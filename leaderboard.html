@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard - Birthday App</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .header {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    h1 { color: #333; font-size: 1.75rem; }
+    .username { color: #667eea; }
+    .nav-tabs {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 0;
+    }
+    .nav-tab {
+      padding: 0.75rem 1.5rem;
+      background: transparent;
+      color: #666;
+      border: none;
+      border-bottom: 3px solid transparent;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .nav-tab:hover {
+      background: #f8fafc;
+      color: #333;
+    }
+    .nav-tab.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+      background: transparent;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover { background: #5568d3; }
+    button.secondary {
+      background: #e53e3e;
+    }
+    button.secondary:hover {
+      background: #c53030;
+    }
+    .section {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+    h2 {
+      color: #333;
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
+    }
+    .scoreboard-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .scoreboard-table th,
+    .scoreboard-table td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .scoreboard-table th {
+      background: #f8fafc;
+      color: #475569;
+      font-weight: 600;
+    }
+    .scoreboard-table tr:hover {
+      background: #f8fafc;
+    }
+    .scoreboard-table tr.current-user {
+      background: #eff6ff;
+      font-weight: 600;
+    }
+    .scoreboard-table tr.current-user:hover {
+      background: #dbeafe;
+    }
+    .rank-medal {
+      font-size: 1.25rem;
+      margin-right: 0.5rem;
+    }
+    .loading {
+      text-align: center;
+      color: #666;
+      padding: 2rem;
+    }
+    .empty {
+      text-align: center;
+      color: #999;
+      padding: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-top">
+        <h1>🏆 Leaderboard</h1>
+        <button class="secondary" id="signOutBtn">Sign Out</button>
+      </div>
+      <div class="nav-tabs">
+        <a href="dashboard.html" class="nav-tab">Dashboard</a>
+        <a href="leaderboard.html" class="nav-tab active">Leaderboard</a>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Rankings</h2>
+      <div id="scoreboard" class="loading">Loading leaderboard...</div>
+    </div>
+  </div>
+
+  <script type="module">
+    const SUPABASE_URL = 'https://pvvkkcqxkwlzfwlladoe.supabase.co'
+    const SUPABASE_KEY = 'sb_publishable_INEqArDABXzb2p2YjiwhJA_jlj_4Q2y'
+
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+    
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+
+    const userId = localStorage.getItem('user_id')
+    const username = localStorage.getItem('username')
+
+    // Redirect to login if not signed in
+    if (!userId) {
+      window.location.href = 'index.html'
+    }
+
+    // Sign out handler
+    document.getElementById('signOutBtn').addEventListener('click', () => {
+      localStorage.removeItem('user_id')
+      localStorage.removeItem('username')
+      window.location.href = 'index.html'
+    })
+
+    // Load full scoreboard
+    async function loadScoreboard() {
+      const container = document.getElementById('scoreboard')
+      
+      try {
+        const { data, error } = await supabase
+          .from('scoreboard')
+          .select('*')
+
+        if (error) throw error
+
+        if (!data || data.length === 0) {
+          container.innerHTML = '<div class="empty">No scores yet.</div>'
+          return
+        }
+
+        const getMedal = (rank) => {
+          if (rank === 1) return '🥇'
+          if (rank === 2) return '🥈'
+          if (rank === 3) return '🥉'
+          return ''
+        }
+
+        container.innerHTML = `
+          <table class="scoreboard-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Player</th>
+                <th>Assigned</th>
+                <th>Competition</th>
+                <th>Total Points</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.map((row, idx) => {
+                const rank = idx + 1
+                const isCurrentUser = row.user_id === userId
+                return `
+                  <tr class="${isCurrentUser ? 'current-user' : ''}">
+                    <td>
+                      ${getMedal(rank) ? `<span class="rank-medal">${getMedal(rank)}</span>` : ''}
+                      #${rank}
+                    </td>
+                    <td>${row.display_name || row.username}${isCurrentUser ? ' (You)' : ''}</td>
+                    <td>${row.assigned_points}</td>
+                    <td>${row.competition_points}</td>
+                    <td><strong>${row.total_points}</strong></td>
+                  </tr>
+                `
+              }).join('')}
+            </tbody>
+          </table>
+        `
+
+      } catch (err) {
+        container.innerHTML = `<div class="empty">Error loading leaderboard: ${err.message}</div>`
+      }
+    }
+
+    // Initial load
+    loadScoreboard()
+
+    // Refresh leaderboard every 10 seconds
+    setInterval(loadScoreboard, 10000)
+  </script>
+</body>
+</html>
