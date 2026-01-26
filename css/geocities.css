@@ -450,7 +450,7 @@ input:focus {
 
 /* === VIEW COUNTER (for future invitation page) === */
 .view-counter {
-  display: flex;
+  display: inline-flex;
   justify-content: center;
   gap: 0.25rem;
   margin: 1rem 0;
@@ -470,6 +470,21 @@ input:focus {
 }
 
 /* === DIVIDERS === */
+.divider {
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.divider img {
+  max-width: 100%;
+  height: auto;
+}
+
+.divider--dragonball {
+    margin-top: clamp(-86px, -12vw, -50px);
+}
+
+/* Legacy specific divider classes */
 .flame-divider, .sparkle-divider {
   text-align: center;
   margin: 1.5rem 0;
