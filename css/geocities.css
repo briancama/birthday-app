@@ -9,7 +9,7 @@
 
 body {
   font-family: 'Comic Sans MS', 'Arial', sans-serif;
-  background-image: url('../images/bg-starfield.gif');
+  background-image: url('../images/background.gif');
   background-repeat: repeat;
   background-color: #000080; /* Navy blue fallback */
   min-height: 100vh;
