@@ -3,93 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Birthday App</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    .container {
-      background: white;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-      width: 90%;
-      max-width: 400px;
-    }
-    h1 {
-      margin-bottom: 1.5rem;
-      color: #333;
-      text-align: center;
-    }
-    .form-group {
-      margin-bottom: 1rem;
-    }
-    label {
-      display: block;
-      margin-bottom: 0.5rem;
-      color: #555;
-      font-weight: 500;
-    }
-    input {
-      width: 100%;
-      padding: 0.75rem;
-      border: 2px solid #ddd;
-      border-radius: 6px;
-      font-size: 1rem;
-      transition: border-color 0.2s;
-    }
-    input:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-    button {
-      width: 100%;
-      padding: 0.75rem;
-      background: #667eea;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    button:hover {
-      background: #5568d3;
-    }
-    button:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-    .error {
-      color: #e53e3e;
-      font-size: 0.875rem;
-      margin-top: 0.5rem;
-    }
-  </style>
+  <title>🎉 Birthday Challenge Zone 🎉</title>
+  <link rel="stylesheet" href="css/geocities.css">
 </head>
-<body>
-  <div class="container">
-    <h1>🎉 Birthday App</h1>
+<body style="display: flex; justify-content: center; align-items: center; min-height: 100vh;">
+  <div class="login-container">
+    <h1 class="rainbow-text">🎉 WELCOME TO THE PARTY! 🎂</h1>
+    
+    <!-- Under Construction GIF -->
+    <img src="images/construction.gif" alt="Under Construction" class="construction-gif" 
+         onerror="this.style.display='none'">
+    
     <form id="loginForm">
       <div class="form-group">
-        <label for="username">Username</label>
+        <label for="username">⭐ ENTER YOUR USERNAME ⭐</label>
         <input 
           type="text" 
           id="username" 
           name="username" 
-          placeholder="Enter your username"
+          placeholder="Type here..."
           required
           autocomplete="off"
         >
       </div>
-      <button type="submit" id="submitBtn">Sign In</button>
+      <button type="submit" id="submitBtn">🚀 SIGN IN NOW! 🚀</button>
       <div id="error" class="error"></div>
     </form>
   </div>

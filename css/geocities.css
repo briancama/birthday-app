@@ -1,0 +1,547 @@
+/* 🌟 GEOCITIES 1998 RETRO STYLESHEET 🌟 */
+
+/* === GLOBAL RESET & BODY === */
+* { 
+  margin: 0; 
+  padding: 0; 
+  box-sizing: border-box; 
+}
+
+body {
+  font-family: 'Comic Sans MS', 'Arial', sans-serif;
+  background-image: url('../images/bg-starfield.gif');
+  background-repeat: repeat;
+  background-color: #000080; /* Navy blue fallback */
+  min-height: 100vh;
+  padding: 1rem;
+  color: #000;
+}
+
+/* === RAINBOW TEXT ANIMATION === */
+@keyframes rainbow {
+  0% { color: #FF0000; }
+  14% { color: #FF7F00; }
+  28% { color: #FFFF00; }
+  42% { color: #00FF00; }
+  57% { color: #0000FF; }
+  71% { color: #4B0082; }
+  85% { color: #9400D3; }
+  100% { color: #FF0000; }
+}
+
+.rainbow-text {
+  animation: rainbow 3s linear infinite;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+/* === BLINK ANIMATION === */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.blink {
+  animation: blink 1s step-start infinite;
+}
+
+/* === SPARKLE ANIMATION === */
+@keyframes sparkle {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.2) rotate(90deg); }
+  50% { transform: scale(1) rotate(180deg); }
+  75% { transform: scale(1.2) rotate(270deg); }
+}
+
+.sparkle {
+  animation: sparkle 1.5s ease-in-out infinite;
+  display: inline-block;
+}
+
+/* === MARQUEE STYLING === */
+marquee, .marquee {
+  background: #FFFF00;
+  color: #FF0000;
+  font-weight: bold;
+  padding: 0.5rem;
+  border: 3px ridge #FFD700;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+/* === CONTAINERS === */
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.section, .header {
+  background: #C0C0C0; /* Silver */
+  border: 4px outset #FFFFFF;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 5px 5px 0px #000000;
+}
+
+.header {
+  background: linear-gradient(to bottom, #0000FF, #00FFFF);
+  color: white;
+  text-align: center;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/* === TYPOGRAPHY === */
+h1 {
+  font-family: 'Arial Black', 'Arial', sans-serif;
+  font-size: 2.5rem;
+  text-align: center;
+  margin-bottom: 1rem;
+  text-shadow: 3px 3px 0px #000000, 
+               -1px -1px 0px #FFFFFF;
+}
+
+h2 {
+  font-family: 'Arial Black', 'Arial', sans-serif;
+  font-size: 1.8rem;
+  color: #FF00FF;
+  text-decoration: underline;
+  margin-bottom: 1rem;
+  text-shadow: 2px 2px 0px #000000;
+}
+
+.username {
+  color: #00FFFF;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px #000000;
+}
+
+/* === NAVIGATION TABS === */
+.nav-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 0;
+  flex-wrap: wrap;
+}
+
+.nav-tab {
+  padding: 0.75rem 1.5rem;
+  background: #C0C0C0;
+  color: #000;
+  border: 3px outset #FFFFFF;
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  font-family: 'Arial', sans-serif;
+}
+
+.nav-tab:hover {
+  background: #FFFF00;
+  border: 3px inset #FFFFFF;
+}
+
+.nav-tab.active {
+  background: #FF00FF;
+  color: #FFFF00;
+  border: 3px inset #FFFFFF;
+}
+
+/* === BUTTONS === */
+button, input[type="submit"] {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(to bottom, #FF00FF, #9400D3);
+  color: #FFFF00;
+  border: 3px outset #FFFFFF;
+  font-weight: bold;
+  cursor: pointer;
+  font-family: 'Arial', sans-serif;
+  font-size: 1rem;
+  text-shadow: 1px 1px 0px #000000;
+}
+
+button:hover, input[type="submit"]:hover {
+  background: linear-gradient(to bottom, #00FFFF, #0000FF);
+  border: 3px inset #FFFFFF;
+}
+
+button:active, input[type="submit"]:active {
+  border: 3px inset #FFFFFF;
+}
+
+button:disabled {
+  background: #808080;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+button.secondary {
+  background: linear-gradient(to bottom, #FF0000, #8B0000);
+  color: white;
+}
+
+button.secondary:hover {
+  background: linear-gradient(to bottom, #FF6347, #FF0000);
+}
+
+button.success-btn {
+  background: linear-gradient(to bottom, #00FF00, #008000);
+  color: #000;
+  font-weight: bold;
+}
+
+button.failure-btn {
+  background: linear-gradient(to bottom, #FF0000, #8B0000);
+  color: #FFFF00;
+}
+
+/* === FORMS === */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #000;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+input[type="text"], input[type="password"], input[type="email"] {
+  width: 100%;
+  padding: 0.75rem;
+  border: 3px inset #FFFFFF;
+  background: white;
+  font-family: 'Courier New', monospace;
+  font-size: 1rem;
+}
+
+input:focus {
+  outline: 3px solid #FF00FF;
+  background: #FFFFCC;
+}
+
+.error {
+  color: #FF0000;
+  font-weight: bold;
+  font-size: 1rem;
+  margin-top: 0.5rem;
+  animation: blink 1s step-start infinite;
+}
+
+/* === LOGIN PAGE SPECIFIC === */
+.login-container {
+  background: #C0C0C0;
+  padding: 2rem;
+  border: 5px ridge #FFFFFF;
+  width: 90%;
+  max-width: 500px;
+  margin: 2rem auto;
+  box-shadow: 10px 10px 0px #000000;
+}
+
+.login-container h1 {
+  color: #FF0000;
+}
+
+/* === CHALLENGE CARDS === */
+.challenge-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.challenge-card {
+  border: 4px groove #FFFFFF;
+  padding: 1rem;
+  background: #FFFFE0; /* Light yellow */
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  box-shadow: 3px 3px 0px #000000;
+}
+
+.challenge-card.locked {
+  background: #D3D3D3;
+  opacity: 0.7;
+}
+
+.challenge-card.unrevealed {
+  background: #FFD700; /* Gold */
+  cursor: pointer;
+  border: 4px outset #FFFFFF;
+}
+
+.challenge-card.unrevealed:hover {
+  background: #FFA500; /* Orange */
+  border: 4px ridge #FFFFFF;
+}
+
+.challenge-card.revealed {
+  background: #98FB98; /* Pale green */
+  border: 4px inset #FFFFFF;
+}
+
+.challenge-card.completed.success {
+  background: #90EE90; /* Light green */
+  border: 4px double #00FF00;
+}
+
+.challenge-card.completed.failure {
+  background: #FFB6C1; /* Light pink */
+  border: 4px double #FF0000;
+}
+
+.challenge-info {
+  flex: 1;
+}
+
+.challenge-title {
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: #000080; /* Navy */
+}
+
+.challenge-description {
+  margin-bottom: 0.5rem;
+  font-family: 'Arial', sans-serif;
+}
+
+.challenge-details {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 0.5rem;
+  font-family: 'Courier New', monospace;
+}
+
+.challenge-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-direction: column;
+}
+
+.challenge-actions button {
+  width: 100%;
+  min-width: 120px;
+}
+
+/* === BADGES === */
+.brian-mode-badge {
+  background: #FF00FF;
+  color: #FFFF00;
+  padding: 0.25rem 0.75rem;
+  border: 2px solid #000;
+  font-size: 0.8rem;
+  font-weight: bold;
+  margin-left: 0.5rem;
+  display: inline-block;
+  text-shadow: 1px 1px 0px #000000;
+}
+
+.outcome-badge {
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+  border: 3px solid #000;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.outcome-badge.success {
+  background: #00FF00;
+  color: #000;
+  animation: blink 2s step-start infinite;
+}
+
+.outcome-badge.failure {
+  background: #FF0000;
+  color: #FFFF00;
+  animation: blink 2s step-start infinite;
+}
+
+/* === STATS GRID === */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-box {
+  background: #000;
+  color: #00FF00;
+  padding: 1rem;
+  border: 3px ridge #00FF00;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  color: #00FFFF;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: bold;
+  text-shadow: 0 0 10px #00FF00;
+}
+
+/* === LEADERBOARD TABLE === */
+.scoreboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 4px double #000;
+}
+
+.scoreboard-table th {
+  background: linear-gradient(to bottom, #0000FF, #000080);
+  color: #FFFF00;
+  padding: 1rem;
+  text-align: left;
+  border: 2px solid #000;
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-shadow: 1px 1px 0px #000000;
+}
+
+.scoreboard-table td {
+  padding: 0.75rem;
+  border: 2px solid #000;
+  font-family: 'Arial', sans-serif;
+}
+
+.scoreboard-table tr:nth-child(odd) {
+  background: #FFFF99; /* Light yellow */
+}
+
+.scoreboard-table tr:nth-child(even) {
+  background: #CCFFCC; /* Light green */
+}
+
+.scoreboard-table tr:hover {
+  background: #FF00FF !important;
+  color: #FFFF00;
+  font-weight: bold;
+}
+
+.scoreboard-table tr.current-user {
+  background: #00FFFF !important;
+  font-weight: bold;
+  border: 3px solid #FF0000;
+}
+
+.scoreboard-table tr.current-user:hover {
+  background: #00CED1 !important;
+}
+
+.rank-medal {
+  font-size: 1.5rem;
+}
+
+/* === VIEW COUNTER (for future invitation page) === */
+.view-counter {
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+  margin: 1rem 0;
+}
+
+.counter-digit {
+  background: #000;
+  color: #00FF00;
+  border: 2px ridge #00FF00;
+  padding: 0.5rem;
+  font-family: 'Courier New', monospace;
+  font-size: 1.5rem;
+  font-weight: bold;
+  min-width: 40px;
+  text-align: center;
+  text-shadow: 0 0 10px #00FF00;
+}
+
+/* === DIVIDERS === */
+.flame-divider, .sparkle-divider {
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.flame-divider img, .sparkle-divider img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* === RETRO GIFS === */
+.construction-gif {
+  display: block;
+  margin: 1rem auto;
+  max-width: 150px;
+}
+
+.trophy-gif {
+  width: 30px;
+  height: 30px;
+  vertical-align: middle;
+  margin-left: 0.5rem;
+}
+
+/* === UTILITY CLASSES === */
+.loading {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+  color: #FF00FF;
+  font-weight: bold;
+}
+
+.empty {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  font-style: italic;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  body {
+    padding: 0.5rem;
+  }
+  
+  h1 {
+    font-size: 1.8rem;
+  }
+  
+  h2 {
+    font-size: 1.4rem;
+  }
+  
+  .challenge-card {
+    flex-direction: column;
+  }
+  
+  .challenge-actions {
+    width: 100%;
+  }
+  
+  .nav-tabs {
+    flex-direction: column;
+  }
+  
+  .nav-tab {
+    width: 100%;
+    text-align: center;
+  }
+}

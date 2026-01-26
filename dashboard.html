@@ -3,212 +3,44 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - Birthday App</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      padding: 2rem 1rem;
-    }
-    .container {
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-    .header {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-      margin-bottom: 2rem;
-    }
-    .header-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-    }
-    h1 { color: #333; font-size: 1.75rem; }
-    .username { color: #667eea; }
-    .nav-tabs {
-      display: flex;
-      gap: 0.5rem;
-      border-bottom: 2px solid #e2e8f0;
-      padding-bottom: 0;
-    }
-    .nav-tab {
-      padding: 0.75rem 1.5rem;
-      background: transparent;
-      color: #666;
-      border: none;
-      border-bottom: 3px solid transparent;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      text-decoration: none;
-      display: inline-block;
-    }
-    .nav-tab:hover {
-      background: #f8fafc;
-      color: #333;
-    }
-    .nav-tab.active {
-      color: #667eea;
-      border-bottom-color: #667eea;
-      background: transparent;
-    }
-    button {
-      padding: 0.5rem 1rem;
-      background: #667eea;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    button:hover { background: #5568d3; }
-    button.secondary {
-      background: #e53e3e;
-    }
-    button.secondary:hover {
-      background: #c53030;
-    }
-    .section {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-      margin-bottom: 2rem;
-    }
-    h2 {
-      color: #333;
-      margin-bottom: 1rem;
-      font-size: 1.5rem;
-    }
-    .challenge-list {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-    .challenge-card {
-      border: 2px solid #e2e8f0;
-      padding: 1rem;
-      border-radius: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 1rem;
-      transition: all 0.2s;
-    }
-    .challenge-card.locked {
-      opacity: 0.6;
-      cursor: not-allowed;
-      background: #f8fafc;
-    }
-    .challenge-card.unrevealed {
-      cursor: pointer;
-      border-color: #cbd5e1;
-    }
-    .challenge-card.unrevealed:hover {
-      border-color: #667eea;
-      background: #f8fafc;
-    }
-    .challenge-card.revealed {
-      border-color: #667eea;
-      background: #eff6ff;
-    }
-    .challenge-card.completed.success {
-      background: #f0fdf4;
-      border-color: #86efac;
-    }
-    .challenge-card.completed.failure {
-      background: #fef2f2;
-      border-color: #fca5a5;
-    }
-    .challenge-info h3 {
-      color: #333;
-      font-size: 1.125rem;
-      margin-bottom: 0.25rem;
-    }
-    .challenge-info p {
-      color: #666;
-      font-size: 0.875rem;
-    }
-    .challenge-details {
-      margin-top: 0.5rem;
-      padding-top: 0.5rem;
-      border-top: 1px solid #e2e8f0;
-    }
-    .challenge-actions {
-      display: flex;
-      gap: 0.5rem;
-      flex-shrink: 0;
-    }
-    .challenge-card button {
-      padding: 0.5rem 1rem;
-      white-space: nowrap;
-      font-size: 0.875rem;
-    }
-    .challenge-card button.success-btn {
-      background: #22c55e;
-    }
-    .challenge-card button.success-btn:hover {
-      background: #16a34a;
-    }
-    .challenge-card button.failure-btn {
-      background: #ef4444;
-    }
-    .challenge-card button.failure-btn:hover {
-      background: #dc2626;
-    }
-    .outcome-badge {
-      padding: 0.25rem 0.75rem;
-      border-radius: 6px;
-      font-weight: 600;
-      font-size: 0.875rem;
-    }
-    .outcome-badge.success {
-      background: #22c55e;
-      color: white;
-    }
-    .outcome-badge.failure {
-      background: #ef4444;
-      color: white;
-    }
-    .loading {
-      text-align: center;
-      color: #666;
-      padding: 2rem;
-    }
-    .empty {
-      text-align: center;
-      color: #999;
-      padding: 2rem;
-    }
-  </style>
+  <title>🎮 Dashboard - Birthday Challenge Zone 🎮</title>
+  <link rel="stylesheet" href="css/geocities.css">
 </head>
 <body>
   <div class="container">
+    <!-- Scrolling Marquee -->
+    <marquee behavior="scroll" direction="left" scrollamount="6">
+      🎉 WELCOME TO THE BIRTHDAY CHALLENGE ZONE! 🎂 Check out the leaderboard! ⭐ New challenges daily! 🔥
+    </marquee>
+    
     <div class="header">
       <div class="header-top">
-        <h1>Welcome, <span class="username" id="displayName">...</span>! 🎉</h1>
-        <button class="secondary" id="signOutBtn">Sign Out</button>
+        <h1>Hello, <span class="username" id="displayName">...</span>! 🎉</h1>
+        <button class="secondary" id="signOutBtn">SIGN OUT</button>
       </div>
       <div class="nav-tabs">
-        <a href="dashboard.html" class="nav-tab active">Dashboard</a>
-        <a href="leaderboard.html" class="nav-tab">Leaderboard</a>
+        <a href="dashboard.html" class="nav-tab active">DASHBOARD</a>
+        <a href="leaderboard.html" class="nav-tab">LEADERBOARD</a>
       </div>
     </div>
 
+    <!-- Flame Divider -->
+    <div class="flame-divider">
+      <img src="images/flame-divider.gif" alt="Flame Divider" onerror="this.style.display='none'">
+    </div>
+
     <div class="section">
-      <h2>Your Stats</h2>
+      <h2>⭐ YOUR STATS ⭐</h2>
       <div id="personalStats" class="loading">Loading your stats...</div>
     </div>
 
+    <!-- Flame Divider -->
+    <div class="flame-divider">
+      <img src="images/flame-divider.gif" alt="Flame Divider" onerror="this.style.display='none'">
+    </div>
+
     <div class="section">
-      <h2>Your Challenges</h2>
+      <h2>🔥 YOUR CHALLENGES 🔥</h2>
       <div id="challengesList" class="loading">Loading challenges...</div>
     </div>
   </div>
@@ -311,26 +143,26 @@
             actionsHTML = `
               <div class="challenge-actions">
                 <button class="success-btn" data-id="${assignment.id}" data-outcome="success">
-                  🎉 Success
+                  ✅ SUCCESS
                 </button>
                 <button class="failure-btn" data-id="${assignment.id}" data-outcome="failure">
-                  ❌ Failure
+                  ❌ FAILURE
                 </button>
               </div>
             `
           } else if (isCompleted) {
             actionsHTML = `
               <span class="outcome-badge ${outcome}">
-                ${outcome === 'success' ? '✓ Success' : '✗ Failure'}
+                ${outcome === 'success' ? '✅ SUCCESS!' : '❌ FAILURE!'}
               </span>
             `
           } else if (!isCompleted && canReveal && !isRevealed) {
-            actionsHTML = `<span style="color: #667eea; font-weight: 600;">Click to reveal →</span>`
+            actionsHTML = `<span class="sparkle">✨ CLICK TO REVEAL ✨</span>`
           } else if (isLocked) {
-            actionsHTML = `<span style="color: #94a3b8;">🔒 Locked</span>`
+            actionsHTML = `<span style="color: #999; font-weight: bold;">🔒 LOCKED</span>`
           }
           
-          const brianBadge = brianMode ? `<span style="background: #fbbf24; color: #78350f; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-left: 0.5rem;">${brianMode === 'vs' ? '⚔️ vs Brian' : '🤝 with Brian'}</span>` : ''
+          const brianBadge = brianMode ? `<span class="brian-mode-badge">${brianMode === 'vs' ? '⚔️ VS BRIAN' : '🤝 WITH BRIAN'}</span>` : ''
           
           // Show generic title unless completed or revealed
           const displayTitle = (isCompleted || isRevealed) 
@@ -342,9 +174,9 @@
             : ''
           
           card.innerHTML = `
-            <div class="challenge-info" style="flex: 1;">
-              <h3>${displayTitle}</h3>
-              ${displayDescription}
+            <div class="challenge-info">
+              <div class="challenge-title">${displayTitle}</div>
+              ${displayDescription ? `<div class="challenge-description">${displayDescription}</div>` : ''}
             </div>
             ${actionsHTML}
           `
@@ -453,22 +285,22 @@
         }
 
         container.innerHTML = `
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-            <div style="padding: 1rem; background: #f8fafc; border-radius: 8px;">
-              <div style="color: #666; font-size: 0.875rem; margin-bottom: 0.25rem;">Your Rank</div>
-              <div style="font-size: 2rem; font-weight: 700; color: #667eea;">#${rank}</div>
+          <div class="stats-grid">
+            <div class="stat-box">
+              <div class="stat-label">YOUR RANK</div>
+              <div class="stat-value">#${rank}</div>
             </div>
-            <div style="padding: 1rem; background: #f8fafc; border-radius: 8px;">
-              <div style="color: #666; font-size: 0.875rem; margin-bottom: 0.25rem;">Total Points</div>
-              <div style="font-size: 2rem; font-weight: 700; color: #667eea;">${userStats.total_points}</div>
+            <div class="stat-box">
+              <div class="stat-label">TOTAL POINTS</div>
+              <div class="stat-value">${userStats.total_points}</div>
             </div>
-            <div style="padding: 1rem; background: #f8fafc; border-radius: 8px;">
-              <div style="color: #666; font-size: 0.875rem; margin-bottom: 0.25rem;">Assigned Complete</div>
-              <div style="font-size: 2rem; font-weight: 700; color: #22c55e;">${userStats.assigned_completed}</div>
+            <div class="stat-box">
+              <div class="stat-label">ASSIGNED COMPLETE</div>
+              <div class="stat-value">${userStats.assigned_completed}</div>
             </div>
-            <div style="padding: 1rem; background: #f8fafc; border-radius: 8px;">
-              <div style="color: #666; font-size: 0.875rem; margin-bottom: 0.25rem;">Competition Points</div>
-              <div style="font-size: 2rem; font-weight: 700; color: #f59e0b;">${userStats.competition_points}</div>
+            <div class="stat-box">
+              <div class="stat-label">COMPETITION POINTS</div>
+              <div class="stat-value">${userStats.competition_points}</div>
             </div>
           </div>
         `
