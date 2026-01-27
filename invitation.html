@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,12 +10,9 @@
   <link rel="stylesheet" href="css/geocities.css">
   <link rel="stylesheet" href="css/invitation.css">
 </head>
+
 <body>
   <div class="invitation-container">
-
-    <!-- Construction GIF -->
-    <img src="images/construction.gif" alt="Under Construction" class="construction-gif" 
-         onerror="this.style.display='none'">
 
     <!-- Main Header -->
     <div class="section text-center">
@@ -60,16 +58,16 @@
         THE RULES (please read carefully!!)
         <img src="images/cocktail_stirrer.gif" alt="" class="icon-gif">
       </h3>
-      
+
       <ul class="rules-list no-bullets">
         <li class="rule-item">
           <strong>WHAT IS A COCKTAIL???</strong>
           <p>
-            For the purposes of this competition, a cocktail is defined as: 
+            For the purposes of this competition, a cocktail is defined as:
             <span class="cyan-highlight">
               A DRINK MADE WITH 2 OR MORE INGREDIENTS
             </span>
-            That's it!! That's the rule!!! If you mix 3 things together, congratulations, 
+            That's it!! That's the rule!!! If you mix 3 things together, congratulations,
             you've made a cocktail!!!
             <img src="images/cocktails.gif" alt="" class="icon-gif">
           </p>
@@ -78,14 +76,14 @@
         <li class="rule-item">
           <strong>THE PRESENTATION COCKTAIL</strong>
           <p>
-            Each competitor shall prepare <u>ONE (1)</u> "presentation cocktail" - this is your 
+            Each competitor shall prepare <u>ONE (1)</u> "presentation cocktail" - this is your
             moment to SHINE<img src="images/sparkle.gif" alt="" class="icon-gif">!!!
-            Make it fancy!! Put a little umbrella in it!!! Garnish it with 
-            something impressive!!! Use a glass that makes people go "ooooh"!!! 
+            Make it fancy!! Put a little umbrella in it!!! Garnish it with
+            something impressive!!! Use a glass that makes people go "ooooh"!!!
             <br><br>
-            BUT WAIT THERE'S MORE ---&gt; All actual JUDGING will be done using a 
+            BUT WAIT THERE'S MORE ---&gt; All actual JUDGING will be done using a
             <span class="red-bold">3-4 ounce standard container</span>.
-            So make sure your beautiful creation can also be poured into a boring cup because 
+            So make sure your beautiful creation can also be poured into a boring cup because
             that's what the judges will actually taste!!!
           </p>
         </li>
@@ -94,7 +92,7 @@
           <strong>QUANTITY MATTERS (kind of)</strong>
           <p>
             You need to make enough for the judges to taste!! We're talking 3-4 ounces per judge.
-            How many judges will there be??? 
+            How many judges will there be???
             <span class="highlight-bg">Good question!!! We'll figure that out later!!!</span>
             Just bring enough ingredients to make like 10 4oz servings and you'll probably be fine!!!
           </p>
@@ -114,12 +112,12 @@
           <img src="images/cocktail_coke.gif" alt="" class="icon-gif large-icon">
         </h3>
         <p>
-          Listen up folks!!! We want everyone to have a good time AND remember it the next day!!! 
+          Listen up folks!!! We want everyone to have a good time AND remember it the next day!!!
           So here's the deal with mocktails:
         </p>
         <ul class="mocktail-list no-bullets">
           <li>
-            Providing a <strong>MOCKTAIL VERSION</strong> of your cocktail is <u>not required</u> 
+            Providing a <strong>MOCKTAIL VERSION</strong> of your cocktail is <u>not required</u>
             BUT it is <span class="green-highlight">HIGHLY SUGGESTED</span>!!!
           </li>
           <li>
@@ -133,7 +131,7 @@
     </div>
 
     <!-- Sparkle Divider -->
-    <div  class="text-center divider">
+    <div class="text-center divider">
       <img style="max-height: 36px;" src="images/red-skelton.gif" alt="Sparkle" onerror="this.style.display='none'">
     </div>
 
@@ -195,13 +193,13 @@
       <div class="guestbook-modal-overlay"></div>
       <div class="guestbook-modal-content">
         <button id="closeGuestbook" class="guestbook-close">❌ CLOSE</button>
-        
+
         <h2 class="text-center rainbow-text">
           <img src="images/sparkle.gif" alt="" class="icon-gif">
           SIGN THE GUESTBOOK!!!
           <img src="images/sparkle.gif" alt="" class="icon-gif">
         </h2>
-        
+
         <!-- Guestbook Form -->
         <div class="guestbook-form">
           <input type="text" id="guestName" placeholder="Your Name" maxlength="50">
@@ -227,13 +225,13 @@
   <script type="module">
     import { SUPABASE_CONFIG } from './js/config.js'
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-    
+
     const supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key)
 
     // View counter using Supabase
     async function updateViewCounter() {
       const counterElement = document.getElementById('viewCounter');
-      
+
       try {
         // Increment the view count
         const { data, error } = await supabase.rpc('increment_page_views', {
@@ -276,7 +274,7 @@
     function displayCounter(views) {
       const viewsStr = views.toString().padStart(6, '0');
       const counterElement = document.getElementById('viewCounter');
-      
+
       counterElement.innerHTML = '';
       for (let i = 0; i < viewsStr.length; i++) {
         const digitBox = document.createElement('div');
@@ -289,7 +287,7 @@
     // Load guestbook entries
     async function loadGuestbook() {
       const container = document.getElementById('guestbookEntries');
-      
+
       try {
         const { data, error } = await supabase
           .from('guestbook')
@@ -404,7 +402,7 @@
 
     // Run on page load
     updateViewCounter();
-    
+
     // Guestbook image rotation
     const guestbookImages = [
       'images/guestbook_fire.gif',
@@ -419,26 +417,26 @@
       'images/guestbook_boop.gif',
       'images/guestbook_ken-ryu.gif',
     ];
-    
+
     // Select random guestbook image on page load
     const randomImage = guestbookImages[Math.floor(Math.random() * guestbookImages.length)];
     document.getElementById('guestbookTrigger').src = randomImage;
-    
+
     // Show guestbook modal on trigger click
-    document.getElementById('guestbookTrigger').addEventListener('click', function() {
+    document.getElementById('guestbookTrigger').addEventListener('click', function () {
       document.getElementById('guestbookModal').style.display = 'block';
       document.body.style.overflow = 'hidden'; // Prevent scrolling
       loadGuestbook(); // Load entries when modal opens
     });
-    
+
     // Close guestbook modal
     function closeGuestbookModal() {
       document.getElementById('guestbookModal').style.display = 'none';
       document.body.style.overflow = 'auto'; // Re-enable scrolling
     }
-    
+
     document.getElementById('closeGuestbook').addEventListener('click', closeGuestbookModal);
-    
+
     // Close on overlay click
     document.querySelector('.guestbook-modal-overlay').addEventListener('click', closeGuestbookModal);
 
@@ -446,4 +444,5 @@
     document.getElementById('signGuestbook').addEventListener('click', signGuestbook);
   </script>
 </body>
+
 </html>
