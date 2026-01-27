@@ -75,6 +75,11 @@ marquee, .marquee {
   margin: 0 auto;
 }
 
+.interior-container {
+    margin: 2rem 0;
+    padding: 2rem;
+}
+
 .section, .header {
   background: #C0C0C0; /* Silver */
   border: 4px outset #FFFFFF;
@@ -539,6 +544,10 @@ input:focus {
   flex-shrink: 0;
 }
 
+.icon-gif--sm {
+    height: 0.8em;
+}
+
 /* Larger icon modifier */
 .icon-gif--lg {
   height: 1.8em;
@@ -638,5 +647,15 @@ input:focus {
   .nav-tab {
     width: 100%;
     text-align: center;
+  }
+
+  .login-container {
+    padding: 2rem 1rem;
+    margin: 2rem 0.5rem;
+    width: 100%;
+  }
+
+  .interior-container {
+    padding: 2rem 1rem;
   }
 }
