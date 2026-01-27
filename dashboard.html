@@ -1,21 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>🎮 Dashboard - Birthday Challenge Zone 🎮</title>  <link rel="icon" type="image/png" href="images/favicon.png">  <link rel="stylesheet" href="css/geocities.css">
+  <title>*** Dashboard - Birthday Challenge Zone ***</title>
+  <link rel="icon" type="image/png" href="images/favicon.png">
+  <link rel="stylesheet" href="css/geocities.css">
 </head>
+
 <body>
   <div class="container">
     <!-- Scrolling Marquee -->
     <marquee behavior="scroll" direction="left" scrollamount="6">
-      🎉 WELCOME TO THE BIRTHDAY CHALLENGE ZONE! 🎂 Check out the leaderboard! ⭐ New challenges daily! 🔥
+      *** WELCOME TO THE BIRTHDAY CHALLENGE ZONE! *** Check out the leaderboard! * New challenges daily! HOT!
     </marquee>
-    
+
     <div class="header">
       <div class="header-top">
-        <h1>Hello, <span class="username" id="displayName">...</span>! 🎉</h1>
+        <h1>Hello, <span class="username" id="displayName">...</span>!</h1>
         <button class="secondary" id="signOutBtn">SIGN OUT</button>
       </div>
       <div class="nav-tabs">
@@ -30,8 +34,8 @@
     </div>
 
     <div class="section">
-      <h2>⭐ YOUR STATS ⭐</h2>
-      <div id="personalStats" class="loading">Loading your stats...</div>
+      <h2>>>> YOUR STATS <<<< /h2>
+          <div id="personalStats" class="loading">Loading your stats...</div>
     </div>
 
     <!-- Flame Divider -->
@@ -48,7 +52,7 @@
   <script type="module">
     import { SUPABASE_CONFIG } from './js/config.js'
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-    
+
     const supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key)
 
     const userId = localStorage.getItem('user_id')
@@ -66,7 +70,7 @@
         .select('display_name')
         .eq('id', userId)
         .single()
-      
+
       if (!error && data) {
         document.getElementById('displayName').textContent = data.display_name || username
       } else {
@@ -89,7 +93,7 @@
     // Load user's assigned challenges
     async function loadChallenges() {
       const container = document.getElementById('challengesList')
-      
+
       try {
         const { data, error } = await supabase
           .from('assignments')
@@ -122,7 +126,7 @@
           const isRevealed = revealedChallengeId === assignment.id
           const canReveal = !isCompleted && (firstIncompleteIndex === index || isRevealed)
           const isLocked = !isCompleted && firstIncompleteIndex < index && !isRevealed
-          
+
           const card = document.createElement('div')
           let cardClass = 'challenge-card'
           if (isCompleted) {
@@ -135,7 +139,7 @@
             cardClass += ' unrevealed'
           }
           card.className = cardClass
-          
+
           let actionsHTML = ''
           if (!isCompleted && isRevealed) {
             actionsHTML = `
@@ -159,18 +163,18 @@
           } else if (isLocked) {
             actionsHTML = `<span style="color: #999; font-weight: bold;">🔒 LOCKED</span>`
           }
-          
+
           const brianBadge = brianMode ? `<span class="brian-mode-badge">${brianMode === 'vs' ? '⚔️ VS BRIAN' : '🤝 WITH BRIAN'}</span>` : ''
-          
+
           // Show generic title unless completed or revealed
-          const displayTitle = (isCompleted || isRevealed) 
-            ? `${assignment.challenges.title}${brianBadge}` 
+          const displayTitle = (isCompleted || isRevealed)
+            ? `${assignment.challenges.title}${brianBadge}`
             : `Challenge ${index + 1}`
-          
+
           const displayDescription = (isCompleted || isRevealed)
             ? `<p>${assignment.challenges.description || 'No description'}</p>`
             : ''
-          
+
           card.innerHTML = `
             <div class="challenge-info">
               <div class="challenge-title">${displayTitle}</div>
@@ -178,7 +182,7 @@
             </div>
             ${actionsHTML}
           `
-          
+
           // Click to reveal for unrevealed challenges
           if (!isCompleted && canReveal && !isRevealed) {
             card.style.cursor = 'pointer'
@@ -187,7 +191,7 @@
               loadChallenges()
             })
           }
-          
+
           if (isRevealed) {
             card.querySelectorAll('button').forEach(btn => {
               btn.addEventListener('click', () => {
@@ -196,7 +200,7 @@
               })
             })
           }
-          
+
           container.appendChild(card)
         })
 
@@ -209,7 +213,7 @@
     async function markComplete(assignmentId, challengeId, outcome, brianMode) {
       try {
         const now = new Date().toISOString()
-        
+
         // Update user's assignment with outcome
         const { error: updateError } = await supabase
           .from('assignments')
@@ -226,7 +230,7 @@
             .select('id')
             .eq('username', 'brianc')
             .single()
-          
+
           if (briancError) throw briancError
 
           let briancOutcome
@@ -247,7 +251,7 @@
               completed_at: now,
               outcome: briancOutcome
             }])
-          
+
           if (briancAssignError) throw briancAssignError
         }
 
@@ -266,7 +270,7 @@
     // Load personal stats (user's position and points)
     async function loadPersonalStats() {
       const container = document.getElementById('personalStats')
-      
+
       try {
         const { data, error } = await supabase
           .from('scoreboard')
@@ -316,4 +320,5 @@
     setInterval(loadPersonalStats, 10000)
   </script>
 </body>
+
 </html>
