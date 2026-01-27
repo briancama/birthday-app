@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,42 +9,35 @@
   <link rel="icon" type="image/png" href="images/favicon.png">
   <link rel="stylesheet" href="css/geocities.css">
 </head>
+
 <body style="display: flex; justify-content: center; align-items: center; min-height: 100vh;">
   <div class="login-container">
-    <h1 class="rainbow-text">🎉 WELCOME TO THE PARTY! 🎂</h1>
-    
+    <h1 class="rainbow-text">WELCOME TO THE PARTY!</h1>
+
     <!-- Under Construction GIF -->
-    <img src="images/construction.gif" alt="Under Construction" class="construction-gif" 
-         onerror="this.style.display='none'">
-    
+    <img src="images/construction.gif" alt="Under Construction" class="construction-gif" onerror="this.style.display='none'">
+
     <div class="interior-container" style="text-align: center; background: #FFFF00; border: 4px dashed #FF00FF;">
       <h2 style="color: #FF0000; margin: 0 0 1rem 0;"><img class="icon-gif icon-gif--sm" src="images/construction_sign.gif" alt="Under Construction">COMING SOON!<img class="icon-gif icon-gif--sm" src="images/construction_sign.gif" alt="Under Construction"></h2>
       <p style="font-size: 1.2rem; margin: 0; color: #000;">The challenge zone is currently under construction! Check back soon!!!</p>
       <p style="margin-top: 1rem;"><a href="invitation.html" style="color: #0000FF; text-decoration: underline; font-weight: bold;">View the Party Invitation →</a></p>
     </div>
-    
+
     <!-- Login form temporarily disabled -->
     <form id="loginForm" style="display: none;">
       <div class="form-group">
         <label for="username">⭐ ENTER YOUR USERNAME ⭐</label>
-        <input 
-          type="text" 
-          id="username" 
-          name="username" 
-          placeholder="Type here..."
-          required
-          autocomplete="off"
-        >
+        <input type="text" id="username" name="username" placeholder="Type here..." required autocomplete="off">
       </div>
       <button type="submit" id="submitBtn">🚀 SIGN IN NOW! 🚀</button>
       <div id="error" class="error"></div>
     </form>
   </div>
 
-<script type="module">
+  <script type="module">
     import { SUPABASE_CONFIG } from './js/config.js'
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-    
+
     const supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key)
 
     const form = document.getElementById('loginForm')
@@ -54,7 +48,7 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault()
       errorDiv.textContent = ''
-      
+
       const username = usernameInput.value.trim()
       if (!username) return
 
@@ -107,4 +101,5 @@
     }
   </script>
 </body>
+
 </html>
