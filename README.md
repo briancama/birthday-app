@@ -21,7 +21,19 @@ A weekend event challenge app with progressive reveals, Brian-mode challenges, a
    cd birthday-app
    ```
 
-2. Create a Supabase project at [supabase.com](https://supabase.com)
+2. Start local dev server:
+   ```bash
+   python3 -m http.server 8000
+   ```
+   Then open `http://localhost:8000` in your browser.
+   
+   **Pro tip**: Add this alias to your `~/.zshrc`:
+   ```bash
+   alias serve="python3 -m http.server 8000"
+   ```
+   Then just run `serve` from any directory.
+
+3. Create a Supabase project at [supabase.com](https://supabase.com)
 
 3. Run the SQL migration in Supabase SQL Editor:
    ```bash

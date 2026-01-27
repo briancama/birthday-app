@@ -529,6 +529,86 @@ input:focus {
   text-align: center;
 }
 
+/* Inline GIF icons that scale with text */
+.icon-gif {
+  display: inline-block;
+  height: 1.2em;
+  width: auto;
+  vertical-align: middle;
+  margin: 0 0.2em;
+  flex-shrink: 0;
+}
+
+/* Larger icon modifier */
+.icon-gif--lg {
+  height: 1.8em;
+}
+
+/* Text highlights */
+.highlight-bg {
+  background: #FFFF00;
+  padding: 2px 6px;
+}
+
+.cyan-highlight {
+  background: #00FFFF;
+  padding: 2px 4px;
+  font-weight: bold;
+}
+
+.green-highlight {
+  background: #00FF00;
+  padding: 2px 6px;
+}
+
+.red-bold {
+  color: #FF0000;
+  font-weight: bold;
+}
+
+/* Error messages */
+.error-message {
+  color: #FF0000;
+  font-weight: bold;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+/* Footer styling */
+.footer-text {
+  text-align: center;
+  margin-top: 2rem;
+  font-size: 0.9rem;
+  color: #666;
+  font-family: 'Courier New', monospace;
+}
+
+.footer-text p {
+  margin-top: 0.5rem;
+}
+
+.footer-text a {
+  color: #0000FF;
+  text-decoration: underline;
+}
+
+/* Page views header */
+.page-views-header {
+  display: inline-block;
+  color: #00FF00;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+/* View counter container */
+.view-counter-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 /* === RESPONSIVE === */
 @media (max-width: 768px) {
   body {
