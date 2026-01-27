@@ -1,0 +1,113 @@
+/* Cocktail Competition Rubric Styles */
+
+.rubric-category {
+    background-color: #001122;
+    border: 2px solid #00FFFF;
+    margin: 15px 0;
+    padding: 15px;
+}
+
+.rubric-category h4 {
+    color: #00FF00;
+    margin-top: 0;
+}
+
+.rubric-category ul {
+    margin: 10px 0;
+}
+
+.rubric-category li {
+    margin: 5px 0;
+    color: #FFFFFF;
+}
+
+.scoring-note {
+    background-color: #330066;
+    padding: 5px;
+    font-style: italic;
+    color: #FFFF00;
+    border-left: 3px solid #FF00FF;
+    margin-top: 10px;
+}
+
+.total-box {
+    background-color: #FF0000;
+    color: #FFFF00;
+    padding: 15px;
+    text-align: center;
+    margin: 20px 0;
+    border: 3px solid #FFFFFF;
+}
+
+.award-system {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.award-category {
+    flex: 1;
+    background-color: #003366;
+    border: 2px solid #FF6600;
+    padding: 15px;
+    min-width: 250px;
+}
+
+.award-category h4 {
+    color: #FF6600;
+    margin-top: 0;
+}
+
+.award-category p {
+    color: white;
+}
+
+.bonus-system {
+    background-color: #660033;
+    border: 2px solid #00FFFF;
+    padding: 15px;
+    color: white;
+}
+
+.example-box {
+    background-color: #004400;
+    border: 1px solid #00FF00;
+    padding: 10px;
+    margin: 15px 0;
+}
+
+.app-integration {
+    background-color: #440044;
+    border: 2px solid #FF00FF;
+    padding: 15px;
+}
+
+.placement-rewards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.placement {
+    background-color: #006600;
+    border: 2px solid #FFFF00;
+    padding: 15px;
+    text-align: center;
+}
+
+.placement h4 {
+    color: #FFFF00;
+    margin-top: 0;
+}
+
+.highlight-box {
+    background-color: #666600;
+    border: 2px solid #FFFF00;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.highlight-box p {
+    margin: 5px 0;
+    color: #FFFFFF;
+}
