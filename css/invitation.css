@@ -111,6 +111,19 @@ h2 .icon-gif {
   background: transparent;
 }
 
+.rules-list {
+  counter-reset: rule-counter;
+}
+
+.rules-list > li {
+  counter-increment: rule-counter;
+}
+
+.rules-list > li strong::before {
+  content: counter(rule-counter) ". ";
+  color: #FF00FF;
+}
+
 .rule-item {
   background: #FFFFFF;
   border: 3px groove #0000FF;
@@ -131,6 +144,15 @@ h2 .icon-gif {
   margin-top: 1rem;
   font-weight: bold;
   color: #000080;
+}
+
+.mocktail-notice p {
+  margin-bottom: 1rem;
+}
+
+.mocktail-list li {
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
 }
 
 /* Header Images Row */
@@ -370,10 +392,8 @@ h2 .icon-gif {
     padding-right: 0.5rem;
   }
 
-  .section li {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
+  .section ul.no-bullets {
+    padding-left: 0;
   }
 
   .icon-gif--lg {

@@ -121,6 +121,21 @@ h2 {
   text-shadow: 2px 2px 0px #000000;
 }
 
+/* List spacing */
+ul, ol {
+  padding-left: 1.5rem;
+}
+
+li {
+  margin-bottom: 4px;
+}
+
+/* Remove bullets from lists */
+.no-bullets {
+  list-style: none;
+  padding-left: 0;
+}
+
 .username {
   color: #00FFFF;
   font-weight: bold;
