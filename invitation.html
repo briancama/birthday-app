@@ -323,8 +323,28 @@
       errorDiv.textContent = '';
       errorDiv.style.color = '#FF0000';
 
+      // Check rate limiting (15 second cooldown)
+      const lastSubmit = localStorage.getItem('lastGuestbookSubmit');
+      if (lastSubmit && Date.now() - parseInt(lastSubmit) < 15000) {
+        const secondsLeft = Math.ceil((15000 - (Date.now() - parseInt(lastSubmit))) / 1000);
+        errorDiv.textContent = `Please wait ${secondsLeft} seconds before submitting again!!!`;
+        return;
+      }
+
+      // Validate required fields
       if (!name || !message) {
         errorDiv.textContent = 'Please fill in both fields!!!';
+        return;
+      }
+
+      // Validate length limits
+      if (name.length > 50) {
+        errorDiv.textContent = 'Name must be 50 characters or less!!!';
+        return;
+      }
+
+      if (message.length > 500) {
+        errorDiv.textContent = 'Message must be 500 characters or less!!!';
         return;
       }
 
@@ -337,6 +357,9 @@
           .insert([{ name, message }]);
 
         if (error) throw error;
+
+        // Store timestamp for rate limiting
+        localStorage.setItem('lastGuestbookSubmit', Date.now().toString());
 
         // Show success message
         errorDiv.style.color = '#00FF00';
