@@ -40,14 +40,10 @@
   </div>
 
 <script type="module">
-    // Replace with your Supabase credentials
-    const SUPABASE_URL = 'https://pvvkkcqxkwlzfwlladoe.supabase.co'
-    const SUPABASE_KEY = 'sb_publishable_INEqArDABXzb2p2YjiwhJA_jlj_4Q2y' // Get from Supabase dashboard → Settings → API
-
-    // Import Supabase client from CDN (corrected URL)
+    import { SUPABASE_CONFIG } from './js/config.js'
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
     
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+    const supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key)
 
     const form = document.getElementById('loginForm')
     const usernameInput = document.getElementById('username')

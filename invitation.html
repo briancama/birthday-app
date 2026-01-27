@@ -118,7 +118,7 @@
         
         • Want to submit a mocktail as your MAIN entry??? <strong>TOTALLY COOL!!!</strong><br><br>
         
-        • Nobody wants to be shitfaced by 9pm so having mocktail options = SMART PLANNING!!! 🧠
+        • Nobody wants to be shitfaced by 9pm so having mocktail options = SMART PLANNING!!!<img src="images/brain.gif" alt="animated gif of brain lifting weights" class="icon-gif icon-gif--lg">
       </div>
     </div>
 
@@ -215,12 +215,10 @@
   </div>
 
   <script type="module">
+    import { SUPABASE_CONFIG } from './js/config.js'
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
     
-    const SUPABASE_URL = 'https://pvvkkcqxkwlzfwlladoe.supabase.co'
-    const SUPABASE_KEY = 'sb_publishable_INEqArDABXzb2p2YjiwhJA_jlj_4Q2y'
-    
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+    const supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key)
 
     // View counter using Supabase
     async function updateViewCounter() {
@@ -380,7 +378,13 @@
       'images/guestbook_jessica_simpson.gif',
       'images/guestbook_lion.gif',
       'images/guestbook_rock.gif',
-      'images/guestbook_unicorn.gif'
+      'images/guestbook_unicorn.gif',
+      'images/guestbook_cop.gif',
+      'images/guestbook_donald.gif',
+      'images/guestbook_nanny.gif',
+      'images/guestbook_lightning.gif',
+      'images/guestbook_boop.gif',
+      'images/guestbook_ken-ryu.gif',
     ];
     
     // Select random guestbook image on page load

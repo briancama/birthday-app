@@ -64,12 +64,10 @@
   </div>
 
   <script type="module">
-    const SUPABASE_URL = 'https://pvvkkcqxkwlzfwlladoe.supabase.co'
-    const SUPABASE_KEY = 'sb_publishable_INEqArDABXzb2p2YjiwhJA_jlj_4Q2y'
-
+    import { SUPABASE_CONFIG } from './js/config.js'
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
     
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+    const supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key)
 
     const userId = localStorage.getItem('user_id')
     const username = localStorage.getItem('username')
