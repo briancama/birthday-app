@@ -115,7 +115,7 @@ class ChallengeCard {
                 </span>
             `;
         } else if (!isCompleted && canReveal && !isRevealed && this.options.allowReveal) {
-            return `<span class="sparkle"><img src="images/reveal.gif" class="icon-gif" alt="detective looking through magnifying glass"> CLICK TO REVEAL <img src="images/reveal.gif" class="icon-gif"alt="detective looking through magnifying glass"></span>`;
+            return `<span class="reveal"><img src="images/reveal.gif" class="icon-gif" alt="detective looking through magnifying glass"> CLICK TO REVEAL <img src="images/reveal.gif" class="icon-gif"alt="detective looking through magnifying glass"></span>`;
         } else if (isLocked) {
             return `<span class="locked-badge">🔒 LOCKED</span>`;
         }

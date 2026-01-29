@@ -243,6 +243,28 @@
     }
   }
 
+  @keyframes reveal {
+    0% {
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+    }
+
+    15% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    85% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    100% {
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+    }
+  }
+
   .rainbow-text {
     animation: rainbow var(--anim-duration-slow) linear infinite;
     font-weight: bold;
@@ -256,6 +278,20 @@
   .sparkle {
     animation: sparkle 1.5s ease-in-out infinite;
     display: inline-block;
+  }
+
+  .reveal {
+    animation: reveal var(--anim-duration-slow) ease-in-out infinite;
+    animation-delay: 0s;
+    opacity: 1;
+    /* Ensure visibility during animation */
+  }
+
+  i .reveal-slow {
+    animation: reveal 4s ease-in-out infinite;
+    animation-delay: 0s;
+    opacity: 1;
+    /* Ensure visibility during animation */
   }
 
   /* Buttons */
@@ -490,13 +526,12 @@
   .outcome-badge.success {
     background: var(--accent-green);
     color: var(--text-dark);
-    animation: blink 2s step-start infinite;
   }
 
   .outcome-badge.failure {
     background: var(--accent-red);
     color: var(--accent-yellow);
-    animation: blink 2s step-start infinite;
+    animation: blink 0.8s step-start infinite;
   }
 
   /* === STATS GRID === */
