@@ -93,31 +93,47 @@ class BasePage {
             briancOutcome = outcome === 'success' ? 'failure' : 'success';
         }
 
-        // Create brianc's assignment
+        // Create or update brianc's assignment
         const { error: briancAssignError } = await this.supabase
             .from('assignments')
-            .insert([{
+            .upsert([{
                 user_id: briancUser.id,
                 challenge_id: challengeId,
                 completed_at: completedAt,
                 outcome: briancOutcome
-            }]);
+            }], {
+                onConflict: 'user_id,challenge_id'
+            });
 
         if (briancAssignError) throw briancAssignError;
     }
 
     async loadUserStats() {
         try {
-            const { data, error } = await this.supabase
-                .from('scoreboard')
-                .select('*');
+            const [scoreboardData, assignmentData] = await Promise.all([
+                this.supabase.from('scoreboard').select('*'),
+                this.supabase.from('assignments').select('id, completed_at').eq('user_id', this.userId)
+            ]);
 
-            if (error) throw error;
+            if (scoreboardData.error) throw scoreboardData.error;
+            if (assignmentData.error) throw assignmentData.error;
 
-            const userStats = data?.find(row => row.user_id === this.userId);
-            const rank = data?.findIndex(row => row.user_id === this.userId) + 1;
+            const userStats = scoreboardData.data?.find(row => row.user_id === this.userId);
+            const rank = scoreboardData.data?.findIndex(row => row.user_id === this.userId) + 1;
 
-            return { userStats, rank, allStats: data };
+            // Calculate assignment completion stats
+            const totalAssigned = assignmentData.data?.length || 0;
+            const totalCompleted = assignmentData.data?.filter(a => a.completed_at).length || 0;
+
+            return {
+                userStats,
+                rank,
+                allStats: scoreboardData.data,
+                assignmentStats: {
+                    totalAssigned,
+                    totalCompleted
+                }
+            };
         } catch (err) {
             console.error('Error loading user stats:', err);
             throw err;

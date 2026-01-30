@@ -10,16 +10,15 @@ class DashboardPage extends BasePage {
 
     async onReady() {
         await this.loadPageData();
-        
+
         // Set up refresh interval
         this.refreshInterval = setInterval(() => this.loadPersonalStats(), 10000);
     }
 
     async loadPageData() {
-        await Promise.all([
-            this.loadPersonalStats(),
-            this.loadChallenges()
-        ]);
+        // Load challenges first to get assignment data, then stats
+        await this.loadChallenges();
+        await this.loadPersonalStats();
     }
 
     async loadChallenges() {
@@ -85,11 +84,11 @@ class DashboardPage extends BasePage {
                 .setOnComplete(async (assignmentId, challengeId, outcome, brianMode) => {
                     try {
                         await this.markChallengeComplete(assignmentId, challengeId, outcome, brianMode);
-                        
+
                         // Reset revealed challenge and reload data
                         this.revealedChallengeId = null;
                         await Promise.all([this.loadChallenges(), this.loadPersonalStats()]);
-                        
+
                     } catch (err) {
                         this.showError('Failed to mark complete: ' + err.message);
                     }
@@ -113,7 +112,7 @@ class DashboardPage extends BasePage {
         const container = document.getElementById('personalStats');
 
         try {
-            const { userStats, rank } = await this.loadUserStats();
+            const { userStats, rank, assignmentStats } = await this.loadUserStats();
 
             if (!userStats) {
                 container.innerHTML = '<div class="empty">No stats yet. Complete some challenges!</div>';
@@ -131,8 +130,8 @@ class DashboardPage extends BasePage {
                         <div class="stat-value">${userStats.total_points}</div>
                     </div>
                     <div class="stat-box">
-                        <div class="stat-label">ASSIGNED COMPLETE</div>
-                        <div class="stat-value">${userStats.assigned_completed}</div>
+                        <div class="stat-label">CHALLENGES</div>
+                        <div class="stat-value">${assignmentStats.totalCompleted}/${assignmentStats.totalAssigned}</div>
                     </div>
                     <div class="stat-box">
                         <div class="stat-label">COMPETITION POINTS</div>

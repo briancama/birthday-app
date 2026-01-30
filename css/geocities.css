@@ -470,6 +470,16 @@
 
   .challenge-info {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    ;
+  }
+
+  .challenge-badge {
+    text-align: left;
+    width: 100%;
+    margin-bottom: 0.8rem;
   }
 
   .challenge-title {
@@ -510,7 +520,6 @@
     border: 2px solid #000;
     font-size: 0.8rem;
     font-weight: bold;
-    margin-left: var(--spacing-sm);
     display: inline-block;
     text-shadow: 1px 1px 0px #000000;
   }
@@ -531,7 +540,6 @@
   .outcome-badge.failure {
     background: var(--accent-red);
     color: var(--accent-yellow);
-    animation: blink 0.8s step-start infinite;
   }
 
   /* === STATS GRID === */
@@ -555,6 +563,7 @@
     font-size: 0.9rem;
     margin-bottom: 0.5rem;
     color: #00FFFF;
+    text-transform: uppercase;
   }
 
   .stat-value {
@@ -713,7 +722,7 @@
     display: inline-block;
     height: 1.2em;
     width: auto;
-    vertical-align: middle;
+    vertical-align: bottom;
     margin: 0 0.2em;
     flex-shrink: 0;
   }
@@ -829,6 +838,10 @@
     width: 100%;
   }
 
+  .challenge-badge {
+    text-align: right;
+  }
+
   .nav-tabs {
     flex-direction: column;
   }
@@ -847,4 +860,68 @@
   .interior-container {
     padding: var(--spacing-xl) var(--spacing-md);
   }
+}
+
+
+/*
+	Improved screen reader only CSS class
+	@author Gaël Poupard
+		@note Based on Yahoo!'s technique
+		@author Thierry Koblentz
+		@see https://www.cssmojo.com/hide-content-from-sighted-users/
+	* 1.
+		@note Use to only display content when it's focused, or one of its child elements is focused
+		@see http://www.w3.org/TR/2013/NOTE-WCAG20-TECHS-20130905/G1
+		@note Based on a HTML5 Boilerplate technique, included in Bootstrap
+	* 2.
+		@note `clip-path` shortest syntax
+		@author Yvain Liechti
+		@see https://twitter.com/ryuran78/status/778943389819604992
+	* 3.
+		@note preventing text to be condensed
+		author J. Renée Beach
+		@see https://medium.com/@jessebeach/beware-smushed-off-screen-accessible-text-5952a4c2cbfe
+		@note Drupal 8 goes with word-wrap: normal instead
+		@see https://www.drupal.org/node/2045151
+		@see http://cgit.drupalcode.org/drupal/commit/?id=5b847ea
+	* 4.
+		@note !important is important
+		@note Obviously you wanna hide something
+		@author Harry Roberts
+		@see https://csswizardry.com/2016/05/the-importance-of-important/
+*/
+
+.visually-hidden,
+.visually-hidden-focusable:not(:focus, :focus-within) {
+  border: 0 !important;
+  clip-path: inset(50%) !important;
+  /* 2 */
+  height: 1px !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  width: 1px !important;
+  white-space: nowrap !important;
+  /* 3 */
+}
+
+/*
+	Prevent visually hidden caption from breaking table's collapsing borders
+	@author Louis-Maxime Piton
+	@see https://github.com/twbs/bootstrap/pull/37533
+*/
+.visually-hidden:not(caption),
+.visually-hidden-focusable:not(caption):not(:focus, :focus-within) {
+  position: absolute !important;
+}
+
+
+/*
+	Prevent overflowing children from being focusable.
+	@author Django Janny
+	@see https://github.com/twbs/bootstrap/pull/41286
+*/
+.visually-hidden *,
+.visually-hidden-focusable:not(:focus, :focus-within) * {
+  overflow: hidden !important;
 }
