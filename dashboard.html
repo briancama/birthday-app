@@ -5,9 +5,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>*** Dashboard - Birthday Challenge Zone ***</title>
+  <title>Dashboard - Birthday Challenge Zone</title>
   <link rel="icon" type="image/png" href="images/favicon.png">
   <link rel="stylesheet" href="css/geocities.css">
+  <link rel="stylesheet" href="css/components/navigation.css">
 </head>
 
 <body>
@@ -17,25 +18,12 @@
       *** WELCOME TO THE BIRTHDAY CHALLENGE ZONE! *** Check out the leaderboard! * New challenges daily! HOT!
     </marquee>
 
-    <div class="header">
-      <div class="header-top">
-        <h1>Hello, <span class="username" id="displayName">...</span>!</h1>
-        <button class="secondary" id="signOutBtn">SIGN OUT</button>
-      </div>
-      <div class="nav-tabs">
-        <a href="dashboard.html" class="nav-tab active">DASHBOARD</a>
-        <a href="leaderboard.html" class="nav-tab">LEADERBOARD</a>
-      </div>
-    </div>
-
-    <!-- Flame Divider -->
-    <div class="flame-divider">
-      <img src="images/flame-divider.gif" alt="Flame Divider" onerror="this.style.display='none'">
-    </div>
+    <!-- Navigation Component -->
+    <site-navigation></site-navigation>
 
     <div class="section">
-      <h2>>>> YOUR STATS <<<< /h2>
-          <div id="personalStats" class="loading">Loading your stats...</div>
+      <h2>YOUR STATS</h2>
+      <div id="personalStats" class="loading">Loading your stats...</div>
     </div>
 
     <!-- Flame Divider -->
@@ -50,274 +38,24 @@
   </div>
 
   <script type="module">
-    import { SUPABASE_CONFIG } from './js/config.js'
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+    import { appState } from './js/app.js';
+    import { SiteNavigation } from './js/components/navigation.js';
+    import { DashboardPage } from './js/pages/dashboard.js';
 
-    const supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key)
+    // Initialize application
+    async function init() {
+      // Initialize app state (handles auth, user loading, navigation)
+      const isAuthenticated = await appState.init();
 
-    const userId = localStorage.getItem('user_id')
-    const username = localStorage.getItem('username')
-
-    // Redirect to login if not signed in
-    if (!userId) {
-      window.location.href = 'index.html'
-    }
-
-    // Load and display user's display_name
-    async function loadUserProfile() {
-      const { data, error } = await supabase
-        .from('users')
-        .select('display_name')
-        .eq('id', userId)
-        .single()
-
-      if (!error && data) {
-        document.getElementById('displayName').textContent = data.display_name || username
-      } else {
-        document.getElementById('displayName').textContent = username
+      if (isAuthenticated) {
+        // Initialize dashboard-specific functionality
+        const dashboard = new DashboardPage();
+        await dashboard.init();
       }
     }
 
-    loadUserProfile()
-
-    // Sign out handler
-    document.getElementById('signOutBtn').addEventListener('click', () => {
-      localStorage.removeItem('user_id')
-      localStorage.removeItem('username')
-      window.location.href = 'index.html'
-    })
-
-    // Track revealed challenge
-    let revealedChallengeId = null
-
-    // Load user's assigned challenges
-    async function loadChallenges() {
-      const container = document.getElementById('challengesList')
-
-      try {
-        const { data, error } = await supabase
-          .from('assignments')
-          .select(`
-            id,
-            completed_at,
-            outcome,
-            challenges (id, title, description, brian_mode)
-          `)
-          .eq('user_id', userId)
-          .order('assigned_at', { ascending: true })
-
-        if (error) throw error
-
-        if (!data || data.length === 0) {
-          container.innerHTML = '<div class="empty">No challenges assigned yet.</div>'
-          return
-        }
-
-        container.innerHTML = ''
-        container.className = 'challenge-list'
-
-        // Find first incomplete challenge
-        const firstIncompleteIndex = data.findIndex(a => !a.completed_at)
-
-        data.forEach((assignment, index) => {
-          const isCompleted = !!assignment.completed_at
-          const outcome = assignment.outcome
-          const brianMode = assignment.challenges.brian_mode
-          const isRevealed = revealedChallengeId === assignment.id
-          const canReveal = !isCompleted && (firstIncompleteIndex === index || isRevealed)
-          const isLocked = !isCompleted && firstIncompleteIndex < index && !isRevealed
-
-          const card = document.createElement('div')
-          let cardClass = 'challenge-card'
-          if (isCompleted) {
-            cardClass += ` completed ${outcome}`
-          } else if (isLocked) {
-            cardClass += ' locked'
-          } else if (isRevealed) {
-            cardClass += ' revealed'
-          } else if (canReveal) {
-            cardClass += ' unrevealed'
-          }
-          card.className = cardClass
-
-          let actionsHTML = ''
-          if (!isCompleted && isRevealed) {
-            actionsHTML = `
-              <div class="challenge-actions">
-                <button class="success-btn" data-id="${assignment.id}" data-outcome="success">
-                  ✅ SUCCESS
-                </button>
-                <button class="failure-btn" data-id="${assignment.id}" data-outcome="failure">
-                  ❌ FAILURE
-                </button>
-              </div>
-            `
-          } else if (isCompleted) {
-            actionsHTML = `
-              <span class="outcome-badge ${outcome}">
-                ${outcome === 'success' ? '✅ SUCCESS!' : '❌ FAILURE!'}
-              </span>
-            `
-          } else if (!isCompleted && canReveal && !isRevealed) {
-            actionsHTML = `<span class="sparkle">✨ CLICK TO REVEAL ✨</span>`
-          } else if (isLocked) {
-            actionsHTML = `<span style="color: #999; font-weight: bold;">🔒 LOCKED</span>`
-          }
-
-          const brianBadge = brianMode ? `<span class="brian-mode-badge">${brianMode === 'vs' ? '⚔️ VS BRIAN' : '🤝 WITH BRIAN'}</span>` : ''
-
-          // Show generic title unless completed or revealed
-          const displayTitle = (isCompleted || isRevealed)
-            ? `${assignment.challenges.title}${brianBadge}`
-            : `Challenge ${index + 1}`
-
-          const displayDescription = (isCompleted || isRevealed)
-            ? `<p>${assignment.challenges.description || 'No description'}</p>`
-            : ''
-
-          card.innerHTML = `
-            <div class="challenge-info">
-              <div class="challenge-title">${displayTitle}</div>
-              ${displayDescription ? `<div class="challenge-description">${displayDescription}</div>` : ''}
-            </div>
-            ${actionsHTML}
-          `
-
-          // Click to reveal for unrevealed challenges
-          if (!isCompleted && canReveal && !isRevealed) {
-            card.style.cursor = 'pointer'
-            card.addEventListener('click', () => {
-              revealedChallengeId = assignment.id
-              loadChallenges()
-            })
-          }
-
-          if (isRevealed) {
-            card.querySelectorAll('button').forEach(btn => {
-              btn.addEventListener('click', () => {
-                const outcome = btn.dataset.outcome
-                markComplete(assignment.id, assignment.challenges.id, outcome, brianMode)
-              })
-            })
-          }
-
-          container.appendChild(card)
-        })
-
-      } catch (err) {
-        container.innerHTML = `<div class="empty">Error loading challenges: ${err.message}</div>`
-      }
-    }
-
-    // Mark challenge as complete
-    async function markComplete(assignmentId, challengeId, outcome, brianMode) {
-      try {
-        const now = new Date().toISOString()
-
-        // Update user's assignment with outcome
-        const { error: updateError } = await supabase
-          .from('assignments')
-          .update({ completed_at: now, outcome: outcome })
-          .eq('id', assignmentId)
-
-        if (updateError) throw updateError
-
-        // If it's a Brian challenge, auto-create brianc's assignment
-        if (brianMode) {
-          // Get brianc's user_id
-          const { data: briancUser, error: briancError } = await supabase
-            .from('users')
-            .select('id')
-            .eq('username', 'brianc')
-            .single()
-
-          if (briancError) throw briancError
-
-          let briancOutcome
-          if (brianMode === 'with') {
-            // Collaborative: both get same outcome
-            briancOutcome = outcome
-          } else if (brianMode === 'vs') {
-            // Competitive: opposite outcome
-            briancOutcome = outcome === 'success' ? 'failure' : 'success'
-          }
-
-          // Create brianc's assignment
-          const { error: briancAssignError } = await supabase
-            .from('assignments')
-            .insert([{
-              user_id: briancUser.id,
-              challenge_id: challengeId,
-              completed_at: now,
-              outcome: briancOutcome
-            }])
-
-          if (briancAssignError) throw briancAssignError
-        }
-
-        // Reset revealed challenge
-        revealedChallengeId = null
-
-        // Reload challenges and personal stats
-        await Promise.all([loadChallenges(), loadPersonalStats()])
-
-      } catch (err) {
-        alert('Failed to mark complete: ' + err.message)
-        console.error('Error:', err)
-      }
-    }
-
-    // Load personal stats (user's position and points)
-    async function loadPersonalStats() {
-      const container = document.getElementById('personalStats')
-
-      try {
-        const { data, error } = await supabase
-          .from('scoreboard')
-          .select('*')
-
-        if (error) throw error
-
-        const userStats = data?.find(row => row.user_id === userId)
-        const rank = data?.findIndex(row => row.user_id === userId) + 1
-
-        if (!userStats) {
-          container.innerHTML = '<div class="empty">No stats yet. Complete some challenges!</div>'
-          return
-        }
-
-        container.innerHTML = `
-          <div class="stats-grid">
-            <div class="stat-box">
-              <div class="stat-label">YOUR RANK</div>
-              <div class="stat-value">#${rank}</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-label">TOTAL POINTS</div>
-              <div class="stat-value">${userStats.total_points}</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-label">ASSIGNED COMPLETE</div>
-              <div class="stat-value">${userStats.assigned_completed}</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-label">COMPETITION POINTS</div>
-              <div class="stat-value">${userStats.competition_points}</div>
-            </div>
-          </div>
-        `
-
-      } catch (err) {
-        container.innerHTML = `<div class="empty">Error loading stats: ${err.message}</div>`
-      }
-    }
-
-    // Initial load
-    loadPersonalStats()
-    loadChallenges()
-
-    // Refresh stats every 10 seconds
-    setInterval(loadPersonalStats, 10000)
+    // Start the application
+    init();
   </script>
 </body>
 
