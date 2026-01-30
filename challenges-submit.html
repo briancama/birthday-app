@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit Challenge - Brian's Birthday Challenge</title>
+  <link rel="stylesheet" href="css/geocities.css">
+  <style>
+    .submissions-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    .submissions-table th,
+    .submissions-table td {
+      padding: 0.75rem;
+      text-align: left;
+      border: 2px solid #FFFFFF;
+    }
+
+    .submissions-table th {
+      background: linear-gradient(to bottom, #9400D3, #4B0082);
+      color: #FFFF00;
+      font-weight: bold;
+    }
+
+    .submissions-table tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .status-badge {
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .status-pending {
+      color: #FFA500;
+    }
+
+    .status-approved {
+      color: #00FF00;
+    }
+
+    .status-denied {
+      color: #FF0000;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: #666666;
+      font-style: italic;
+    }
+
+    .add-challenge-btn {
+      margin-bottom: 1.5rem;
+    }
+
+    .challenge-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 9999;
+      display: none;
+    }
+
+    .challenge-modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      cursor: pointer;
+    }
+
+    .challenge-modal-content {
+      position: relative;
+      max-width: 700px;
+      max-height: 90vh;
+      margin: 5vh auto;
+      background: #C0C0C0;
+      border: 6px outset #FFFFFF;
+      padding: 2rem;
+      overflow-y: auto;
+      box-shadow: 10px 10px 0px rgba(0, 0, 0, 0.5);
+      z-index: 10000;
+    }
+
+    .challenge-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: linear-gradient(180deg, #FF0000 0%, #CC0000 100%);
+      color: #FFFF00;
+      border: 3px outset #FF0000;
+      padding: 0.5rem 1rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+      color: #000080;
+    }
+
+    .form-group input[type="text"],
+    .form-group textarea {
+      width: 100%;
+      padding: 0.5rem;
+      border: 3px inset #FFFFFF;
+      font-family: 'Courier New', monospace;
+      font-size: 1rem;
+      background: #FFFFFF;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-group small {
+      display: block;
+      margin-top: 0.25rem;
+      color: #666666;
+      font-size: 0.875rem;
+    }
+
+    .error-message {
+      color: #FF0000;
+      font-weight: bold;
+      margin-top: 1rem;
+      padding: 0.5rem;
+      background: rgba(255, 0, 0, 0.1);
+      border: 2px solid #FF0000;
+      display: none;
+    }
+
+    .success-message {
+      color: #00FF00;
+      font-weight: bold;
+      margin-top: 1rem;
+      padding: 0.5rem;
+      background: rgba(0, 255, 0, 0.1);
+      border: 2px solid #00FF00;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-top">
+        <h1>✨ SUBMIT A CHALLENGE ✨</h1>
+        <button class="secondary" id="signOutBtn">SIGN OUT</button>
+      </div>
+      <div class="nav-tabs">
+        <a href="dashboard.html" class="nav-tab">DASHBOARD</a>
+        <a href="leaderboard.html" class="nav-tab">LEADERBOARD</a>
+        <a href="challenges-submit.html" class="nav-tab active">SUBMIT CHALLENGE</a>
+      </div>
+    </div>
+
+    <div class="section">
+      <button id="addChallengeBtn" class="add-challenge-btn">✨ ADD CHALLENGE ✨</button>
+      
+      <h2>Your Submitted Challenges</h2>
+      <div id="submissionsContainer">
+        <div class="empty-state">Loading your submissions...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Challenge Submission Modal -->
+  <div id="challengeModal" class="challenge-modal">
+    <div class="challenge-modal-overlay"></div>
+    <div class="challenge-modal-content">
+      <button id="closeChallengeModal" class="challenge-close">❌ CLOSE</button>
+      
+      <h2 class="text-center rainbow-text">SUBMIT A NEW CHALLENGE!</h2>
+      
+      <form id="challengeForm">
+        <div class="form-group">
+          <label for="challengeName">Challenge Name *</label>
+          <input type="text" id="challengeName" required maxlength="100">
+          <small>Max 100 characters</small>
+        </div>
+
+        <div class="form-group">
+          <label for="challengeDescription">Challenge Description *</label>
+          <textarea id="challengeDescription" required maxlength="500"></textarea>
+          <small>Max 500 characters. Describe what needs to be done.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="challengeMetric">Success Metric *</label>
+          <input type="text" id="challengeMetric" required maxlength="200">
+          <small>Max 200 characters. How will success be measured?</small>
+        </div>
+
+        <div class="form-group">
+          <label for="assignedTo">Assign To (Optional)</label>
+          <input type="text" id="assignedTo" list="usersDatalist" placeholder="Start typing a username...">
+          <datalist id="usersDatalist"></datalist>
+          <small>Leave blank for anyone to accept, or assign to a specific user.</small>
+        </div>
+
+        <button type="submit" id="submitChallengeBtn">🚀 SUBMIT CHALLENGE 🚀</button>
+        
+        <div id="formError" class="error-message"></div>
+        <div id="formSuccess" class="success-message"></div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { SUPABASE_CONFIG } from './js/config.js'
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+    const supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key)
+
+    // Auth gate
+    const userId = localStorage.getItem('user_id')
+    const username = localStorage.getItem('username')
+    if (!userId) {
+      window.location.href = 'index.html'
+    }
+
+    // Sign out
+    document.getElementById('signOutBtn').addEventListener('click', () => {
+      localStorage.removeItem('user_id')
+      localStorage.removeItem('username')
+      localStorage.removeItem('display_name')
+      window.location.href = 'index.html'
+    })
+
+    // Modal handling
+    const modal = document.getElementById('challengeModal')
+    const addBtn = document.getElementById('addChallengeBtn')
+    const closeBtn = document.getElementById('closeChallengeModal')
+    const overlay = document.querySelector('.challenge-modal-overlay')
+
+    function openModal() {
+      modal.style.display = 'block'
+      document.body.style.overflow = 'hidden'
+      loadUsers()
+    }
+
+    function closeModal() {
+      modal.style.display = 'none'
+      document.body.style.overflow = 'auto'
+      document.getElementById('challengeForm').reset()
+      document.getElementById('formError').style.display = 'none'
+      document.getElementById('formSuccess').style.display = 'none'
+    }
+
+    addBtn.addEventListener('click', openModal)
+    closeBtn.addEventListener('click', closeModal)
+    overlay.addEventListener('click', closeModal)
+
+    // Load users for datalist - using username for display
+    async function loadUsers() {
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('id, username')
+          .order('username')
+
+        if (error) throw error
+
+        const datalist = document.getElementById('usersDatalist')
+        datalist.innerHTML = data.map(user => 
+          `<option value="${user.username}" data-user-id="${user.id}">`
+        ).join('')
+      } catch (err) {
+        console.error('Error loading users:', err)
+      }
+    }
+
+    // Load user's submissions
+    async function loadSubmissions() {
+      const container = document.getElementById('submissionsContainer')
+      
+      try {
+        const { data, error } = await supabase
+          .from('challenges')
+          .select('*')
+          .eq('created_by', userId)
+          .order('created_at', { ascending: false })
+
+        if (error) throw error
+
+        if (!data || data.length === 0) {
+          container.innerHTML = '<div class="empty-state">You haven\'t submitted any challenges yet. Click "ADD CHALLENGE" to get started!</div>'
+          return
+        }
+
+        // Fetch assigned usernames for challenges that have assigned_to
+        const assignedUserIds = [...new Set(data.filter(c => c.assigned_to).map(c => c.assigned_to))]
+        let usernameMap = {}
+        
+        if (assignedUserIds.length > 0) {
+          const { data: users, error: userError } = await supabase
+            .from('users')
+            .select('id, username')
+            .in('id', assignedUserIds)
+
+          if (!userError && users) {
+            usernameMap = Object.fromEntries(users.map(u => [u.id, u.username]))
+          }
+        }
+
+        const tableHTML = `
+          <table class="submissions-table">
+            <thead>
+              <tr>
+                <th>Challenge Name</th>
+                <th>Assigned To</th>
+                <th>Status</th>
+                <th>Submitted</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.map(challenge => `
+                <tr>
+                  <td>${escapeHtml(challenge.title)}</td>
+                  <td>${challenge.assigned_to ? escapeHtml(usernameMap[challenge.assigned_to] || 'Unknown') : 'Anyone'}</td>
+                  <td><span class="status-badge status-${challenge.approval_status}">${challenge.approval_status}</span></td>
+                  <td>${new Date(challenge.created_at).toLocaleDateString()}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `
+
+        container.innerHTML = tableHTML
+      } catch (err) {
+        console.error('Error loading submissions:', err)
+        container.innerHTML = '<div class="empty-state">Error loading submissions. Please refresh the page.</div>'
+      }
+    }
+
+    // Form submission
+    document.getElementById('challengeForm').addEventListener('submit', async (e) => {
+      e.preventDefault()
+
+      const submitBtn = document.getElementById('submitChallengeBtn')
+      const errorDiv = document.getElementById('formError')
+      const successDiv = document.getElementById('formSuccess')
+
+      errorDiv.style.display = 'none'
+      successDiv.style.display = 'none'
+
+      submitBtn.disabled = true
+      submitBtn.textContent = 'Submitting...'
+
+      try {
+        const challengeName = document.getElementById('challengeName').value.trim()
+        const challengeDescription = document.getElementById('challengeDescription').value.trim()
+        const challengeMetric = document.getElementById('challengeMetric').value.trim()
+        const assignedToUsername = document.getElementById('assignedTo').value.trim()
+
+        // Validate
+        if (!challengeName || !challengeDescription || !challengeMetric) {
+          throw new Error('Please fill in all required fields.')
+        }
+
+        // Find user ID if assigned - using username instead of display_name
+        let assignedToUserId = null
+        if (assignedToUsername) {
+          const { data: users, error: userError } = await supabase
+            .from('users')
+            .select('id, username')
+            .eq('username', assignedToUsername)
+            .limit(1)
+
+          if (userError) throw userError
+
+          if (users && users.length > 0) {
+            assignedToUserId = users[0].id
+          } else {
+            throw new Error(`User "${assignedToUsername}" not found. Please select a valid user from the list.`)
+          }
+        }
+
+        // Generate unique ID for challenge (timestamp-based)
+        const challengeId = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
+        // Insert challenge
+        const { error } = await supabase
+          .from('challenges')
+          .insert([{
+            id: challengeId,
+            title: challengeName,
+            description: challengeDescription,
+            success_metric: challengeMetric,
+            type: 'assigned',
+            created_by: userId,
+            assigned_to: assignedToUserId,
+            approval_status: 'pending'
+          }])
+
+        if (error) throw error
+
+        successDiv.textContent = 'Challenge submitted successfully! Awaiting admin approval.'
+        successDiv.style.display = 'block'
+
+        // Reload submissions
+        await loadSubmissions()
+
+        // Close modal after 2 seconds
+        setTimeout(() => {
+          closeModal()
+        }, 2000)
+
+      } catch (err) {
+        console.error('Error submitting challenge:', err)
+        errorDiv.textContent = err.message || 'Failed to submit challenge. Please try again.'
+        errorDiv.style.display = 'block'
+      } finally {
+        submitBtn.disabled = false
+        submitBtn.textContent = '🚀 SUBMIT CHALLENGE 🚀'
+      }
+    })
+
+    // Utility function to escape HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div')
+      div.textContent = text
+      return div.innerHTML
+    }
+
+    // Initial load
+    loadSubmissions()
+  </script>
+</body>
+</html>
