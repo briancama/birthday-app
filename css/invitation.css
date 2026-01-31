@@ -5,7 +5,7 @@
   margin: 0 auto;
 }
 
-/* Larger icons for headings */
+/* Icon sizes */
 h1 .icon-gif {
   height: 1.5em;
 }
@@ -14,12 +14,11 @@ h2 .icon-gif {
   height: 1.3em;
 }
 
-/* Flex wrapper for headings with icons */
-.heading-with-icons {
-  display: flex;
+.icon-gif--lg {
   flex-shrink: 0;
 }
 
+/* Date Banner */
 .date-banner {
   display: flex;
   align-items: center;
@@ -38,79 +37,13 @@ h2 .icon-gif {
   animation: rainbow 5s linear infinite;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .date-banner {
-    font-size: 1.3rem;
-  }
-  
-  .date-banner .icon-gif {
-    height: 1.3rem;
-  }
-  
-  .heading-with-icons h1 {
-    font-size: 2rem !important;
-  }
-  
-  h1 .icon-gif {
-    height: 1.2em;
-  }
-}
-
-@media (max-width: 480px) {
-  .date-banner {
-    font-size: 1rem;
-  }
-  
-  .date-banner .icon-gif {
-    height: 1rem;
-  }
-  
-  .heading-with-icons h1 {
-    font-size: 1.5rem !important;
-  }
-}
-
-/* Banner icons */
 .date-banner .icon-gif {
   height: 1.8rem;
   vertical-align: middle;
   flex-shrink: 0;
 }
 
-.date-banner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  background: linear-gradient(to right, #FF0000, #FF7F00, #FFFF00, #00FF00, #0000FF, #4B0082, #9400D3);
-  color: white;
-  padding: 1rem;
-  text-align: center;
-  border: 5px solid #FFD700;
-  margin-bottom: 2rem;
-  font-size: 1.8rem;
-  font-weight: bold;
-  text-shadow: 3px 3px 0px #000000;
-  animation: rainbow 5s linear infinite;
-}
-
-.rules-section {
-  background: #FFFFCC !important;
-  border: 4px dashed #FF00FF;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.rules-section h3 {
-  color: #FF0000;
-  font-size: 1.6rem;
-  margin-bottom: 1rem;
-  text-decoration: underline wavy #00FF00;
-  background: transparent;
-}
-
+/* Rules Section */
 .rules-list {
   counter-reset: rule-counter;
 }
@@ -137,6 +70,11 @@ h2 .icon-gif {
   font-size: 1.2rem;
 }
 
+.rule-item p {
+  margin-top: 0.5rem;
+}
+
+/* Mocktail Notice */
 .mocktail-notice {
   background: #00FFFF;
   border: 4px double #FF0000;
@@ -155,7 +93,7 @@ h2 .icon-gif {
   line-height: 1.5;
 }
 
-/* Header Images Row */
+/* Header Images */
 .header-images {
   display: flex;
   justify-content: space-between;
@@ -168,7 +106,7 @@ h2 .icon-gif {
   width: auto;
 }
 
-/* Main Title */
+/* Title Styles */
 .main-title {
   font-size: 3rem;
   margin-bottom: 1rem;
@@ -187,103 +125,12 @@ h2 .icon-gif {
   text-shadow: 1px 1px 2px #000000;
 }
 
-/* Sparkle Decorations */
+/* Decorations */
 .sparkle-decoration {
   width: 100px;
 }
 
-.sparkle-row {
-  padding-bottom: 15px;
-}
-
-.sparkle-row img {
-  width: 80px;
-  margin: 1rem;
-}
-
-/* Intro Paragraphs */
-.intro-large {
-  font-size: 1.2rem;
-  line-height: 1.8;
-  color: #000;
-}
-
-.intro-medium {
-  margin-top: 1rem;
-  font-size: 1.1rem;
-}
-
-/* Rule Item Paragraphs */
-.rule-item p {
-  margin-top: 0.5rem;
-}
-
-/* Mocktail Notice Large Icons */
-.mocktail-notice .large-icon {
-  height: 2em;
-}
-
-/* What to Bring Section */
-.what-to-bring {
-  background: #FFE4E1;
-}
-
-.what-to-bring h2 {
-  color: #FF1493;
-}
-
-.what-to-bring ul {
-  font-size: 1.1rem;
-  line-height: 2;
-  list-style: none;
-}
-
-.what-to-bring li {
-  padding: 0.5rem 0;
-}
-
-/* Final Section */
-.final-section {
-  background: linear-gradient(to bottom, #FFD700, #FFA500);
-}
-
-.final-section .main-heading {
-  font-size: 2rem;
-  color: #FF0000;
-  text-shadow: 2px 2px 0 #000;
-}
-
-.final-section .large-text {
-  font-size: 1.3rem;
-  margin-top: 1rem;
-  font-weight: bold;
-}
-
-.final-section .large-text .icon-gif {
-  height: 1.5em;
-}
-
-.final-section .small-text {
-  margin-top: 1rem;
-  font-size: 0.9rem;
-}
-
-/* Trophy Container */
-.trophy-container {
-  margin-top: 2rem;
-}
-
-.trophy-container img {
-  width: 120px;
-}
-
-/* Spinning Star */
-.spinning-star {
-  width: 20px;
-  vertical-align: middle;
-}
-
-/* Guestbook & Counter Side by Side */
+/* Guestbook & Counter Container */
 .guestbook-counter-container {
   display: flex;
   justify-content: center;
@@ -299,7 +146,7 @@ h2 .icon-gif {
   text-align: center;
 }
 
-/* Guestbook Trigger Image */
+/* Guestbook Trigger */
 .guestbook-trigger {
   max-width: 250px;
   height: auto;
@@ -313,7 +160,7 @@ h2 .icon-gif {
   filter: brightness(1.2);
 }
 
-/* Guestbook Modal/Popup */
+/* Guestbook Modal - uses similar structure to submissions.css but with party styling */
 .guestbook-modal {
   position: fixed;
   top: 0;
@@ -369,78 +216,16 @@ h2 .icon-gif {
   border-style: inset;
 }
 
-/* Mobile padding adjustments */
-@media (max-width: 768px) {
-  .section {
-    padding: 0.75rem !important;
-  }
-  
-  .rules-section {
-    padding: 0.75rem;
-  }
-  
-  .rule-item {
-    padding: 0.5rem;
-  }
-  
-  .mocktail-notice {
-    padding: 0.5rem;
-  }
-
-  .section ul {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-
-  .section ul.no-bullets {
-    padding-left: 0;
-  }
-
-  .icon-gif--lg {
-    flex-shrink: 0;
-  }
-}
-
-/* Guestbook Styles */
+/* Guestbook form styling - uses shared forms.css for inputs/labels */
 .guestbook-form {
-  max-width: 500px;
-  margin: 2rem auto;
-  padding: 1rem;
-  background: #FFCCFF;
-  border: 4px outset #FF00FF;
-}
-
-.guestbook-form input,
-.guestbook-form textarea {
-  width: 100%;
-  padding: 0.5rem;
-  margin-bottom: 0.75rem;
-  border: 2px inset #666;
-  font-family: 'Comic Sans MS', cursive;
-  font-size: 1rem;
+  margin-bottom: 2rem;
 }
 
 .guestbook-form button {
   width: 100%;
-  padding: 0.75rem;
-  background: linear-gradient(180deg, #00FF00 0%, #008800 100%);
-  color: #000;
-  border: 3px outset #00FF00;
-  font-family: 'Comic Sans MS', cursive;
-  font-weight: bold;
-  font-size: 1.1rem;
-  cursor: pointer;
-  text-shadow: 1px 1px 0px #FFFF00;
 }
 
-.guestbook-form button:hover {
-  background: linear-gradient(180deg, #00CC00 0%, #006600 100%);
-}
-
-.guestbook-form button:active {
-  border-style: inset;
-}
-
+/* Guestbook Entries */
 .guestbook-entries {
   max-width: 600px;
   margin: 2rem auto;
@@ -475,4 +260,54 @@ h2 .icon-gif {
 .entry-message {
   color: #000;
   line-height: 1.4;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .date-banner {
+    font-size: 1.3rem;
+  }
+  
+  .date-banner .icon-gif {
+    height: 1.3rem;
+  }
+  
+  h1 .icon-gif {
+    height: 1.2em;
+  }
+
+  .section {
+    padding: 0.75rem !important;
+  }
+  
+  .rule-item {
+    padding: 0.5rem;
+  }
+  
+  .mocktail-notice {
+    padding: 0.5rem;
+  }
+
+  .section ul {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .section ul.no-bullets {
+    padding-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .date-banner {
+    font-size: 1rem;
+  }
+  
+  .date-banner .icon-gif {
+    height: 1rem;
+  }
+  
+  .main-title {
+    font-size: 1.5rem !important;
+  }
 }

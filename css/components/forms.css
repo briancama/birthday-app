@@ -1,0 +1,129 @@
+/**
+ * Forms Component Styles
+ * Reusable form styles across the application
+ */
+
+/* Form Groups */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+  color: #000080;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group input[type="number"],
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 3px inset #FFFFFF;
+  font-family: 'Courier New', monospace;
+  font-size: 1rem;
+  background: #FFFFFF;
+  color: #000000;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: 'Courier New', monospace;
+}
+
+.form-group small {
+  display: block;
+  margin-top: 0.25rem;
+  color: #666666;
+  font-size: 0.875rem;
+}
+
+/* Input focus states */
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: 2px solid #0000FF;
+  outline-offset: 2px;
+}
+
+/* Disabled inputs */
+.form-group input:disabled,
+.form-group textarea:disabled,
+.form-group select:disabled {
+  background: #CCCCCC;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Form Messages */
+.error-message {
+  color: #FF0000;
+  font-weight: bold;
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background: rgba(255, 0, 0, 0.1);
+  border: 2px solid #FF0000;
+  display: none;
+}
+
+.success-message {
+  color: #00FF00;
+  font-weight: bold;
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background: rgba(0, 255, 0, 0.1);
+  border: 2px solid #00FF00;
+  display: none;
+}
+
+.warning-message {
+  color: #FFA500;
+  font-weight: bold;
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background: rgba(255, 165, 0, 0.1);
+  border: 2px solid #FFA500;
+  display: none;
+}
+
+.info-message {
+  color: #00BFFF;
+  font-weight: bold;
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background: rgba(0, 191, 255, 0.1);
+  border: 2px solid #00BFFF;
+  display: none;
+}
+
+/* Required field indicator */
+.form-group label .required {
+  color: #FF0000;
+  margin-left: 0.25rem;
+}
+
+/* Form validation states */
+.form-group.has-error input,
+.form-group.has-error textarea,
+.form-group.has-error select {
+  border-color: #FF0000;
+}
+
+.form-group.has-success input,
+.form-group.has-success textarea,
+.form-group.has-success select {
+  border-color: #00FF00;
+}
+
+/* Datalist styling (limited due to browser constraints) */
+.form-group input[list] {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12"><path fill="%23666666" d="M6 9L1 4h10z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  padding-right: 2rem;
+}

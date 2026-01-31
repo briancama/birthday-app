@@ -75,9 +75,22 @@ class ChallengeCard {
         const { isCompleted, isRevealed } = state;
 
         if (isCompleted || isRevealed) {
-            return this.assignment.challenges.description
-                ? `<p>${this.assignment.challenges.description}</p>`
-                : '<p>No description</p>';
+            let html = '';
+            
+            // Add description
+            if (this.assignment.challenges.description) {
+                html += `<p>${this.assignment.challenges.description}</p>`;
+            }
+            
+            // Add success metric if it exists
+            if (this.assignment.challenges.success_metric) {
+                html += `<details class="success-metric">
+                    <summary><strong>Success Metric</strong></summary>
+                    <p>${this.assignment.challenges.success_metric}</p>
+                </details>`;
+            }
+            
+            return html || '<p>No description</p>';
         }
 
         return '';
