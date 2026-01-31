@@ -18,8 +18,8 @@
   --accent-blue: #0000FF;
 
   /* Spacing */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 0.75rem;
   --spacing-md: 1rem;
   --spacing-lg: 1.5rem;
   --spacing-xl: 2rem;
@@ -352,7 +352,7 @@
 
   label {
     display: block;
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
     color: var(--text-dark);
     font-weight: bold;
     font-size: 1.1rem;
@@ -413,7 +413,7 @@
     background: var(--accent-yellow);
     color: var(--accent-red);
     font-weight: bold;
-    padding: var(--spacing-sm);
+    padding: var(--spacing-xs);
     border: var(--border-width) ridge #FFD700;
     margin-bottom: var(--spacing-md);
     font-size: 1.1rem;
@@ -443,6 +443,8 @@
   }
 
   .challenge-card.unrevealed {
+    display: flex;
+    align-items: center;
     background: #FFD700;
     cursor: pointer;
     border: var(--border-thick) var(--border-style) var(--border-color);
@@ -485,25 +487,52 @@
   .challenge-title {
     font-weight: bold;
     font-size: 1.2rem;
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
     color: #000080;
   }
 
   .challenge-description {
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
     font-family: 'Arial', sans-serif;
+  }
+
+  .success-metric {
+    margin-top: var(--spacing-xs);
+    padding: 0.75rem;
+    background: rgba(255, 255, 0, 0.2);
+    border: 2px dashed #FFA500;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    font-family: 'Arial', sans-serif;
+  }
+
+  .success-metric summary {
+    cursor: pointer;
+    color: #FF8C00;
+    font-weight: bold;
+    user-select: none;
+    list-style-position: inside;
+  }
+
+  .success-metric summary:hover {
+    color: #FF6500;
+  }
+
+  .success-metric p {
+    margin-top: 0.5rem;
+    padding-left: 0.5rem;
   }
 
   .challenge-details {
     font-size: 0.9rem;
     color: #666;
-    margin-top: var(--spacing-sm);
+    margin-top: var(--spacing-xs);
     font-family: var(--font-mono);
   }
 
   .challenge-actions {
     display: flex;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-xs);
     flex-direction: column;
   }
 
@@ -525,7 +554,7 @@
   }
 
   .outcome-badge {
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: var(--spacing-xs) var(--spacing-md);
     font-weight: bold;
     border: var(--border-width) solid #000;
     text-align: center;
@@ -547,7 +576,6 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 1rem;
-    margin-bottom: 1.5rem;
   }
 
   .stat-box {
@@ -686,7 +714,7 @@
     width: 30px;
     height: 30px;
     vertical-align: middle;
-    margin-left: var(--spacing-sm);
+    margin-left: var(--spacing-xs);
   }
 }
 
@@ -711,18 +739,13 @@
     text-align: center;
   }
 
-  .username {
-    color: var(--accent-cyan);
-    font-weight: bold;
-    text-shadow: 1px 1px 2px #000000;
-  }
 
   /* Icon GIFs */
+
   .icon-gif {
     display: inline-block;
     height: 1.2em;
     width: auto;
-    vertical-align: bottom;
     margin: 0 0.2em;
     flex-shrink: 0;
   }
@@ -733,6 +756,12 @@
 
   .icon-gif--lg {
     height: 1.8em;
+  }
+
+  *:has(> .icon-gif--with-text) {
+    display:inline-flex;
+    align-items: center;
+    line-height:1;
   }
 
   /* Text highlights */
@@ -762,14 +791,14 @@
     color: var(--accent-red);
     font-weight: bold;
     font-size: 1rem;
-    margin-top: var(--spacing-sm);
+    margin-top: var(--spacing-xs);
     animation: blink var(--anim-duration-medium) step-start infinite;
   }
 
   .error-message {
     color: var(--accent-red);
     font-weight: bold;
-    margin-top: var(--spacing-sm);
+    margin-top: var(--spacing-xs);
     text-align: center;
   }
 
@@ -783,7 +812,7 @@
   }
 
   .footer-text p {
-    margin-top: var(--spacing-sm);
+    margin-top: var(--spacing-xs);
   }
 
   .footer-text a {
@@ -795,7 +824,7 @@
     display: inline-block;
     color: var(--accent-green);
     font-weight: bold;
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
     white-space: nowrap;
     font-size: 0.9rem;
   }
@@ -810,7 +839,7 @@
 /* === RESPONSIVE DESIGN === */
 @media (max-width: 768px) {
   :root {
-    --container-padding: var(--spacing-sm);
+    --container-padding: var(--spacing-xs);
     --section-padding-block: var(--spacing-lg);
     --section-padding-inline: var(--spacing-md);
     --section-margin: var(--spacing-md);
@@ -819,7 +848,7 @@
   }
 
   body {
-    padding: var(--spacing-sm);
+    padding: var(--spacing-xs);
   }
 
   h1 {
@@ -853,12 +882,16 @@
 
   .login-container {
     padding: var(--spacing-xl) var(--spacing-md);
-    margin: var(--spacing-xl) var(--spacing-sm);
+    margin: var(--spacing-xl) var(--spacing-xs);
     width: 100%;
   }
 
   .interior-container {
     padding: var(--spacing-xl) var(--spacing-md);
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   }
 }
 
