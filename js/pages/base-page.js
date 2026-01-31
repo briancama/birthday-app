@@ -51,6 +51,14 @@ class BasePage {
         console.log('Page ready');
     }
 
+    setPageTitle(title) {
+        const user = appState.getCurrentUser();
+        const fullTitle = user && title === 'Dashboard' 
+            ? `${user.name}'s ${title}` 
+            : title;
+        document.title = `${fullTitle} - Birthday Challenge Zone`;
+    }
+
     // Challenge management methods that can be shared
     async markChallengeComplete(assignmentId, challengeId, outcome, brianMode) {
         try {

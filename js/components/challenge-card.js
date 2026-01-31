@@ -42,7 +42,7 @@ class ChallengeCard {
         const { isCompleted, outcome, brianMode, isRevealed, canReveal, isLocked } = state;
 
         const brianBadge = (brianMode && this.options.showBrianMode && (isCompleted || isRevealed))
-            ? `<span class="brian-mode-badge">${brianMode === 'vs' ? '<img src="images/vs.gif" class="icon-gif" alt="against-dragonball"><span class="visually-hidden">VS</SPAN> BRIAN' : '<img src="images/with.gif" class="icon-gif" alt="with"> WITH BRIAN'}</span>`
+            ? `<span class="brian-mode-badge">${brianMode === 'vs' ? '<img src="images/vs.gif" class="icon-gif" alt="VS Brian">' : '<img src="images/with.gif" class="icon-gif" alt="With Brian">'}</span>`
             : '';
 
         const displayTitle = this.getDisplayTitle(state, brianBadge);
@@ -51,8 +51,7 @@ class ChallengeCard {
 
         return `
             <div class="challenge-info">
-                <div class="challenge-badge">${brianBadge}</div>
-                <div class="challenge-title">${displayTitle}</div>
+                <div class="challenge-title">${displayTitle}${brianBadge}</div>
                 ${displayDescription ? `<div class="challenge-description">${displayDescription}</div>` : ''}
             </div>
             ${actionsHTML}

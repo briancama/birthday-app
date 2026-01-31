@@ -1,5 +1,6 @@
 import { BasePage } from './base-page.js';
 import { ChallengeCard } from '../components/challenge-card.js';
+import { APP_CONFIG } from '../config.js';
 
 class DashboardPage extends BasePage {
     constructor() {
@@ -9,10 +10,13 @@ class DashboardPage extends BasePage {
     }
 
     async onReady() {
+        this.setPageTitle('Dashboard');
         await this.loadPageData();
 
-        // Set up refresh interval
-        this.refreshInterval = setInterval(() => this.loadPersonalStats(), 10000);
+        // Set up refresh interval (disabled in dev mode for easier inspection)
+        if (APP_CONFIG.enableAutoRefresh) {
+            this.refreshInterval = setInterval(() => this.loadPersonalStats(), APP_CONFIG.refreshInterval);
+        }
     }
 
     async loadPageData() {
