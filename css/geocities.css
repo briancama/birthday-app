@@ -8,7 +8,8 @@
   /* Colors */
   --primary-bg: #000080;
   --section-bg: #C0C0C0;
-  --text-dark: #000;
+  --text-dark: hsl(0, 0%, 0%);
+  --text-gray: #c6c6c6;
   --text-light: #FFF;
   --accent-magenta: #FF00FF;
   --accent-cyan: #00FFFF;
