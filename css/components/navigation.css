@@ -18,7 +18,7 @@
     font-size: 1.2rem;
     position: absolute;
     top: var(--spacing-xs);
-    left: var(--spacing-xs);
+    right: var(--spacing-xs);
     z-index: 1000;
     cursor: pointer;
     font-family: 'Arial', sans-serif;
@@ -33,32 +33,28 @@
     background: var(--accent-red);
 }
 
-/* Mobile User Info */
-.mobile-user-info {
-    display: none;
-    padding: var(--spacing-md);
+/* User Info / Page Title Section */
+.nav-user-info {
     text-align: center;
+    padding: var(--spacing-md);
     border-bottom: 2px solid var(--accent-magenta);
-    background: rgba(255, 0, 255, 0.1);
+    background: rgba(255, 0, 255, 0.05);
+}
+
+.user-welcome {
+    color: var(--accent-cyan);
+    font-weight: bold;
+    text-shadow: 1px 1px 2px #000000;
+    font-size: 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-xs);
 }
 
 /* Navigation Menu */
 .nav-menu {
     padding: var(--section-padding-block) var(--section-padding-inline);
-}
-
-/* User Info (Desktop) */
-.nav-user-info {
-    text-align: center;
-    margin-bottom: var(--spacing-lg);
-}
-
-.user-welcome {
-    font-size: 1.1rem;
-    font-weight: bold;
-    color: var(--text-dark);
-    width: 100%;
-    justify-content: center;
 }
 
 /* Navigation Tabs */
@@ -124,19 +120,20 @@
         margin-bottom: var(--spacing-md);
     }
 
-    /* Show mobile toggle and user info */
+    /* Show mobile toggle */
     .mobile-menu-toggle {
         display: block;
     }
 
-    .mobile-user-info {
-        display: block;
-        height: 60px; /* Account for hamburger button */
+    /* Adjust user info for mobile with hamburger button */
+    .nav-user-info {
+        padding-right: 60px; /* Account for hamburger button */
+        text-align: left;
     }
 
-    /* Hide desktop user info on mobile */
-    .nav-user-info {
-        display: none;
+    .user-welcome {
+        font-size: 1.2rem;
+        justify-content: flex-start;
     }
 
     /* Mobile menu behavior */
@@ -154,6 +151,7 @@
 
     .nav-menu.mobile-open .nav-tabs {
         display: flex;
+        gap: var(--spacing-xs);
     }
 
     .nav-tab {
@@ -171,7 +169,7 @@
     .username {
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start;
     }
 }
 
@@ -185,6 +183,6 @@
 
     .mobile-user-info {
         font-size: 0.9rem;
-        padding: var(--spacing-xs) var(--spacing-md);
+        padding: var(--spacing-xs) var(--spacing-sm);
     }
 }
