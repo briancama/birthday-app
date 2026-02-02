@@ -42,7 +42,7 @@ class ChallengeCard {
         const { isCompleted, outcome, brianMode, isRevealed, canReveal, isLocked } = state;
 
         const brianBadge = (brianMode && this.options.showBrianMode && (isCompleted || isRevealed))
-            ? `<span class="brian-mode-badge">${brianMode === 'vs' ? '<img src="images/vs.gif" class="icon-gif" alt="against-dragonball"><span class="visually-hidden">VS</SPAN> BRIAN' : '<img src="images/with.gif" class="icon-gif" alt="with"> WITH BRIAN'}</span>`
+            ? `<span class="brian-mode-badge">${brianMode === 'vs' ? '<img src="images/vs.gif" class="icon-gif" alt="VS Brian">' : '<img src="images/with.gif" class="icon-gif" alt="With Brian">'}</span>`
             : '';
 
         const displayTitle = this.getDisplayTitle(state, brianBadge);
@@ -51,8 +51,7 @@ class ChallengeCard {
 
         return `
             <div class="challenge-info">
-                <div class="challenge-badge">${brianBadge}</div>
-                <div class="challenge-title">${displayTitle}</div>
+                <div class="challenge-title">${displayTitle}${brianBadge}</div>
                 ${displayDescription ? `<div class="challenge-description">${displayDescription}</div>` : ''}
             </div>
             ${actionsHTML}
@@ -75,9 +74,22 @@ class ChallengeCard {
         const { isCompleted, isRevealed } = state;
 
         if (isCompleted || isRevealed) {
-            return this.assignment.challenges.description
-                ? `<p>${this.assignment.challenges.description}</p>`
-                : '<p>No description</p>';
+            let html = '';
+            
+            // Add description
+            if (this.assignment.challenges.description) {
+                html += `<p>${this.assignment.challenges.description}</p>`;
+            }
+            
+            // Add success metric if it exists
+            if (this.assignment.challenges.success_metric) {
+                html += `<details class="success-metric">
+                    <summary><strong>Success Metric</strong></summary>
+                    <p>${this.assignment.challenges.success_metric}</p>
+                </details>`;
+            }
+            
+            return html || '<p>No description</p>';
         }
 
         return '';

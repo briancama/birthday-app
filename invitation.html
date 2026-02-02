@@ -8,6 +8,7 @@
   <title>🍸 COCKTAIL COMPETITION INVITATION 🍹</title>
   <link rel="icon" type="image/png" href="images/favicon.png">
   <link rel="stylesheet" href="css/geocities.css">
+  <link rel="stylesheet" href="css/components/forms.css">
   <link rel="stylesheet" href="css/invitation.css">
 </head>
 
@@ -201,12 +202,24 @@
         </h2>
 
         <!-- Guestbook Form -->
-        <div class="guestbook-form">
-          <input type="text" id="guestName" placeholder="Your Name" maxlength="50">
-          <textarea id="guestMessage" placeholder="Leave a message!!!" rows="3" maxlength="200"></textarea>
-          <button id="signGuestbook">SIGN IT!!!</button>
+        <form id="guestbookForm" class="guestbook-form">
+          <div class="form-group">
+            <label for="guestName">Your Name *</label>
+            <input type="text" id="guestName" required maxlength="50">
+            <small>Max 50 characters</small>
+          </div>
+          
+          <div class="form-group">
+            <label for="guestMessage">Your Message *</label>
+            <textarea id="guestMessage" required maxlength="200" rows="3"></textarea>
+            <small>Max 200 characters</small>
+          </div>
+          
+          <button type="button" id="signGuestbook">SIGN IT!!!</button>
+          
           <div id="guestbookError" class="error-message"></div>
-        </div>
+          <div id="guestbookSuccess" class="success-message"></div>
+        </form>
 
         <!-- Guestbook Entries -->
         <div id="guestbookEntries" class="guestbook-entries">
@@ -328,30 +341,34 @@
       const message = messageInput.value.trim();
 
       errorDiv.textContent = '';
-      errorDiv.style.color = '#FF0000';
+      errorDiv.style.display = 'none';
 
       // Check rate limiting (15 second cooldown)
       const lastSubmit = localStorage.getItem('lastGuestbookSubmit');
       if (lastSubmit && Date.now() - parseInt(lastSubmit) < 15000) {
         const secondsLeft = Math.ceil((15000 - (Date.now() - parseInt(lastSubmit))) / 1000);
         errorDiv.textContent = `Please wait ${secondsLeft} seconds before submitting again!!!`;
+        errorDiv.style.display = 'block';
         return;
       }
 
       // Validate required fields
       if (!name || !message) {
         errorDiv.textContent = 'Please fill in both fields!!!';
+        errorDiv.style.display = 'block';
         return;
       }
 
       // Validate length limits
       if (name.length > 50) {
         errorDiv.textContent = 'Name must be 50 characters or less!!!';
+        errorDiv.style.display = 'block';
         return;
       }
 
       if (message.length > 500) {
         errorDiv.textContent = 'Message must be 500 characters or less!!!';
+        errorDiv.style.display = 'block';
         return;
       }
 
@@ -369,8 +386,9 @@
         localStorage.setItem('lastGuestbookSubmit', Date.now().toString());
 
         // Show success message
-        errorDiv.style.color = '#00FF00';
-        errorDiv.textContent = '✓ SUCCESS!!! Your message has been signed!!!';
+        const successDiv = document.getElementById('guestbookSuccess');
+        successDiv.textContent = '✓ SUCCESS!!! Your message has been signed!!!';
+        successDiv.style.display = 'block';
 
         // Clear form
         nameInput.value = '';
@@ -381,12 +399,12 @@
 
         // Clear success message after 3 seconds
         setTimeout(() => {
-          errorDiv.textContent = '';
+          successDiv.style.display = 'none';
         }, 3000);
 
       } catch (err) {
-        errorDiv.style.color = '#FF0000';
         errorDiv.textContent = `Error: ${err.message}`;
+        errorDiv.style.display = 'block';
       } finally {
         button.disabled = false;
         button.textContent = 'SIGN IT!!!';
