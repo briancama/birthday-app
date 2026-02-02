@@ -14,14 +14,13 @@
     background: var(--accent-magenta);
     color: var(--accent-yellow);
     border: 2px solid var(--border-color);
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: var(--spacing-xs) var(--spacing-sm);
     font-size: 1.2rem;
     position: absolute;
-    top: var(--spacing-sm);
-    left: var(--spacing-sm);
+    top: var(--spacing-xs);
+    right: var(--spacing-xs);
     z-index: 1000;
     cursor: pointer;
-    /* Add this */
     font-family: 'Arial', sans-serif;
     font-weight: bold;
 }
@@ -34,30 +33,28 @@
     background: var(--accent-red);
 }
 
-/* Mobile User Info */
-.mobile-user-info {
-    display: none;
-    padding: var(--spacing-md);
+/* User Info / Page Title Section */
+.nav-user-info {
     text-align: center;
+    padding: var(--spacing-md);
     border-bottom: 2px solid var(--accent-magenta);
-    background: rgba(255, 0, 255, 0.1);
+    background: rgba(255, 0, 255, 0.05);
+}
+
+.user-welcome {
+    color: var(--accent-cyan);
+    font-weight: bold;
+    text-shadow: 1px 1px 2px #000000;
+    font-size: 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-xs);
 }
 
 /* Navigation Menu */
 .nav-menu {
     padding: var(--section-padding-block) var(--section-padding-inline);
-}
-
-/* User Info (Desktop) */
-.nav-user-info {
-    text-align: center;
-    margin-bottom: var(--spacing-lg);
-}
-
-.user-welcome {
-    font-size: 1.1rem;
-    font-weight: bold;
-    color: var(--text-dark);
 }
 
 /* Navigation Tabs */
@@ -80,7 +77,7 @@
     text-shadow: 1px 1px 0px #000000;
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-xs);
     transition: all 0.3s ease;
     min-width: 120px;
     justify-content: center;
@@ -109,26 +106,34 @@
     background: linear-gradient(to bottom, #FF6347, var(--accent-red));
 }
 
+.username {
+    color: var(--accent-cyan);
+    font-weight: bold;
+    text-shadow: 1px 1px 2px #000000;
+    font-size: 1.5rem;
+    height: 100%;
+}
+
 /* Mobile Responsive Design */
 @media (max-width: 768px) {
     .site-navigation {
         margin-bottom: var(--spacing-md);
     }
 
-    /* Show mobile toggle and user info */
+    /* Show mobile toggle */
     .mobile-menu-toggle {
         display: block;
     }
 
-    .mobile-user-info {
-        display: block;
-        padding-left: 60px;
-        /* Account for hamburger button */
+    /* Adjust user info for mobile with hamburger button */
+    .nav-user-info {
+        padding-right: 60px; /* Account for hamburger button */
+        text-align: left;
     }
 
-    /* Hide desktop user info on mobile */
-    .nav-user-info {
-        display: none;
+    .user-welcome {
+        font-size: 1.2rem;
+        justify-content: flex-start;
     }
 
     /* Mobile menu behavior */
@@ -146,18 +151,25 @@
 
     .nav-menu.mobile-open .nav-tabs {
         display: flex;
+        gap: var(--spacing-xs);
     }
 
     .nav-tab {
         width: 100%;
         text-align: center;
         padding: var(--spacing-lg);
-        margin-bottom: var(--spacing-sm);
+        margin-bottom: var(--spacing-xs);
         font-size: 1rem;
     }
 
     .nav-tab:last-child {
         margin-bottom: 0;
+    }
+
+    .username {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
     }
 }
 
@@ -171,7 +183,6 @@
 
     .mobile-user-info {
         font-size: 0.9rem;
-        padding: var(--spacing-sm) var(--spacing-md);
-        padding-left: 50px;
+        padding: var(--spacing-xs) var(--spacing-sm);
     }
 }

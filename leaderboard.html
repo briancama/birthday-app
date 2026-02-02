@@ -5,163 +5,49 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>*** Leaderboard - Birthday Challenge Zone ***</title>
+  <title>Leaderboard - Birthday Challenge Zone</title>
   <link rel="icon" type="image/png" href="images/favicon.png">
   <link rel="stylesheet" href="css/geocities.css">
+  <link rel="stylesheet" href="css/components/navigation.css">
+  <link rel="stylesheet" href="css/components/leaderboard.css">
 </head>
 
 <body>
   <div class="container">
-    <div class="header">
-      <div class="header-top">
-        <h1>Leaderboard</h1>
-        <button class="secondary" id="signOutBtn">SIGN OUT</button>
-      </div>
-      <div class="nav-tabs">
-        <a href="dashboard.html" class="nav-tab">DASHBOARD</a>
-        background: #f8fafc;
-        color: #475569;
-        font-weight: 600;
-        }
-        .scoreboard-table tr:hover {
-        background: #f8fafc;
-        }
-        .scoreboard-table tr.current-user {
-        background: #eff6ff;
-        font-weight: 600;
-        }
-        .scoreboard-table tr.current-user:hover {
-        background: #dbeafe;
-        }
-        .rank-medal {
-        font-size: 1.25rem;
-        margin-right: 0.5rem;
-        }
-        .loading {
-        text-align: center;
-        color: #666;
-        padding: 2rem;
-        }
-        .empty {
-        text-align: center;
-        color: #999;
-        padding: 2rem;
-        }
-        </style>
-        </head>
+    <!-- Scrolling Marquee -->
+    <marquee behavior="scroll" direction="left" scrollamount="6">
+      *** LEADERBOARD! *** Who's on top? * Check your ranking! * Competition is fierce! ***
+    </marquee>
 
-        <body>
-          <div class="container">
-            <div class="header">
-              <div class="header-top">
-                <h1>[[[ Leaderboard ]]]</h1>
-                <button class="secondary" id="signOutBtn">Sign Out</button>
-              </div>
-              <div class="nav-tabs">
-                <a href="dashboard.html" class="nav-tab">DASHBOARD</a>
-                <a href="leaderboard.html" class="nav-tab active">LEADERBOARD</a>
-              </div>
-            </div>
+    <!-- Navigation Component -->
+    <site-navigation></site-navigation>
 
-            <div class="section">
-              <h2>>>> TOP PLAYERS <<<< /h2>
-                  <div id="scoreboard" class="loading">Loading leaderboard...</div>
-            </div>
-          </div>
+    <div class="section">
+      <h2 class="text-shadow-light">TOP PLAYERS<img src="images/trophy.gif" alt="Trophy" class="trophy-gif"></h2>
+      <div id="scoreboard"><div class="loading">Loading leaderboard...</div></div>
+    </div>
+  </div>
 
-          <script type="module">
-            import { SUPABASE_CONFIG } from './js/config.js'
-            import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+  <script type="module">
+    import { appState } from './js/app.js';
+    import { SiteNavigation } from './js/components/navigation.js';
+    import { LeaderboardPage } from './js/pages/leaderboard.js';
 
-            const supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key)
+    // Initialize application
+    async function init() {
+      // Initialize app state (handles auth, user loading, navigation)
+      const isAuthenticated = await appState.init();
 
-            const userId = localStorage.getItem('user_id')
-            const username = localStorage.getItem('username')
+      if (isAuthenticated) {
+        // Initialize leaderboard-specific functionality
+        const leaderboard = new LeaderboardPage();
+        await leaderboard.init();
+      }
+    }
 
-            // Redirect to login if not signed in
-            if (!userId) {
-              window.location.href = 'index.html'
-            }
-
-            // Sign out handler
-            document.getElementById('signOutBtn').addEventListener('click', () => {
-              localStorage.removeItem('user_id')
-              localStorage.removeItem('username')
-              window.location.href = 'index.html'
-            })
-
-            // Load full scoreboard
-            async function loadScoreboard() {
-              const container = document.getElementById('scoreboard')
-
-              try {
-                const { data, error } = await supabase
-                  .from('scoreboard')
-                  .select('*')
-
-                if (error) throw error
-
-                if (!data || data.length === 0) {
-                  container.innerHTML = '<div class="empty">No scores yet.</div>'
-                  return
-                }
-
-                const getMedal = (rank) => {
-                  if (rank === 1) return '🥇'
-                  if (rank === 2) return '🥈'
-                  if (rank === 3) return '🥉'
-                  return ''
-                }
-
-                const getTrophyGif = (rank) => {
-                  if (rank <= 3) return '<img src="images/trophy.gif" class="trophy-gif" alt="Trophy" onerror="this.style.display=\'none\'">'
-                  return ''
-                }
-
-                container.innerHTML = `
-          <table class="scoreboard-table">
-            <thead>
-              <tr>
-                <th>RANK</th>
-                <th>PLAYER</th>
-                <th>ASSIGNED</th>
-                <th>COMPETITION</th>
-                <th>TOTAL POINTS</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${data.map((row, idx) => {
-                  const rank = idx + 1
-                  const isCurrentUser = row.user_id === userId
-                  return `
-                  <tr class="${isCurrentUser ? 'current-user' : ''}">
-                    <td>
-                      ${getMedal(rank) ? `<span class="rank-medal">${getMedal(rank)}</span>` : ''}
-                      #${rank}
-                      ${getTrophyGif(rank)}
-                    </td>
-                    <td>${row.display_name || row.username}${isCurrentUser ? ' (YOU!)' : ''}</td>
-                    <td>${row.assigned_points}</td>
-                    <td>${row.competition_points}</td>
-                    <td><strong>${row.total_points}</strong></td>
-                  </tr>
-                `
-                }).join('')}
-            </tbody>
-          </table>
-        `
-
-              } catch (err) {
-                container.innerHTML = `<div class="empty">Error loading leaderboard: ${err.message}</div>`
-              }
-            }
-
-            // Initial load
-            loadScoreboard()
-
-            // Refresh leaderboard every 10 seconds
-            setInterval(loadScoreboard, 10000)
-          </script>
-        </body>
+    // Start the application
+    init();
+  </script>
+</body>
 
 </html>
