@@ -37,6 +37,7 @@ class SiteNavigation extends HTMLElement {
         if (path.includes('leaderboard')) return 'leaderboard';
         if (path.includes('cocktail-rubric')) return 'rubric';
         if (path.includes('challenges-submit')) return 'challenges-submit';
+        if (path.includes('admin-approvals')) return 'admin-approvals';
         return 'dashboard'; // default
     }
 
@@ -45,7 +46,8 @@ class SiteNavigation extends HTMLElement {
             'dashboard': 'Dashboard',
             'leaderboard': 'Leaderboard',
             'rubric': 'Cocktail Rubric',
-            'challenges-submit': 'Challenge Workshop'
+            'challenges-submit': 'Challenge Workshop',
+            'admin-approvals': 'Admin Approvals'
         };
         const title = pageTitles[this.currentPage] || 'Dashboard';
         
@@ -93,6 +95,12 @@ class SiteNavigation extends HTMLElement {
                             <img src="images/trophy.gif" alt="trophy" class="icon-gif icon-gif--with-text">
                             <span>LEADERBOARD</span>
                         </a>
+                        ${this.currentUser?.isAdmin ? `
+                        <a href="admin-approvals.html" class="nav-tab ${this.currentPage === 'admin-approvals' ? 'active' : ''}">
+                            <img src="images/star_icon.gif" alt="admin" class="icon-gif icon-gif--with-text">
+                            <span>🔐 ADMIN</span>
+                        </a>
+                        ` : ''}
                         <a href="cocktail-rubric.html" class="nav-tab ${this.currentPage === 'rubric' ? 'active' : ''}">
                             <img src="images/star_icon.gif" alt="star" class="icon-gif icon-gif--with-text">
                             <span>RUBRIC</span>

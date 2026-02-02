@@ -3,6 +3,29 @@
  * For challenge submissions table and modal
  */
 
+/* Denied Challenges Expandable Section */
+.denied-challenges-details {
+  border: 2px solid #FF0000;
+  padding: 1rem;
+  margin-top: 1rem;
+  background: rgba(255, 0, 0, 0.05);
+}
+
+.denied-challenges-details summary {
+  cursor: pointer;
+  user-select: none;
+  font-weight: bold;
+}
+
+.denied-challenges-details summary h2 {
+  display: inline;
+  margin: 0;
+}
+
+.denied-challenges-details[open] summary {
+  margin-bottom: 1rem;
+}
+
 /* Submissions Table */
 .submissions-table {
   width: 100%;
