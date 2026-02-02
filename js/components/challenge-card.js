@@ -1,7 +1,12 @@
 import { appState } from '../app.js';
+import { EventBus } from '../events/event-bus.js';
 
 class ChallengeCard {
     constructor(assignment, index, options = {}) {
+        // Add EventTarget capabilities for event emission
+        Object.assign(this, EventTarget.prototype);
+        EventTarget.call(this);
+
         this.assignment = assignment;
         this.index = index;
         this.options = {
@@ -13,6 +18,10 @@ class ChallengeCard {
         };
         this.supabase = appState.getSupabase();
         this.userId = appState.getUserId();
+
+        // Legacy callback support for backward compatibility
+        this.onReveal = null;
+        this.onComplete = null;
     }
 
     create(state) {
@@ -154,6 +163,23 @@ class ChallengeCard {
         if (!isCompleted && canReveal && !isRevealed && this.options.allowReveal) {
             card.style.cursor = 'pointer';
             card.addEventListener('click', () => {
+                const eventDetail = {
+                    assignmentId: this.assignment.id,
+                    challengeId: this.assignment.challenges.id,
+                    element: card,
+                    component: this
+                };
+
+                // Emit new event
+                this.dispatchEvent(new CustomEvent('reveal', {
+                    detail: eventDetail,
+                    bubbles: true
+                }));
+
+                // Also emit to global event bus
+                EventBus.instance.emit(EventBus.EVENTS.CHALLENGE.REVEAL, eventDetail);
+
+                // Legacy callback support
                 this.onReveal?.(this.assignment.id);
             });
         }
@@ -161,24 +187,58 @@ class ChallengeCard {
         // Action buttons for revealed challenges
         if (isRevealed && this.options.showActions) {
             card.querySelectorAll('button').forEach(btn => {
+                // Store original text for error recovery
+                btn.dataset.originalText = btn.textContent;
+
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
+
                     const outcome = btn.dataset.outcome;
+                    const eventDetail = {
+                        assignmentId: this.assignment.id,
+                        challengeId: this.assignment.challenges.id,
+                        outcome,
+                        brianMode: this.assignment.challenges.brian_mode,
+                        element: card,
+                        button: btn,
+                        component: this
+                    };
+
+                    // Emit new event
+                    this.dispatchEvent(new CustomEvent('complete', {
+                        detail: eventDetail,
+                        bubbles: true
+                    }));
+
+                    // Also emit to global event bus
+                    EventBus.instance.emit(EventBus.EVENTS.CHALLENGE.COMPLETE, eventDetail);
+
+                    // Legacy callback support
                     this.onComplete?.(this.assignment.id, this.assignment.challenges.id, outcome, this.assignment.challenges.brian_mode);
                 });
             });
         }
     }
 
-    // Callback setters
+    // Callback setters - DEPRECATED: Use addEventListener instead
     setOnReveal(callback) {
+        console.warn('ChallengeCard.setOnReveal() is deprecated. Use addEventListener("reveal", handler) instead.');
         this.onReveal = callback;
         return this;
     }
 
     setOnComplete(callback) {
+        console.warn('ChallengeCard.setOnComplete() is deprecated. Use addEventListener("complete", handler) instead.');
         this.onComplete = callback;
         return this;
+    }
+
+    /**
+     * Cleanup method to remove event listeners and prevent memory leaks
+     */
+    cleanup() {
+        // Remove any event listeners if needed
+        // This will be important if we store references to DOM elements
     }
 }
 
