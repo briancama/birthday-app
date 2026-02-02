@@ -51,6 +51,20 @@ class BasePage {
         console.log('Page ready');
     }
 
+    setPageTitle(title) {
+        const user = appState.getCurrentUser();
+        const fullTitle = user && title === 'Dashboard' 
+            ? `${user.name}'s ${title}` 
+            : title;
+        document.title = `${fullTitle} - Birthday Challenge Zone`;
+    }
+
+    isAdmin() {
+        // Check if current user is an admin
+        const adminUsernames = ['brianc', 'admin'];
+        return this.currentUser && adminUsernames.includes(this.currentUser.username);
+    }
+
     // Challenge management methods that can be shared
     async markChallengeComplete(assignmentId, challengeId, outcome, brianMode) {
         try {
@@ -106,6 +120,29 @@ class BasePage {
             });
 
         if (briancAssignError) throw briancAssignError;
+    }
+
+    async enrichScoreboardWithCompletions(scoreboardData) {
+        // Get all assignments to count completions per user
+        const { data: assignmentsData, error: assignmentsError } = await this.supabase
+            .from('assignments')
+            .select('user_id, completed_at, outcome');
+
+        if (assignmentsError) throw assignmentsError;
+
+        // Count successful completions per user
+        const completionCounts = {};
+        assignmentsData?.forEach(assignment => {
+            if (assignment.completed_at && assignment.outcome === 'success') {
+                completionCounts[assignment.user_id] = (completionCounts[assignment.user_id] || 0) + 1;
+            }
+        });
+
+        // Enrich scoreboard data with completion counts
+        return scoreboardData.map(row => ({
+            ...row,
+            challenges_completed: completionCounts[row.user_id] || 0
+        }));
     }
 
     async loadUserStats() {

@@ -74,7 +74,25 @@ class SiteNavigation extends HTMLElement {
         if (path.includes('dashboard')) return 'dashboard';
         if (path.includes('leaderboard')) return 'leaderboard';
         if (path.includes('cocktail-rubric')) return 'rubric';
+        if (path.includes('challenges-submit')) return 'challenges-submit';
+        if (path.includes('admin-approvals')) return 'admin-approvals';
         return 'dashboard'; // default
+    }
+
+    getPageTitle() {
+        const pageTitles = {
+            'dashboard': 'Dashboard',
+            'leaderboard': 'Leaderboard',
+            'rubric': 'Cocktail Rubric',
+            'challenges-submit': 'Challenge Workshop',
+            'admin-approvals': 'Admin Approvals'
+        };
+        const title = pageTitles[this.currentPage] || 'Dashboard';
+
+        // Apply same logic as BasePage.setPageTitle()
+        return this.currentUser && title === 'Dashboard'
+            ? `${this.currentUser.name}'s ${title}`
+            : title;
     }
 
     setCurrentUser(user) {
@@ -90,47 +108,44 @@ class SiteNavigation extends HTMLElement {
                     <span class="hamburger-icon">☰</span>
                 </button>
 
-                <!-- User Info (Mobile Top Bar) -->
-                <div class="mobile-user-info">
-                    ${this.currentUser ? `
-                        <span class="username">
-                            <img src="images/star_icon.gif" alt="star" class="icon-gif icon-gif--sm">
-                            ${this.currentUser.name}
-                            <img src="images/star_icon.gif" alt="star" class="icon-gif icon-gif--sm">
-                        </span>
-                    ` : ''}
+                <!-- Page Title / User Info -->
+                <div class="nav-user-info">
+                    <div class="user-welcome">
+                        <img src="images/star_icon.gif" alt="star" class="icon-gif hide-mobile">
+                        <span>${this.getPageTitle()}</span>
+                        <img src="images/star_icon.gif" alt="star" class="icon-gif">
+                    </div>
                 </div>
 
                 <!-- Navigation Menu -->
                 <div class="nav-menu">
-                    <!-- User Info (Desktop) -->
-                    <div class="nav-user-info">
-                        ${this.currentUser ? `
-                            <div class="user-welcome">
-                                <img src="images/star_icon.gif" alt="star" class="icon-gif">
-                                Welcome back, <span class="username">${this.currentUser.name}</span>!
-                                <img src="images/star_icon.gif" alt="star" class="icon-gif">
-                            </div>
-                        ` : ''}
-                    </div>
-
                     <!-- Navigation Links -->
                     <div class="nav-tabs">
                         <a href="dashboard.html" class="nav-tab ${this.currentPage === 'dashboard' ? 'active' : ''}">
-                            <img src="images/home.gif" alt="home" class="icon-gif icon-gif--lg">
-                            DASHBOARD
+                            <img src="images/home.gif" alt="home" class="icon-gif icon-gif--lg icon-gif--with-text">
+                            <span>DASHBOARD</span>
+                        </a>
+                        <a href="challenges-submit.html" class="nav-tab ${this.currentPage === 'challenges-submit' ? 'active' : ''}">
+                            <img src="images/star_icon.gif" alt="star" class="icon-gif icon-gif--with-text">
+                            <span>SUBMIT CHALLENGE</span>
                         </a>
                         <a href="leaderboard.html" class="nav-tab ${this.currentPage === 'leaderboard' ? 'active' : ''}">
-                            <img src="images/trophy.gif" alt="trophy" class="icon-gif">
-                            LEADERBOARD  
+                            <img src="images/trophy.gif" alt="trophy" class="icon-gif icon-gif--with-text">
+                            <span>LEADERBOARD</span>
                         </a>
+                        ${this.currentUser?.isAdmin ? `
+                        <a href="admin-approvals.html" class="nav-tab ${this.currentPage === 'admin-approvals' ? 'active' : ''}">
+                            <img src="images/star_icon.gif" alt="admin" class="icon-gif icon-gif--with-text">
+                            <span>🔐 ADMIN</span>
+                        </a>
+                        ` : ''}
                         <a href="cocktail-rubric.html" class="nav-tab ${this.currentPage === 'rubric' ? 'active' : ''}">
-                            <img src="images/star_icon.gif" alt="star" class="icon-gif">
-                            RUBRIC
+                            <img src="images/star_icon.gif" alt="star" class="icon-gif icon-gif--with-text">
+                            <span>RUBRIC</span>
                         </a>
                         <button class="nav-tab logout-btn">
-                            <img src="images/logout.gif" alt="logout" class="icon-gif icon-gif--lg">
-                            LOGOUT
+                            <img src="images/logout.gif" alt="logout" class="icon-gif icon-gif--lg icon-gif--with-text">
+                            <span>LOGOUT</span>
                         </button>
                     </div>
                 </div>
@@ -142,15 +157,9 @@ class SiteNavigation extends HTMLElement {
     }
 
     addEventListeners() {
-        console.log('🔧 Setting up navigation event listeners...');
-
         // Mobile menu toggle
         const menuToggle = this.querySelector('.mobile-menu-toggle');
         const navMenu = this.querySelector('.nav-menu');
-
-        console.log('📱 Mobile menu toggle found:', !!menuToggle);
-        console.log('📱 Nav menu found:', !!navMenu);
-        console.log('📱 Current viewport width:', window.innerWidth);
 
         if (menuToggle && navMenu) {
             menuToggle.addEventListener('click', (e) => {
@@ -172,24 +181,17 @@ class SiteNavigation extends HTMLElement {
                 console.log('📱 After toggle - active:', menuToggle.classList.contains('active'));
                 console.log('📱 Nav menu classes:', navMenu.className);
             });
-        } else {
-            console.error('❌ Could not find menu toggle or nav menu elements!');
         }
 
         // Logout functionality
         const logoutBtn = this.querySelector('.logout-btn');
-        console.log('🚪 Logout button found:', !!logoutBtn);
-
         logoutBtn?.addEventListener('click', (e) => {
             e.preventDefault();
-            console.log('🚪 Logout clicked');
             appState.logout();
         });
 
         // Close mobile menu when clicking a link
         const navLinks = this.querySelectorAll('.nav-tab:not(.logout-btn)');
-        console.log('🔗 Nav links found:', navLinks.length);
-
         navLinks.forEach(link => {
             link.addEventListener('click', (e) => {
                 console.log('🔗 Nav link clicked, closing mobile menu');

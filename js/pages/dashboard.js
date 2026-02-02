@@ -12,6 +12,7 @@ class DashboardPage extends BasePage {
 
     async onReady() {
         this.setupEventListeners();
+        this.setPageTitle('Dashboard');
         await this.loadPageData();
 
         // Set up refresh interval
@@ -98,7 +99,7 @@ await this.loadPersonalStats();
                     id,
                     completed_at,
                     outcome,
-                    challenges (id, title, description, brian_mode)
+                    challenges (id, title, description, brian_mode, success_metric)
                 `)
             .eq('user_id', this.userId)
             .order('assigned_at', { ascending: true });
@@ -190,7 +191,7 @@ renderChallenges(container, data) {
                         <div class="stat-value">${assignmentStats.totalCompleted}/${assignmentStats.totalAssigned}</div>
                     </div>
                     <div class="stat-box">
-                        <div class="stat-label">COMPETITION POINTS</div>
+                        <div class="stat-label">BRODOWN</div>
                         <div class="stat-value">${userStats.competition_points}</div>
                     </div>
                 </div>
