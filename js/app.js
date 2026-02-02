@@ -39,12 +39,17 @@ class AppState {
 
             if (error) throw error;
 
+            // Check if user is admin
+            const adminUsernames = ['brianc', 'admin'];
+            const isAdmin = adminUsernames.includes(data.username);
+
             this.currentUser = {
                 id: this.userId,
                 username: data.username,
                 display_name: data.display_name,
                 name: data.display_name || data.username,
-                created_at: data.created_at
+                created_at: data.created_at,
+                isAdmin: isAdmin
             };
 
             // Notify all subscribers

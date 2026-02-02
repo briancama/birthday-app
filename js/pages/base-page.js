@@ -59,6 +59,12 @@ class BasePage {
         document.title = `${fullTitle} - Birthday Challenge Zone`;
     }
 
+    isAdmin() {
+        // Check if current user is an admin
+        const adminUsernames = ['brianc', 'admin'];
+        return this.currentUser && adminUsernames.includes(this.currentUser.username);
+    }
+
     // Challenge management methods that can be shared
     async markChallengeComplete(assignmentId, challengeId, outcome, brianMode) {
         try {

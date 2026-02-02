@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Admin Approvals - Birthday Challenge Zone</title>
+  <link rel="icon" type="image/png" href="images/favicon.png">
+  <link rel="stylesheet" href="css/geocities.css">
+  <link rel="stylesheet" href="css/components/navigation.css">
+  <link rel="stylesheet" href="css/components/forms.css">
+  <link rel="stylesheet" href="css/components/submissions.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Navigation component will be inserted here -->
+    <site-navigation></site-navigation>
+
+    <div class="section">
+      <h2 class="text-shadow-light">🔐 Pending Challenge Approvals</h2>
+      <div id="pendingContainer">
+        <div class="empty-state">Loading pending submissions...</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="text-shadow-light">✅ Approved Challenges</h2>
+      <div id="approvedContainer">
+        <div class="empty-state">Loading approved challenges...</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <details class="denied-challenges-details">
+        <summary><h2 class="text-shadow-light">❌ Denied Challenges</h2></summary>
+        <div id="deniedContainer">
+          <div class="empty-state">Loading denied challenges...</div>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- Challenge Details Modal -->
+  <div id="detailsModal" class="challenge-modal">
+    <div class="challenge-modal-overlay"></div>
+    <div class="challenge-modal-content">
+      <button id="closeDetailsModal" class="challenge-close">❌ CLOSE</button>
+      
+      <h2 class="text-center rainbow-text">Challenge Details</h2>
+      
+      <div id="challengeDetails" class="challenge-details">
+        <!-- Details will be populated here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Assignment Modal -->
+  <div id="assignmentModal" class="challenge-modal">
+    <div class="challenge-modal-overlay"></div>
+    <div class="challenge-modal-content">
+      <button id="closeAssignmentModal" class="challenge-close">❌ CLOSE</button>
+      
+      <h2 class="text-center rainbow-text">Approve & Assign Challenge</h2>
+      
+      <form id="assignmentForm">
+        <div id="assignmentChallengeInfo" class="form-info">
+          <!-- Challenge info will be populated here -->
+        </div>
+
+        <div class="form-group">
+          <label>Assign To</label>
+          <div id="userCheckboxList" class="checkbox-list">
+            <!-- User checkboxes will be populated here -->
+          </div>
+          <small>Select one or more users to assign this challenge to.</small>
+        </div>
+
+        <button type="submit" id="approveAssignBtn">✅ APPROVE CHALLENGE</button>
+        
+        <div id="assignmentError" class="error-message"></div>
+        <div id="assignmentSuccess" class="success-message"></div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { appState } from './js/app.js';
+    import { SiteNavigation } from './js/components/navigation.js';
+    import { AdminApprovalsPage } from './js/pages/admin-approvals.js';
+
+    async function init() {
+      // Initialize app state (handles auth and navigation)
+      const isAuthenticated = await appState.init();
+      
+      if (isAuthenticated) {
+        // Initialize page
+        const page = new AdminApprovalsPage();
+        await page.init();
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

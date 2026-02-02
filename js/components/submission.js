@@ -73,8 +73,7 @@ export class SubmissionRow {
     row.innerHTML = `
       <td>${this.escapeHtml(this.challenge.title)}</td>
       <td>${this.getAssignedTo()}</td>
-      <td>${this.getStatusBadge()}</td>
-      <td>${this.formatDate(this.challenge.created_at)}</td>
+      ${this.mode === 'user' ? `<td>${this.getStatusBadge()}</td>` : ''}
       ${this.getActionButtons()}
     `;
 
@@ -122,8 +121,10 @@ export class SubmissionTable {
    * Get table headers based on mode
    */
   getHeaders() {
-    const baseHeaders = ['Challenge Name', 'Assigned To', 'Status', 'Submitted'];
-    if (this.mode === 'admin') {
+    const baseHeaders = ['Challenge Name', 'Intended For'];
+    if (this.mode === 'user') {
+      baseHeaders.push('Status');
+    } else if (this.mode === 'admin') {
       baseHeaders.push('Actions');
     }
     return baseHeaders;
