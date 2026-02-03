@@ -12,6 +12,12 @@
     margin-top: 0;
 }
 
+.category-description {
+    color: #CCCCCC;
+    margin-bottom: 8px;
+    font-size: 0.95em;
+}
+
 .rubric-category ul {
     margin: 10px 0;
 }

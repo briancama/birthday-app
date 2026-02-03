@@ -1,6 +1,7 @@
 import { BasePage } from './base-page.js';
 import { ChallengeCard } from '../components/challenge-card.js';
 import { EventBus } from '../events/event-bus.js';
+import { APP_CONFIG } from '../config.js';
 
 class DashboardPage extends BasePage {
     constructor() {
@@ -15,8 +16,10 @@ class DashboardPage extends BasePage {
         this.setPageTitle('Dashboard');
         await this.loadPageData();
 
-        // Set up refresh interval
-        this.refreshInterval = setInterval(() => this.loadPersonalStats(), 10000);
+        // Set up refresh interval for stats only (challenges cause layout shifts)
+        if (APP_CONFIG.enableAutoRefresh) {
+            this.refreshInterval = setInterval(() => this.loadPersonalStats(), APP_CONFIG.refreshInterval);
+        }
     }
 
     setupEventListeners() {
@@ -83,143 +86,165 @@ class DashboardPage extends BasePage {
             this.showError('Failed to mark complete: ' + err.message);
         }
     }
+
+    async loadPageData() {
         // Load challenges first to get assignment data, then stats
         await this.loadChallenges();
-await this.loadPersonalStats();
+        await this.loadPersonalStats();
     }
 
     async loadChallenges() {
-    const container = document.getElementById('challengesList');
-    this.setLoadingState('challengesList', true);
+        const container = document.getElementById('challengesList');
+        this.setLoadingState('challengesList', true);
 
-    try {
-        const { data, error } = await this.supabase
-            .from('assignments')
-            .select(`
+        try {
+            const { data, error } = await this.supabase
+                .from('assignments')
+                .select(`
                     id,
                     completed_at,
                     outcome,
                     challenges (id, title, description, brian_mode, success_metric)
                 `)
-            .eq('user_id', this.userId)
-            .order('assigned_at', { ascending: true });
+                .eq('user_id', this.userId)
+                .eq('active', true)
+                .order('assigned_at', { ascending: true });
 
-        if (error) throw error;
+            if (error) throw error;
 
-        if (!data || data.length === 0) {
-            container.innerHTML = '<div class="empty">No challenges assigned yet.</div>';
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="empty">No challenges assigned yet.</div>';
+                container.className = '';
+                return;
+            }
+
+            this.renderChallenges(container, data);
+
+        } catch (err) {
+            container.innerHTML = `<div class="empty">Error loading challenges: ${err.message}</div>`;
             container.className = '';
-            return;
         }
-
-        this.renderChallenges(container, data);
-
-    } catch (err) {
-        container.innerHTML = `<div class="empty">Error loading challenges: ${err.message}</div>`;
-        container.className = '';
     }
-}
 
-renderChallenges(container, data) {
-    container.innerHTML = '';
-    container.className = 'challenge-list';
+    renderChallenges(container, data) {
+        container.innerHTML = '';
+        container.className = 'challenge-list';
 
-    // Find first incomplete challenge
-    const firstIncompleteIndex = data.findIndex(a => !a.completed_at);
+        // Find first incomplete challenge
+        const firstIncompleteIndex = data.findIndex(a => !a.completed_at);
 
-    data.forEach((assignment, index) => {
-        const isCompleted = !!assignment.completed_at;
-        const outcome = assignment.outcome;
-        const brianMode = assignment.challenges.brian_mode;
-        const isRevealed = this.revealedChallengeId === assignment.id;
-        const canReveal = !isCompleted && (firstIncompleteIndex === index || isRevealed);
-        const isLocked = !isCompleted && firstIncompleteIndex < index && !isRevealed;
+        data.forEach((assignment, index) => {
+            const isCompleted = !!assignment.completed_at;
+            const outcome = assignment.outcome;
+            const brianMode = assignment.challenges.brian_mode;
+            const isRevealed = this.revealedChallengeId === assignment.id;
+            const canReveal = !isCompleted && (firstIncompleteIndex === index || isRevealed);
+            const isLocked = !isCompleted && firstIncompleteIndex < index && !isRevealed;
 
-        const challengeCard = new ChallengeCard(assignment, index, {
-            showActions: true,
-            allowReveal: true,
-            showBrianMode: true,
-            showIndex: true
+            const challengeCard = new ChallengeCard(assignment, index, {
+                showActions: true,
+                allowReveal: true,
+                showBrianMode: true,
+                showIndex: true
+            });
+
+            // NEW: Use event listeners instead of callbacks
+            challengeCard.addEventListener('reveal', (e) => {
+                this.handleChallengeReveal(e.detail);
+            });
+
+            challengeCard.addEventListener('complete', (e) => {
+                this.handleChallengeComplete(e.detail);
+            });
+
+            const state = {
+                isCompleted,
+                outcome,
+                brianMode,
+                isRevealed,
+                canReveal,
+                isLocked
+            };
+
+            const cardElement = challengeCard.create(state);
+            container.appendChild(cardElement);
         });
-
-        // NEW: Use event listeners instead of callbacks
-        challengeCard.addEventListener('reveal', (e) => {
-            this.handleChallengeReveal(e.detail);
-        });
-
-        challengeCard.addEventListener('complete', (e) => {
-            this.handleChallengeComplete(e.detail);
-        });
-
-        const state = {
-            isCompleted,
-            outcome,
-            brianMode,
-            isRevealed,
-            canReveal,
-            isLocked
-        };
-
-        const cardElement = challengeCard.create(state);
-        container.appendChild(cardElement);
-    });
-}
+    }
 
     async loadPersonalStats() {
-    const container = document.getElementById('personalStats');
+        const container = document.getElementById('personalStats');
 
-    try {
-        const { userStats, rank, assignmentStats } = await this.loadUserStats();
+        try {
+            const { userStats, rank, assignmentStats } = await this.loadUserStats();
 
-        if (!userStats) {
-            container.innerHTML = '<div class="empty">No stats yet. Complete some challenges!</div>';
-            return;
+            if (!userStats) {
+                container.innerHTML = '<div class="empty">No stats yet. Complete some challenges!</div>';
+                return;
+            }
+
+            // Smart refresh: only update data values, not entire HTML structure
+            if (APP_CONFIG.useSmartRefresh && container.querySelector('.stats-grid')) {
+                this.updateStatsValues(container, { userStats, rank, assignmentStats });
+            } else {
+                // Full render for initial load or when smart refresh is disabled
+                container.innerHTML = `
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">YOUR RANK</div>
+                            <div class="stat-value" data-stat="rank">#${rank}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">TOTAL POINTS</div>
+                            <div class="stat-value" data-stat="total-points">${userStats.total_points}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">CHALLENGES</div>
+                            <div class="stat-value" data-stat="challenges">${assignmentStats.totalCompleted}/${assignmentStats.totalAssigned}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">BRODOWN</div>
+                            <div class="stat-value" data-stat="competition-points">${userStats.competition_points}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+        } catch (err) {
+            container.innerHTML = `<div class="empty">Error loading stats: ${err.message}</div>`;
+        }
+    }
+
+    updateStatsValues(container, { userStats, rank, assignmentStats }) {
+        // Update only the data values, preserving all HTML structure and images
+        const rankEl = container.querySelector('[data-stat="rank"]');
+        const pointsEl = container.querySelector('[data-stat="total-points"]');
+        const challengesEl = container.querySelector('[data-stat="challenges"]');
+        const competitionEl = container.querySelector('[data-stat="competition-points"]');
+
+        if (rankEl) rankEl.textContent = `#${rank}`;
+        if (pointsEl) pointsEl.textContent = userStats.total_points;
+        if (challengesEl) challengesEl.textContent = `${assignmentStats.totalCompleted}/${assignmentStats.totalAssigned}`;
+        if (competitionEl) competitionEl.textContent = userStats.competition_points;
+    }
+
+    cleanup() {
+        super.cleanup();
+
+        // Clear refresh interval
+        if (this.refreshInterval) {
+            clearInterval(this.refreshInterval);
         }
 
-        container.innerHTML = `
-                <div class="stats-grid">
-                    <div class="stat-box">
-                        <div class="stat-label">YOUR RANK</div>
-                        <div class="stat-value">#${rank}</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-label">TOTAL POINTS</div>
-                        <div class="stat-value">${userStats.total_points}</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-label">CHALLENGES</div>
-                        <div class="stat-value">${assignmentStats.totalCompleted}/${assignmentStats.totalAssigned}</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-label">BRODOWN</div>
-                        <div class="stat-value">${userStats.competition_points}</div>
-                    </div>
-                </div>
-            `;
-
-    } catch (err) {
-        container.innerHTML = `<div class="empty">Error loading stats: ${err.message}</div>`;
+        // Clean up event listeners
+        this.eventCleanup.forEach(cleanup => cleanup());
+        this.eventCleanup = [];
     }
-}
-
-cleanup() {
-    super.cleanup();
-
-    // Clear refresh interval
-    if (this.refreshInterval) {
-        clearInterval(this.refreshInterval);
-    }
-
-    // Clean up event listeners
-    this.eventCleanup.forEach(cleanup => cleanup());
-    this.eventCleanup = [];
-}
 
     async loadPageData() {
-    // Load challenges first to get assignment data, then stats
-    await this.loadChallenges();
-    await this.loadPersonalStats();
-}
+        // Load challenges first to get assignment data, then stats
+        await this.loadChallenges();
+        await this.loadPersonalStats();
+    }
 }
 
 export { DashboardPage };
