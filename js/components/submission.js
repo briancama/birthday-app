@@ -22,8 +22,8 @@ export class SubmissionRow {
    * Get assigned user display
    */
   getAssignedTo() {
-    if (this.challenge.assigned_to_username) {
-      return this.escapeHtml(this.challenge.assigned_to_username);
+    if (this.challenge.suggested_for_username) {
+      return this.escapeHtml(this.challenge.suggested_for_username);
     }
     return 'Anyone';
   }
@@ -47,9 +47,9 @@ export class SubmissionRow {
 
     return `
       <td class="action-buttons">
-        <button class="btn-approve" data-id="${this.challenge.id}">✅ Approve</button>
-        <button class="btn-deny" data-id="${this.challenge.id}">❌ Deny</button>
-        <button class="btn-view" data-id="${this.challenge.id}">👁️ View</button>
+        <button class="btn-approve" data-id="${this.challenge.id}" aria-label="Approve challenge">✅</button>
+        <button class="btn-deny" data-id="${this.challenge.id}" aria-label="Deny challenge">❌</button>
+        <button class="btn-view" data-id="${this.challenge.id}" aria-label="View challenge details">👁️</button>
       </td>
     `;
   }

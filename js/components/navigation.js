@@ -1,22 +1,17 @@
 import { appState } from '../app.js';
+import { EventBus } from '../events/event-bus.js';
 
 class SiteNavigation extends HTMLElement {
     constructor() {
         super();
         this.currentUser = null;
         this.currentPage = this.getCurrentPage();
-        this.unsubscribe = null;
+        this.eventCleanup = [];
     }
 
     connectedCallback() {
         this.render();
-        
-        // Subscribe to app state changes
-        this.unsubscribe = appState.subscribe((event, data) => {
-            if (event === 'user-loaded') {
-                this.setCurrentUser(data);
-            }
-        });
+        this.setupEventListeners();
 
         // Set user if already loaded
         if (appState.getCurrentUser()) {
@@ -24,11 +19,54 @@ class SiteNavigation extends HTMLElement {
         }
     }
 
+    setupEventListeners() {
+        // Modern event-based subscription to appState
+        const userLoadedCleanup = appState.on('user:loaded', (e) => {
+            this.setCurrentUser(e.detail);
+        });
+
+        const userLogoutCleanup = appState.on('user:logout', (e) => {
+            this.currentUser = null;
+            this.render();
+        });
+
+        const userErrorCleanup = appState.on('user:error', (e) => {
+            console.error('Navigation: User error', e.detail);
+            this.showUserError(e.detail);
+        });
+
+        // Listen to global navigation events
+        const pageChangeCleanup = EventBus.instance.listen(EventBus.EVENTS.NAVIGATION.PAGE_CHANGE, (e) => {
+            this.handlePageChange(e.detail);
+        });
+
+        // Store cleanup functions
+        this.eventCleanup.push(
+            userLoadedCleanup,
+            userLogoutCleanup,
+            userErrorCleanup,
+            pageChangeCleanup
+        );
+    }
+
     disconnectedCallback() {
-        // Clean up subscription
-        if (this.unsubscribe) {
-            this.unsubscribe();
+        // Clean up event listeners
+        this.eventCleanup.forEach(cleanup => cleanup());
+        this.eventCleanup = [];
+    }
+
+    handlePageChange(detail) {
+        const { page, source } = detail;
+        if (page !== this.currentPage) {
+            this.currentPage = page;
+            this.render();
         }
+    }
+
+    showUserError(errorDetail) {
+        // Could show a temporary error message in the navigation
+        console.warn('Navigation: User authentication error', errorDetail);
+        // For now, just log it - could add error UI later
     }
 
     getCurrentPage() {
@@ -50,7 +88,7 @@ class SiteNavigation extends HTMLElement {
             'admin-approvals': 'Admin Approvals'
         };
         const title = pageTitles[this.currentPage] || 'Dashboard';
-        
+
         // Apply same logic as BasePage.setPageTitle()
         return this.currentUser && title === 'Dashboard'
             ? `${this.currentUser.name}'s ${title}`
@@ -113,7 +151,7 @@ class SiteNavigation extends HTMLElement {
                 </div>
             </nav>
         `;
-        
+
         // Add event listeners AFTER rendering
         this.addEventListeners();
     }
@@ -125,9 +163,23 @@ class SiteNavigation extends HTMLElement {
 
         if (menuToggle && navMenu) {
             menuToggle.addEventListener('click', (e) => {
-                e.preventDefault();
+                e.preventDefault(); // Prevent any default button behavior
+                console.log('🎯 Mobile menu toggle CLICKED!');
+                console.log('📱 Before toggle - mobile-open:', navMenu.classList.contains('mobile-open'));
+
+                const wasOpen = navMenu.classList.contains('mobile-open');
                 navMenu.classList.toggle('mobile-open');
                 menuToggle.classList.toggle('active');
+
+                // Emit menu toggle event
+                EventBus.instance.emit(EventBus.EVENTS.NAVIGATION.MENU_TOGGLE, {
+                    isOpen: !wasOpen,
+                    source: 'mobile-toggle'
+                });
+
+                console.log('📱 After toggle - mobile-open:', navMenu.classList.contains('mobile-open'));
+                console.log('📱 After toggle - active:', menuToggle.classList.contains('active'));
+                console.log('📱 Nav menu classes:', navMenu.className);
             });
         }
 
@@ -141,7 +193,21 @@ class SiteNavigation extends HTMLElement {
         // Close mobile menu when clicking a link
         const navLinks = this.querySelectorAll('.nav-tab:not(.logout-btn)');
         navLinks.forEach(link => {
-            link.addEventListener('click', () => {
+            link.addEventListener('click', (e) => {
+                console.log('🔗 Nav link clicked, closing mobile menu');
+
+                // Extract page from href for event
+                const href = link.getAttribute('href');
+                const page = href ? href.replace('.html', '') : 'unknown';
+
+                // Emit navigation event
+                EventBus.instance.emit(EventBus.EVENTS.NAVIGATION.PAGE_CHANGE, {
+                    page,
+                    source: 'navigation-click',
+                    href
+                });
+
+                // Close mobile menu
                 if (navMenu) {
                     navMenu.classList.remove('mobile-open');
                 }

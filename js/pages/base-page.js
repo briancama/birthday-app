@@ -5,14 +5,25 @@ class BasePage {
         this.supabase = appState.getSupabase();
         this.userId = appState.getUserId();
         this.currentUser = appState.getCurrentUser();
-        this.unsubscribe = null;
+        this.eventCleanup = [];
     }
 
     async init() {
-        // Subscribe to app state changes
-        this.unsubscribe = appState.subscribe((event, data) => {
-            this.handleStateChange(event, data);
+        // Modern event-based subscription to app state changes
+        const userLoadedCleanup = appState.on('user:loaded', (e) => {
+            this.handleStateChange('user-loaded', e.detail);
         });
+
+        const userErrorCleanup = appState.on('user:error', (e) => {
+            this.handleStateChange('user-error', e.detail);
+        });
+
+        const userLogoutCleanup = appState.on('user:logout', (e) => {
+            this.handleStateChange('user-logout', e.detail);
+        });
+
+        // Store cleanup functions
+        this.eventCleanup.push(userLoadedCleanup, userErrorCleanup, userLogoutCleanup);
 
         // Wait for app state to be ready
         if (!this.currentUser) {
@@ -41,6 +52,14 @@ class BasePage {
                 this.userId = data.id;
                 this.onUserLoaded?.(data);
                 break;
+            case 'user-error':
+                this.onUserError?.(data);
+                break;
+            case 'user-logout':
+                this.currentUser = null;
+                this.userId = null;
+                this.onUserLogout?.(data);
+                break;
             default:
                 this.onStateChange?.(event, data);
         }
@@ -53,8 +72,8 @@ class BasePage {
 
     setPageTitle(title) {
         const user = appState.getCurrentUser();
-        const fullTitle = user && title === 'Dashboard' 
-            ? `${user.name}'s ${title}` 
+        const fullTitle = user && title === 'Dashboard'
+            ? `${user.name}'s ${title}`
             : title;
         document.title = `${fullTitle} - Birthday Challenge Zone`;
     }
@@ -114,7 +133,8 @@ class BasePage {
                 user_id: briancUser.id,
                 challenge_id: challengeId,
                 completed_at: completedAt,
-                outcome: briancOutcome
+                outcome: briancOutcome,
+                active: true
             }], {
                 onConflict: 'user_id,challenge_id'
             });
@@ -126,7 +146,8 @@ class BasePage {
         // Get all assignments to count completions per user
         const { data: assignmentsData, error: assignmentsError } = await this.supabase
             .from('assignments')
-            .select('user_id, completed_at, outcome');
+            .select('user_id, completed_at, outcome')
+            .eq('active', true);
 
         if (assignmentsError) throw assignmentsError;
 
@@ -149,7 +170,7 @@ class BasePage {
         try {
             const [scoreboardData, assignmentData] = await Promise.all([
                 this.supabase.from('scoreboard').select('*'),
-                this.supabase.from('assignments').select('id, completed_at').eq('user_id', this.userId)
+                this.supabase.from('assignments').select('id, completed_at').eq('user_id', this.userId).eq('active', true)
             ]);
 
             if (scoreboardData.error) throw scoreboardData.error;
@@ -178,9 +199,9 @@ class BasePage {
     }
 
     cleanup() {
-        if (this.unsubscribe) {
-            this.unsubscribe();
-        }
+        // Clean up event listeners
+        this.eventCleanup.forEach(cleanup => cleanup());
+        this.eventCleanup = [];
     }
 
     // Utility methods
