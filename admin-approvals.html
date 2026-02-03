@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,7 @@
   <link rel="stylesheet" href="css/components/forms.css">
   <link rel="stylesheet" href="css/components/submissions.css">
 </head>
+
 <body>
   <div class="container">
     <!-- Navigation component will be inserted here -->
@@ -32,7 +34,9 @@
 
     <div class="section">
       <details class="denied-challenges-details">
-        <summary><h2 class="text-shadow-light">❌ Denied Challenges</h2></summary>
+        <summary>
+          <h2 class="text-shadow-light">❌ Denied Challenges</h2>
+        </summary>
         <div id="deniedContainer">
           <div class="empty-state">Loading denied challenges...</div>
         </div>
@@ -45,9 +49,9 @@
     <div class="challenge-modal-overlay"></div>
     <div class="challenge-modal-content">
       <button id="closeDetailsModal" class="challenge-close">❌ CLOSE</button>
-      
+
       <h2 class="text-center rainbow-text">Challenge Details</h2>
-      
+
       <div id="challengeDetails" class="challenge-details">
         <!-- Details will be populated here -->
       </div>
@@ -59,9 +63,9 @@
     <div class="challenge-modal-overlay"></div>
     <div class="challenge-modal-content">
       <button id="closeAssignmentModal" class="challenge-close">❌ CLOSE</button>
-      
+
       <h2 class="text-center rainbow-text">Approve & Assign Challenge</h2>
-      
+
       <form id="assignmentForm">
         <div id="assignmentChallengeInfo" class="form-info">
           <!-- Challenge info will be populated here -->
@@ -72,11 +76,11 @@
           <div id="userCheckboxList" class="checkbox-list">
             <!-- User checkboxes will be populated here -->
           </div>
-          <small>Select one or more users to assign this challenge to.</small>
+          <small>Check to assign, uncheck to unassign users for this challenge.</small>
         </div>
 
-        <button type="submit" id="approveAssignBtn">✅ APPROVE CHALLENGE</button>
-        
+        <button type="submit" id="approveAssignBtn">✅ SAVE ASSIGNMENTS</button>
+
         <div id="assignmentError" class="error-message"></div>
         <div id="assignmentSuccess" class="success-message"></div>
       </form>
@@ -91,7 +95,7 @@
     async function init() {
       // Initialize app state (handles auth and navigation)
       const isAuthenticated = await appState.init();
-      
+
       if (isAuthenticated) {
         // Initialize page
         const page = new AdminApprovalsPage();
@@ -102,4 +106,5 @@
     init();
   </script>
 </body>
+
 </html>

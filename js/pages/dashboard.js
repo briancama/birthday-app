@@ -1,5 +1,6 @@
 import { BasePage } from './base-page.js';
 import { ChallengeCard } from '../components/challenge-card.js';
+import { EventBus } from '../events/event-bus.js';
 import { APP_CONFIG } from '../config.js';
 
 class DashboardPage extends BasePage {
@@ -7,15 +8,82 @@ class DashboardPage extends BasePage {
         super();
         this.revealedChallengeId = null;
         this.refreshInterval = null;
+        this.eventCleanup = [];
     }
 
     async onReady() {
+        this.setupEventListeners();
         this.setPageTitle('Dashboard');
         await this.loadPageData();
 
-        // Set up refresh interval (disabled in dev mode for easier inspection)
+        // Set up refresh interval for stats only (challenges cause layout shifts)
         if (APP_CONFIG.enableAutoRefresh) {
             this.refreshInterval = setInterval(() => this.loadPersonalStats(), APP_CONFIG.refreshInterval);
+        }
+    }
+
+    setupEventListeners() {
+        // Listen for global challenge events
+        const revealCleanup = EventBus.instance.listen(EventBus.EVENTS.CHALLENGE.REVEAL, (e) => {
+            this.handleChallengeReveal(e.detail);
+        });
+
+        const completeCleanup = EventBus.instance.listen(EventBus.EVENTS.CHALLENGE.COMPLETE, (e) => {
+            this.handleChallengeComplete(e.detail);
+        });
+
+        // Store cleanup functions for later removal
+        this.eventCleanup.push(revealCleanup, completeCleanup);
+    }
+
+    handleChallengeReveal(detail) {
+        const { assignmentId } = detail;
+        this.revealedChallengeId = assignmentId;
+        this.loadChallenges();
+    }
+
+    async handleChallengeComplete(detail) {
+        const { assignmentId, challengeId, outcome, brianMode, button } = detail;
+
+        try {
+            // Provide immediate UI feedback
+            button.disabled = true;
+            button.textContent = 'Processing...';
+
+            // Emit loading event
+            EventBus.instance.emit(EventBus.EVENTS.CHALLENGE.LOADING, {
+                assignmentId,
+                action: 'completing'
+            });
+
+            await this.markChallengeComplete(assignmentId, challengeId, outcome, brianMode);
+
+            // Reset revealed challenge and reload data
+            this.revealedChallengeId = null;
+            await Promise.all([this.loadChallenges(), this.loadPersonalStats()]);
+
+            // Emit success event
+            EventBus.instance.emit(EventBus.EVENTS.CHALLENGE.COMPLETED_SUCCESS, {
+                assignmentId,
+                challengeId,
+                outcome,
+                brianMode
+            });
+
+        } catch (err) {
+            // Reset button state on error
+            button.disabled = false;
+            button.textContent = button.dataset.originalText || 'RETRY';
+
+            // Emit error event
+            EventBus.instance.emit(EventBus.EVENTS.CHALLENGE.COMPLETED_ERROR, {
+                assignmentId,
+                challengeId,
+                error: err.message,
+                originalError: err
+            });
+
+            this.showError('Failed to mark complete: ' + err.message);
         }
     }
 
@@ -39,6 +107,7 @@ class DashboardPage extends BasePage {
                     challenges (id, title, description, brian_mode, success_metric)
                 `)
                 .eq('user_id', this.userId)
+                .eq('active', true)
                 .order('assigned_at', { ascending: true });
 
             if (error) throw error;
@@ -79,24 +148,14 @@ class DashboardPage extends BasePage {
                 showIndex: true
             });
 
-            // Set up callbacks
-            challengeCard
-                .setOnReveal((assignmentId) => {
-                    this.revealedChallengeId = assignmentId;
-                    this.loadChallenges();
-                })
-                .setOnComplete(async (assignmentId, challengeId, outcome, brianMode) => {
-                    try {
-                        await this.markChallengeComplete(assignmentId, challengeId, outcome, brianMode);
+            // NEW: Use event listeners instead of callbacks
+            challengeCard.addEventListener('reveal', (e) => {
+                this.handleChallengeReveal(e.detail);
+            });
 
-                        // Reset revealed challenge and reload data
-                        this.revealedChallengeId = null;
-                        await Promise.all([this.loadChallenges(), this.loadPersonalStats()]);
-
-                    } catch (err) {
-                        this.showError('Failed to mark complete: ' + err.message);
-                    }
-                });
+            challengeCard.addEventListener('complete', (e) => {
+                this.handleChallengeComplete(e.detail);
+            });
 
             const state = {
                 isCompleted,
@@ -123,37 +182,68 @@ class DashboardPage extends BasePage {
                 return;
             }
 
-            container.innerHTML = `
-                <div class="stats-grid">
-                    <div class="stat-box">
-                        <div class="stat-label">YOUR RANK</div>
-                        <div class="stat-value">#${rank}</div>
+            // Smart refresh: only update data values, not entire HTML structure
+            if (APP_CONFIG.useSmartRefresh && container.querySelector('.stats-grid')) {
+                this.updateStatsValues(container, { userStats, rank, assignmentStats });
+            } else {
+                // Full render for initial load or when smart refresh is disabled
+                container.innerHTML = `
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">YOUR RANK</div>
+                            <div class="stat-value" data-stat="rank">#${rank}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">TOTAL POINTS</div>
+                            <div class="stat-value" data-stat="total-points">${userStats.total_points}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">CHALLENGES</div>
+                            <div class="stat-value" data-stat="challenges">${assignmentStats.totalCompleted}/${assignmentStats.totalAssigned}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">BRODOWN</div>
+                            <div class="stat-value" data-stat="competition-points">${userStats.competition_points}</div>
+                        </div>
                     </div>
-                    <div class="stat-box">
-                        <div class="stat-label">TOTAL POINTS</div>
-                        <div class="stat-value">${userStats.total_points}</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-label">CHALLENGES</div>
-                        <div class="stat-value">${assignmentStats.totalCompleted}/${assignmentStats.totalAssigned}</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-label">BRODOWN</div>
-                        <div class="stat-value">${userStats.competition_points}</div>
-                    </div>
-                </div>
-            `;
+                `;
+            }
 
         } catch (err) {
             container.innerHTML = `<div class="empty">Error loading stats: ${err.message}</div>`;
         }
     }
 
+    updateStatsValues(container, { userStats, rank, assignmentStats }) {
+        // Update only the data values, preserving all HTML structure and images
+        const rankEl = container.querySelector('[data-stat="rank"]');
+        const pointsEl = container.querySelector('[data-stat="total-points"]');
+        const challengesEl = container.querySelector('[data-stat="challenges"]');
+        const competitionEl = container.querySelector('[data-stat="competition-points"]');
+
+        if (rankEl) rankEl.textContent = `#${rank}`;
+        if (pointsEl) pointsEl.textContent = userStats.total_points;
+        if (challengesEl) challengesEl.textContent = `${assignmentStats.totalCompleted}/${assignmentStats.totalAssigned}`;
+        if (competitionEl) competitionEl.textContent = userStats.competition_points;
+    }
+
     cleanup() {
         super.cleanup();
+
+        // Clear refresh interval
         if (this.refreshInterval) {
             clearInterval(this.refreshInterval);
         }
+
+        // Clean up event listeners
+        this.eventCleanup.forEach(cleanup => cleanup());
+        this.eventCleanup = [];
+    }
+
+    async loadPageData() {
+        // Load challenges first to get assignment data, then stats
+        await this.loadChallenges();
+        await this.loadPersonalStats();
     }
 }
 

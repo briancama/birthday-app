@@ -41,8 +41,8 @@ export class ChallengeAssignmentRow {
       <td>${this.escapeHtml(this.challenge.title)}</td>
       <td class="assigned-users">${this.getAssignedUsers()}</td>
       <td class="action-buttons">
-        <button class="btn-assign" data-id="${this.challenge.id}">➕ Assign</button>
-        <button class="btn-view" data-id="${this.challenge.id}">👁️ View</button>
+        <button class="btn-assign" data-id="${this.challenge.id}" aria-label="Manage assignments">✏️</button>
+        <button class="btn-view" data-id="${this.challenge.id}" aria-label="View challenge details">👁️</button>
       </td>
     `;
 

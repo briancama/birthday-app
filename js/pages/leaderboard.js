@@ -9,17 +9,38 @@ class LeaderboardPage extends BasePage {
 
     async onReady() {
         this.setPageTitle('Leaderboard');
+        this.addRefreshButton();
+        await this.loadLeaderboard();
+    }
+
+    addRefreshButton() {
+        const refreshButton = document.getElementById('refreshButton');
+        if (refreshButton) {
+            refreshButton.addEventListener('click', () => this.handleRefresh());
+        }
+    }
+
+    async handleRefresh() {
+        const refreshButton = document.getElementById('refreshButton');
+        const originalText = refreshButton?.textContent;
+
+        if (refreshButton) {
+            refreshButton.disabled = true;
+            refreshButton.textContent = 'Refreshing...';
+        }
+
         await this.loadLeaderboard();
 
-        // Set up refresh interval (disabled in dev mode for easier inspection)
-        if (APP_CONFIG.enableAutoRefresh) {
-            this.refreshInterval = setInterval(() => this.loadLeaderboard(), APP_CONFIG.refreshInterval);
+        if (refreshButton) {
+            refreshButton.disabled = false;
+            refreshButton.textContent = originalText;
         }
     }
 
     async loadLeaderboard() {
         const container = document.getElementById('scoreboard');
-        
+        const lastUpdatedElement = document.getElementById('lastUpdated');
+
         try {
             const { data, error } = await this.supabase
                 .from('scoreboard')
@@ -37,6 +58,11 @@ class LeaderboardPage extends BasePage {
 
             this.renderLeaderboard(container, enrichedData);
 
+            // Update last refreshed timestamp
+            if (lastUpdatedElement) {
+                lastUpdatedElement.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+            }
+
         } catch (err) {
             container.innerHTML = `<div class="empty">Error loading leaderboard: ${err.message}</div>`;
         }
@@ -53,9 +79,9 @@ class LeaderboardPage extends BasePage {
         const leaderboardHTML = `
             <div class="leaderboard-cards">
                 ${data.map((row, idx) => {
-                    const rank = idx + 1;
-                    const isCurrentUser = row.user_id === this.userId;
-                    return `
+            const rank = idx + 1;
+            const isCurrentUser = row.user_id === this.userId;
+            return `
                         <div class="leaderboard-card ${isCurrentUser ? 'current-user' : ''}">
                             <div class="leaderboard-card__rank">
                                 <span class="rank-number">#${rank}</span>
@@ -78,7 +104,7 @@ class LeaderboardPage extends BasePage {
                             </div>
                         </div>
                     `;
-                }).join('')}
+        }).join('')}
             </div>
         `;
 
@@ -86,9 +112,7 @@ class LeaderboardPage extends BasePage {
     }
 
     cleanup() {
-        if (this.refreshInterval) {
-            clearInterval(this.refreshInterval);
-        }
+        // Manual refresh only - no intervals to clean up
     }
 }
 
