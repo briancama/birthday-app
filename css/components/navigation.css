@@ -127,7 +127,8 @@
 
     /* Adjust user info for mobile with hamburger button */
     .nav-user-info {
-        padding-right: 60px; /* Account for hamburger button */
+        padding-right: 60px;
+        /* Account for hamburger button */
         text-align: left;
     }
 
@@ -151,7 +152,7 @@
 
     .nav-menu.mobile-open .nav-tabs {
         display: flex;
-        gap: var(--spacing-xs);
+        gap: 0;
     }
 
     .nav-tab {
