@@ -26,7 +26,7 @@ class LeaderboardPage extends BasePage {
 
         if (refreshButton) {
             refreshButton.disabled = true;
-            refreshButton.innerHTML = '<img src="images/refresh.gif" alt="Refresh" class="icon-gif"> <span class="refresh-text">Refreshing...</span>';
+            refreshButton.innerHTML = '<img src="images/refresh.gif" alt="Refresh" class="icon-gif icon-gif--with-text"> <span class="refresh-text">Refreshing...</span>';
         }
 
         await this.loadLeaderboard();
