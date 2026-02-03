@@ -358,6 +358,33 @@
     color: var(--accent-yellow);
   }
 
+  /* Close Button - Universal style for all modals */
+  .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: linear-gradient(180deg, #FF0000 0%, #CC0000 100%);
+    color: #FFFF00;
+    border: 3px outset #FF0000;
+    padding: 0.5rem 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: 'Comic Sans MS', cursive;
+    font-size: 0.9rem;
+    text-shadow: 1px 1px 0px #000000;
+    z-index: 1000;
+  }
+
+  .close-btn:hover {
+    background: linear-gradient(180deg, #CC0000 0%, #990000 100%);
+    border-style: inset;
+  }
+
+  .close-btn:active {
+    border-style: inset;
+    transform: translateY(1px);
+  }
+
   /* Forms */
   .form-group {
     margin-bottom: var(--spacing-lg);
