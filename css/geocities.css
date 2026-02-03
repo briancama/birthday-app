@@ -47,15 +47,24 @@
   --text-shadow-strong: 3px 3px 0px #000000, -1px -1px 0px #FFFFFF;
 
   /* Font Sizes (base: 16px = 1rem) */
-  --text-xs: 0.75rem;   /* 12px - smallest */
-  --text-sm: 0.875rem;  /* 14px */
-  --text-base: 1rem;    /* 16px */
-  --text-lg: 1.125rem;  /* 18px */
-  --text-xl: 1.25rem;   /* 20px */
-  --text-2xl: 1.5rem;   /* 24px */
-  --text-3xl: 1.875rem; /* 30px */
-  --text-4xl: 2.25rem;  /* 36px */
-  --text-5xl: 3rem;     /* 48px */
+  --text-xs: 0.75rem;
+  /* 12px - smallest */
+  --text-sm: 0.875rem;
+  /* 14px */
+  --text-base: 1rem;
+  /* 16px */
+  --text-lg: 1.125rem;
+  /* 18px */
+  --text-xl: 1.25rem;
+  /* 20px */
+  --text-2xl: 1.5rem;
+  /* 24px */
+  --text-3xl: 1.875rem;
+  /* 30px */
+  --text-4xl: 2.25rem;
+  /* 36px */
+  --text-5xl: 3rem;
+  /* 48px */
 
   /* Animations */
   --anim-duration-fast: 0.5s;
@@ -366,13 +375,14 @@
     background: linear-gradient(180deg, #FF0000 0%, #CC0000 100%);
     color: #FFFF00;
     border: 3px outset #FF0000;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 0.5rem;
     font-weight: bold;
     cursor: pointer;
     font-family: 'Comic Sans MS', cursive;
     font-size: 0.9rem;
     text-shadow: 1px 1px 0px #000000;
     z-index: 1000;
+    line-height: 1;
   }
 
   .close-btn:hover {
@@ -414,37 +424,6 @@
   textarea:focus {
     outline: var(--border-width) solid var(--accent-magenta);
     background: #FFFFCC;
-  }
-
-  /* Navigation */
-  .nav-tabs {
-    display: flex;
-    gap: var(--spacing-xs);
-    margin-bottom: 0;
-    flex-wrap: wrap;
-  }
-
-  .nav-tab {
-    padding: 0.75rem var(--spacing-lg);
-    background: var(--section-bg);
-    color: var(--text-dark);
-    border: var(--border-width) var(--border-style) var(--border-color);
-    font-weight: bold;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-block;
-    font-family: 'Arial', sans-serif;
-  }
-
-  .nav-tab:hover {
-    background: var(--accent-yellow);
-    border: var(--border-width) inset var(--border-color);
-  }
-
-  .nav-tab.active {
-    background: var(--accent-magenta);
-    color: var(--accent-yellow);
-    border: var(--border-width) inset var(--border-color);
   }
 
   /* Marquee */
@@ -808,9 +787,9 @@
   }
 
   *:has(> .icon-gif--with-text) {
-    display:inline-flex;
+    display: inline-flex;
     align-items: center;
-    line-height:1;
+    line-height: 1;
   }
 
   /* Text highlights */

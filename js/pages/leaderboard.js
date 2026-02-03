@@ -22,18 +22,18 @@ class LeaderboardPage extends BasePage {
 
     async handleRefresh() {
         const refreshButton = document.getElementById('refreshButton');
-        const originalText = refreshButton?.textContent;
+        const originalHTML = refreshButton?.innerHTML;
 
         if (refreshButton) {
             refreshButton.disabled = true;
-            refreshButton.textContent = 'Refreshing...';
+            refreshButton.innerHTML = '<img src="images/refresh.gif" alt="Refresh" class="icon-gif"> <span class="refresh-text">Refreshing...</span>';
         }
 
         await this.loadLeaderboard();
 
         if (refreshButton) {
             refreshButton.disabled = false;
-            refreshButton.textContent = originalText;
+            refreshButton.innerHTML = originalHTML;
         }
     }
 

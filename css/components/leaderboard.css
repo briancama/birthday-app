@@ -1,11 +1,26 @@
 /* Leaderboard Page Styles */
 
+/* Leaderboard Header - Flex container for title and controls */
+.leaderboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-md);
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+}
+
+.leaderboard-header h2 {
+    margin: 0;
+    flex-shrink: 0;
+}
+
 /* Leaderboard Controls */
 .leaderboard-controls {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
-    margin-bottom: var(--spacing-md);
+    flex-direction: column;
     flex-wrap: wrap;
     gap: var(--spacing-sm);
 }
@@ -14,10 +29,11 @@
     background: linear-gradient(180deg, #00FF00 0%, #00CC00 100%);
     color: #000000;
     border: 2px outset #FFFFFF;
-    padding: var(--spacing-xs) var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-xs);
     font-weight: bold;
     cursor: pointer;
     font-family: inherit;
+    line-height: 1;
 }
 
 .refresh-btn:hover {
@@ -30,7 +46,7 @@
 }
 
 .last-updated {
-    color: #CCCCCC;
+    color: #424242;
     font-size: 0.875rem;
     font-style: italic;
 }
@@ -180,5 +196,15 @@
 
     .leaderboard-card__stat-value {
         font-size: 0.8rem;
+    }
+
+    /* Hide refresh button text on mobile */
+    .refresh-text {
+        display: none;
+    }
+
+    /* Hide last updated text on mobile */
+    .last-updated {
+        display: none;
     }
 }
