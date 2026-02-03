@@ -1,11 +1,9 @@
 import { appState } from '../app.js';
 import { EventBus } from '../events/event-bus.js';
 
-class ChallengeCard {
+class ChallengeCard extends EventTarget {
     constructor(assignment, index, options = {}) {
-        // Add EventTarget capabilities for event emission
-        Object.assign(this, EventTarget.prototype);
-        EventTarget.call(this);
+        super(); // Call EventTarget constructor
 
         this.assignment = assignment;
         this.index = index;
@@ -84,12 +82,12 @@ class ChallengeCard {
 
         if (isCompleted || isRevealed) {
             let html = '';
-            
+
             // Add description
             if (this.assignment.challenges.description) {
                 html += `<p>${this.assignment.challenges.description}</p>`;
             }
-            
+
             // Add success metric if it exists
             if (this.assignment.challenges.success_metric) {
                 html += `<details class="success-metric">
@@ -97,7 +95,7 @@ class ChallengeCard {
                     <p>${this.assignment.challenges.success_metric}</p>
                 </details>`;
             }
-            
+
             return html || '<p>No description</p>';
         }
 
