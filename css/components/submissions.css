@@ -55,6 +55,21 @@
   background: rgba(255, 255, 255, 0.15);
 }
 
+/* Column widths for challenge assignment table (approved challenges) */
+#approvedContainer .submissions-table th:nth-child(1),
+#approvedContainer .submissions-table td:nth-child(1) {
+  width: 40%;
+  /* Challenge Name */
+}
+
+#approvedContainer .submissions-table th:nth-child(2),
+#approvedContainer .submissions-table td:nth-child(2) {
+  width: 50%;
+  /* Assigned To - expanded */
+}
+
+/* Actions column - let it auto-size based on flex content */
+
 /* Status Badges */
 .status-badge {
   font-weight: bold;
@@ -96,11 +111,14 @@
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  width: 100%;
+  /* Ensure flex container respects table cell width */
+  justify-content: flex-start;
 }
 
 .action-buttons button {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.875rem;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.8rem;
   cursor: pointer;
   border: 2px outset #FFFFFF;
   background: linear-gradient(180deg, #FFFFFF 0%, #C0C0C0 100%);
