@@ -193,7 +193,7 @@
     <div id="guestbookModal" class="guestbook-modal" style="display: none;">
       <div class="guestbook-modal-overlay"></div>
       <div class="guestbook-modal-content">
-        <button id="closeGuestbook" class="guestbook-close">❌ CLOSE</button>
+        <button id="closeGuestbook" class="close-btn">❌</button>
 
         <h2 class="text-center rainbow-text">
           <img src="images/sparkle.gif" alt="" class="icon-gif">
@@ -208,15 +208,15 @@
             <input type="text" id="guestName" required maxlength="50">
             <small>Max 50 characters</small>
           </div>
-          
+
           <div class="form-group">
             <label for="guestMessage">Your Message *</label>
             <textarea id="guestMessage" required maxlength="200" rows="3"></textarea>
             <small>Max 200 characters</small>
           </div>
-          
+
           <button type="button" id="signGuestbook">SIGN IT!!!</button>
-          
+
           <div id="guestbookError" class="error-message"></div>
           <div id="guestbookSuccess" class="success-message"></div>
         </form>

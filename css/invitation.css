@@ -193,29 +193,6 @@ h2 .icon-gif {
   z-index: 10000;
 }
 
-.guestbook-close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: linear-gradient(180deg, #FF0000 0%, #CC0000 100%);
-  color: #FFFF00;
-  border: 3px outset #FF0000;
-  padding: 0.5rem 1rem;
-  font-family: 'Comic Sans MS', cursive;
-  font-weight: bold;
-  cursor: pointer;
-  text-shadow: 1px 1px 0px #000000;
-  font-size: 0.9rem;
-}
-
-.guestbook-close:hover {
-  background: linear-gradient(180deg, #CC0000 0%, #990000 100%);
-}
-
-.guestbook-close:active {
-  border-style: inset;
-}
-
 /* Guestbook form styling - uses shared forms.css for inputs/labels */
 .guestbook-form {
   margin-bottom: 2rem;

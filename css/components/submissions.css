@@ -183,28 +183,6 @@
   z-index: 10000;
 }
 
-.challenge-close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: linear-gradient(180deg, #FF0000 0%, #CC0000 100%);
-  color: #FFFF00;
-  border: 3px outset #FF0000;
-  padding: 0.5rem 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  font-family: 'Comic Sans MS', cursive;
-}
-
-.challenge-close:hover {
-  border-style: inset;
-}
-
-.challenge-close:active {
-  border-style: inset;
-  transform: translateY(1px);
-}
-
 /* Add Challenge Button */
 .add-challenge-btn {
   margin-bottom: 1.5rem;
