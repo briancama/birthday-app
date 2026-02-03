@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             } catch (error) {
                 console.error('Error parsing user data:', error);
                 // Redirect to login if user data is corrupted
-                window.location.href = 'index.html';
+                window.location.href = '/';
             }
         } else {
             // No user found, redirect to login

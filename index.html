@@ -20,7 +20,7 @@
     <div class="interior-container" style="text-align: center; background: #FFFF00; border: 4px dashed #FF00FF;">
       <h2 style="color: #FF0000; margin: 0 0 1rem 0;"><img class="icon-gif icon-gif--sm" src="images/construction_sign.gif" alt="Under Construction">COMING SOON!<img class="icon-gif icon-gif--sm" src="images/construction_sign.gif" alt="Under Construction"></h2>
       <p style="font-size: 1.2rem; margin: 0; color: #000;">The challenge zone is currently under construction! Check back soon!!!</p>
-      <p style="margin-top: 1rem;"><a href="invitation.html" style="color: #0000FF; text-decoration: underline; font-weight: bold;">View the Party Invitation →</a></p>
+      <p style="margin-top: 1rem;"><a href="invitation" style="color: #0000FF; text-decoration: underline; font-weight: bold;">View the Party Invitation →</a></p>
     </div>
 
     <!-- Login form temporarily disabled -->
@@ -120,7 +120,7 @@
         localStorage.setItem('display_name', user.display_name)
 
         // Redirect to dashboard
-        window.location.href = 'dashboard.html'
+        window.location.href = 'dashboard'
 
       } catch (err) {
         console.error('Sign in error:', err)
@@ -132,7 +132,7 @@
 
     // Check if already signed in
     if (localStorage.getItem('user_id')) {
-      window.location.href = 'dashboard.html'
+      window.location.href = 'dashboard'
     }
   </script>
 </body>

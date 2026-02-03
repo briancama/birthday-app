@@ -181,7 +181,7 @@ class AppState extends EventTarget {
     }
 
     redirectToLogin() {
-        window.location.href = 'index.html';
+        window.location.href = '/';
     }
 
     // Getters for convenience

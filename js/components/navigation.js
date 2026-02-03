@@ -121,25 +121,25 @@ class SiteNavigation extends HTMLElement {
                 <div class="nav-menu">
                     <!-- Navigation Links -->
                     <div class="nav-tabs">
-                        <a href="dashboard.html" class="nav-tab ${this.currentPage === 'dashboard' ? 'active' : ''}">
+                        <a href="dashboard" class="nav-tab ${this.currentPage === 'dashboard' ? 'active' : ''}">
                             <img src="images/home.gif" alt="home" class="icon-gif icon-gif--lg icon-gif--with-text">
                             <span>DASHBOARD</span>
                         </a>
-                        <a href="challenges-submit.html" class="nav-tab ${this.currentPage === 'challenges-submit' ? 'active' : ''}">
+                        <a href="challenges-submit" class="nav-tab ${this.currentPage === 'challenges-submit' ? 'active' : ''}">
                             <img src="images/star_icon.gif" alt="star" class="icon-gif icon-gif--with-text">
                             <span>SUBMIT CHALLENGE</span>
                         </a>
-                        <a href="leaderboard.html" class="nav-tab ${this.currentPage === 'leaderboard' ? 'active' : ''}">
+                        <a href="leaderboard" class="nav-tab ${this.currentPage === 'leaderboard' ? 'active' : ''}">
                             <img src="images/trophy.gif" alt="trophy" class="icon-gif icon-gif--with-text">
                             <span>LEADERBOARD</span>
                         </a>
                         ${this.currentUser?.isAdmin ? `
-                        <a href="admin-approvals.html" class="nav-tab ${this.currentPage === 'admin-approvals' ? 'active' : ''}">
+                        <a href="admin-approvals" class="nav-tab ${this.currentPage === 'admin-approvals' ? 'active' : ''}">
                             <img src="images/star_icon.gif" alt="admin" class="icon-gif icon-gif--with-text">
                             <span>🔐 ADMIN</span>
                         </a>
                         ` : ''}
-                        <a href="cocktail-rubric.html" class="nav-tab ${this.currentPage === 'rubric' ? 'active' : ''}">
+                        <a href="cocktail-rubric" class="nav-tab ${this.currentPage === 'rubric' ? 'active' : ''}">
                             <img src="images/star_icon.gif" alt="star" class="icon-gif icon-gif--with-text">
                             <span>RUBRIC</span>
                         </a>
