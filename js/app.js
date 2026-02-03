@@ -1,11 +1,15 @@
 import { SUPABASE_CONFIG } from './config.js';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { EventBus } from './events/event-bus.js';
 
-class AppState {
+class AppState extends EventTarget {
     constructor() {
+        super();
         this.supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
         this.currentUser = null;
         this.userId = null;
+
+        // Keep legacy subscribers for backward compatibility
         this.subscribers = new Set();
     }
 
@@ -22,15 +26,19 @@ class AppState {
 
         // Load full user profile
         await this.loadUserProfile();
-        
+
         // Initialize navigation if present
         this.initializeNavigation();
-        
+
         return true;
     }
 
     async loadUserProfile() {
         try {
+            // Emit loading event
+            this.dispatchEvent(new CustomEvent('user:loading'));
+            EventBus.instance.emit(EventBus.EVENTS.USER.LOADING);
+
             const { data, error } = await this.supabase
                 .from('users')
                 .select('id, username, display_name, created_at')
@@ -52,11 +60,31 @@ class AppState {
                 isAdmin: isAdmin
             };
 
-            // Notify all subscribers
+            // Emit user loaded events
+            const userLoadedEvent = new CustomEvent('user:loaded', {
+                detail: this.currentUser
+            });
+            this.dispatchEvent(userLoadedEvent);
+            EventBus.instance.emit(EventBus.EVENTS.USER.LOADED, this.currentUser);
+
+            // Legacy subscriber support
             this.notifySubscribers('user-loaded', this.currentUser);
 
         } catch (error) {
             console.error('Failed to load user profile:', error);
+
+            // Emit error events
+            const errorDetail = {
+                error: error.message,
+                action: 'loadProfile',
+                originalError: error
+            };
+
+            this.dispatchEvent(new CustomEvent('user:error', {
+                detail: errorDetail
+            }));
+            EventBus.instance.emit(EventBus.EVENTS.USER.ERROR, errorDetail);
+
             this.redirectToLogin();
         }
     }
@@ -68,29 +96,56 @@ class AppState {
         }
     }
 
-    // Subscribe to state changes
+    // Modern event-based subscription (recommended)
+    on(eventType, handler, options = {}) {
+        this.addEventListener(eventType, handler, options);
+        return () => this.removeEventListener(eventType, handler, options);
+    }
+
+    // Emit custom events
+    emit(eventType, detail) {
+        this.dispatchEvent(new CustomEvent(eventType, { detail }));
+        EventBus.instance.emit(eventType, detail);
+    }
+
+    // Legacy subscription - DEPRECATED
     subscribe(callback) {
+        console.warn('AppState.subscribe() is deprecated. Use appState.on(eventType, handler) instead.');
         this.subscribers.add(callback);
         return () => this.subscribers.delete(callback);
     }
 
-    // Notify subscribers of state changes
+    // Legacy subscriber notification - for backward compatibility
     notifySubscribers(event, data) {
         this.subscribers.forEach(callback => {
             try {
                 callback(event, data);
             } catch (error) {
-                console.error('Subscriber callback error:', error);
+                console.error('Legacy subscriber callback error:', error);
             }
         });
     }
 
     // Authentication methods
     logout() {
+        const previousUser = this.currentUser;
+
         localStorage.removeItem('user_id');
         localStorage.removeItem('username');
         this.currentUser = null;
         this.userId = null;
+
+        // Emit logout events
+        const logoutDetail = {
+            previousUser,
+            timestamp: new Date().toISOString()
+        };
+
+        this.dispatchEvent(new CustomEvent('user:logout', {
+            detail: logoutDetail
+        }));
+        EventBus.instance.emit(EventBus.EVENTS.USER.LOGOUT, logoutDetail);
+
         this.redirectToLogin();
     }
 

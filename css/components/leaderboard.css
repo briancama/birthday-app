@@ -1,5 +1,40 @@
 /* Leaderboard Page Styles */
 
+/* Leaderboard Controls */
+.leaderboard-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+}
+
+.refresh-btn {
+    background: linear-gradient(180deg, #00FF00 0%, #00CC00 100%);
+    color: #000000;
+    border: 2px outset #FFFFFF;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-weight: bold;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.refresh-btn:hover {
+    border-style: inset;
+}
+
+.refresh-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.last-updated {
+    color: #CCCCCC;
+    font-size: 0.875rem;
+    font-style: italic;
+}
+
 /* Leaderboard Cards Container */
 .leaderboard-cards {
     display: flex;
@@ -126,23 +161,23 @@
     .rank-number {
         font-size: 1.5rem;
     }
-    
+
     .leaderboard-card__name {
         font-size: 1rem;
     }
-    
+
     .total-value {
         font-size: 2rem;
     }
-    
+
     .leaderboard-card__stats {
         gap: var(--spacing-md);
     }
-    
+
     .leaderboard-card__stat-label {
         font-size: 0.7rem;
     }
-    
+
     .leaderboard-card__stat-value {
         font-size: 0.8rem;
     }

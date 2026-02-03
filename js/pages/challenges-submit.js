@@ -47,6 +47,21 @@ export class ChallengesSubmitPage extends BasePage {
     }
 
     this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+
+    // Show admin fields if user is admin
+    if (this.isAdmin()) {
+      this.showAdminFields();
+    }
+  }
+
+  /**
+   * Show admin-only form fields
+   */
+  showAdminFields() {
+    const brianModeGroup = document.getElementById('brianModeGroup');
+    if (brianModeGroup) {
+      brianModeGroup.style.display = 'block';
+    }
   }
 
   /**
@@ -114,7 +129,7 @@ export class ChallengesSubmitPage extends BasePage {
 
       const datalist = document.getElementById('usersDatalist');
       if (datalist) {
-        datalist.innerHTML = data.map(user => 
+        datalist.innerHTML = data.map(user =>
           `<option value="${user.username}" data-user-id="${user.id}">`
         ).join('');
       }
@@ -138,10 +153,10 @@ export class ChallengesSubmitPage extends BasePage {
 
       if (error) throw error;
 
-      // Fetch assigned usernames for challenges that have assigned_to
+      // Fetch suggested usernames for challenges that have suggested_for
       if (data && data.length > 0) {
-        const assignedUserIds = [...new Set(data.filter(c => c.assigned_to).map(c => c.assigned_to))];
-        
+        const assignedUserIds = [...new Set(data.filter(c => c.suggested_for).map(c => c.suggested_for))];
+
         if (assignedUserIds.length > 0) {
           const { data: users, error: userError } = await this.supabase
             .from('users')
@@ -150,11 +165,11 @@ export class ChallengesSubmitPage extends BasePage {
 
           if (!userError && users) {
             const usernameMap = Object.fromEntries(users.map(u => [u.id, u.username]));
-            
+
             // Attach username to each challenge
             data.forEach(challenge => {
-              if (challenge.assigned_to) {
-                challenge.assigned_to_username = usernameMap[challenge.assigned_to];
+              if (challenge.suggested_for) {
+                challenge.suggested_for_username = usernameMap[challenge.suggested_for];
               }
             });
           }
@@ -186,9 +201,13 @@ export class ChallengesSubmitPage extends BasePage {
       const challengeMetric = document.getElementById('challengeMetric').value.trim();
       const assignedToUsername = document.getElementById('assignedTo').value.trim();
 
-      // Validate
-      if (!challengeName || !challengeDescription || !challengeMetric) {
-        throw new Error('Please fill in all required fields.');
+      // Safely get brian mode value (field might be hidden for non-admin users)
+      const brianModeElement = document.getElementById('brianMode');
+      const brianMode = brianModeElement ? brianModeElement.value.trim() : '';
+
+      // Validate required fields only
+      if (!challengeName || !challengeDescription) {
+        throw new Error('Please fill in all required fields (Name and Description).');
       }
 
       // Find user ID if assigned
@@ -213,18 +232,28 @@ export class ChallengesSubmitPage extends BasePage {
       const challengeId = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
       // Insert challenge
+      const challengeData = {
+        id: challengeId,
+        title: challengeName,
+        description: challengeDescription,
+        type: 'assigned',
+        created_by: this.userId,
+        suggested_for: assignedToUserId,
+        approval_status: 'pending'
+      };
+
+      // Add optional fields if provided
+      if (challengeMetric) {
+        challengeData.success_metric = challengeMetric;
+      }
+
+      if (brianMode && this.isAdmin()) {
+        challengeData.brian_mode = brianMode;
+      }
+
       const { error } = await this.supabase
         .from('challenges')
-        .insert([{
-          id: challengeId,
-          title: challengeName,
-          description: challengeDescription,
-          success_metric: challengeMetric,
-          type: 'assigned',
-          created_by: this.userId,
-          assigned_to: assignedToUserId,
-          approval_status: 'pending'
-        }]);
+        .insert([challengeData]);
 
       if (error) throw error;
 
@@ -243,7 +272,7 @@ export class ChallengesSubmitPage extends BasePage {
       this.showError(err.message || 'Failed to submit challenge. Please try again.');
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = '🚀 SUBMIT CHALLENGE 🚀';
+      submitBtn.textContent = 'SUBMIT CHALLENGE';
     }
   }
 }
