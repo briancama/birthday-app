@@ -35,10 +35,20 @@
   </div>
 
   <script type="module">
-    import { SUPABASE_CONFIG } from './js/config.js'
+    import { SUPABASE_CONFIG, APP_CONFIG } from './js/config.js'
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
     const supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key)
+
+    // Hide/show login based on environment
+    const loginForm = document.getElementById('loginForm')
+    if (APP_CONFIG.isProduction) {
+      // Hide login in production
+      loginForm.style.display = 'none'
+    } else {
+      // Show login in development
+      loginForm.style.display = 'block'
+    }
 
     const form = document.getElementById('loginForm')
     const usernameInput = document.getElementById('username')
