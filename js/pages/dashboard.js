@@ -1,7 +1,7 @@
 import { BasePage } from './base-page.js';
 import { ChallengeCard } from '../components/challenge-card.js';
 import { EventBus } from '../events/event-bus.js';
-import { APP_CONFIG } from '../config.js';
+import { APP_CONFIG } from '../app.js';
 
 class DashboardPage extends BasePage {
     constructor() {

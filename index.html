@@ -35,19 +35,44 @@
   </div>
 
   <script type="module">
-    import { SUPABASE_CONFIG, APP_CONFIG } from './js/config.js'
+    import { SUPABASE_CONFIG } from './js/config.js'
+    import { APP_CONFIG } from './js/app.js'
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
     const supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key)
 
+    // Debug APP_CONFIG first
+    console.log('APP_CONFIG debug:', {
+      exists: !!APP_CONFIG,
+      full_object: APP_CONFIG,
+      isProduction: APP_CONFIG?.isProduction,
+      isDevelopment: APP_CONFIG?.isDevelopment
+    })
+
     // Hide/show login based on environment
     const loginForm = document.getElementById('loginForm')
-    if (APP_CONFIG.isProduction) {
-      // Hide login in production
-      loginForm.style.display = 'none'
+
+    // Use APP_CONFIG if available, otherwise fallback
+    const isProduction = APP_CONFIG ? APP_CONFIG.isProduction : (
+      window.location.hostname !== 'localhost' &&
+      window.location.hostname !== '127.0.0.1' &&
+      !window.location.hostname.includes('github.io')
+    )
+
+    console.log('Final environment check:', {
+      hostname: window.location.hostname,
+      isProduction: isProduction,
+      source: APP_CONFIG ? 'APP_CONFIG' : 'fallback'
+    })
+
+    if (isProduction) {
+      // Hide login in production with !important to override any CSS
+      loginForm.style.setProperty('display', 'none', 'important')
+      console.log('Login form hidden for production')
     } else {
       // Show login in development
-      loginForm.style.display = 'block'
+      loginForm.style.setProperty('display', 'block', 'important')
+      console.log('Login form shown for development')
     }
 
     const form = document.getElementById('loginForm')

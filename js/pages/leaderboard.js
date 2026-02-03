@@ -1,5 +1,5 @@
 import { BasePage } from './base-page.js';
-import { APP_CONFIG } from '../config.js';
+import { APP_CONFIG } from '../app.js';
 
 class LeaderboardPage extends BasePage {
     constructor() {
