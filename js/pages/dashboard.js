@@ -1,5 +1,6 @@
 import { BasePage } from './base-page.js';
 import { ChallengeCard } from '../components/challenge-card.js';
+import { CocktailEntryModal } from '../components/cocktail-entry-modal.js';
 import { EventBus } from '../events/event-bus.js';
 import { APP_CONFIG } from '../app.js';
 
@@ -9,11 +10,39 @@ class DashboardPage extends BasePage {
         this.revealedChallengeId = null;
         this.refreshInterval = null;
         this.eventCleanup = [];
+        this.cocktailModal = null;
     }
 
     async onReady() {
         this.setupEventListeners();
         this.setPageTitle('Dashboard');
+        
+        // Initialize cocktail entry modal
+        try {
+            this.cocktailModal = new CocktailEntryModal();
+            await this.cocktailModal.init();
+            console.log('✅ Cocktail modal initialized successfully');
+        } catch (err) {
+            console.error('❌ Failed to initialize cocktail modal:', err);
+        }
+        
+        // Setup cocktail registration button
+        const registerBtn = document.getElementById('registerCocktailBtn');
+        if (registerBtn) {
+            console.log('✅ Found register button, attaching listener');
+            registerBtn.addEventListener('click', () => {
+                console.log('🎉 Register button clicked');
+                if (this.cocktailModal) {
+                    this.cocktailModal.open();
+                } else {
+                    console.error('❌ Modal not initialized');
+                    alert('Cocktail modal failed to initialize. Please refresh the page.');
+                }
+            });
+        } else {
+            console.error('❌ Register button not found in DOM');
+        }
+        
         await this.loadPageData();
 
         // Set up refresh interval for stats only (challenges cause layout shifts)

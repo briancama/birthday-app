@@ -213,3 +213,153 @@
     width: 100%;
   }
 }
+/* ============================================
+   COCKTAIL JUDGING STYLES
+   ============================================ */
+
+.entry-card {
+  background: #FFFFFF;
+  border: 3px solid #FF1493;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.3);
+}
+
+.entry-card.judged {
+  border-color: #00FF00;
+  background: #F0FFF0;
+}
+
+.entry-header {
+  border-bottom: 2px dotted #FF1493;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.entry-header h3 {
+  margin: 0 0 0.5rem 0;
+  color: #9400D3;
+}
+
+.entry-author {
+  margin: 0;
+  color: #666;
+  font-style: italic;
+}
+
+.favorite-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #FFD700;
+  color: #000;
+  padding: 0.25rem 0.75rem;
+  font-weight: bold;
+  border: 2px solid #FFA500;
+  transform: rotate(5deg);
+}
+
+.entry-description pre {
+  white-space: pre-wrap;
+  font-family: 'Courier New', monospace;
+  background: #F5F5F5;
+  padding: 1rem;
+  border: 2px inset #CCC;
+  margin: 0;
+}
+
+.judgment-form {
+  margin-top: 1.5rem;
+}
+
+.scoring-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.score-input label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+  color: #4B0082;
+}
+
+.score-input select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 2px solid #FF1493;
+  font-size: 1rem;
+}
+
+.notes-input {
+  margin-bottom: 1rem;
+}
+
+.notes-input label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+  color: #4B0082;
+}
+
+.notes-input textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 2px solid #FF1493;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.judgment-view {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: rgba(0, 255, 0, 0.1);
+  border: 2px solid #00FF00;
+}
+
+.scores-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.score-item {
+  padding: 0.5rem;
+  background: #FFFFFF;
+  border: 1px solid #00FF00;
+}
+
+.total-score {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #9400D3;
+  padding: 1rem;
+  background: #FFFF00;
+  border: 2px solid #FF1493;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.judgment-notes {
+  padding: 1rem;
+  background: #FFFFFF;
+  border: 2px dashed #666;
+  margin-bottom: 1rem;
+}
+
+.judgment-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
