@@ -23,15 +23,17 @@ A weekend event challenge app with progressive reveals, Brian-mode challenges, a
 
 2. Start local dev server:
    ```bash
-   python3 -m http.server 8000
+   python3 serve.py 8000
    ```
    Then open `http://localhost:8000` in your browser.
    
+   **Important**: Use the custom `serve.py` script (not `python3 -m http.server`) to properly resolve routes without `.html` extensions (e.g., `/dashboard`, `/leaderboard` instead of `/dashboard.html`). This ensures the local development environment matches production behavior.
+   
    **Pro tip**: Add this alias to your `~/.zshrc`:
    ```bash
-   alias serve="python3 -m http.server 8000"
+   alias serve="python3 serve.py 8000"
    ```
-   Then just run `serve` from any directory.
+   Then just run `serve` from the project directory.
 
 3. Create a Supabase project at [supabase.com](https://supabase.com)
 

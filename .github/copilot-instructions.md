@@ -22,13 +22,14 @@ this.currentUser = appState.getCurrentUser(); // loaded from Supabase
 ### Database Integration
 - **Supabase Client**: Single instance via `appState.getSupabase()`
 - **Environment Switching**: Automatic dev/prod config in `js/config.js` based on hostname
-- **Key Tables**: users, challenges, assignments, competition_placements
+- **Key Tables**: users, challenges, assignments, competition_placements, cocktail_competitions, cocktail_entries, cocktail_votes
 - **View**: scoreboard (aggregates points from assignments + competitions)
+- **SQL Documentation Rule**: **CRITICAL** - All database schema changes, migrations, and RLS policies MUST be documented in `/sql/` folder before implementation. Every table creation, policy addition, or schema modification requires a corresponding SQL file for version control and environment replication.
 
 ## Development Conventions
 
 ### GeoCities Aesthetic Requirements
-- **NO MODERN EMOJIS** - Use text alternatives, gifs, or request vintage gifs
+- **NO MODERN EMOJIS FOR DECORATION**: Emojis are acceptable in buttons/interactive elements for functional purposes, but avoid using them as decorative content elements. Prioritize retro gifs that can be found in our /images folder or use retro text emojis or ASCII art
 - **CSS Variables**: All colors/spacing in `:root` of `css/geocities.css`
 - **Retro Elements**: Marquees, flame dividers, rainbow text, construction gifs
 - **File Structure**: `/css/`, `/js/`, `/images/` organization

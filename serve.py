@@ -39,7 +39,15 @@ class CleanURLHandler(http.server.SimpleHTTPRequestHandler):
 if __name__ == "__main__":
     PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
     
+    # Allow reusing the address immediately after stopping
+    socketserver.TCPServer.allow_reuse_address = True
+    
     with socketserver.TCPServer(("", PORT), CleanURLHandler) as httpd:
         print(f"Serving at http://localhost:{PORT}")
         print("Clean URLs enabled - /dashboard serves dashboard.html")
-        httpd.serve_forever()
+        print("Press Ctrl+C to stop")
+        try:
+            httpd.serve_forever()
+        except KeyboardInterrupt:
+            print("\nShutting down server...")
+            httpd.shutdown()
