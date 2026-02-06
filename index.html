@@ -28,6 +28,7 @@
       <div class="form-group">
         <label for="username">* ENTER YOUR USERNAME *</label>
         <input type="text" id="username" name="username" placeholder="Type here..." required autocomplete="off">
+        <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;">Username is your first name + last initial, all lowercase (e.g., brianc)</p>
       </div>
       <button type="submit" id="submitBtn">>>> SIGN IN NOW! <<<</button>
       <div id="error" class="error"></div>
@@ -35,11 +36,7 @@
   </div>
 
   <script type="module">
-    import { SUPABASE_CONFIG } from './js/config.js'
-    import { APP_CONFIG } from './js/app.js'
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.94.1/+esm'
-
-    const supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key)
+    import { appState, APP_CONFIG } from './js/app.js'
 
     // Debug APP_CONFIG first
     console.log('APP_CONFIG debug:', {
@@ -79,6 +76,9 @@
     const usernameInput = document.getElementById('username')
     const submitBtn = document.getElementById('submitBtn')
     const errorDiv = document.getElementById('error')
+    
+    // Get supabase client from appState
+    const supabase = appState.getSupabase()
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault()
