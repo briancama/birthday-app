@@ -17,7 +17,7 @@ class DashboardPage extends BasePage {
     async onReady() {
         this.setupEventListeners();
         this.setPageTitle('Dashboard');
-        
+
         // Initialize cocktail entry modal
         try {
             this.cocktailModal = new CocktailEntryModal();
@@ -26,7 +26,7 @@ class DashboardPage extends BasePage {
         } catch (err) {
             console.error('✖️ Failed to initialize cocktail modal:', err);
         }
-        
+
         // Setup cocktail registration button
         const registerBtn = document.getElementById('registerCocktailBtn');
         if (registerBtn) {
@@ -43,7 +43,7 @@ class DashboardPage extends BasePage {
         } else {
             console.error('✖️ Register button not found in DOM');
         }
-        
+
         await this.loadPageData();
 
         // Set up refresh interval for stats only (challenges cause layout shifts)
@@ -68,54 +68,61 @@ class DashboardPage extends BasePage {
 
     async handleChallengeReveal(detail) {
         const { assignmentId, element } = detail;
-        
+
         // Just toggle the revealed state on the card element
         if (element) {
             element.classList.remove('unrevealed');
             element.classList.add('revealed');
-            
+
             // Update the reveal prompt to action buttons
             const actionsContainer = element.querySelector('.challenge-actions, .reveal');
             if (actionsContainer) {
+                // Get challenge details from the assignment data stored on the card
+                const challengeId = element.dataset.challengeId;
+                const brianMode = element.dataset.brianMode;
+
                 actionsContainer.outerHTML = `
                     <div class="challenge-actions">
-                        <button class="success-btn" data-id="${assignmentId}" data-sound="success" data-outcome="success">
+                        <button class="success-btn" data-id="${assignmentId}" data-challenge-id="${challengeId}" data-brian-mode="${brianMode}" data-sound="success" data-outcome="success">
                             <img src="images/green-checkmark.gif" class="icon-gif icon-gif--with-text hide-mobile" alt="checkmark">SUCCESS
                         </button>
-                        <button class="failure-btn" data-id="${assignmentId}" data-sound="failure" data-outcome="failure">
+                        <button class="failure-btn" data-id="${assignmentId}" data-challenge-id="${challengeId}" data-brian-mode="${brianMode}" data-sound="failure" data-outcome="failure">
                             <img src="images/failure.gif" class="icon-gif icon-gif--with-text hide-mobile" alt="cross">FAILURE
                         </button>
                     </div>
                 `;
-                
+
                 // Re-attach event listeners to new buttons
                 element.querySelectorAll('button').forEach(btn => {
+                    btn.dataset.originalText = btn.textContent;
                     btn.addEventListener('click', (e) => {
                         e.stopPropagation();
                         const outcome = btn.dataset.outcome;
                         const assignmentId = btn.dataset.id;
-                        
+                        const challengeId = btn.dataset.challengeId;
+                        const brianMode = btn.dataset.brianMode;
+
                         EventBus.instance.emit(EventBus.EVENTS.CHALLENGE.COMPLETE, {
                             assignmentId,
-                            challengeId: detail.challengeId,
+                            challengeId,
                             outcome,
-                            brianMode: detail.brianMode,
+                            brianMode,
                             button: btn,
                             element: element
                         });
                     });
                 });
             }
-            
+
             // Remove the click handler from the card
             element.style.cursor = '';
         }
-        
+
         this.revealedChallengeId = assignmentId;
     }
 
     async handleChallengeComplete(detail) {
-        const { assignmentId, challengeId, outcome, brianMode, button } = detail;
+        const { assignmentId, challengeId, outcome, brianMode, button, element } = detail;
 
         try {
             // Provide immediate UI feedback
@@ -130,11 +137,14 @@ class DashboardPage extends BasePage {
 
             await this.markChallengeComplete(assignmentId, challengeId, outcome, brianMode);
 
+            // Instead of reloading all challenges, update just this card
+            this.updateCardAfterCompletion(assignmentId, outcome, element);
+
             // Reset revealed challenge
             this.revealedChallengeId = null;
-            
-            // Update challenges and stats
-            await Promise.all([this.loadChallenges(), this.loadPersonalStats()]);
+
+            // Only reload stats (much lighter operation)
+            await this.loadPersonalStats();
 
             // Emit success event
             EventBus.instance.emit(EventBus.EVENTS.CHALLENGE.COMPLETED_SUCCESS, {
@@ -158,6 +168,71 @@ class DashboardPage extends BasePage {
             });
 
             this.showError('Failed to mark complete: ' + err.message);
+        }
+    }
+
+    /**
+     * Update a specific card after completion without rebuilding the entire list
+     */
+    updateCardAfterCompletion(assignmentId, outcome, cardElement) {
+        if (!cardElement) {
+            // Fallback: find the card by assignment ID
+            cardElement = document.querySelector(`[data-assignment-id="${assignmentId}"]`);
+        }
+
+        if (!cardElement) {
+            console.warn(`Could not find card element for assignment ${assignmentId}`);
+            // Fallback to full reload if we can't find the card
+            this.loadChallenges();
+            return;
+        }
+
+        // Update card classes for completed state
+        cardElement.className = `challenge-card completed ${outcome}`;
+
+        // Find and replace the action buttons with completion badge
+        const actionsContainer = cardElement.querySelector('.challenge-actions');
+        if (actionsContainer) {
+            const badgeHTML = outcome === 'success'
+                ? '<span class="outcome-badge success"><img src="images/green-checkmark.gif" class="icon-gif" alt="checkmark">SUCCESS!</span>'
+                : '<span class="outcome-badge failure"><img src="images/failure.gif" class="icon-gif" alt="cross">FAILURE!</span>';
+
+            actionsContainer.outerHTML = badgeHTML;
+        }
+
+        // Unlock next challenge card if this was successful
+        if (outcome === 'success') {
+            this.unlockNextChallenge(cardElement);
+        }
+    }
+
+    /**
+     * Unlock the next challenge card after a successful completion
+     */
+    unlockNextChallenge(completedCardElement) {
+        // Find the next card in the list
+        const nextCard = completedCardElement.nextElementSibling;
+        if (nextCard && nextCard.classList.contains('challenge-card') && nextCard.classList.contains('locked')) {
+            // Remove locked class and add unrevealed class
+            nextCard.classList.remove('locked');
+            nextCard.classList.add('unrevealed');
+
+            // Update the locked badge to reveal prompt
+            const lockedBadge = nextCard.querySelector('.locked-badge');
+            if (lockedBadge) {
+                lockedBadge.outerHTML = '<span class="reveal"><img src="images/reveal.gif" class="icon-gif" alt="detective looking through magnifying glass"> CLICK TO REVEAL <img src="images/reveal.gif" class="icon-gif" alt="detective looking through magnifying glass"></span>';
+
+                // Add click listener for revealing
+                nextCard.style.cursor = 'pointer';
+                nextCard.addEventListener('click', () => {
+                    // Find the assignment ID and trigger reveal
+                    const assignmentId = nextCard.dataset.assignmentId;
+                    if (assignmentId) {
+                        this.revealedChallengeId = assignmentId;
+                        this.handleChallengeReveal({ assignmentId, element: nextCard });
+                    }
+                });
+            }
         }
     }
 
@@ -208,7 +283,7 @@ class DashboardPage extends BasePage {
         // Preserve scroll position and existing card states
         const existingCards = Array.from(container.querySelectorAll('.challenge-card'));
         const existingCardMap = new Map();
-        
+
         // Map existing cards by assignment ID
         existingCards.forEach(card => {
             const assignmentId = card.dataset.assignmentId;
@@ -216,13 +291,13 @@ class DashboardPage extends BasePage {
                 existingCardMap.set(assignmentId, card);
             }
         });
-        
+
         // Find first incomplete challenge
         const firstIncompleteIndex = data.findIndex(a => !a.completed_at);
 
         // Track which cards should exist
         const validAssignmentIds = new Set(data.map(a => a.id));
-        
+
         data.forEach((assignment, index) => {
             const isCompleted = !!assignment.completed_at;
             const outcome = assignment.outcome;
@@ -239,9 +314,9 @@ class DashboardPage extends BasePage {
                 canReveal,
                 isLocked
             };
-            
+
             const existingCard = existingCardMap.get(assignment.id);
-            
+
             if (existingCard && this.isSameCardState(existingCard, state)) {
                 // Card state unchanged - do nothing (leave in place)
                 existingCardMap.delete(assignment.id); // Mark as still valid
@@ -286,27 +361,27 @@ class DashboardPage extends BasePage {
                 container.appendChild(cardElement);
             }
         });
-        
+
         // Remove cards that no longer exist in data
         existingCardMap.forEach((card, assignmentId) => {
             if (!validAssignmentIds.has(assignmentId)) {
                 card.remove();
             }
         });
-        
+
         // Ensure container has proper class
         container.className = 'challenge-list';
     }
-    
+
     isSameCardState(cardElement, newState) {
         // Check if card state matches to avoid unnecessary re-renders
         const hasCompleted = cardElement.classList.contains('completed');
         const hasRevealed = cardElement.classList.contains('revealed');
         const hasLocked = cardElement.classList.contains('locked');
-        
+
         return hasCompleted === newState.isCompleted &&
-               hasRevealed === newState.isRevealed &&
-               hasLocked === newState.isLocked;
+            hasRevealed === newState.isRevealed &&
+            hasLocked === newState.isLocked;
     }
 
     async loadPersonalStats() {

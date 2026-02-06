@@ -59,10 +59,6 @@
             <img src="images/star_icon.gif" alt="admin" class="icon-gif icon-gif--with-text">
             <span>🔐 ADMIN</span>
           </a>
-          <a href="cocktail-rubric" class="nav-tab" data-sound="menu" data-page="rubric">
-            <img src="images/star_icon.gif" alt="star" class="icon-gif icon-gif--with-text">
-            <span>RUBRIC</span>
-          </a>
           <button class="nav-tab logout-btn">
             <img src="images/logout.gif" alt="logout" class="icon-gif icon-gif--lg icon-gif--with-text">
             <span>LOGOUT</span>
@@ -75,7 +71,7 @@
       <div class="leaderboard-header">
         <h2 class="text-shadow-light">TOP PLAYERS<img src="images/trophy.gif" alt="Trophy" class="trophy-gif"></h2>
         <div class="leaderboard-controls">
-          <button id="refreshButton" class="refresh-btn"><img src="images/refresh.gif" alt="Refresh" class="icon-gif"> <span class="refresh-text">Refresh</span></button>
+          <button id="refreshButton" class="refresh-btn"><img src="images/refresh.gif" alt="Refresh" class="icon-gif icon-gif--with-text"> <span class="refresh-text">Refresh</span></button>
           <div id="lastUpdated" class="last-updated"></div>
         </div>
       </div>
@@ -99,7 +95,7 @@
       if (isAuthenticated) {
         // Initialize navigation controller
         initNavigation();
-        
+
         // Initialize leaderboard-specific functionality
         const leaderboard = new LeaderboardPage();
         await leaderboard.init();

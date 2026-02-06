@@ -1,172 +1,53 @@
-# Birthday App 🎉
+# Birthday Challenge Zone 🎉
 
-A weekend event challenge app with progressive reveals, Brian-mode challenges, and live scoreboard.
-
-## Features
-
-- 🔓 **Username-only auth** (no passwords needed)
-- 🎯 **Progressive challenge reveals** (unlock one at a time)
-- ⚔️ **Brian vs mode** (competitive challenges)
-- 🤝 **Brian with mode** (collaborative challenges)
-- 🏆 **Live scoreboard** with rankings
-- 📊 **Personal stats dashboard**
+A retro GeoCities-style weekend event app with progressive challenge unlocking and live scoreboards.
 
 ## Quick Start
 
-### Local Development
+1. Copy `js/config.js.example` to `js/config.js` and add your Supabase credentials
+2. Run the development server: `serve` (or `python3 serve.py 8000`)
+3. Visit `http://localhost:8000`
 
-1. Clone the repo:
-   ```bash
-   git clone https://github.com/yourusername/birthday-app.git
-   cd birthday-app
-   ```
+## Documentation
 
-2. Start local dev server:
-   ```bash
-   python3 serve.py 8000
-   ```
-   Then open `http://localhost:8000` in your browser.
-   
-   **Important**: Use the custom `serve.py` script (not `python3 -m http.server`) to properly resolve routes without `.html` extensions (e.g., `/dashboard`, `/leaderboard` instead of `/dashboard.html`). This ensures the local development environment matches production behavior.
-   
-   **Pro tip**: Add this alias to your `~/.zshrc`:
-   ```bash
-   alias serve="python3 serve.py 8000"
-   ```
-   Then just run `serve` from the project directory.
+Detailed documentation is available in the [`/docs`](./docs) folder:
 
-3. Create a Supabase project at [supabase.com](https://supabase.com)
+- [README](./docs/README.md) - Comprehensive project documentation
+- [Development Guidelines](./docs/DEVELOPMENT-GUIDELINES.md) - Setup, architecture, and coding patterns
+- [Assignment Service Implementation](./docs/ASSIGNMENT-SERVICE-IMPLEMENTATION.md) - Challenge assignment system
+- [Audio Setup](./docs/AUDIO-SETUP.md) - Sound effects configuration
 
-3. Run the SQL migration in Supabase SQL Editor:
-   ```bash
-   # Copy contents of supabase/sql/init.sql
-   # Paste and run in Supabase dashboard → SQL Editor
-   ```
+## Project Architecture
 
-4. Update Supabase credentials in all HTML files:
-   - `index.html`
-   - `dashboard.html`
-   - `leaderboard.html`
-   
-   Replace:
-   ```javascript
-   const SUPABASE_URL = 'https://your-project.supabase.co'
-   const SUPABASE_KEY = 'your-anon-key'
-   ```
+- **Frontend**: Vanilla HTML/CSS/JS with GeoCities aesthetic
+- **Backend**: Supabase for data and auth
+- **Components**: Event-driven architecture with modern ES6 modules
+- **Styling**: CSS layers with retro design system
 
-5. Open `index.html` in your browser
+# Birthday Challenge Zone 🎉
 
-### Production Deployment (DigitalOcean)
+A retro GeoCities-style weekend event app with progressive challenge unlocking and live scoreboards.
 
-1. SSH to your droplet:
-   ```bash
-   ssh root@your-droplet-ip
-   ```
+## Quick Start
 
-2. Install nginx:
-   ```bash
-   apt update && apt install nginx -y
-   ```
+1. Copy `js/config.js.example` to `js/config.js` and add your Supabase credentials
+2. Run the development server: `serve` (or `python3 serve.py 8000`)
+3. Visit `http://localhost:8000`
 
-3. Clone repo to web directory:
-   ```bash
-   mkdir -p /var/www/birthday-app
-   cd /var/www/birthday-app
-   git clone https://github.com/yourusername/birthday-app.git .
-   ```
+## Documentation
 
-4. Configure nginx:
-   ```bash
-   nano /etc/nginx/sites-available/birthday-app
-   ```
-   
-   Paste:
-   ```nginx
-   server {
-       listen 80;
-       server_name your-domain.com;
-       root /var/www/birthday-app;
-       index index.html;
-       location / {
-           try_files $uri $uri/ =404;
-       }
-   }
-   ```
+Detailed documentation is available in the [`/docs`](./docs) folder:
 
-5. Enable site:
-   ```bash
-   ln -s /etc/nginx/sites-available/birthday-app /etc/nginx/sites-enabled/
-   nginx -t
-   systemctl restart nginx
-   ```
+- [README](./docs/README.md) - Comprehensive project documentation
+- [Development Guidelines](./docs/DEVELOPMENT-GUIDELINES.md) - Setup, architecture, and coding patterns
+- [Assignment Service Implementation](./docs/ASSIGNMENT-SERVICE-IMPLEMENTATION.md) - Challenge assignment system
+- [Audio Setup](./docs/AUDIO-SETUP.md) - Sound effects configuration
 
-6. Optional - Setup SSL:
-   ```bash
-   apt install certbot python3-certbot-nginx -y
-   certbot --nginx -d your-domain.com
-   ```
+## Project Architecture
 
-## Admin Guide
+- **Frontend**: Vanilla HTML/CSS/JS with GeoCities aesthetic
+- **Backend**: Supabase for data and auth
+- **Components**: Event-driven architecture with modern ES6 modules
+- **Styling**: CSS layers with retro design system
 
-### Setup Users
-```sql
-INSERT INTO users (username, display_name) VALUES 
-  ('alice', 'Alice'),
-  ('bob', 'Bob');
-```
-
-### Create Challenges
-```sql
--- Regular challenge
-INSERT INTO challenges (id, title, description, type) VALUES
-  ('c1', 'First Challenge', 'Complete this task', 'assigned');
-
--- Brian vs challenge
-INSERT INTO challenges (id, title, description, type, brian_mode) VALUES
-  ('c2', 'Beat Brian', 'Compete against Brian', 'assigned', 'vs');
-
--- Brian with challenge
-INSERT INTO challenges (id, title, description, type, brian_mode) VALUES
-  ('c3', 'Team Up', 'Work with Brian', 'assigned', 'with');
-
--- Competition challenge
-INSERT INTO challenges (id, title, description, type) VALUES
-  ('comp1', 'Competition 1', 'First competition', 'competition');
-```
-
-### Assign Challenges
-```sql
-INSERT INTO assignments (user_id, challenge_id)
-SELECT u.id, 'c1' FROM users u WHERE u.username = 'alice';
-```
-
-### Add Competition Results
-```sql
-INSERT INTO competition_placements (user_id, challenge_id, place, points)
-SELECT u.id, 'comp1', 1, 20 FROM users u WHERE u.username = 'alice';
-```
-
-## Database Schema
-
-- **users**: User accounts (username, display_name)
-- **challenges**: Challenge definitions (title, description, type, brian_mode)
-- **assignments**: User-challenge links with outcomes
-- **competition_placements**: Competition results with points
-- **scoreboard**: View aggregating all points
-
-## Points System
-
-- **Assigned challenges**: 5 points per successful completion
-- **Brian challenges**: 5 points to winner/collaborators, 0 to loser/failed
-- **Competition challenges**: Custom points per placement
-
-## Tech Stack
-
-- Frontend: Vanilla HTML/CSS/JavaScript (ES modules)
-- Backend: Supabase (Postgres + RLS)
-- Auth: Username-based (no passwords)
-- Hosting: Static nginx on DigitalOcean
-
-## License
-
-MIT
+For full setup instructions, deployment guides, and development patterns, see the [complete documentation](./docs).
