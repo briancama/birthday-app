@@ -55,10 +55,6 @@
             <img src="images/star_icon.gif" alt="admin" class="icon-gif icon-gif--with-text">
             <span>🔐 ADMIN</span>
           </a>
-          <a href="cocktail-rubric" class="nav-tab" data-sound="menu" data-page="rubric">
-            <img src="images/star_icon.gif" alt="star" class="icon-gif icon-gif--with-text">
-            <span>RUBRIC</span>
-          </a>
           <button class="nav-tab logout-btn">
             <img src="images/logout.gif" alt="logout" class="icon-gif icon-gif--lg icon-gif--with-text">
             <span>LOGOUT</span>
@@ -141,7 +137,7 @@
       if (isAuthenticated) {
         // Initialize navigation controller
         initNavigation();
-        
+
         // Initialize page
         const page = new ChallengesSubmitPage();
         await page.init();

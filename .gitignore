@@ -48,3 +48,4 @@ $RECYCLE.BIN/
 *.bak
 *.backup
 *~
+.DS_Store
