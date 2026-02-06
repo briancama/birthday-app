@@ -40,6 +40,8 @@ class ChallengeCard extends EventTarget {
 
         card.className = cardClass;
         card.dataset.assignmentId = this.assignment.id; // Add data attribute for tracking
+        card.dataset.challengeId = this.assignment.challenges.id; // Store challenge ID
+        card.dataset.brianMode = this.assignment.challenges.brian_mode || ''; // Store brian mode
         card.innerHTML = this.getCardHTML(state);
         this.addEventListeners(card, state);
 
@@ -56,7 +58,7 @@ class ChallengeCard extends EventTarget {
         // Always include full title and description, just hide with CSS
         const fullTitle = `${this.assignment.challenges.title}`;
         const hiddenTitle = this.options.showIndex ? `Challenge ${this.index + 1}` : 'Hidden Challenge';
-        
+
         const displayDescription = this.getFullDescription();
         const actionsHTML = this.getActionsHTML(state);
 
@@ -269,6 +271,56 @@ class ChallengeCard extends EventTarget {
         console.warn('ChallengeCard.setOnComplete() is deprecated. Use addEventListener("complete", handler) instead.');
         this.onComplete = callback;
         return this;
+    }
+
+    /**
+     * Update the card state without recreating the entire DOM structure
+     */
+    updateState(newState, element = null) {
+        const card = element || document.querySelector(`[data-assignment-id="${this.assignment.id}"]`);
+        if (!card) {
+            console.warn(`Card not found for assignment ${this.assignment.id}`);
+            return;
+        }
+
+        const { isCompleted, outcome, isRevealed } = newState;
+
+        // Update CSS classes for visual state
+        card.className = 'challenge-card';
+        if (isCompleted) {
+            card.className += ` completed ${outcome}`;
+        } else if (isRevealed) {
+            card.className += ' revealed';
+        }
+
+        // Update the actions section (buttons -> badge)
+        const actionsContainer = card.querySelector('.challenge-actions, .outcome-badge, .reveal, .locked-badge');
+        if (actionsContainer) {
+            if (isCompleted) {
+                // Replace action buttons with completion badge
+                actionsContainer.outerHTML = this.getCompletedBadge(outcome);
+            }
+        }
+
+        // Update visibility of title and description if moving from hidden to revealed
+        if (isRevealed) {
+            this.showRevealedContent(card);
+        }
+
+        return card;
+    }
+
+    /**
+     * Show revealed content using CSS visibility changes
+     */
+    showRevealedContent(card) {
+        const hiddenTitle = card.querySelector('.title-hidden');
+        const revealedTitle = card.querySelector('.title-revealed');
+        const description = card.querySelector('.challenge-description');
+
+        if (hiddenTitle) hiddenTitle.style.display = 'none';
+        if (revealedTitle) revealedTitle.style.display = 'inline';
+        if (description) description.style.display = 'block';
     }
 
     /**
