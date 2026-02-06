@@ -44,19 +44,19 @@ async function testAssignmentService() {
         if (version1 === version2) {
             console.log('✅ Version calculation is order-independent');
         } else {
-            console.log('❌ Version calculation should be order-independent');
+            console.log('✖️ Version calculation should be order-independent');
         }
 
         if (version1 !== version3) {
             console.log('✅ Version calculation differentiates between different sets');
         } else {
-            console.log('❌ Version calculation should differentiate between different sets');
+            console.log('✖️ Version calculation should differentiate between different sets');
         }
 
         console.log('🎉 AssignmentService tests completed!');
 
     } catch (error) {
-        console.error('❌ Test failed:', error);
+        console.error('✖️ Test failed:', error);
 
         // Check if it's a ConflictError
         if (error instanceof ConflictError) {

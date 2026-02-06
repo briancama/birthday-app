@@ -19,6 +19,8 @@ Add the following animated GIF files to this directory:
 - **medal-silver.gif** - Silver medal animation
 - **medal-bronze.gif** - Bronze medal animation
 
+**Note:** Sound effects are now stored in the `/audio` directory. See `/audio/README.md` for details.
+
 ## Where to Find GeoCities GIFs
 
 - https://gifcities.org/ - Internet Archive's GeoCities GIF Search

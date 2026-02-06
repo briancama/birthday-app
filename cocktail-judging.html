@@ -20,11 +20,60 @@
     </marquee>
 
     <!-- Navigation Component -->
-    <site-navigation></site-navigation>
+    <nav class="site-navigation">
+      <!-- Mobile Menu Toggle -->
+      <button class="mobile-menu-toggle" data-sound="menu" aria-label="Toggle navigation menu">
+        <span class="hamburger-icon">☰</span>
+      </button>
+
+      <!-- Page Title / User Info -->
+      <div class="nav-user-info">
+        <div class="user-welcome">
+          <img src="images/star_icon.gif" alt="star" class="icon-gif hide-mobile">
+          <span data-nav="page-title">Cocktail Judging</span>
+          <img src="images/star_icon.gif" alt="star" class="icon-gif">
+        </div>
+      </div>
+
+      <!-- Navigation Menu -->
+      <div class="nav-menu">
+        <!-- Navigation Links -->
+        <div class="nav-tabs">
+          <a href="dashboard" class="nav-tab" data-sound="menu" data-page="dashboard">
+            <img src="images/home.gif" alt="home" class="icon-gif icon-gif--lg icon-gif--with-text">
+            <span>DASHBOARD</span>
+          </a>
+          <a href="challenges-submit" class="nav-tab" data-sound="menu" data-page="challenges-submit">
+            <img src="images/star_icon.gif" alt="star" class="icon-gif icon-gif--with-text">
+            <span>SUBMIT CHALLENGE</span>
+          </a>
+          <a href="leaderboard" class="nav-tab" data-sound="menu" data-page="leaderboard">
+            <img src="images/trophy.gif" alt="trophy" class="icon-gif icon-gif--with-text">
+            <span>LEADERBOARD</span>
+          </a>
+          <a href="cocktail-judging" class="nav-tab active" data-sound="menu" data-page="cocktail-judging">
+            <img src="images/cocktail_stirrer.gif" alt="cocktail" class="icon-gif icon-gif--with-text">
+            <span>JUDGE COCKTAILS</span>
+          </a>
+          <a href="admin-approvals" class="nav-tab" data-sound="menu" data-page="admin-approvals" data-admin-only style="display: none;">
+            <img src="images/star_icon.gif" alt="admin" class="icon-gif icon-gif--with-text">
+            <span>🔐 ADMIN</span>
+          </a>
+          <a href="cocktail-rubric" class="nav-tab" data-sound="menu" data-page="rubric">
+            <img src="images/star_icon.gif" alt="star" class="icon-gif icon-gif--with-text">
+            <span>RUBRIC</span>
+          </a>
+          <button class="nav-tab logout-btn">
+            <img src="images/logout.gif" alt="logout" class="icon-gif icon-gif--lg icon-gif--with-text">
+            <span>LOGOUT</span>
+          </button>
+        </div>
+      </div>
+    </nav>
 
     <div class="section text-center">
       <h1 class="rainbow-text">COCKTAIL JUDGING</h1>
-      <p id="competitionName" class="large-text">Loading competition...</p>
+      <p><a href="cocktail-rubric.html" target="_blank" class="btn btn-secondary">VIEW FULL RUBRIC</a></p>
       <div id="judgingStatus" class="highlight-box" style="margin: 1rem auto; max-width: 600px;">
         <p class="loading">Checking judging status...</p>
       </div>
@@ -38,20 +87,15 @@
     <!-- Entries List -->
     <div class="section">
       <h2 class="text-shadow-light">COCKTAIL ENTRIES</h2>
-      <div id="entriesList">
+      <div id="entriesList" class="entries-grid">
         <div class="loading">Loading entries...</div>
       </div>
-    </div>
-
-    <!-- View Rubric Link -->
-    <div class="section text-center">
-      <p><a href="cocktail-rubric.html" target="_blank" class="btn-secondary">VIEW FULL RUBRIC</a></p>
     </div>
   </div>
 
   <script type="module">
     import { appState } from './js/app.js';
-    import { SiteNavigation } from './js/components/navigation.js';
+    import { initNavigation } from './js/components/navigation.js';
     import { CocktailJudgingPage } from './js/pages/cocktail-judging.js';
 
     // Initialize application
@@ -59,6 +103,9 @@
       const isAuthenticated = await appState.init();
 
       if (isAuthenticated) {
+        // Initialize navigation controller
+        initNavigation();
+        
         const judgingPage = new CocktailJudgingPage();
         await judgingPage.init();
       }

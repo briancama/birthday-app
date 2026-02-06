@@ -116,7 +116,7 @@
   justify-content: flex-start;
 }
 
-.action-buttons button {
+.action-button {
   padding: 0.2rem 0.4rem;
   font-size: 0.8rem;
   cursor: pointer;
@@ -125,11 +125,11 @@
   font-weight: bold;
 }
 
-.action-buttons button:hover {
+.action-button:hover {
   border-style: inset;
 }
 
-.action-buttons button:active {
+.action-button:active {
   border-style: inset;
   transform: translateY(1px);
 }
@@ -209,7 +209,7 @@
     flex-direction: column;
   }
 
-  .action-buttons button {
+  .action-button {
     width: 100%;
   }
 }
@@ -363,3 +363,232 @@
   gap: 1rem;
   flex-wrap: wrap;
 }
+
+/* Compact Entry Cards for Judging */
+.entries-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 800px) {
+  .entries-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.entry-card-compact {
+  background: #FFFFFF;
+  border: 3px solid #CCC;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  transition: all 0.2s ease;
+}
+
+.entry-card-compact:hover {
+  box-shadow: 3px 3px 0 rgba(255, 20, 147, 0.3);
+}
+
+/* Full-width button for starting/continuing judging */
+.entry-card-compact .btn-primary {
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  font-size: 1rem;
+}
+
+.entry-card-compact.status-not-started {
+  border-color: #FFA500;
+}
+
+.entry-card-compact.status-in-progress {
+  border-color: #FFD700;
+}
+
+.entry-card-compact.status-completed {
+  border-color: #00FF00;
+}
+
+.entry-compact-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+  gap: 0.5rem;
+}
+
+.entry-compact-info {
+  flex: 1;
+}
+
+.entry-compact-title {
+  margin: 0 0 0.25rem 0;
+  color: #9400D3;
+  font-size: 1.1rem;
+}
+
+.entry-compact-author {
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.entry-compact-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.btn-favorite-icon {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+  transition: transform 0.2s ease;
+  filter: grayscale(100%);
+}
+
+.btn-favorite-icon:hover {
+  transform: scale(1.2);
+}
+
+.btn-favorite-icon.is-favorite {
+  filter: grayscale(0%);
+}
+
+.btn-edit-icon {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+}
+
+.btn-edit-icon:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.btn-info-icon {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 1rem;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  vertical-align: middle;
+}
+
+.btn-info-icon:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.entry-description-collapse {
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background: #F5F5F5;
+  border: 2px solid #CCC;
+  border-radius: 4px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+}
+
+.description-content {
+  font-family: 'Courier New', monospace;
+}
+
+.description-content strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-family: 'Comic Sans MS', cursive;
+}
+
+.description-content p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+
+.entry-compact-scores {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.score-compact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  flex: 0 0 auto;
+  min-width: 50px;
+}
+
+.score-compact .score-label {
+  font-size: 0.65rem;
+  color: #666;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.score-compact .score-value {
+  font-size: 0.95rem;
+  color: #4B0082;
+  font-weight: bold;
+}
+
+.score-compact.score-total {
+  padding-left: 0.75rem;
+  border-left: 2px solid #FF1493;
+}
+
+.score-compact.score-total .score-value {
+  font-size: 1.1rem;
+  color: #9400D3;
+}
+
+@media (max-width: 768px) {
+  .entry-compact-header {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  
+  .entry-compact-title {
+    font-size: 1rem;
+  }
+  
+  .btn-favorite-icon {
+    font-size: 1.25rem;
+  }
+  
+  .judge-entry-btn {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+}
+

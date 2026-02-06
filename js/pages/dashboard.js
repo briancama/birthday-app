@@ -11,6 +11,7 @@ class DashboardPage extends BasePage {
         this.refreshInterval = null;
         this.eventCleanup = [];
         this.cocktailModal = null;
+        this.activeCompetition = null;
     }
 
     async onReady() {
@@ -23,7 +24,7 @@ class DashboardPage extends BasePage {
             await this.cocktailModal.init();
             console.log('✅ Cocktail modal initialized successfully');
         } catch (err) {
-            console.error('❌ Failed to initialize cocktail modal:', err);
+            console.error('✖️ Failed to initialize cocktail modal:', err);
         }
         
         // Setup cocktail registration button
@@ -35,12 +36,12 @@ class DashboardPage extends BasePage {
                 if (this.cocktailModal) {
                     this.cocktailModal.open();
                 } else {
-                    console.error('❌ Modal not initialized');
+                    console.error('✖️ Modal not initialized');
                     alert('Cocktail modal failed to initialize. Please refresh the page.');
                 }
             });
         } else {
-            console.error('❌ Register button not found in DOM');
+            console.error('✖️ Register button not found in DOM');
         }
         
         await this.loadPageData();
@@ -53,22 +54,64 @@ class DashboardPage extends BasePage {
 
     setupEventListeners() {
         // Listen for global challenge events
-        const revealCleanup = EventBus.instance.listen(EventBus.EVENTS.CHALLENGE.REVEAL, (e) => {
-            this.handleChallengeReveal(e.detail);
+        const revealCleanup = EventBus.instance.listen(EventBus.EVENTS.CHALLENGE.REVEAL, async (e) => {
+            await this.handleChallengeReveal(e.detail);
         });
 
-        const completeCleanup = EventBus.instance.listen(EventBus.EVENTS.CHALLENGE.COMPLETE, (e) => {
-            this.handleChallengeComplete(e.detail);
+        const completeCleanup = EventBus.instance.listen(EventBus.EVENTS.CHALLENGE.COMPLETE, async (e) => {
+            await this.handleChallengeComplete(e.detail);
         });
 
         // Store cleanup functions for later removal
         this.eventCleanup.push(revealCleanup, completeCleanup);
     }
 
-    handleChallengeReveal(detail) {
-        const { assignmentId } = detail;
+    async handleChallengeReveal(detail) {
+        const { assignmentId, element } = detail;
+        
+        // Just toggle the revealed state on the card element
+        if (element) {
+            element.classList.remove('unrevealed');
+            element.classList.add('revealed');
+            
+            // Update the reveal prompt to action buttons
+            const actionsContainer = element.querySelector('.challenge-actions, .reveal');
+            if (actionsContainer) {
+                actionsContainer.outerHTML = `
+                    <div class="challenge-actions">
+                        <button class="success-btn" data-id="${assignmentId}" data-sound="success" data-outcome="success">
+                            <img src="images/green-checkmark.gif" class="icon-gif icon-gif--with-text hide-mobile" alt="checkmark">SUCCESS
+                        </button>
+                        <button class="failure-btn" data-id="${assignmentId}" data-sound="failure" data-outcome="failure">
+                            <img src="images/failure.gif" class="icon-gif icon-gif--with-text hide-mobile" alt="cross">FAILURE
+                        </button>
+                    </div>
+                `;
+                
+                // Re-attach event listeners to new buttons
+                element.querySelectorAll('button').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const outcome = btn.dataset.outcome;
+                        const assignmentId = btn.dataset.id;
+                        
+                        EventBus.instance.emit(EventBus.EVENTS.CHALLENGE.COMPLETE, {
+                            assignmentId,
+                            challengeId: detail.challengeId,
+                            outcome,
+                            brianMode: detail.brianMode,
+                            button: btn,
+                            element: element
+                        });
+                    });
+                });
+            }
+            
+            // Remove the click handler from the card
+            element.style.cursor = '';
+        }
+        
         this.revealedChallengeId = assignmentId;
-        this.loadChallenges();
     }
 
     async handleChallengeComplete(detail) {
@@ -87,8 +130,10 @@ class DashboardPage extends BasePage {
 
             await this.markChallengeComplete(assignmentId, challengeId, outcome, brianMode);
 
-            // Reset revealed challenge and reload data
+            // Reset revealed challenge
             this.revealedChallengeId = null;
+            
+            // Update challenges and stats
             await Promise.all([this.loadChallenges(), this.loadPersonalStats()]);
 
             // Emit success event
@@ -141,6 +186,9 @@ class DashboardPage extends BasePage {
 
             if (error) throw error;
 
+            // Clear loading state
+            this.setLoadingState('challengesList', false);
+
             if (!data || data.length === 0) {
                 container.innerHTML = '<div class="empty">No challenges assigned yet.</div>';
                 container.className = '';
@@ -150,18 +198,31 @@ class DashboardPage extends BasePage {
             this.renderChallenges(container, data);
 
         } catch (err) {
+            this.setLoadingState('challengesList', false);
             container.innerHTML = `<div class="empty">Error loading challenges: ${err.message}</div>`;
             container.className = '';
         }
     }
 
     renderChallenges(container, data) {
-        container.innerHTML = '';
-        container.className = 'challenge-list';
-
+        // Preserve scroll position and existing card states
+        const existingCards = Array.from(container.querySelectorAll('.challenge-card'));
+        const existingCardMap = new Map();
+        
+        // Map existing cards by assignment ID
+        existingCards.forEach(card => {
+            const assignmentId = card.dataset.assignmentId;
+            if (assignmentId) {
+                existingCardMap.set(assignmentId, card);
+            }
+        });
+        
         // Find first incomplete challenge
         const firstIncompleteIndex = data.findIndex(a => !a.completed_at);
 
+        // Track which cards should exist
+        const validAssignmentIds = new Set(data.map(a => a.id));
+        
         data.forEach((assignment, index) => {
             const isCompleted = !!assignment.completed_at;
             const outcome = assignment.outcome;
@@ -169,22 +230,6 @@ class DashboardPage extends BasePage {
             const isRevealed = this.revealedChallengeId === assignment.id;
             const canReveal = !isCompleted && (firstIncompleteIndex === index || isRevealed);
             const isLocked = !isCompleted && firstIncompleteIndex < index && !isRevealed;
-
-            const challengeCard = new ChallengeCard(assignment, index, {
-                showActions: true,
-                allowReveal: true,
-                showBrianMode: true,
-                showIndex: true
-            });
-
-            // NEW: Use event listeners instead of callbacks
-            challengeCard.addEventListener('reveal', (e) => {
-                this.handleChallengeReveal(e.detail);
-            });
-
-            challengeCard.addEventListener('complete', (e) => {
-                this.handleChallengeComplete(e.detail);
-            });
 
             const state = {
                 isCompleted,
@@ -194,10 +239,74 @@ class DashboardPage extends BasePage {
                 canReveal,
                 isLocked
             };
+            
+            const existingCard = existingCardMap.get(assignment.id);
+            
+            if (existingCard && this.isSameCardState(existingCard, state)) {
+                // Card state unchanged - do nothing (leave in place)
+                existingCardMap.delete(assignment.id); // Mark as still valid
+            } else if (existingCard) {
+                // Card exists but needs update - replace it
+                const challengeCard = new ChallengeCard(assignment, index, {
+                    showActions: true,
+                    allowReveal: true,
+                    showBrianMode: true,
+                    showIndex: true
+                });
 
-            const cardElement = challengeCard.create(state);
-            container.appendChild(cardElement);
+                challengeCard.addEventListener('reveal', (e) => {
+                    this.handleChallengeReveal(e.detail);
+                });
+
+                challengeCard.addEventListener('complete', (e) => {
+                    this.handleChallengeComplete(e.detail);
+                });
+
+                const newCard = challengeCard.create(state);
+                existingCard.replaceWith(newCard);
+                existingCardMap.delete(assignment.id);
+            } else {
+                // New card needed - append it
+                const challengeCard = new ChallengeCard(assignment, index, {
+                    showActions: true,
+                    allowReveal: true,
+                    showBrianMode: true,
+                    showIndex: true
+                });
+
+                challengeCard.addEventListener('reveal', (e) => {
+                    this.handleChallengeReveal(e.detail);
+                });
+
+                challengeCard.addEventListener('complete', (e) => {
+                    this.handleChallengeComplete(e.detail);
+                });
+
+                const cardElement = challengeCard.create(state);
+                container.appendChild(cardElement);
+            }
         });
+        
+        // Remove cards that no longer exist in data
+        existingCardMap.forEach((card, assignmentId) => {
+            if (!validAssignmentIds.has(assignmentId)) {
+                card.remove();
+            }
+        });
+        
+        // Ensure container has proper class
+        container.className = 'challenge-list';
+    }
+    
+    isSameCardState(cardElement, newState) {
+        // Check if card state matches to avoid unnecessary re-renders
+        const hasCompleted = cardElement.classList.contains('completed');
+        const hasRevealed = cardElement.classList.contains('revealed');
+        const hasLocked = cardElement.classList.contains('locked');
+        
+        return hasCompleted === newState.isCompleted &&
+               hasRevealed === newState.isRevealed &&
+               hasLocked === newState.isLocked;
     }
 
     async loadPersonalStats() {
@@ -211,32 +320,8 @@ class DashboardPage extends BasePage {
                 return;
             }
 
-            // Smart refresh: only update data values, not entire HTML structure
-            if (APP_CONFIG.useSmartRefresh && container.querySelector('.stats-grid')) {
-                this.updateStatsValues(container, { userStats, rank, assignmentStats });
-            } else {
-                // Full render for initial load or when smart refresh is disabled
-                container.innerHTML = `
-                    <div class="stats-grid">
-                        <div class="stat-box">
-                            <div class="stat-label">YOUR RANK</div>
-                            <div class="stat-value" data-stat="rank">#${rank}</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">TOTAL POINTS</div>
-                            <div class="stat-value" data-stat="total-points">${userStats.total_points}</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">CHALLENGES</div>
-                            <div class="stat-value" data-stat="challenges">${assignmentStats.totalCompleted}/${assignmentStats.totalAssigned}</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">BRODOWN</div>
-                            <div class="stat-value" data-stat="competition-points">${userStats.competition_points}</div>
-                        </div>
-                    </div>
-                `;
-            }
+            // Update only the data values (HTML structure already exists in dashboard.html)
+            this.updateStatsValues(container, { userStats, rank, assignmentStats });
 
         } catch (err) {
             container.innerHTML = `<div class="empty">Error loading stats: ${err.message}</div>`;
@@ -270,9 +355,57 @@ class DashboardPage extends BasePage {
     }
 
     async loadPageData() {
-        // Load challenges first to get assignment data, then stats
+        // Load challenges first to get assignment data, then stats and cocktail status
         await this.loadChallenges();
         await this.loadPersonalStats();
+        await this.loadCocktailCompetitionStatus();
+    }
+
+    async loadCocktailCompetitionStatus() {
+        const registerBtn = document.getElementById('registerCocktailBtn');
+        const judgingLink = document.getElementById('cocktailJudgingLink');
+
+        try {
+            // Get most recent competition
+            const { data: competitions, error } = await this.supabase
+                .from('cocktail_competitions')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(1);
+
+            if (error) throw error;
+
+            if (!competitions || competitions.length === 0) {
+                // No competition exists - hide section entirely
+                if (registerBtn) registerBtn.style.display = 'none';
+                return;
+            }
+
+            this.activeCompetition = competitions[0];
+
+            // Check if user has already registered
+            const { data: entry, error: entryError } = await this.supabase
+                .from('cocktail_entries')
+                .select('id')
+                .eq('competition_id', this.activeCompetition.id)
+                .eq('user_id', this.userId)
+                .maybeSingle();
+
+            if (entryError) throw entryError;
+
+            // Update button text if user has registered
+            if (registerBtn && entry) {
+                registerBtn.textContent = 'UPDATE COCKTAIL';
+            }
+
+            // Show judging link only if voting is open
+            if (judgingLink && this.activeCompetition.voting_open) {
+                judgingLink.style.display = 'block';
+            }
+
+        } catch (err) {
+            console.error('Error loading cocktail competition status:', err);
+        }
     }
 }
 
