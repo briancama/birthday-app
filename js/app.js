@@ -1,5 +1,5 @@
 import { SUPABASE_CONFIG } from './config.js';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.94.1/+esm';
 import { EventBus } from './events/event-bus.js';
 
 // Environment detection

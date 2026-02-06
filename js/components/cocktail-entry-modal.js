@@ -33,7 +33,7 @@ export class CocktailEntryModal {
       <div id="cocktailEntryModal" class="challenge-modal" style="display: none;">
         <div class="challenge-modal-overlay"></div>
         <div class="challenge-modal-content">
-          <button id="closeCocktailEntryModal" class="close-btn">❌</button>
+          <button id="closeCocktailEntryModal" class="close-btn">✖️</button>
           
           <h2 class="text-center rainbow-text">Cocktail Entry</h2>
           
@@ -310,7 +310,7 @@ export class CocktailEntryModal {
       this.modal.style.display = 'block';
       document.body.style.overflow = 'hidden';
     } else {
-      console.error('❌ Modal element not found!');
+      console.error('✖️ Modal element not found!');
     }
   }
 

@@ -11,7 +11,6 @@ export class ChallengesSubmitPage extends BasePage {
 
   async init() {
     await super.init();
-    this.setPageTitle('Challenge Workshop');
     this.initializeModal();
     this.initializeForm();
     await this.loadSubmissions();

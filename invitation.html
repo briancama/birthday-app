@@ -193,7 +193,7 @@
     <div id="guestbookModal" class="guestbook-modal" style="display: none;">
       <div class="guestbook-modal-overlay"></div>
       <div class="guestbook-modal-content">
-        <button id="closeGuestbook" class="close-btn">❌</button>
+        <button id="closeGuestbook" class="close-btn">✖️</button>
 
         <h2 class="text-center rainbow-text">
           <img src="images/sparkle.gif" alt="" class="icon-gif">
@@ -237,7 +237,7 @@
 
   <script type="module">
     import { SUPABASE_CONFIG } from './js/config.js'
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.94.1/+esm'
 
     const supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key)
 

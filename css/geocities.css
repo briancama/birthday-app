@@ -347,6 +347,59 @@
     opacity: 0.6;
   }
 
+  /* Button modifier classes - can be used with <button> or <a> tags */
+  .btn {
+    display: inline-block;
+    padding: 0.75rem var(--spacing-lg);
+    border: var(--border-width) var(--border-style) var(--border-color);
+    font-weight: bold;
+    cursor: pointer;
+    font-family: 'Arial', sans-serif;
+    font-size: 1rem;
+    text-shadow: 1px 1px 0px #000000;
+    text-decoration: none;
+    text-align: center;
+  }
+
+  .btn:hover {
+    border: var(--border-width) inset var(--border-color);
+  }
+
+  .btn:active {
+    border: var(--border-width) inset var(--border-color);
+    transform: translateY(1px);
+  }
+
+  .btn-primary {
+    background: linear-gradient(to bottom, var(--accent-magenta), #9400D3);
+    color: var(--accent-yellow);
+    border-color: var(--border-color);
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(to bottom, var(--accent-cyan), var(--accent-blue));
+  }
+
+  .btn-secondary {
+    background: linear-gradient(to bottom, var(--accent-red), #8B0000);
+    color: var(--text-light);
+    border-color: var(--border-color);
+  }
+
+  .btn-secondary:hover {
+    background: linear-gradient(to bottom, #FF6347, var(--accent-red));
+  }
+
+  .btn-tertiary {
+    background: linear-gradient(to bottom, var(--accent-blue), #000080);
+    color: var(--text-light);
+    border-color: var(--border-color);
+  }
+
+  .btn-tertiary:hover {
+    background: linear-gradient(to bottom, #4169E1, var(--accent-blue));
+  }
+
   button.secondary {
     background: linear-gradient(to bottom, var(--accent-red), #8B0000);
     color: var(--text-light);
@@ -513,6 +566,32 @@
     gap: var(--spacing-xs);
   }
 
+  /* Hide/show title based on card state */
+  .challenge-card .title-revealed {
+    display: none;
+  }
+
+  .challenge-card.revealed .title-hidden,
+  .challenge-card.completed .title-hidden {
+    display: none;
+  }
+
+  .challenge-card.revealed .title-revealed,
+  .challenge-card.completed .title-revealed {
+    display: inline;
+  }
+
+  /* Hide description until revealed */
+  .challenge-card.unrevealed .challenge-description,
+  .challenge-card.locked .challenge-description {
+    display: none;
+  }
+
+  /* Hide brian badge until revealed */
+  .challenge-card.unrevealed .brian-mode-badge {
+    display: none;
+  }
+
   .challenge-description {
     margin-bottom: var(--spacing-xs);
     font-family: 'Arial', sans-serif;
@@ -554,13 +633,13 @@
 
   .challenge-actions {
     display: flex;
-    gap: var(--spacing-xs);
-    flex-direction: column;
+    gap: var(--spacing-sm);
   }
 
   .challenge-actions button {
-    width: 100%;
+    width: 50%;
     min-width: 120px;
+    justify-content: center;
   }
 
   /* Badges */

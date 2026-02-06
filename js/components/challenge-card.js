@@ -39,6 +39,7 @@ class ChallengeCard extends EventTarget {
         }
 
         card.className = cardClass;
+        card.dataset.assignmentId = this.assignment.id; // Add data attribute for tracking
         card.innerHTML = this.getCardHTML(state);
         this.addEventListeners(card, state);
 
@@ -48,21 +49,48 @@ class ChallengeCard extends EventTarget {
     getCardHTML(state) {
         const { isCompleted, outcome, brianMode, isRevealed, canReveal, isLocked } = state;
 
-        const brianBadge = (brianMode && this.options.showBrianMode && (isCompleted || isRevealed))
+        const brianBadge = (brianMode && this.options.showBrianMode)
             ? `<span class="brian-mode-badge">${brianMode === 'vs' ? '<img src="images/vs.gif" class="icon-gif" alt="VS Brian">' : '<img src="images/with.gif" class="icon-gif" alt="With Brian">'}</span>`
             : '';
 
-        const displayTitle = this.getDisplayTitle(state, brianBadge);
-        const displayDescription = this.getDisplayDescription(state);
+        // Always include full title and description, just hide with CSS
+        const fullTitle = `${this.assignment.challenges.title}`;
+        const hiddenTitle = this.options.showIndex ? `Challenge ${this.index + 1}` : 'Hidden Challenge';
+        
+        const displayDescription = this.getFullDescription();
         const actionsHTML = this.getActionsHTML(state);
 
         return `
             <div class="challenge-info">
-                <div class="challenge-title">${displayTitle}${brianBadge}</div>
-                ${displayDescription ? `<div class="challenge-description">${displayDescription}</div>` : ''}
+                <div class="challenge-title">
+                    <span class="title-hidden">${hiddenTitle}</span>
+                    <span class="title-revealed">${fullTitle}</span>
+                    ${brianBadge}
+                </div>
+                <div class="challenge-description">${displayDescription}</div>
             </div>
             ${actionsHTML}
         `;
+    }
+
+    getFullDescription() {
+        // Always render full description - CSS will control visibility
+        let html = '';
+
+        // Add description
+        if (this.assignment.challenges.description) {
+            html += `<p>${this.assignment.challenges.description}</p>`;
+        }
+
+        // Add success metric if it exists
+        if (this.assignment.challenges.success_metric) {
+            html += `<details class="success-metric">
+                <summary><strong>Success Metric</strong></summary>
+                <p>${this.assignment.challenges.success_metric}</p>
+            </details>`;
+        }
+
+        return html || '<p>No description</p>';
     }
 
     getDisplayTitle(state, brianBadge) {
@@ -148,11 +176,11 @@ class ChallengeCard extends EventTarget {
     getActionButtons() {
         return `
             <div class="challenge-actions">
-                <button class="success-btn" data-id="${this.assignment.id}" data-outcome="success">
-                    <img src="images/green-checkmark.gif" class="icon-gif" alt="checkmark">SUCCESS
+                <button class="success-btn" data-id="${this.assignment.id}" data-sound="success" data-outcome="success">
+                    <img src="images/green-checkmark.gif" class="icon-gif icon-gif--with-text hide-mobile" alt="checkmark">SUCCESS
                 </button>
-                <button class="failure-btn" data-id="${this.assignment.id}" data-outcome="failure">
-                    <img src="images/failure.gif" class="icon-gif" alt="cross">FAILURE
+                <button class="failure-btn" data-id="${this.assignment.id}" data-sound="failure" data-outcome="failure">
+                    <img src="images/failure.gif" class="icon-gif icon-gif--with-text hide-mobile" alt="cross">FAILURE
                 </button>
             </div>
         `;

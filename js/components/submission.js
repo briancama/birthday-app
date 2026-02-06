@@ -48,7 +48,7 @@ export class SubmissionRow {
     return `
       <td class="action-buttons">
         <button class="btn-approve" data-id="${this.challenge.id}" aria-label="Approve challenge">✅</button>
-        <button class="btn-deny" data-id="${this.challenge.id}" aria-label="Deny challenge">❌</button>
+        <button class="btn-deny" data-id="${this.challenge.id}" aria-label="Deny challenge">✖️</button>
         <button class="btn-view" data-id="${this.challenge.id}" aria-label="View challenge details">👁️</button>
       </td>
     `;

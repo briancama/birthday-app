@@ -1,4 +1,5 @@
 import { appState } from '../app.js';
+import { audioManager, addClickSound } from '../utils/audio.js';
 
 class BasePage {
     constructor() {
@@ -6,9 +7,13 @@ class BasePage {
         this.userId = appState.getUserId();
         this.currentUser = appState.getCurrentUser();
         this.eventCleanup = [];
+        this.audioManager = audioManager;
     }
 
     async init() {
+        // Initialize audio on first user interaction
+        this.setupAudio();
+        
         // Modern event-based subscription to app state changes
         const userLoadedCleanup = appState.on('user:loaded', (e) => {
             this.handleStateChange('user-loaded', e.detail);
@@ -204,6 +209,25 @@ class BasePage {
         this.eventCleanup = [];
     }
 
+    setupAudio() {
+        // Preload click sound
+        this.audioManager.preload('click', '/audio/click.mp3');
+        this.audioManager.preload('success', '/audio/success.mp3');
+        this.audioManager.preload('menu', '/audio/menu.mp3');
+        
+        // Initialize audio on first interaction (required for mobile)
+        const initAudio = () => {
+            this.audioManager.initialize();
+            document.removeEventListener('click', initAudio);
+        };
+        document.addEventListener('click', initAudio, { once: true });
+        
+        // Add click sounds to common button selectors
+        addClickSound('button:not([data-no-sound])');
+        addClickSound('a.btn');
+        addClickSound('.action-button');
+    }
+
     // Utility methods
     showError(message) {
         // You could make this more sophisticated with toast notifications
@@ -213,9 +237,13 @@ class BasePage {
     setLoadingState(elementId, isLoading = true) {
         const element = document.getElementById(elementId);
         if (element) {
-            element.className = isLoading ? 'loading' : '';
             if (isLoading) {
+                element.className = 'loading';
                 element.innerHTML = 'Loading...';
+            } else {
+                // Clear loading state - remove class and content
+                element.className = '';
+                element.innerHTML = '';
             }
         }
     }
