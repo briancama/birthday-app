@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <title>Cocktail Judging - Birthday Challenge Zone</title>
-  <link rel="icon" type="image/png" href="images/favicon.png">
+  <link rel="icon" type="image/png" href="images/favicon.jpg">
   <link rel="stylesheet" href="css/geocities.css">
   <link rel="stylesheet" href="css/components/navigation.css">
   <link rel="stylesheet" href="css/components/submissions.css">
@@ -67,22 +67,18 @@
       </div>
     </nav>
 
-    <div class="section text-center">
-      <h1 class="rainbow-text">COCKTAIL JUDGING</h1>
-      <p><a href="cocktail-rubric.html" target="_blank" class="btn btn-secondary">VIEW FULL RUBRIC</a></p>
-      <div id="judgingStatus" class="highlight-box" style="margin: 1rem auto; max-width: 600px;">
-        <p class="loading">Checking judging status...</p>
-      </div>
-    </div>
-
-    <!-- Flame Divider -->
-    <div class="flame-divider">
-      <img src="images/flame_transparent.gif" alt="Flame Divider" onerror="this.style.display='none'">
-    </div>
-
-    <!-- Entries List -->
     <div class="section">
-      <h2 class="text-shadow-light">COCKTAIL ENTRIES</h2>
+      <h1 class="text-shadow-light" style="text-align:left;">COCKTAIL ENTRIES</h1>
+      <p style="max-width: 600px; margin-bottom: 1rem;">Rate each cocktail on the rubric criteria (1-5 scale), then pick your favorite to crown the champion!</p>
+      
+      <!-- Rubric Button + Progress Indicator Row -->
+      <div style="min-height: 60px; display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; position: sticky; top: 10px; z-index: 10;">
+        <a href="cocktail-rubric.html" target="_blank" class="btn btn-secondary" style="flex-shrink: 0;">RUBRIC</a>
+        <div id="judgingStatus" style="padding: 0.5rem 1rem; background: rgba(255, 255, 0, 0.9); border: 2px solid #000; font-weight: bold; font-size: 0.9rem;">
+          <p style="margin: 0;">Loading...</p>
+        </div>
+      </div>
+      
       <div id="entriesList" class="entries-grid">
         <div class="loading">Loading entries...</div>
       </div>

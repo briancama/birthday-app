@@ -77,7 +77,7 @@ export class CocktailEntryModal {
                 <small>Share what's in your cocktail (max 1000 characters)</small>
               </div>
 
-              <button type="submit" id="cocktailEntrySubmitBtn" class="btn-primary">
+              <button type="submit" id="cocktailEntrySubmitBtn" class="btn-primary" data-sound="save">
                 🎉 REGISTER MY COCKTAIL
               </button>
 
@@ -93,7 +93,7 @@ export class CocktailEntryModal {
               </div>
               <div class="detail-row">
                 <strong>Ingredients & Instructions:</strong>
-                <pre id="displayCocktailDescription" style="white-space: pre-wrap; font-family: 'Courier New', monospace; background: #F5F5F5; padding: 1rem; border: 2px inset #CCC; margin: 0.5rem 0;"></pre>
+                <pre id="displayCocktailDescription" style="white-space: pre-wrap; font-family: 'Courier New', monospace; background: rgba(255, 255, 0, 0.1); padding: 1rem; border: 2px solid #FF6600; border-radius: 4px; margin: 0.5rem 0; color: #000;"></pre>
               </div>
               <div class="detail-row">
                 <strong>Registered:</strong>
