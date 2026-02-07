@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <title>Dashboard - Birthday Challenge Zone</title>
-  <link rel="icon" type="image/png" href="images/favicon.png">
+  <link rel="icon" type="image/png" href="images/favicon.jpg">
   <link rel="stylesheet" href="css/geocities.css">
   <link rel="stylesheet" href="css/components/navigation.css">
   <link rel="stylesheet" href="css/components/submissions.css">
@@ -16,7 +16,7 @@
   <div class="container">
     <!-- Scrolling Marquee -->
     <marquee behavior="scroll" direction="left" scrollamount="6">
-      *** WELCOME TO THE BIRTHDAY CHALLENGE ZONE! *** Check out the leaderboard! * New challenges daily! HOT!
+      *** WELCOME TO THE BIRTHDAY CHALLENGE ZONE<span id="marqueeUsername" style="opacity: 0;"></span>! *** Check out the leaderboard! * New challenges daily! HOT!
     </marquee>
 
     <!-- Navigation Component -->
@@ -29,9 +29,8 @@
       <!-- Page Title / User Info -->
       <div class="nav-user-info">
         <div class="user-welcome">
-          <img src="images/star_icon.gif" alt="star" class="icon-gif hide-mobile">
-          <span data-nav="page-title">Dashboard</span>
           <img src="images/star_icon.gif" alt="star" class="icon-gif">
+          <span data-nav="page-title">Dashboard</span>
         </div>
       </div>
 
@@ -92,17 +91,17 @@
     </div>
 
     <!-- Cocktail Competition Section -->
-    <div class="section text-center" style="display:flex; flex-direction:column; min-height: 375px; align-items: center;">
+    <div class="section text-center" style="display:flex; flex-direction:column; min-height: 377px; align-items: center;">
       <h2 class="text-shadow-light"><span><img class="icon-gif icon-gif--with-text" src="images/cocktail_stirrer.gif" alt="Cocktail Icon">COCKTAIL COMPETITION<img class="icon-gif icon-gif--with-text" src="images/cocktail_stirrer.gif" alt="Cocktail Icon"></span></h2>
       <p style="margin: 0rem auto 1.5rem; max-width: 600px;">
-        Mix up your best cocktail masterpiece and throw your hat in the ring! Check the rubric to see how you'll be judged, and once the event kicks off, you'll be able to rate everyone's creations right here.
+        Mix your best cocktail and compete! Check the rubric for judging criteria, and when voting opens, rate everyone's creations.
       </p>
-      <button id="registerCocktailBtn" class="btn btn-primary" style="min-width: 280px; margin-bottom: 0.75rem">
-        REGISTER COCKTAIL
-      </button>
-      <a href="cocktail-rubric" class="btn btn-tertiary" style="min-width: 280px; margin-bottom: 0.75rem" target="_blank">
+      <a href="cocktail-rubric" class="btn btn-tertiary" style="min-width: 280px; margin-bottom: 0.75rem;" target="_blank">
         VIEW RUBRIC
       </a>
+      <button id="registerCocktailBtn" class="btn btn-primary cocktail-button-fade-in" style="min-width: 280px; margin-bottom: 0.75rem; opacity: 0;">
+        REGISTER COCKTAIL
+      </button>
       <div id="cocktailJudgingLink" style="display: none;">
         <a href="cocktail-judging" class="btn btn-secondary" style="min-width: 280px;">
           JUDGE COCKTAILS NOW

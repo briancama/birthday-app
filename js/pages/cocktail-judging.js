@@ -1,4 +1,5 @@
 import { BasePage } from './base-page.js';
+import { FavoriteButton } from '../components/favorite-button.js';
 
 class CocktailJudgingPage extends BasePage {
     constructor() {
@@ -101,28 +102,26 @@ class CocktailJudgingPage extends BasePage {
 
     showNoCompetition() {
         document.getElementById('judgingStatus').innerHTML = `
-            <h3>No Active Competition</h3>
-            <p>There is no cocktail competition available for judging at this time.</p>
+            <p style="margin: 0;">⚠️ No Active Competition</p>
         `;
-        document.getElementById('entriesList').innerHTML = '';
+        document.getElementById('entriesList').innerHTML = '<p class="text-center">There is no cocktail competition available for judging at this time.</p>';
     }
 
     showVotingClosed() {
         document.getElementById('judgingStatus').innerHTML = `
-            <h3>Judging Closed</h3>
-            <p>Judging for this competition has ended.</p>
+            <p style="margin: 0;">🔒 Judging Closed</p>
         `;
-        document.getElementById('entriesList').innerHTML = '';
+        document.getElementById('entriesList').innerHTML = '<p class="text-center">Judging for this competition has ended.</p>';
     }
 
     renderEntries() {
         const statusDiv = document.getElementById('judgingStatus');
         const completedCount = Array.from(this.myJudgments.values()).filter(j => this.isJudgmentComplete(j)).length;
         const totalCount = this.entries.length;
+        const favoriteIcon = this.myFavorite ? '⭐' : '☆';
 
         statusDiv.innerHTML = `
-            <p><strong>Your Progress:</strong> ${completedCount} of ${totalCount} cocktails completed</p>
-            ${this.myFavorite ? '<p>Favorite selected!</p>' : '<p>Don\'t forget to pick your favorite!</p>'}
+            <p style="margin: 0;">Progress: ${completedCount}/${totalCount} completed ${favoriteIcon} ${this.myFavorite ? 'Favorite picked!' : 'Pick favorite'}</p>
         `;
 
         const entriesDiv = document.getElementById('entriesList');
@@ -185,13 +184,7 @@ class CocktailJudgingPage extends BasePage {
                         <p class="entry-compact-author">by ${entry.users?.display_name || entry.users?.username || 'Unknown'}</p>
                     </div>
                     <div class="entry-compact-actions">
-                        <button class="btn-favorite-icon ${isFavorite ? 'is-favorite' : ''}" 
-                                data-action="toggle-favorite"
-                                data-entry-id="${entry.id}"
-                                title="${isFavorite ? 'Your favorite!' : 'Mark as favorite'}"
-                                aria-label="${isFavorite ? 'Your favorite!' : 'Mark as favorite'}">
-                            ${isFavorite ? '⭐' : '☆'}
-                        </button>
+                        ${FavoriteButton.toHTML({ entryId: entry.id, isFavorite, style: 'icon' })}
                         ${isComplete ? `
                             <button class="btn-edit-icon" 
                                     data-action="open-judging-modal"
@@ -279,11 +272,7 @@ class CocktailJudgingPage extends BasePage {
                     <button class="btn-secondary edit-judgment-btn" data-entry-id="${entry.id}">
                         Edit Scores
                     </button>
-                    ${!isFavorite ? `
-                        <button class="btn-primary mark-favorite-btn" data-entry-id="${entry.id}">
-                            Mark as Favorite
-                        </button>
-                    ` : ''}
+                    ${!isFavorite ? FavoriteButton.toHTML({ entryId: entry.id, isFavorite: false, style: 'button' }) : ''}
                 </div>
             </div>
         `;
@@ -348,18 +337,18 @@ class CocktailJudgingPage extends BasePage {
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit" class="btn-primary">
+                    <button type="submit" class="btn-primary" data-sound="save">
                         Submit Judgment
                     </button>
-                    ${!isFavorite && this.myJudgments.size > 0 ? `
-                        <button type="button" class="btn-secondary mark-favorite-btn" data-entry-id="${entry.id}">
-                            Mark as Favorite
-                        </button>
-                    ` : ''}
                 </div>
 
                 <div class="error-message" style="display: none;"></div>
             </form>
+            
+            <!-- Favorite toggle outside form for independent action -->
+            <div style="margin-top: 1rem; text-align: center;">
+                ${FavoriteButton.toHTML({ entryId: entry.id, isFavorite, style: 'icon-with-text' })}
+            </div>
         `;
     }
 
@@ -482,12 +471,13 @@ class CocktailJudgingPage extends BasePage {
             await this.handleJudgmentSubmit(e, closeModal);
         });
 
-        // Favorite button handler
-        const favoriteBtn = modal.querySelector('.mark-favorite-btn');
+        // Favorite button handler (using data-action selector, don't close modal)
+        const favoriteBtn = modal.querySelector('[data-action="toggle-favorite"]');
         if (favoriteBtn) {
             favoriteBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
                 await this.handleMarkFavorite(e);
-                closeModal();
+                // Modal stays open - button updates via FavoriteButton.update()
             });
         }
     }
@@ -583,42 +573,56 @@ class CocktailJudgingPage extends BasePage {
     }
 
     async handleMarkFavorite(e) {
-        const entryId = e.target.dataset.entryId;
-        const btn = e.target;
+        const entryId = e.target.closest('[data-action="toggle-favorite"]').dataset.entryId;
+        const btn = e.target.closest('[data-action="toggle-favorite"]');
+        const wasAlreadyFavorite = this.myFavorite === entryId;
 
         btn.disabled = true;
-        btn.textContent = 'Saving...';
 
         try {
-            // Remove existing favorite if any
-            if (this.myFavorite) {
+            if (wasAlreadyFavorite) {
+                // Remove favorite
                 await this.supabase
                     .from('cocktail_favorites')
                     .delete()
                     .eq('judge_user_id', this.userId)
                     .eq('competition_id', this.activeCompetition.id);
+                
+                this.myFavorite = null;
+            } else {
+                // Remove existing favorite if any
+                if (this.myFavorite) {
+                    await this.supabase
+                        .from('cocktail_favorites')
+                        .delete()
+                        .eq('judge_user_id', this.userId)
+                        .eq('competition_id', this.activeCompetition.id);
+                }
+
+                // Add new favorite
+                const { error } = await this.supabase
+                    .from('cocktail_favorites')
+                    .insert([{
+                        competition_id: this.activeCompetition.id,
+                        judge_user_id: this.userId,
+                        entry_id: entryId
+                    }]);
+
+                if (error) throw error;
+                this.myFavorite = entryId;
             }
 
-            // Add new favorite
-            const { error } = await this.supabase
-                .from('cocktail_favorites')
-                .insert([{
-                    competition_id: this.activeCompetition.id,
-                    judge_user_id: this.userId,
-                    entry_id: entryId
-                }]);
+            // Update the button that was clicked using the component
+            FavoriteButton.update(btn, this.myFavorite === entryId);
+            btn.disabled = false;
 
-            if (error) throw error;
-
-            // Reload and re-render
-            await this.loadMyFavorite();
+            // Re-render all entries to update other favorite buttons
             this.renderEntries();
 
         } catch (err) {
-            console.error('Error marking favorite:', err);
-            alert('Failed to mark as favorite. Please try again.');
+            console.error('Error toggling favorite:', err);
+            alert('Failed to update favorite. Please try again.');
             btn.disabled = false;
-            btn.textContent = 'Mark as Favorite';
         }
     }
 

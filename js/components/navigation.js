@@ -143,12 +143,7 @@ class NavigationController {
             'challenges-submit': 'Challenge Workshop',
             'admin-approvals': 'Admin Approvals'
         };
-        const title = pageTitles[this.currentPage] || 'Dashboard';
-
-        // Apply same logic as BasePage.setPageTitle()
-        return this.currentUser && title === 'Dashboard'
-            ? `${this.currentUser.name}'s ${title}`
-            : title;
+        return pageTitles[this.currentPage] || 'Dashboard';
     }
 
     setCurrentUser(user) {

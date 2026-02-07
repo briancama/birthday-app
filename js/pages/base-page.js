@@ -213,7 +213,12 @@ class BasePage {
         // Preload click sound
         this.audioManager.preload('click', '/audio/click.mp3');
         this.audioManager.preload('success', '/audio/success.mp3');
+        this.audioManager.preload('failure', '/audio/failure.mp3');
         this.audioManager.preload('menu', '/audio/menu.mp3');
+        this.audioManager.preload('save', '/audio/save.mp3');
+        this.audioManager.preload('favorite', '/audio/favorite.mp3');
+        this.audioManager.preload('unfavorite', '/audio/unfavorite.mp3');
+
         
         // Initialize audio on first interaction (required for mobile)
         const initAudio = () => {

@@ -17,6 +17,9 @@ class DashboardPage extends BasePage {
     async onReady() {
         this.setupEventListeners();
         this.setPageTitle('Dashboard');
+        this.updateMarqueeUsername();
+        this.updateMarqueeUsername();
+        this.updateMarqueeUsername();
 
         // Initialize cocktail entry modal
         try {
@@ -49,6 +52,18 @@ class DashboardPage extends BasePage {
         // Set up refresh interval for stats only (challenges cause layout shifts)
         if (APP_CONFIG.enableAutoRefresh) {
             this.refreshInterval = setInterval(() => this.loadPersonalStats(), APP_CONFIG.refreshInterval);
+        }
+    }
+
+    updateMarqueeUsername() {
+        const marqueeUsername = document.getElementById('marqueeUsername');
+        if (marqueeUsername && this.currentUser) {
+            marqueeUsername.textContent = `, ${this.currentUser.name.toUpperCase()}`;
+            // Fade in the username
+            setTimeout(() => {
+                marqueeUsername.style.transition = 'opacity 0.5s ease-in';
+                marqueeUsername.style.opacity = '1';
+            }, 100);
         }
     }
 
@@ -122,42 +137,40 @@ class DashboardPage extends BasePage {
     }
 
     async handleChallengeComplete(detail) {
-        const { assignmentId, challengeId, outcome, brianMode, button, element } = detail;
+        const { assignmentId, challengeId, outcome, brianMode, element } = detail;
+
+        // Optimistic update - immediately update the UI assuming success
+        this.updateCardAfterCompletion(assignmentId, outcome, element);
+
+        // Reset revealed challenge
+        this.revealedChallengeId = null;
+
+        // Optimistically update stats (we'll reload after backend confirms)
+        this.updateStatsOptimistically(outcome);
+
+        // Emit optimistic event
+        EventBus.instance.emit(EventBus.EVENTS.CHALLENGE.COMPLETED_SUCCESS, {
+            assignmentId,
+            challengeId,
+            outcome,
+            brianMode,
+            optimistic: true
+        });
 
         try {
-            // Provide immediate UI feedback
-            button.disabled = true;
-            button.textContent = 'Processing...';
-
-            // Emit loading event
-            EventBus.instance.emit(EventBus.EVENTS.CHALLENGE.LOADING, {
-                assignmentId,
-                action: 'completing'
-            });
-
+            // Make the backend call in the background
             await this.markChallengeComplete(assignmentId, challengeId, outcome, brianMode);
 
-            // Instead of reloading all challenges, update just this card
-            this.updateCardAfterCompletion(assignmentId, outcome, element);
-
-            // Reset revealed challenge
-            this.revealedChallengeId = null;
-
-            // Only reload stats (much lighter operation)
+            // Backend succeeded - reload stats to get accurate data
             await this.loadPersonalStats();
 
-            // Emit success event
-            EventBus.instance.emit(EventBus.EVENTS.CHALLENGE.COMPLETED_SUCCESS, {
-                assignmentId,
-                challengeId,
-                outcome,
-                brianMode
-            });
-
         } catch (err) {
-            // Reset button state on error
-            button.disabled = false;
-            button.textContent = button.dataset.originalText || 'RETRY';
+            // Backend failed - rollback the optimistic update
+            console.error('Challenge completion failed, rolling back:', err);
+
+            // Reload the entire challenge list to restore accurate state
+            await this.loadChallenges();
+            await this.loadPersonalStats();
 
             // Emit error event
             EventBus.instance.emit(EventBus.EVENTS.CHALLENGE.COMPLETED_ERROR, {
@@ -168,6 +181,36 @@ class DashboardPage extends BasePage {
             });
 
             this.showError('Failed to mark complete: ' + err.message);
+        }
+    }
+
+    /**
+     * Optimistically update stats before backend confirms
+     */
+    updateStatsOptimistically(outcome) {
+        const totalChallenges = document.querySelector('[data-stat="total-challenges"]');
+        const completedChallenges = document.querySelector('[data-stat="completed-challenges"]');
+        const successRate = document.querySelector('[data-stat="success-rate"]');
+        const totalPoints = document.querySelector('[data-stat="total-points"]');
+
+        if (completedChallenges) {
+            const current = parseInt(completedChallenges.textContent) || 0;
+            completedChallenges.textContent = current + 1;
+        }
+
+        if (totalPoints && outcome === 'success') {
+            const current = parseInt(totalPoints.textContent) || 0;
+            totalPoints.textContent = current + 1;
+        }
+
+        // Update success rate if we have the data
+        if (successRate && completedChallenges && totalPoints) {
+            const completed = parseInt(completedChallenges.textContent) || 0;
+            const points = parseInt(totalPoints.textContent) || 0;
+            if (completed > 0) {
+                const rate = Math.round((points / completed) * 100);
+                successRate.textContent = `${rate}%`;
+            }
         }
     }
 
@@ -187,22 +230,36 @@ class DashboardPage extends BasePage {
             return;
         }
 
-        // Update card classes for completed state
-        cardElement.className = `challenge-card completed ${outcome}`;
-
-        // Find and replace the action buttons with completion badge
+        // Find the action buttons container
         const actionsContainer = cardElement.querySelector('.challenge-actions');
         if (actionsContainer) {
-            const badgeHTML = outcome === 'success'
-                ? '<span class="outcome-badge success"><img src="images/green-checkmark.gif" class="icon-gif" alt="checkmark">SUCCESS!</span>'
-                : '<span class="outcome-badge failure"><img src="images/failure.gif" class="icon-gif" alt="cross">FAILURE!</span>';
+            // Add fade-out class to trigger animation
+            actionsContainer.classList.add('fading-out');
 
-            actionsContainer.outerHTML = badgeHTML;
-        }
+            // Wait for fade-out animation to complete (200ms)
+            setTimeout(() => {
+                // Update card classes for completed state
+                cardElement.className = `challenge-card completed ${outcome}`;
 
-        // Unlock next challenge card if this was successful
-        if (outcome === 'success') {
-            this.unlockNextChallenge(cardElement);
+                // Replace action buttons with completion badge
+                const badgeHTML = outcome === 'success'
+                    ? '<span class="outcome-badge success"><img src="images/green-checkmark.gif" class="icon-gif" alt="checkmark">SUCCESS!</span>'
+                    : '<span class="outcome-badge failure"><img src="images/failure.gif" class="icon-gif" alt="cross">FAILURE!</span>';
+
+                actionsContainer.outerHTML = badgeHTML;
+
+                // Unlock next challenge card if this was successful
+                if (outcome === 'success') {
+                    this.unlockNextChallenge(cardElement);
+                }
+            }, 200); // Match the fadeOut animation duration
+        } else {
+            // No actions container, just update classes directly
+            cardElement.className = `challenge-card completed ${outcome}`;
+            
+            if (outcome === 'success') {
+                this.unlockNextChallenge(cardElement);
+            }
         }
     }
 
@@ -225,13 +282,23 @@ class DashboardPage extends BasePage {
                 // Add click listener for revealing
                 nextCard.style.cursor = 'pointer';
                 nextCard.addEventListener('click', () => {
-                    // Find the assignment ID and trigger reveal
+                    // Get assignment details from card dataset
                     const assignmentId = nextCard.dataset.assignmentId;
+                    const challengeId = nextCard.dataset.challengeId;
+                    const brianMode = nextCard.dataset.brianMode;
+                    
                     if (assignmentId) {
-                        this.revealedChallengeId = assignmentId;
-                        this.handleChallengeReveal({ assignmentId, element: nextCard });
+                        const eventDetail = {
+                            assignmentId,
+                            challengeId,
+                            brianMode,
+                            element: nextCard
+                        };
+                        
+                        // Emit to global event bus
+                        EventBus.instance.emit(EventBus.EVENTS.CHALLENGE.REVEAL, eventDetail);
                     }
-                });
+                }, { once: true }); // Only allow one reveal
             }
         }
     }
@@ -478,8 +545,21 @@ class DashboardPage extends BasePage {
                 judgingLink.style.display = 'block';
             }
 
+            // Trigger fade-in for cocktail buttons after content is set
+            setTimeout(() => {
+                document.querySelectorAll('.cocktail-button-fade-in').forEach(btn => {
+                    btn.classList.add('loaded');
+                });
+            }, 50); // Small delay to ensure DOM is ready
+
         } catch (err) {
             console.error('Error loading cocktail competition status:', err);
+            // Still fade in buttons even on error
+            setTimeout(() => {
+                document.querySelectorAll('.cocktail-button-fade-in').forEach(btn => {
+                    btn.classList.add('loaded');
+                });
+            }, 50);
         }
     }
 }
