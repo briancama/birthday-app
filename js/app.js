@@ -1,5 +1,6 @@
-import { SUPABASE_CONFIG } from './config.js';
+import { SUPABASE_CONFIG, FIREBASE_CONFIG } from './config.js';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.94.1/+esm';
+import { firebaseAuth } from './services/firebase-auth.js';
 import { EventBus } from './events/event-bus.js';
 
 // Environment detection
@@ -46,17 +47,16 @@ class AppState extends EventTarget {
 
     // Initialize the application
     async init() {
-        // Check authentication
-        this.userId = localStorage.getItem('user_id');
-        const username = localStorage.getItem('username');
+        // Check authentication - use firebase_uid instead of username
+        const firebaseUid = localStorage.getItem('firebase_uid');
 
-        if (!this.userId) {
+        if (!firebaseUid) {
             this.redirectToLogin();
             return false;
         }
 
-        // Load full user profile
-        await this.loadUserProfile();
+        // Load full user profile using firebase_uid
+        await this.loadUserProfile(firebaseUid);
 
         // Initialize navigation if present
         this.initializeNavigation();
@@ -64,7 +64,7 @@ class AppState extends EventTarget {
         return true;
     }
 
-    async loadUserProfile() {
+    async loadUserProfile(firebaseUid) {
         try {
             // Emit loading event
             this.dispatchEvent(new CustomEvent('user:loading'));
@@ -72,11 +72,14 @@ class AppState extends EventTarget {
 
             const { data, error } = await this.supabase
                 .from('users')
-                .select('id, username, display_name, created_at')
-                .eq('id', this.userId)
+                .select('id, username, display_name, firebase_uid, created_at')
+                .eq('firebase_uid', firebaseUid)
                 .single();
 
             if (error) throw error;
+
+            // Store user ID for other queries
+            this.userId = data.id;
 
             // Check if user is admin
             const adminUsernames = ['brianc', 'admin'];
@@ -84,6 +87,7 @@ class AppState extends EventTarget {
 
             this.currentUser = {
                 id: this.userId,
+                firebase_uid: firebaseUid,
                 username: data.username,
                 display_name: data.display_name,
                 name: data.display_name || data.username,
@@ -161,8 +165,13 @@ class AppState extends EventTarget {
     logout() {
         const previousUser = this.currentUser;
 
-        localStorage.removeItem('user_id');
-        localStorage.removeItem('username');
+        // Clear Firebase auth
+        firebaseAuth.signOut().catch(err => console.error('Firebase signout error:', err));
+
+        // Clear localStorage
+        localStorage.removeItem('firebase_uid');
+        localStorage.removeItem('phone_number');
+        
         this.currentUser = null;
         this.userId = null;
 

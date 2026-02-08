@@ -72,7 +72,7 @@
       <p style="max-width: 600px; margin-bottom: 1rem;">Rate each cocktail on the rubric criteria (1-5 scale), then pick your favorite to crown the champion!</p>
       
       <!-- Rubric Button + Progress Indicator Row -->
-      <div style="min-height: 60px; display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; position: sticky; top: 10px; z-index: 10;">
+      <div style="min-height: 60px; display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem;z-index: 10;">
         <a href="cocktail-rubric.html" target="_blank" class="btn btn-secondary" style="flex-shrink: 0;">RUBRIC</a>
         <div id="judgingStatus" style="padding: 0.5rem 1rem; background: rgba(255, 255, 0, 0.9); border: 2px solid #000; font-weight: bold; font-size: 0.9rem;">
           <p style="margin: 0;">Loading...</p>
@@ -105,6 +105,9 @@
 
     init();
   </script>
+  <!-- Add before closing </body> -->
+  <bottom-menu></bottom-menu>
+  <script type="module" src="js/components/bottom-menu.js"></script>
 </body>
 
 </html>

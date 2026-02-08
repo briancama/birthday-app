@@ -65,7 +65,7 @@ class CocktailJudgingPage extends BasePage {
                 users:user_id (username, display_name)
             `)
             .eq('competition_id', this.activeCompetition.id)
-            .neq('user_id', this.userId)
+            // .neq('user_id', this.userId)  // Temporarily commented for testing - allows viewing own entry
             .order('submitted_at', { ascending: true });
 
         if (error) throw error;
@@ -173,6 +173,9 @@ class CocktailJudgingPage extends BasePage {
                     <div class="entry-compact-info">
                         <h3 class="entry-compact-title">
                             ${entry.entry_name}
+                        </h3>
+                        <p class="entry-compact-author">
+                            by ${entry.users?.display_name || entry.users?.username || 'Unknown'}
                             <button class="btn-info-icon" 
                                     data-action="toggle-description"
                                     data-entry-id="${entry.id}"
@@ -180,8 +183,7 @@ class CocktailJudgingPage extends BasePage {
                                     aria-label="View description">
                                 <img class="icon-gif icon-gif--with-text" src="images/info.gif" alt="info">
                             </button>
-                        </h3>
-                        <p class="entry-compact-author">by ${entry.users?.display_name || entry.users?.username || 'Unknown'}</p>
+                        </p>
                     </div>
                     <div class="entry-compact-actions">
                         ${FavoriteButton.toHTML({ entryId: entry.id, isFavorite, style: 'icon' })}

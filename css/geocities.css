@@ -726,6 +726,47 @@
     border: 3px ridge #00FF00;
     text-align: center;
     font-family: 'Courier New', monospace;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-box-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.3;
+    z-index: 0;
+  }
+
+  .stat-box > div {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* Stat value animation - fade in and scale */
+  @keyframes statPopIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.3);
+    }
+    70% {
+      opacity: 1;
+      transform: scale(1.15);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .stat-value.animate {
+    animation: statPopIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   }
 
   .stat-label {
@@ -733,6 +774,24 @@
     margin-bottom: 0.5rem;
     color: #00FFFF;
     text-transform: uppercase;
+    visibility: hidden;
+  }
+
+  .stat-label.animate {
+    animation: fadeInDown 0.6s ease-out forwards;
+  }
+
+  @keyframes fadeInDown {
+    0% {
+      opacity: 0;
+      transform: translateY(-10px);
+      visibility: visible;
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+      visibility: visible;
+    }
   }
 
   .stat-value {
@@ -1134,4 +1193,168 @@
 .visually-hidden *,
 .visually-hidden-focusable:not(:focus, :focus-within) * {
   overflow: hidden !important;
+}
+
+/* Bottom Menu - Bottom Sticky Navigation */
+.bottom-menu {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: linear-gradient(180deg, #FF00FF, #0000FF);
+  border-top: 3px solid #FFFF00;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  
+  /* Respect browser UI and safe areas */
+  padding-bottom: max(0px, env(safe-area-inset-bottom));
+  justify-content: space-around;
+  align-items: center;
+  gap: 0;
+  
+  /* Animation */
+  opacity: 0;
+  transition: opacity 0.4s ease-in-out;
+}
+
+.bottom-menu.loaded {
+  opacity: 1;
+}
+
+/* Show only on mobile */
+@media (max-width: 768px) {
+  .bottom-menu {
+    display: flex;
+  }
+  
+  /* Adjust body to account for fixed menu */
+  body {
+    padding-bottom: 60px;
+  }
+}
+
+.bottom-menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 100%;
+  text-decoration: none;
+  color: #FFF;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  font-family: 'Comic Sans MS', cursive;
+  font-size: 10px;
+  transition: background-color 0.2s, transform 0.1s;
+  
+  /* Touch target minimum size */
+  min-height: 44px;
+}
+
+.bottom-menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
+}
+
+.bottom-menu-item.active {
+  background: rgba(255, 255, 0, 0.2);
+  border-bottom: 3px solid #FFFF00;
+}
+
+.bottom-menu-item:active {
+  transform: scale(0.95);
+}
+
+.bottom-menu-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-bottom: 2px;
+}
+
+.bottom-menu-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.bottom-menu-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Respect notches and safe areas on modern phones */
+@supports (padding: max(0px)) {
+  .bottom-menu {
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Toast Notifications */
+#errorMessages,
+#successMessages {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 400px;
+}
+
+.error-message {
+  background: linear-gradient(135deg, #FF0000, #FF6600);
+  color: #FFF;
+  padding: 12px 16px;
+  border: 3px solid #000;
+  border-radius: 4px;
+  font-weight: bold;
+  font-family: 'Comic Sans MS', cursive;
+  font-size: 13px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease-out;
+}
+
+.success-message {
+  background: linear-gradient(135deg, #00FF00, #00CC00);
+  color: #000;
+  padding: 12px 16px;
+  border: 3px solid #000;
+  border-radius: 4px;
+  font-weight: bold;
+  font-family: 'Comic Sans MS', cursive;
+  font-size: 13px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  #errorMessages,
+  #successMessages {
+    left: 10px;
+    right: 10px;
+    max-width: none;
+    top: 10px;
+  }
 }

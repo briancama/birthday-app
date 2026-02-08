@@ -1,5 +1,6 @@
 import { appState } from '../app.js';
 import { EventBus } from '../events/event-bus.js';
+import { formatAndEscapeText } from '../utils/text-format.js';
 
 class ChallengeCard extends EventTarget {
     constructor(assignment, index, options = {}) {
@@ -79,16 +80,19 @@ class ChallengeCard extends EventTarget {
         // Always render full description - CSS will control visibility
         let html = '';
 
-        // Add description
+        // Add description - format text to preserve spacing and line breaks
         if (this.assignment.challenges.description) {
-            html += `<p>${this.assignment.challenges.description}</p>`;
+            const formattedDesc = formatAndEscapeText(this.assignment.challenges.description);
+            console.log('Formatted Description:', formattedDesc); // Debug log to verify formatting
+            html += `<p>${formattedDesc}</p>`;
         }
 
-        // Add success metric if it exists
+        // Add success metric if it exists - format text for display
         if (this.assignment.challenges.success_metric) {
+            const formattedMetric = formatAndEscapeText(this.assignment.challenges.success_metric);
             html += `<details class="success-metric">
                 <summary><strong>Success Metric</strong></summary>
-                <p>${this.assignment.challenges.success_metric}</p>
+                <p>${formattedMetric}</p>
             </details>`;
         }
 

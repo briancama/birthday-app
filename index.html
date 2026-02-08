@@ -8,6 +8,10 @@
   <title>*** Birthday Challenge Zone ***</title>
   <link rel="icon" type="image/png" href="images/favicon.jpg">
   <link rel="stylesheet" href="css/geocities.css">
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
 </head>
 
 <body style="display: flex; justify-content: center; align-items: center; min-height: 100vh;">
@@ -23,116 +27,202 @@
       <p style="margin-top: 1rem;"><a href="invitation" style="color: #0000FF; text-decoration: underline; font-weight: bold;">View the Party Invitation →</a></p>
     </div>
 
-    <!-- Login form temporarily disabled -->
+    <!-- Login form with Firebase phone auth -->
     <form id="loginForm">
-      <div class="form-group">
-        <label for="username">* ENTER YOUR USERNAME *</label>
-        <input type="text" id="username" name="username" placeholder="Type here..." required autocomplete="off">
-        <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;">Username is your first name + last initial, all lowercase (e.g., boboc)</p>
+      <!-- Phone Input Step -->
+      <div id="phoneStep" class="form-group">
+        <label for="phoneInput">📱 ENTER YOUR PHONE NUMBER</label>
+        <input type="tel" id="phoneInput" name="phone" placeholder="(617) 555-1234" maxlength="14" required autocomplete="off">
+        <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;">10-digit US phone number</p>
+        <div id="recaptchaContainer" style="margin: 1rem 0;"></div>
+        <button type="button" id="sendOTPBtn">>>> SEND CODE <<<</button>
       </div>
-      <button type="submit" id="submitBtn">>>> SIGN IN NOW! <<<</button>
+
+      <!-- OTP Input Step -->
+      <div id="otpStep" class="form-group" style="display: none;">
+        <label for="otpInput">✔️ ENTER THE CODE FROM YOUR TEXT</label>
+        <input type="text" id="otpInput" name="otp" placeholder="000000" maxlength="6" required autocomplete="off">
+        <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;">Check your SMS for a 6-digit code</p>
+        <button type="submit" id="verifyOTPBtn">>>> VERIFY CODE <<<</button>
+        <button type="button" id="backBtn">← BACK</button>
+      </div>
+
       <div id="error" class="error"></div>
     </form>
   </div>
 
   <script type="module">
-    import { appState, APP_CONFIG } from './js/app.js'
+    import { appState } from './js/app.js';
+    import { firebaseAuth } from './js/services/firebase-auth.js';
+    import { formatPhoneInput, toE164Format, isValidUSPhone } from './js/utils/phone-format.js';
 
-    // Debug APP_CONFIG first
-    console.log('APP_CONFIG debug:', {
-      exists: !!APP_CONFIG,
-      full_object: APP_CONFIG,
-      isProduction: APP_CONFIG?.isProduction,
-      isDevelopment: APP_CONFIG?.isDevelopment
-    })
+    const form = document.getElementById('loginForm');
+    const phoneInput = document.getElementById('phoneInput');
+    const otpInput = document.getElementById('otpInput');
+    const phoneStep = document.getElementById('phoneStep');
+    const otpStep = document.getElementById('otpStep');
+    const sendOTPBtn = document.getElementById('sendOTPBtn');
+    const verifyOTPBtn = document.getElementById('verifyOTPBtn');
+    const backBtn = document.getElementById('backBtn');
+    const errorDiv = document.getElementById('error');
+    const recaptchaContainer = document.getElementById('recaptchaContainer');
 
-    // Hide/show login based on environment
-    const loginForm = document.getElementById('loginForm')
+    let phoneNumber = null;
+    let recaptchaReady = false;
 
-    // Use APP_CONFIG if available, otherwise fallback
-    const isProduction = APP_CONFIG ? APP_CONFIG.isProduction : (
-      window.location.hostname !== 'localhost' &&
-      window.location.hostname !== '127.0.0.1' &&
-      !window.location.hostname.includes('github.io')
-    )
+    // Format phone number as user types: (XXX) XXX-XXXX
+    phoneInput.addEventListener('input', (e) => {
+      e.target.value = formatPhoneInput(e.target.value);
+    });
 
-    console.log('Final environment check:', {
-      hostname: window.location.hostname,
-      isProduction: isProduction,
-      source: APP_CONFIG ? 'APP_CONFIG' : 'fallback'
-    })
+    // Initialize Firebase
+    await firebaseAuth.init();
+    console.log('Firebase initialized, waiting for first interaction...');
 
-    if (isProduction) {
-      // Hide login in production with !important to override any CSS
-      loginForm.style.setProperty('display', 'none', 'important')
-      console.log('Login form hidden for production')
-    } else {
-      // Show login in development
-      loginForm.style.setProperty('display', 'block', 'important')
-      console.log('Login form shown for development')
-    }
+    // Send OTP
+    sendOTPBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      errorDiv.textContent = '';
 
-    const form = document.getElementById('loginForm')
-    const usernameInput = document.getElementById('username')
-    const submitBtn = document.getElementById('submitBtn')
-    const errorDiv = document.getElementById('error')
-    
-    // Get supabase client from appState
-    const supabase = appState.getSupabase()
+      // Setup reCAPTCHA on first click if not already done
+      if (!recaptchaReady) {
+        try {
+          sendOTPBtn.disabled = true;
+          sendOTPBtn.textContent = 'Setting up...';
+          await firebaseAuth.setupRecaptcha('recaptchaContainer');
+          recaptchaReady = true;
+          sendOTPBtn.disabled = false;
+          sendOTPBtn.textContent = '>>> SEND CODE <<<';
+        } catch (err) {
+          errorDiv.textContent = 'Setup failed: ' + err.message;
+          sendOTPBtn.disabled = false;
+          sendOTPBtn.textContent = '>>> SEND CODE <<<';
+          return;
+        }
+      }
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault()
-      errorDiv.textContent = ''
+      phoneNumber = phoneInput.value.trim();
+      if (!phoneNumber) {
+        errorDiv.textContent = 'Please enter a phone number';
+        return;
+      }
 
-      const username = usernameInput.value.trim()
-      if (!username) return
+      // Validate and convert to E.164 format
+      try {
+        phoneNumber = toE164Format(phoneNumber);
+      } catch (err) {
+        errorDiv.textContent = err.message;
+        return;
+      }
 
-      submitBtn.disabled = true
-      submitBtn.textContent = 'Signing in...'
+      sendOTPBtn.disabled = true;
+      sendOTPBtn.textContent = 'Sending...';
 
       try {
-        // Check if user exists
-        const { data: existing, error: selectErr } = await supabase
+        await firebaseAuth.sendOTP(phoneNumber);
+        // Switch to OTP step
+        phoneStep.style.display = 'none';
+        otpStep.style.display = 'block';
+        otpInput.focus();
+      } catch (err) {
+        console.error('Send OTP error:', err);
+        errorDiv.textContent = err.message || 'Failed to send code. Try again.';
+        sendOTPBtn.disabled = false;
+        sendOTPBtn.textContent = '>>> SEND CODE <<<';
+      }
+    });
+
+    // Back button
+    backBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      phoneStep.style.display = 'block';
+      otpStep.style.display = 'none';
+      errorDiv.textContent = '';
+      otpInput.value = '';
+      sendOTPBtn.disabled = false;
+      sendOTPBtn.textContent = '>>> SEND CODE <<<';
+    });
+
+    // Verify OTP
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorDiv.textContent = '';
+
+      const code = otpInput.value.trim();
+      if (!code || code.length !== 6) {
+        errorDiv.textContent = 'Please enter a valid 6-digit code';
+        return;
+      }
+
+      verifyOTPBtn.disabled = true;
+      verifyOTPBtn.textContent = 'Verifying...';
+
+      try {
+        // Actually verify the OTP with Firebase
+        const userCredential = await firebaseAuth.verifyOTP(code);
+        
+        if (!userCredential?.user?.uid) {
+          throw new Error('Firebase verification failed');
+        }
+
+        const firebaseUid = userCredential.user.uid;
+        const supabase = appState.getSupabase();
+
+        // Look for existing user by phone number
+        const { data: existingUser, error: selectErr } = await supabase
           .from('users')
           .select('*')
-          .eq('username', username)
-          .maybeSingle()
+          .eq('phone_number', phoneNumber)
+          .maybeSingle();
 
-        if (selectErr) throw selectErr
+        if (selectErr) throw selectErr;
 
-        let user = existing
+        let user = existingUser;
 
-        if (!existing) {
+        if (existingUser) {
+          // Update firebase_uid on existing user
+          const { error: updateErr } = await supabase
+            .from('users')
+            .update({ firebase_uid: firebaseUid })
+            .eq('id', existingUser.id);
+
+          if (updateErr) throw updateErr;
+          user = { ...existingUser, firebase_uid: firebaseUid };
+        } else {
           // Create new user
           const { data: newUser, error: insertErr } = await supabase
             .from('users')
-            .insert([{ username, display_name: username }])
+            .insert([{
+              firebase_uid: firebaseUid,
+              phone_number: phoneNumber,
+              display_name: phoneNumber,
+              username: phoneNumber // Use phone as fallback username
+            }])
             .select()
-            .single()
+            .single();
 
-          if (insertErr) throw insertErr
-          user = newUser
+          if (insertErr) throw insertErr;
+          user = newUser;
         }
 
-        // Store user ID in localStorage
-        localStorage.setItem('user_id', user.id)
-        localStorage.setItem('username', user.username)
-        localStorage.setItem('display_name', user.display_name)
+        // Store firebase_uid in localStorage
+        localStorage.setItem('firebase_uid', firebaseUid);
+        localStorage.setItem('phone_number', phoneNumber);
 
         // Redirect to dashboard
-        window.location.href = 'dashboard'
+        window.location.href = 'dashboard';
 
       } catch (err) {
-        console.error('Sign in error:', err)
-        errorDiv.textContent = err.message || 'Sign in failed. Please try again.'
-        submitBtn.disabled = false
-        submitBtn.textContent = 'Sign In'
+        console.error('Verify OTP error:', err);
+        errorDiv.textContent = err.message || 'Verification failed. Try again.';
+        verifyOTPBtn.disabled = false;
+        verifyOTPBtn.textContent = '>>> VERIFY CODE <<<';
       }
-    })
+    });
 
     // Check if already signed in
-    if (localStorage.getItem('user_id')) {
-      window.location.href = 'dashboard'
+    if (localStorage.getItem('firebase_uid')) {
+      window.location.href = 'dashboard';
     }
   </script>
 </body>

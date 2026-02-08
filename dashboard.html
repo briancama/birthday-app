@@ -71,20 +71,32 @@
       <div id="personalStats">
         <div class="stats-grid">
           <div class="stat-box">
-            <div class="stat-label">YOUR RANK</div>
-            <div class="stat-value" data-stat="rank">-</div>
+            <img src="images/matrix.gif" alt="" class="stat-box-bg">
+            <div>
+              <div class="stat-label">YOUR RANK</div>
+              <div class="stat-value" data-stat="rank">-</div>
+            </div>
           </div>
           <div class="stat-box">
-            <div class="stat-label">TOTAL POINTS</div>
-            <div class="stat-value" data-stat="total-points">-</div>
+            <img src="images/matrix.gif" alt="" class="stat-box-bg">
+            <div>
+              <div class="stat-label">TOTAL POINTS</div>
+              <div class="stat-value" data-stat="total-points">-</div>
+            </div>
           </div>
           <div class="stat-box">
-            <div class="stat-label">CHALLENGES</div>
-            <div class="stat-value" data-stat="challenges">-</div>
+            <img src="images/matrix.gif" alt="" class="stat-box-bg">
+            <div>
+              <div class="stat-label">CHALLENGES</div>
+              <div class="stat-value" data-stat="challenges">-</div>
+            </div>
           </div>
           <div class="stat-box">
-            <div class="stat-label">BRODOWN</div>
-            <div class="stat-value" data-stat="competition-points">-</div>
+            <img src="images/matrix.gif" alt="" class="stat-box-bg">
+            <div>
+              <div class="stat-label">BRODOWN</div>
+              <div class="stat-value" data-stat="competition-points">-</div>
+            </div>
           </div>
         </div>
       </div>
@@ -92,7 +104,7 @@
 
     <!-- Cocktail Competition Section -->
     <div class="section text-center" style="display:flex; flex-direction:column; min-height: 377px; align-items: center;">
-      <h2 class="text-shadow-light"><span><img class="icon-gif icon-gif--with-text" src="images/cocktail_stirrer.gif" alt="Cocktail Icon">COCKTAIL COMPETITION<img class="icon-gif icon-gif--with-text" src="images/cocktail_stirrer.gif" alt="Cocktail Icon"></span></h2>
+      <h2 class="text-shadow-light"><span><img class="icon-gif icon-gif--lg icon-gif--with-text" src="images/cocktail_stirrer.gif" alt="Cocktail Icon">COCKTAIL COMPETITION<img class="icon-gif icon-gif--lg icon-gif--with-text" src="images/cocktail_stirrer.gif" alt="Cocktail Icon"></span></h2>
       <p style="margin: 0rem auto 1.5rem; max-width: 600px;">
         Mix your best cocktail and compete! Check the rubric for judging criteria, and when voting opens, rate everyone's creations.
       </p>
@@ -121,28 +133,23 @@
   </div>
 
   <script type="module">
-    import { appState } from './js/app.js';
-    import { initNavigation } from './js/components/navigation.js';
     import { DashboardPage } from './js/pages/dashboard.js';
-
-    // Initialize application
-    async function init() {
-      // Initialize app state (handles auth, user loading, navigation)
-      const isAuthenticated = await appState.init();
-
-      if (isAuthenticated) {
-        // Initialize navigation controller
-        initNavigation();
-
-        // Initialize dashboard-specific functionality
-        const dashboard = new DashboardPage();
-        await dashboard.init();
+    
+    (async () => {
+      try {
+        console.log('🚀 Starting dashboard initialization...');
+        const page = new DashboardPage();
+        await page.init();
+        console.log('✅ Dashboard fully initialized');
+      } catch (err) {
+        console.error('❌ Dashboard initialization failed:', err);
       }
-    }
-
-    // Start the application
-    init();
+    })();
   </script>
+  
+  <!-- Add before closing </body> -->
+  <bottom-menu></bottom-menu>
+  <script type="module" src="js/components/bottom-menu.js"></script>
 </body>
 
 </html>

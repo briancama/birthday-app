@@ -2,6 +2,7 @@ import { BasePage } from './base-page.js';
 import { ChallengeCard } from '../components/challenge-card.js';
 import { CocktailEntryModal } from '../components/cocktail-entry-modal.js';
 import { EventBus } from '../events/event-bus.js';
+import { featureFlags } from '../utils/feature-flags.js';
 import { APP_CONFIG } from '../app.js';
 
 class DashboardPage extends BasePage {
@@ -18,14 +19,12 @@ class DashboardPage extends BasePage {
         this.setupEventListeners();
         this.setPageTitle('Dashboard');
         this.updateMarqueeUsername();
-        this.updateMarqueeUsername();
-        this.updateMarqueeUsername();
+        console.log('DashboardPage ready, checking feature flags...');
 
         // Initialize cocktail entry modal
         try {
             this.cocktailModal = new CocktailEntryModal();
             await this.cocktailModal.init();
-            console.log('✅ Cocktail modal initialized successfully');
         } catch (err) {
             console.error('✖️ Failed to initialize cocktail modal:', err);
         }
@@ -33,9 +32,7 @@ class DashboardPage extends BasePage {
         // Setup cocktail registration button
         const registerBtn = document.getElementById('registerCocktailBtn');
         if (registerBtn) {
-            console.log('✅ Found register button, attaching listener');
             registerBtn.addEventListener('click', () => {
-                console.log('🎉 Register button clicked');
                 if (this.cocktailModal) {
                     this.cocktailModal.open();
                 } else {
@@ -46,6 +43,8 @@ class DashboardPage extends BasePage {
         } else {
             console.error('✖️ Register button not found in DOM');
         }
+
+        console.log('DashboardPage initialized, loading page data...');
 
         await this.loadPageData();
 
@@ -305,8 +304,27 @@ class DashboardPage extends BasePage {
 
     async loadPageData() {
         // Load challenges first to get assignment data, then stats
-        await this.loadChallenges();
-        await this.loadPersonalStats();
+          // Check feature flags
+        const eventStarted = await featureFlags.isEventStarted(this.supabase);
+  
+        if (eventStarted) {
+            await this.loadChallenges();
+            await this.loadPersonalStats();
+        } else {
+            console.log('Event has not started yet, showing preview message');
+            // Show preview
+            const preview = document.getElementById('challengesList');
+            if (preview) {
+                preview.innerHTML = `
+                    <div class="feature-preview">
+                        <img src="images/under_construction.gif" alt="Under Construction" class="preview-gif">
+                        <p>Challenges coming soon! Check back when the event starts.</p>
+                    </div>
+                `;
+                preview.className = 'feature-preview';
+            }
+        }
+        await this.loadCocktailCompetitionStatus();
     }
 
     async loadChallenges() {
@@ -477,10 +495,41 @@ class DashboardPage extends BasePage {
         const challengesEl = container.querySelector('[data-stat="challenges"]');
         const competitionEl = container.querySelector('[data-stat="competition-points"]');
 
-        if (rankEl) rankEl.textContent = `#${rank}`;
-        if (pointsEl) pointsEl.textContent = userStats.total_points;
-        if (challengesEl) challengesEl.textContent = `${assignmentStats.totalCompleted}/${assignmentStats.totalAssigned}`;
-        if (competitionEl) competitionEl.textContent = userStats.competition_points;
+        if (rankEl) {
+            rankEl.textContent = `#${rank}`;
+            this.triggerStatAnimation(rankEl);
+        }
+        if (pointsEl) {
+            pointsEl.textContent = userStats.total_points;
+            this.triggerStatAnimation(pointsEl);
+        }
+        if (challengesEl) {
+            challengesEl.textContent = `${assignmentStats.totalCompleted}/${assignmentStats.totalAssigned}`;
+            this.triggerStatAnimation(challengesEl);
+        }
+        if (competitionEl) {
+            competitionEl.textContent = userStats.competition_points;
+            this.triggerStatAnimation(competitionEl);
+        }
+    }
+
+    triggerStatAnimation(element) {
+        // Remove animation class if it exists
+        element.classList.remove('animate');
+        
+        // Force reflow to restart animation
+        void element.offsetWidth;
+        
+        // Add animation class
+        element.classList.add('animate');
+        
+        // Also animate the label
+        const label = element.closest('.stat-box')?.querySelector('.stat-label');
+        if (label) {
+            label.classList.remove('animate');
+            void label.offsetWidth;
+            label.classList.add('animate');
+        }
     }
 
     cleanup() {
@@ -494,13 +543,6 @@ class DashboardPage extends BasePage {
         // Clean up event listeners
         this.eventCleanup.forEach(cleanup => cleanup());
         this.eventCleanup = [];
-    }
-
-    async loadPageData() {
-        // Load challenges first to get assignment data, then stats and cocktail status
-        await this.loadChallenges();
-        await this.loadPersonalStats();
-        await this.loadCocktailCompetitionStatus();
     }
 
     async loadCocktailCompetitionStatus() {

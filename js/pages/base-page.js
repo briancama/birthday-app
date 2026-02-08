@@ -11,43 +11,45 @@ class BasePage {
     }
 
     async init() {
+        console.log('🔧 BasePage.init() called');
+        
+        // Initialize appState first (loads user and emits events)
+        console.log('📍 Initializing appState...');
+        const isAuthenticated = await appState.init();
+        if (!isAuthenticated) {
+            console.error('User not authenticated');
+            return;
+        }
+        
         // Initialize audio on first user interaction
         this.setupAudio();
         
         // Modern event-based subscription to app state changes
         const userLoadedCleanup = appState.on('user:loaded', (e) => {
+            console.log('📡 user:loaded event received:', e.detail);
             this.handleStateChange('user-loaded', e.detail);
         });
 
         const userErrorCleanup = appState.on('user:error', (e) => {
+            console.log('❌ user:error event received:', e.detail);
             this.handleStateChange('user-error', e.detail);
         });
 
         const userLogoutCleanup = appState.on('user:logout', (e) => {
+            console.log('👋 user:logout event received:', e.detail);
             this.handleStateChange('user-logout', e.detail);
         });
 
         // Store cleanup functions
         this.eventCleanup.push(userLoadedCleanup, userErrorCleanup, userLogoutCleanup);
 
-        // Wait for app state to be ready
-        if (!this.currentUser) {
-            // Wait for user to be loaded
-            return new Promise((resolve) => {
-                const checkUser = () => {
-                    if (appState.getCurrentUser()) {
-                        this.currentUser = appState.getCurrentUser();
-                        this.userId = appState.getUserId();
-                        resolve();
-                    } else {
-                        setTimeout(checkUser, 100);
-                    }
-                };
-                checkUser();
-            }).then(() => this.onReady());
-        } else {
-            return this.onReady();
-        }
+        // User is already loaded from appState.init(), so set it and call onReady
+        this.currentUser = appState.getCurrentUser();
+        this.userId = appState.getUserId();
+        console.log('✅ User already loaded from appState:', this.currentUser.username);
+        
+        // Call onReady
+        await this.onReady();
     }
 
     handleStateChange(event, data) {
@@ -81,6 +83,18 @@ class BasePage {
             ? `${user.name}'s ${title}`
             : title;
         document.title = `${fullTitle} - Birthday Challenge Zone`;
+    }
+
+    /**
+     * Update all marquee elements with data-marquee="username" to display current user's name
+     */
+    updateMarqueeUsername() {
+        if (this.currentUser?.display_name) {
+            const marqueeElements = document.querySelectorAll('[data-marquee="username"]');
+            marqueeElements.forEach(el => {
+                el.textContent = this.currentUser.display_name.toUpperCase();
+            });
+        }
     }
 
     isAdmin() {
@@ -235,8 +249,57 @@ class BasePage {
 
     // Utility methods
     showError(message) {
-        // You could make this more sophisticated with toast notifications
-        alert(message);
+        console.error('❌', message);
+        
+        // Create error container if it doesn't exist
+        let errorContainer = document.getElementById('errorMessages');
+        if (!errorContainer) {
+            errorContainer = document.createElement('div');
+            errorContainer.id = 'errorMessages';
+            errorContainer.className = 'error-messages';
+            document.body.insertBefore(errorContainer, document.body.firstChild);
+        }
+        
+        // Add error message
+        const errorEl = document.createElement('div');
+        errorEl.className = 'error-message';
+        errorEl.textContent = message;
+        errorContainer.appendChild(errorEl);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            errorEl.remove();
+            if (errorContainer.children.length === 0) {
+                errorContainer.remove();
+            }
+        }, 5000);
+    }
+
+    showSuccess(message) {
+        console.log('✅', message);
+        
+        // Create success container if it doesn't exist
+        let successContainer = document.getElementById('successMessages');
+        if (!successContainer) {
+            successContainer = document.createElement('div');
+            successContainer.id = 'successMessages';
+            successContainer.className = 'success-messages';
+            document.body.insertBefore(successContainer, document.body.firstChild);
+        }
+        
+        // Add success message
+        const successEl = document.createElement('div');
+        successEl.className = 'success-message';
+        successEl.textContent = message;
+        successContainer.appendChild(successEl);
+        
+        // Auto-remove after 3 seconds
+        setTimeout(() => {
+            successEl.remove();
+            if (successContainer.children.length === 0) {
+                successContainer.remove();
+            }
+        }, 3000);
     }
 
     setLoadingState(elementId, isLoading = true) {

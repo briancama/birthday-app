@@ -15,6 +15,10 @@
 
 <body>
   <div class="container">
+
+    <marquee class="marquee" behavior="scroll" direction="left">
+      HELLO <span data-marquee="username">FRIEND</span> SUBMIT CHALLENGES HERE FOR OTHER ATTENDEES TO COMPLETE!
+    </marquee>
     <!-- Navigation Component -->
     <nav class="site-navigation">
       <!-- Mobile Menu Toggle -->
@@ -64,6 +68,7 @@
     </nav>
 
     <div class="section">
+
       <button id="addChallengeBtn" class="add-challenge-btn">✨ ADD CHALLENGE ✨</button>
 
       <h2 class="text-shadow-light">Your Submitted Challenges</h2>
@@ -100,14 +105,14 @@
           <small>Max 200 characters. How will success be measured? Leave blank if not applicable.</small>
         </div>
 
-        <div class="form-group admin-only" id="brianModeGroup" style="display: none;">
-          <label for="brianMode">Brian Participation</label>
+        <div class="form-group" id="brianModeGroup" style="display: none;">
+          <label for="brianMode">Brian Participation (Optional)</label>
           <select id="brianMode">
             <option value="" selected>None (Regular Challenge)</option>
             <option value="vs">⚔️ VS Brian (Competitive)</option>
             <option value="with">🤝 WITH Brian (Collaborative)</option>
           </select>
-          <small>Admin only: Set Brian's participation mode for this challenge.</small>
+          <small><strong>VS:</strong> Brian must fail if you succeed (and vice versa) • <strong>WITH:</strong> Brian must complete the same challenge as you</small>
         </div>
 
         <div class="form-group">
@@ -146,6 +151,9 @@
 
     init();
   </script>
+  <!-- Add before closing </body> -->
+  <bottom-menu></bottom-menu>
+  <script type="module" src="js/components/bottom-menu.js"></script>
 </body>
 
 </html>

@@ -1,4 +1,5 @@
 import { appState } from '../app.js';
+import { formatAndEscapeText } from '../utils/text-format.js';
 
 export class CocktailEntryModal {
   constructor() {
@@ -210,7 +211,7 @@ export class CocktailEntryModal {
     
     // Populate display
     document.getElementById('displayCocktailName').textContent = this.currentEntry.entry_name || '';
-    document.getElementById('displayCocktailDescription').textContent = this.currentEntry.description || '';
+    document.getElementById('displayCocktailDescription').innerHTML = this.currentEntry.description || '';
     document.getElementById('displayCocktailSubmittedAt').textContent = 
       new Date(this.currentEntry.submitted_at).toLocaleString();
   }
@@ -218,9 +219,14 @@ export class CocktailEntryModal {
   enableEditMode() {
     this.isEditMode = true;
     
-    // Populate form
+    // Populate form - convert formatted description back to plain text for editing
     document.getElementById('cocktailName').value = this.currentEntry.entry_name || '';
-    document.getElementById('cocktailDescription').value = this.currentEntry.description || '';
+    
+    // Reverse the formatting: convert <br> back to newlines and &nbsp; back to spaces
+    let description = this.currentEntry.description || '';
+    description = description.replace(/<br>/g, '\n');
+    description = description.replace(/&nbsp;/g, ' ');
+    document.getElementById('cocktailDescription').value = description;
     
     // Update button text
     const submitBtn = document.getElementById('cocktailEntrySubmitBtn');
@@ -243,12 +249,15 @@ export class CocktailEntryModal {
     
     try {
       const entryName = document.getElementById('cocktailName').value.trim();
-      const description = document.getElementById('cocktailDescription').value.trim();
+      let description = document.getElementById('cocktailDescription').value;
       
-      if (!entryName || !description) {
+      if (!entryName || !description.trim()) {
         throw new Error('Please fill in all required fields.');
       }
-      
+
+      // Format and escape the description (handles newlines and spaces)
+      description = formatAndEscapeText(description);
+
       if (this.isEditMode && this.currentEntry) {
         // Update existing entry
         const { data, error } = await this.supabase

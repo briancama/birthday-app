@@ -1,5 +1,6 @@
 import { BasePage } from './base-page.js';
 import { SubmissionTable } from '../components/submission.js';
+import { escapeHTML } from '../utils/text-format.js';
 
 export class ChallengesSubmitPage extends BasePage {
   constructor() {
@@ -13,6 +14,7 @@ export class ChallengesSubmitPage extends BasePage {
     await super.init();
     this.initializeModal();
     this.initializeForm();
+    this.updateMarqueeUsername();
     await this.loadSubmissions();
   }
 
@@ -230,11 +232,11 @@ export class ChallengesSubmitPage extends BasePage {
       // Generate unique ID for challenge
       const challengeId = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-      // Insert challenge
+      // Insert challenge - store raw text with HTML entities, format on display
       const challengeData = {
         id: challengeId,
-        title: challengeName,
-        description: challengeDescription,
+        title: escapeHTML(challengeName),
+        description: escapeHTML(challengeDescription),  // Just escape, preserve newlines/spacing
         type: 'assigned',
         created_by: this.userId,
         suggested_for: assignedToUserId,
@@ -243,7 +245,7 @@ export class ChallengesSubmitPage extends BasePage {
 
       // Add optional fields if provided
       if (challengeMetric) {
-        challengeData.success_metric = challengeMetric;
+        challengeData.success_metric = escapeHTML(challengeMetric);
       }
 
       if (brianMode && this.isAdmin()) {
