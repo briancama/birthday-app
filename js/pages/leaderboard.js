@@ -1,16 +1,27 @@
 import { BasePage } from './base-page.js';
 import { APP_CONFIG } from '../app.js';
+import { featureFlags } from '../utils/feature-flags.js';
 
 class LeaderboardPage extends BasePage {
     constructor() {
         super();
         this.refreshInterval = null;
+        this.eventStarted = false;
     }
 
     async onReady() {
         this.setPageTitle('Leaderboard');
+        
+        // Check if event has started
+        this.eventStarted = await featureFlags.isEventStarted(this.supabase);
+        
         this.addRefreshButton();
         await this.loadLeaderboard();
+        
+        // Only set up auto-refresh if event started
+        if (this.eventStarted && APP_CONFIG.enableAutoRefresh) {
+            this.refreshInterval = setInterval(() => this.loadLeaderboard(), APP_CONFIG.refreshInterval);
+        }
     }
 
     addRefreshButton() {
@@ -53,13 +64,16 @@ class LeaderboardPage extends BasePage {
                 return;
             }
 
-            // Enrich with completion counts using shared method
-            const enrichedData = await this.enrichScoreboardWithCompletions(data);
+            // Enrich with completion counts only if event started
+            let enrichedData = data;
+            if (this.eventStarted) {
+                enrichedData = await this.enrichScoreboardWithCompletions(data);
+            }
 
             this.renderLeaderboard(container, enrichedData);
 
-            // Update last refreshed timestamp
-            if (lastUpdatedElement) {
+            // Update last refreshed timestamp only if event started
+            if (lastUpdatedElement && this.eventStarted) {
                 lastUpdatedElement.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
             }
 
@@ -81,29 +95,48 @@ class LeaderboardPage extends BasePage {
                 ${data.map((row, idx) => {
             const rank = idx + 1;
             const isCurrentUser = row.user_id === this.userId;
-            return `
-                        <div class="leaderboard-card ${isCurrentUser ? 'current-user' : ''}">
-                            <div class="leaderboard-card__rank">
-                                <span class="rank-number">#${rank}</span>
-                            </div>
-                            <div class="leaderboard-card__name">
-                                ${row.display_name || row.username}${getMedal(rank)}${isCurrentUser ? ' <span class="you-badge">(YOU!)</span>' : ''}
-                            </div>
-                            <div class="leaderboard-card__stats">
-                                <div class="stat-item">
-                                    <span class="leaderboard-card__stat-label">Challenges</span>
-                                    <span class="leaderboard-card__stat-value">${row.challenges_completed}</span>
-                                </div>
-                                <div class="stat-item">
-                                    <span class="leaderboard-card__stat-label">Brodown</span>
-                                    <span class="leaderboard-card__stat-value">${row.competition_points}</span>
-                                </div>
-                            </div>
-                            <div class="leaderboard-card__total">
-                                <span class="total-value">${row.total_points}</span>
-                            </div>
+            
+            // If event hasn't started, show simplified card
+            if (!this.eventStarted) {
+                return `
+                    <div class="leaderboard-card ${isCurrentUser ? 'current-user' : ''}">
+                        <div class="leaderboard-card__rank">
+                            <span class="rank-number">#${rank}</span>
                         </div>
-                    `;
+                        <div class="leaderboard-card__name">
+                            ${row.display_name || row.username}${isCurrentUser ? ' <span class="you-badge">(YOU!)</span>' : ''}
+                        </div>
+                        <div class="leaderboard-card__total">
+                            <span class="total-value">-</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Event started - show full card with stats
+            return `
+                <div class="leaderboard-card ${isCurrentUser ? 'current-user' : ''}">
+                    <div class="leaderboard-card__rank">
+                        <span class="rank-number">#${rank}</span>
+                    </div>
+                    <div class="leaderboard-card__name">
+                        ${row.display_name || row.username}${getMedal(rank)}${isCurrentUser ? ' <span class="you-badge">(YOU!)</span>' : ''}
+                    </div>
+                    <div class="leaderboard-card__stats">
+                        <div class="stat-item">
+                            <span class="leaderboard-card__stat-label">Challenges</span>
+                            <span class="leaderboard-card__stat-value">${row.challenges_completed}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="leaderboard-card__stat-label">Brodown</span>
+                            <span class="leaderboard-card__stat-value">${row.competition_points}</span>
+                        </div>
+                    </div>
+                    <div class="leaderboard-card__total">
+                        <span class="total-value">${row.total_points}</span>
+                    </div>
+                </div>
+            `;
         }).join('')}
             </div>
         `;
@@ -112,7 +145,9 @@ class LeaderboardPage extends BasePage {
     }
 
     cleanup() {
-        // Manual refresh only - no intervals to clean up
+        if (this.refreshInterval) {
+            clearInterval(this.refreshInterval);
+        }
     }
 }
 

@@ -1,57 +1,23 @@
 /**
  * Feature Flags Management
- * Fetches app-wide feature flags from Supabase
+ * Simple singleton to check if event has started
  */
 
 class FeatureFlags {
-  constructor() {
-    this.cache = null;
-    this.cacheExpiry = 0;
-    this.CACHE_DURATION = 60000; // 1 minute
-  }
-
-  async getSettings(supabase, forceRefresh = false) {
-    const now = Date.now();
-    
-    if (!forceRefresh && this.cache && now < this.cacheExpiry) {
-      return this.cache;
-    }
-
+  async isEventStarted(supabase) {
     try {
       const { data, error } = await supabase
         .from('app_settings')
-        .select('setting_key, setting_value');
+        .select('setting_value')
+        .eq('setting_key', 'event_started')
+        .single();
 
       if (error) throw error;
-
-      this.cache = data.reduce((acc, row) => {
-        acc[row.setting_key] = row.setting_value;
-        return acc;
-      }, {});
-
-      this.cacheExpiry = now + this.CACHE_DURATION;
-      return this.cache;
+      return data?.setting_value?.enabled === true;
     } catch (err) {
-      console.error('Failed to load feature flags:', err);
-      return {};
+      console.error('Failed to check event status:', err);
+      return false; // Default to disabled on error
     }
-  }
-
-  /**
-   * Check if event has started (enables challenges and leaderboard)
-   */
-  async isEventStarted(supabase) {
-    const settings = await this.getSettings(supabase);
-    const eventSettings = settings.event_started;
-    return eventSettings?.enabled === true;
-  }
-
-  /**
-   * Invalidate cache to force refresh
-   */
-  invalidateCache() {
-    this.cache = null;
-    this.cacheExpiry = 0;
   }
 }
 

@@ -47,7 +47,10 @@ class BasePage {
         this.currentUser = appState.getCurrentUser();
         this.userId = appState.getUserId();
         console.log('✅ User already loaded from appState:', this.currentUser.username);
-        
+
+        // Show random site-awards image at the bottom
+        this.showRandomSiteAward();
+
         // Call onReady
         await this.onReady();
     }
@@ -314,6 +317,33 @@ class BasePage {
                 element.innerHTML = '';
             }
         }
+    }
+
+    /**
+     * Display a random site-awards image at the bottom of the page
+     */
+    showRandomSiteAward() {
+        const siteAwardsImages = [
+            'images/site-awards_blink182.gif',
+            'images/site-awards_hackers.gif',
+            'images/site-awards_pikachu.gif',
+            'images/site-awards_christian.gif',
+            'images/site-awards_hanson.gif',
+            'images/site-awards_aaroncarter.gif',
+            'images/site-awards_angel.gif',
+            'images/site-awards_pug.gif',
+            'images/site-awards_predator.gif',
+            'images/site-awards_southpark.gif'
+        ];
+        const randomAward = siteAwardsImages[Math.floor(Math.random() * siteAwardsImages.length)];
+        const awardImg = document.createElement('img');
+        awardImg.src = randomAward;
+        awardImg.alt = 'Site Award';
+        awardImg.className = 'site-awards-img';
+        awardImg.style.display = 'block';
+        awardImg.style.margin = '40px auto 0 auto';
+        awardImg.style.position = 'relative';
+        document.body.appendChild(awardImg);
     }
 }
 

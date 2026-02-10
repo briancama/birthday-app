@@ -3,6 +3,7 @@ import { ChallengeCard } from '../components/challenge-card.js';
 import { CocktailEntryModal } from '../components/cocktail-entry-modal.js';
 import { EventBus } from '../events/event-bus.js';
 import { featureFlags } from '../utils/feature-flags.js';
+import { initNavigation } from '../components/navigation.js';
 import { APP_CONFIG } from '../app.js';
 
 class DashboardPage extends BasePage {
@@ -17,6 +18,7 @@ class DashboardPage extends BasePage {
 
     async onReady() {
         this.setupEventListeners();
+        initNavigation();
         this.setPageTitle('Dashboard');
         this.updateMarqueeUsername();
         console.log('DashboardPage ready, checking feature flags...');
@@ -40,19 +42,66 @@ class DashboardPage extends BasePage {
                     alert('Cocktail modal failed to initialize. Please refresh the page.');
                 }
             });
-        } else {
-            console.error('✖️ Register button not found in DOM');
         }
 
-        console.log('DashboardPage initialized, loading page data...');
+        // Check event status once and store it
+        this.eventStarted = await featureFlags.isEventStarted(this.supabase);
+
+        // If event started, show stats and load data
+        if (this.eventStarted) {
+            await this.loadPersonalStats();
+            
+            // Set up refresh interval only if event started
+            if (APP_CONFIG.enableAutoRefresh) {
+                this.refreshInterval = setInterval(() => this.loadPersonalStats(), APP_CONFIG.refreshInterval);
+            }
+        }
 
         await this.loadPageData();
+    }
 
-        // Set up refresh interval for stats only (challenges cause layout shifts)
-        if (APP_CONFIG.enableAutoRefresh) {
-            this.refreshInterval = setInterval(() => this.loadPersonalStats(), APP_CONFIG.refreshInterval);
+    async loadPageData() {
+        if (this.eventStarted) {
+            await this.loadChallenges();
+        } else {
+            console.log('Event has not started yet, showing preview message');
+            const preview = document.getElementById('challengesList');
+            if (preview) {
+                preview.innerHTML = `
+                    <div class="feature-preview" style="text-align: center;">
+                        <img style="margin-top:-25px;" src="images/construction.gif" alt="Under Construction" class="preview-gif">
+                        <div style="text-align: left; padding: 1rem;">
+                            <h3 style="margin-top: 0; text-align: center;">What are Challenges?</h3>
+                            <p style="margin: 0.5rem 0;">Challenges are quick, fun activities that take <strong>30 seconds to 1 minute</strong> to complete. During the weekend, anyone can challenge you to perform one of these predetermined tasks—check the app and give it your best shot!</p>
+                            
+                            <p style="margin: 0.5rem 0;"><strong>Have an idea?</strong> We've got plenty of challenges already created, but feel free to submit your own! Whether it's a general challenge for anyone or a specific one tailored for a particular person, <a href="challenges-submit.html" style="color: #0000FF; text-decoration: underline;">submit a challenge here</a>.</p>
+                            
+                            <p style="margin: 0.5rem 0; text-align: center; font-style: italic; font-size: 0.9rem;">Once the event starts, be ready to accept some challenges and climb the leaderboard!</p>
+                        </div>
+                    </div>
+                `;
+                preview.className = 'feature-preview';
+            }
+        }
+        await this.loadCocktailCompetitionStatus();
+    }
+
+    async loadPersonalStats() {
+        try {
+            const { userStats, rank, assignmentStats } = await this.loadUserStats();
+            
+            if (!userStats) {
+                document.getElementById('personalStats').innerHTML = '<div class="empty">No stats yet. Complete some challenges!</div>';
+                return;
+            }
+            
+            this.updateStatsValues(document.getElementById('personalStats'), { userStats, rank, assignmentStats });
+        } catch (err) {
+            this.showError('Failed to load stats: ' + err.message);
         }
     }
+
+    // Keep existing updateStatsValues and triggerStatAnimation methods as-is
 
     updateMarqueeUsername() {
         const marqueeUsername = document.getElementById('marqueeUsername');
@@ -302,31 +351,6 @@ class DashboardPage extends BasePage {
         }
     }
 
-    async loadPageData() {
-        // Load challenges first to get assignment data, then stats
-          // Check feature flags
-        const eventStarted = await featureFlags.isEventStarted(this.supabase);
-  
-        if (eventStarted) {
-            await this.loadChallenges();
-            await this.loadPersonalStats();
-        } else {
-            console.log('Event has not started yet, showing preview message');
-            // Show preview
-            const preview = document.getElementById('challengesList');
-            if (preview) {
-                preview.innerHTML = `
-                    <div class="feature-preview">
-                        <img src="images/under_construction.gif" alt="Under Construction" class="preview-gif">
-                        <p>Challenges coming soon! Check back when the event starts.</p>
-                    </div>
-                `;
-                preview.className = 'feature-preview';
-            }
-        }
-        await this.loadCocktailCompetitionStatus();
-    }
-
     async loadChallenges() {
         const container = document.getElementById('challengesList');
         this.setLoadingState('challengesList', true);
@@ -469,22 +493,58 @@ class DashboardPage extends BasePage {
             hasLocked === newState.isLocked;
     }
 
-    async loadPersonalStats() {
+    /**
+     * Render stats data to the DOM with animations
+     */
+    updateStatsDisplay({ userStats, rank, assignmentStats }) {
         const container = document.getElementById('personalStats');
+        
+        const rankEl = container.querySelector('[data-stat="rank"]');
+        const pointsEl = container.querySelector('[data-stat="total-points"]');
+        const challengesEl = container.querySelector('[data-stat="challenges"]');
+        const competitionEl = container.querySelector('[data-stat="competition-points"]');
 
-        try {
-            const { userStats, rank, assignmentStats } = await this.loadUserStats();
+        if (rankEl) {
+            rankEl.textContent = `#${rank}`;
+            this.triggerStatAnimation(rankEl);
+        }
+        if (pointsEl) {
+            pointsEl.textContent = userStats.total_points;
+            this.triggerStatAnimation(pointsEl);
+        }
+        if (challengesEl) {
+            challengesEl.textContent = `${assignmentStats.totalCompleted}/${assignmentStats.totalAssigned}`;
+            this.triggerStatAnimation(challengesEl);
+        }
+        if (competitionEl) {
+            competitionEl.textContent = userStats.competition_points;
+            this.triggerStatAnimation(competitionEl);
+        }
+    }
 
-            if (!userStats) {
-                container.innerHTML = '<div class="empty">No stats yet. Complete some challenges!</div>';
-                return;
-            }
+    renderStatsEmpty() {
+        document.getElementById('personalStats').innerHTML = '<div class="empty">No stats yet. Complete some challenges!</div>';
+    }
 
-            // Update only the data values (HTML structure already exists in dashboard.html)
-            this.updateStatsValues(container, { userStats, rank, assignmentStats });
+    renderStatsError(message) {
+        const statsSection = document.getElementById('personalStatsSection');
+        const previewContainer = document.getElementById('leaderboardPreview');
+        
+        statsSection.style.visibility = 'hidden';
+        previewContainer.style.visibility = 'visible';
+        this.showError('Failed to load stats: ' + message);
+        }
 
-        } catch (err) {
-            container.innerHTML = `<div class="empty">Error loading stats: ${err.message}</div>`;
+    triggerStatAnimation(element) {
+        element.classList.remove('animate');
+        void element.offsetWidth;
+        element.classList.add('animate');
+        
+        const label = element.closest('.stat-box')?.querySelector('.stat-label');
+        if (label) {
+            label.classList.remove('animate');
+            void label.offsetWidth;
+            label.classList.add('animate');
         }
     }
 

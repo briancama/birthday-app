@@ -1,12 +1,13 @@
 import { BasePage } from './base-page.js';
 import { FavoriteButton } from '../components/favorite-button.js';
+import { featureFlags } from '../utils/feature-flags.js';
 
 class CocktailJudgingPage extends BasePage {
     constructor() {
         super();
         this.activeCompetition = null;
         this.entries = [];
-        this.myJudgments = new Map(); // entry_id -> judgment data
+        this.myJudgments = new Map();
         this.myFavorite = null;
     }
 
@@ -17,6 +18,14 @@ class CocktailJudgingPage extends BasePage {
 
     async loadCompetitionData() {
         try {
+            // Check if event has started
+            const eventStarted = await featureFlags.isEventStarted(this.supabase);
+
+            if (!eventStarted) {
+                this.showVotingNotStarted();
+                return;
+            }
+
             // Load active competition
             const { data: competitions, error: compError } = await this.supabase
                 .from('cocktail_competitions')
@@ -57,47 +66,20 @@ class CocktailJudgingPage extends BasePage {
         }
     }
 
-    async loadEntries() {
-        const { data, error } = await this.supabase
-            .from('cocktail_entries')
-            .select(`
-                *,
-                users:user_id (username, display_name)
-            `)
-            .eq('competition_id', this.activeCompetition.id)
-            // .neq('user_id', this.userId)  // Temporarily commented for testing - allows viewing own entry
-            .order('submitted_at', { ascending: true });
-
-        if (error) throw error;
-
-        this.entries = data || [];
-    }
-
-    async loadMyJudgments() {
-        const { data, error } = await this.supabase
-            .from('cocktail_judgments')
-            .select('*')
-            .eq('judge_user_id', this.userId);
-
-        if (error) throw error;
-
-        this.myJudgments.clear();
-        (data || []).forEach(judgment => {
-            this.myJudgments.set(judgment.entry_id, judgment);
-        });
-    }
-
-    async loadMyFavorite() {
-        const { data, error } = await this.supabase
-            .from('cocktail_favorites')
-            .select('*')
-            .eq('competition_id', this.activeCompetition.id)
-            .eq('judge_user_id', this.userId)
-            .maybeSingle();
-
-        if (error) throw error;
-
-        this.myFavorite = data?.entry_id || null;
+    showVotingNotStarted() {
+        document.getElementById('judgingStatus').innerHTML = `
+            <p style="margin: 0;">Judging will open once the event starts.</p>
+        `;
+        document.getElementById('entriesList').innerHTML = `
+            <div class="feature-preview" style="text-align: center;">
+                <img style="margin-top:-25px;" src="images/construction.gif" alt="Under Construction" class="preview-gif">
+                <div style="text-align: left; padding: 1rem;">
+                    <h3 style="margin-top: 0; text-align: center;">Cocktail Competition</h3>
+                    <p style="margin: 0.5rem 0;">Get ready to judge some amazing cocktails! Once the event starts, you'll be able to vote on entries and pick your favorite creation.</p>
+                    <p style="margin: 0.5rem 0; text-align: center; font-style: italic; font-size: 0.9rem;">Check back when the event begins to start judging! 🍹</p>
+                </div>
+            </div>
+        `;
     }
 
     showNoCompetition() {

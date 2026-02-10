@@ -48,21 +48,6 @@ export class ChallengesSubmitPage extends BasePage {
     }
 
     this.form.addEventListener('submit', (e) => this.handleSubmit(e));
-
-    // Show admin fields if user is admin
-    if (this.isAdmin()) {
-      this.showAdminFields();
-    }
-  }
-
-  /**
-   * Show admin-only form fields
-   */
-  showAdminFields() {
-    const brianModeGroup = document.getElementById('brianModeGroup');
-    if (brianModeGroup) {
-      brianModeGroup.style.display = 'block';
-    }
   }
 
   /**

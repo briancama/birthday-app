@@ -1223,6 +1223,37 @@
   opacity: 1;
 }
 
+.challenge-info-details {
+  background: var(--retro-yellow, #ffff99);
+  border: 2px dashed #0000cc;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+}
+
+.challenge-info-summary {
+  color: #0000cc;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  outline: none;
+}
+
+.challenge-info-details[open] {
+  background: var(--retro-pink, #ffccff);
+  border-color: #cc00cc;
+}
+
+/* Hide recaptcha badge */
+#recaptcha-container,
+.grecaptcha-badge {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  height: 0 !important;
+  width: 0 !important;
+}
+
 /* Show only on mobile */
 @media (max-width: 768px) {
   .bottom-menu {

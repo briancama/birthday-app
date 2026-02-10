@@ -44,30 +44,33 @@ class FirebaseAuthService {
       if (!this.auth) {
         throw new Error('Firebase auth not initialized. Call init() first.');
       }
-
       const container = document.getElementById(containerId);
       if (!container) {
-        throw new Error(`Container with ID "${containerId}" not found`);
+        const errorMsg = `Container with ID "${containerId}" not found`;
+        console.error('✖️ reCAPTCHA setup failed:', errorMsg);
+        throw new Error(errorMsg);
       }
-
-      // Wait a moment to ensure auth is fully ready
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      this.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(containerId, {
-        size: 'invisible',
-        callback: (token) => {
-          console.log('✅ reCAPTCHA verified');
-        },
-        'expired-callback': () => {
-          console.warn('⚠️ reCAPTCHA expired');
-          if (this.recaptchaVerifier) {
-            this.recaptchaVerifier.clear();
-            this.recaptchaVerifier = null;
-          }
+      // Create RecaptchaVerifier once
+      if (!this.recaptchaVerifier) {
+        try {
+          this.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(containerId, {
+            size: 'invisible',
+            callback: (token) => {
+              console.log('✅ reCAPTCHA verified');
+            },
+            'expired-callback': () => {
+              console.warn('⚠️ reCAPTCHA expired');
+              if (this.recaptchaVerifier) {
+                this.recaptchaVerifier.clear();
+                this.recaptchaVerifier = null;
+              }
+            }
+          });
+        } catch (verifierErr) {
+          console.error('✖️ reCAPTCHA verifier creation failed:', verifierErr);
+          throw verifierErr;
         }
-      });
-
-      console.log('✅ reCAPTCHA setup complete');
+      }
       return this;
     } catch (err) {
       console.error('✖️ reCAPTCHA setup failed:', err);
@@ -82,27 +85,83 @@ class FirebaseAuthService {
    */
   async sendOTP(phoneNumber) {
     try {
+      // Validate phone number input and convert to E.164 format
+      let formattedNumber = phoneNumber;
+      try {
+        // Remove all non-digit characters
+        const digits = phoneNumber.replace(/\D/g, '');
+        if (digits.length === 10) {
+          // Assume US number, add country code
+          formattedNumber = '+1' + digits;
+        } else if (digits.length === 11 && digits.startsWith('1')) {
+          formattedNumber = '+' + digits;
+        } else if (digits.length > 10 && digits.startsWith('')) {
+          formattedNumber = '+' + digits;
+        } else {
+          const errorMsg = 'Invalid phone number format. Please enter a valid 10-digit US number.';
+          console.error('✖️ Phone number validation failed:', errorMsg);
+          throw new Error(errorMsg);
+        }
+      } catch (formatErr) {
+        console.error('✖️ Phone number validation failed:', formatErr);
+        throw formatErr;
+      }
+
+      // Use existing RecaptchaVerifier
       if (!this.recaptchaVerifier) {
-        throw new Error('reCAPTCHA not initialized. Call setupRecaptcha() first.');
+        const errorMsg = 'reCAPTCHA not initialized. Call setupRecaptcha() first.';
+        console.error('✖️ sendOTP error:', errorMsg);
+        throw new Error(errorMsg);
+      }
+
+      // Log formatted phone number for debugging
+      console.log('📞 Formatted phone number:', formattedNumber);
+
+      // Ensure reCAPTCHA is rendered and ready
+      try {
+        await this.recaptchaVerifier.render();
+      } catch (renderErr) {
+        console.error('✖️ reCAPTCHA render failed:', renderErr);
+        throw new Error('reCAPTCHA render failed. Please refresh and try again.');
+      }
+
+      // Optionally, force reCAPTCHA to resolve before sending OTP
+      let recaptchaToken;
+      try {
+        recaptchaToken = await this.recaptchaVerifier.verify();
+        if (!recaptchaToken) {
+          const errorMsg = 'reCAPTCHA verification failed. Please try again.';
+          console.error('✖️ reCAPTCHA verify failed:', errorMsg);
+          throw new Error(errorMsg);
+        }
+      } catch (verifyErr) {
+        console.error('✖️ reCAPTCHA verify failed:', verifyErr);
+        throw new Error('reCAPTCHA verify failed. Please refresh and try again.');
       }
 
       // signInWithPhoneNumber returns a ConfirmationResult
-      this.confirmationResult = await this.auth.signInWithPhoneNumber(
-        phoneNumber, 
-        this.recaptchaVerifier
-      );
-      
-      console.log('✅ OTP sent to', phoneNumber);
-      
+      try {
+        this.confirmationResult = await this.auth.signInWithPhoneNumber(
+          formattedNumber,
+          this.recaptchaVerifier
+        );
+      } catch (otpErr) {
+        console.error('✖️ Failed to send OTP:', otpErr);
+        // Clear reCAPTCHA on error so it can be tried again
+        if (this.recaptchaVerifier) {
+          this.recaptchaVerifier.clear();
+          this.recaptchaVerifier = null;
+        }
+        throw new Error('Failed to send OTP. Please check your phone number and try again.');
+      }
+
+      console.log('✅ OTP sent to', formattedNumber);
+
       return this.confirmationResult;
     } catch (err) {
-      console.error('✖️ Failed to send OTP:', err);
-      // Clear reCAPTCHA on error so it can be tried again
-      if (this.recaptchaVerifier) {
-        this.recaptchaVerifier.clear();
-        this.recaptchaVerifier = null;
-      }
-      throw err;
+      // Top-level catch for any error
+      console.error('✖️ sendOTP error:', err);
+      throw new Error('An unexpected error occurred during phone authentication. Please try again or contact support.');
     }
   }
 

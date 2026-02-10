@@ -70,7 +70,27 @@
     <div class="section">
 
       <button id="addChallengeBtn" class="add-challenge-btn">✨ ADD CHALLENGE ✨</button>
-
+      <!-- Retro collapsible details for challenge info -->
+      <details class="challenge-info-details" style="margin: 1rem 0;">
+        <summary class="challenge-info-summary" style="cursor: pointer; font-weight: bold; font-size: 1.1rem;">
+          <img src="images/question.gif" alt="?" class="icon-gif" style="vertical-align: middle; margin-right: 6px;">
+          What are Challenges?
+        </summary>
+        <div class="challenge-info-content" style="padding: 1rem 0 0 0;">
+          <p style="margin: 0.5rem 0;">
+            Challenges are quick, fun activities that take <strong>30 seconds to 1 minute</strong> to complete. During the weekend, anyone can challenge you to perform one of these predetermined tasks—check the app and give it your best shot!
+          </p>
+          <p style="margin: 0.5rem 0;">
+            <strong>Have an idea?</strong> I've got plenty of challenges already created, but feel free to submit your own! Whether it's a general challenge for anyone or a specific one tailored for a particular person, you can add your challenge from this page.
+          </p>
+          <p style="margin: 0.5rem 0;">
+            <strong>What is Brian Mode?</strong> Some challenges can be marked as <span style="color: #cc00cc; font-weight: bold;">Brian Mode</span>! If you select <b>VS Brian</b>, Brian will be assigned the challenge as your rival—if you succeed, he must fail (and vice versa). If you select <b>WITH Brian</b>, Brian will be assigned a cooperative challenge and you’ll both try to complete it together. Look, I love a little competition and might just be looking for a few extra points to help me win this totally not rigged event.<img src="images/silly.gif" alt="wink" class="icon-gif" class="icon-gif icon-gif--with-text">
+          </p>
+          <p style="margin: 0.5rem 0; font-style: italic; font-size: 0.9rem; text-align: center;">
+            Once the event starts, be ready to accept some challenges and climb the leaderboard!
+          </p>
+        </div>
+      </details>
       <h2 class="text-shadow-light">Your Submitted Challenges</h2>
       <div id="submissionsContainer">
         <div class="empty-state">Loading your submissions...</div>
@@ -105,7 +125,7 @@
           <small>Max 200 characters. How will success be measured? Leave blank if not applicable.</small>
         </div>
 
-        <div class="form-group" id="brianModeGroup" style="display: none;">
+        <div class="form-group" id="brianModeGroup">
           <label for="brianMode">Brian Participation (Optional)</label>
           <select id="brianMode">
             <option value="" selected>None (Regular Challenge)</option>
