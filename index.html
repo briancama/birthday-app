@@ -18,21 +18,21 @@
   <div class="login-container">
     <h1 class="rainbow-text">WELCOME TO THE PARTY!</h1>
 
-    <!-- Under Construction GIF -->
+    <!-- Under Construction GIF
     <img src="images/construction.gif" alt="Under Construction" class="construction-gif" onerror="this.style.display='none'">
 
     <div class="interior-container" style="text-align: center; background: #FFFF00; border: 4px dashed #FF00FF;">
       <h2 style="color: #FF0000; margin: 0 0 1rem 0;"><img class="icon-gif icon-gif--sm" src="images/construction_sign.gif" alt="Under Construction">COMING SOON!<img class="icon-gif icon-gif--sm" src="images/construction_sign.gif" alt="Under Construction"></h2>
       <p style="font-size: 1.2rem; margin: 0; color: #000;">The challenge zone is currently under construction! Check back soon!!!</p>
       <p style="margin-top: 1rem;"><a href="invitation" style="color: #0000FF; text-decoration: underline; font-weight: bold;">View the Party Invitation →</a></p>
-    </div>
+    </div> -->
 
     <!-- Login form with Firebase phone auth -->
     <form id="loginForm">
       <!-- Phone Input Step -->
       <div id="phoneStep" class="form-group">
-        <label for="phoneInput">📱 ENTER YOUR PHONE NUMBER</label>
-        <input type="tel" id="phoneInput" name="phone" placeholder="(617) 555-1234" maxlength="14" required autocomplete="off">
+        <label for="phoneInput"><img src="images/phone.gif" alt="Phone Icon" class="icon-gif icon-gif--with-text"> ENTER YOUR PHONE NUMBER</label>
+        <input type="tel" inputmode="numeric" pattern="[0-9]*" id="phoneInput" name="phone" placeholder="(959) 867-5309" maxlength="14" required autocomplete="tel">
         <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;">10-digit US phone number</p>
         <div id="recaptchaContainer" style="margin: 1rem 0;"></div>
         <button type="button" id="sendOTPBtn">>>> SEND CODE <<<</button>
@@ -41,7 +41,7 @@
       <!-- OTP Input Step -->
       <div id="otpStep" class="form-group" style="display: none;">
         <label for="otpInput">✔️ ENTER THE CODE FROM YOUR TEXT</label>
-        <input type="text" id="otpInput" name="otp" placeholder="000000" maxlength="6" required autocomplete="off">
+        <input type="text" id="otpInput" name="otp" placeholder="000000" maxlength="6" required autocomplete="one-time-code">
         <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;">Check your SMS for a 6-digit code</p>
         <button type="submit" id="verifyOTPBtn">>>> VERIFY CODE <<<</button>
         <button type="button" id="backBtn">← BACK</button>
