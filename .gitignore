@@ -51,3 +51,4 @@ $RECYCLE.BIN/
 *.backup
 *~
 .DS_Store
+.env-dev
