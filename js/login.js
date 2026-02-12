@@ -1,9 +1,9 @@
 // js/login.js
 // Handles login form logic for index.html (Firebase phone auth + Supabase user creation)
 
-import { appState } from "./js/app.js";
-import { firebaseAuth } from "./js/services/firebase-auth.js";
-import { formatPhoneInput, toE164Format, isValidUSPhone } from "./js/utils/phone-format.js";
+import { appState } from "./app.js";
+import { firebaseAuth } from "./services/firebase-auth.js";
+import { formatPhoneInput, toE164Format, isValidUSPhone } from "./utils/phone-format.js";
 
 const form = document.getElementById("loginForm");
 const phoneInput = document.getElementById("phoneInput");
