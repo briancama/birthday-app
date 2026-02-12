@@ -48,13 +48,22 @@ class AppState extends EventTarget {
 
   // Initialize the application
   async init() {
-    // Check authentication - use firebase_uid instead of username
+    // Wait for Firebase auth state to be ready before proceeding
     const firebaseUid = localStorage.getItem("firebase_uid");
-
     if (!firebaseUid) {
       this.redirectToLogin();
       return false;
     }
+
+    // Wait for Firebase to restore session and user to be available
+    await new Promise((resolve) => {
+      const unsub = firebaseAuth.onAuthStateChanged((user) => {
+        if (user) {
+          unsub();
+          resolve();
+        }
+      });
+    });
 
     // Load full user profile using firebase_uid
     await this.loadUserProfile(firebaseUid);
