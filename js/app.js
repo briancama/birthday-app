@@ -71,6 +71,15 @@ class AppState extends EventTarget {
       this.dispatchEvent(new CustomEvent("user:loading"));
       EventBus.instance.emit(EventBus.EVENTS.USER.LOADING);
 
+      // Get Firebase ID token and set it as Supabase session for RLS
+      const idToken = await firebaseAuth.getIdToken();
+      if (idToken) {
+        // For Supabase JS v2: setSession expects both access_token and refresh_token, but refresh_token is optional for custom JWT
+        await this.supabase.auth.setSession({ access_token: idToken, refresh_token: idToken });
+      } else {
+        console.warn("No Firebase ID token found; Supabase requests may not be authenticated.");
+      }
+
       const { data, error } = await this.supabase
         .from("users")
         .select("id, username, display_name, firebase_uid, created_at")
@@ -78,8 +87,6 @@ class AppState extends EventTarget {
         .single();
 
       if (error) throw error;
-
-      console.log(await firebaseAuth.getIdToken());
 
       // Store user ID for other queries
       this.userId = data.id;
