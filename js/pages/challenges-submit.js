@@ -1,11 +1,11 @@
-import { BasePage } from './base-page.js';
-import { SubmissionTable } from '../components/submission.js';
-import { escapeHTML } from '../utils/text-format.js';
+import { BasePage } from "./base-page.js";
+import { SubmissionTable } from "../components/submission.js";
+import { escapeHTML } from "../utils/text-format.js";
 
 export class ChallengesSubmitPage extends BasePage {
   constructor() {
     super();
-    this.submissionTable = new SubmissionTable('submissionsContainer', 'user');
+    this.submissionTable = new SubmissionTable("submissionsContainer", "user");
     this.modal = null;
     this.form = null;
   }
@@ -22,40 +22,40 @@ export class ChallengesSubmitPage extends BasePage {
    * Initialize modal elements and event listeners
    */
   initializeModal() {
-    this.modal = document.getElementById('challengeModal');
-    const addBtn = document.getElementById('addChallengeBtn');
-    const closeBtn = document.getElementById('closeChallengeModal');
-    const overlay = document.querySelector('.challenge-modal-overlay');
+    this.modal = document.getElementById("challengeModal");
+    const addBtn = document.getElementById("addChallengeBtn");
+    const closeBtn = document.getElementById("closeChallengeModal");
+    const overlay = document.querySelector(".challenge-modal-overlay");
 
     if (!this.modal || !addBtn || !closeBtn || !overlay) {
-      console.error('Modal elements not found');
+      console.error("Modal elements not found");
       return;
     }
 
-    addBtn.addEventListener('click', () => this.openModal());
-    closeBtn.addEventListener('click', () => this.closeModal());
-    overlay.addEventListener('click', () => this.closeModal());
+    addBtn.addEventListener("click", () => this.openModal());
+    closeBtn.addEventListener("click", () => this.closeModal());
+    overlay.addEventListener("click", () => this.closeModal());
   }
 
   /**
    * Initialize form and submission handler
    */
   initializeForm() {
-    this.form = document.getElementById('challengeForm');
+    this.form = document.getElementById("challengeForm");
     if (!this.form) {
-      console.error('Challenge form not found');
+      console.error("Challenge form not found");
       return;
     }
 
-    this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+    this.form.addEventListener("submit", (e) => this.handleSubmit(e));
   }
 
   /**
    * Open the challenge submission modal
    */
   openModal() {
-    this.modal.style.display = 'block';
-    document.body.style.overflow = 'hidden';
+    this.modal.style.display = "block";
+    document.body.style.overflow = "hidden";
     this.loadUsers();
   }
 
@@ -63,8 +63,8 @@ export class ChallengesSubmitPage extends BasePage {
    * Close the modal and reset form
    */
   closeModal() {
-    this.modal.style.display = 'none';
-    document.body.style.overflow = 'auto';
+    this.modal.style.display = "none";
+    document.body.style.overflow = "auto";
     this.form.reset();
     this.hideMessages();
   }
@@ -73,20 +73,20 @@ export class ChallengesSubmitPage extends BasePage {
    * Hide error and success messages
    */
   hideMessages() {
-    const errorDiv = document.getElementById('formError');
-    const successDiv = document.getElementById('formSuccess');
-    if (errorDiv) errorDiv.style.display = 'none';
-    if (successDiv) successDiv.style.display = 'none';
+    const errorDiv = document.getElementById("formError");
+    const successDiv = document.getElementById("formSuccess");
+    if (errorDiv) errorDiv.style.display = "none";
+    if (successDiv) successDiv.style.display = "none";
   }
 
   /**
    * Show error message
    */
   showError(message) {
-    const errorDiv = document.getElementById('formError');
+    const errorDiv = document.getElementById("formError");
     if (errorDiv) {
       errorDiv.textContent = message;
-      errorDiv.style.display = 'block';
+      errorDiv.style.display = "block";
     }
   }
 
@@ -94,10 +94,10 @@ export class ChallengesSubmitPage extends BasePage {
    * Show success message
    */
   showSuccess(message) {
-    const successDiv = document.getElementById('formSuccess');
+    const successDiv = document.getElementById("formSuccess");
     if (successDiv) {
       successDiv.textContent = message;
-      successDiv.style.display = 'block';
+      successDiv.style.display = "block";
     }
   }
 
@@ -107,20 +107,20 @@ export class ChallengesSubmitPage extends BasePage {
   async loadUsers() {
     try {
       const { data, error } = await this.supabase
-        .from('users')
-        .select('id, username')
-        .order('username');
+        .from("users")
+        .select("id, username")
+        .order("username");
 
       if (error) throw error;
 
-      const datalist = document.getElementById('usersDatalist');
+      const datalist = document.getElementById("usersDatalist");
       if (datalist) {
-        datalist.innerHTML = data.map(user =>
-          `<option value="${user.username}" data-user-id="${user.id}">`
-        ).join('');
+        datalist.innerHTML = data
+          .map((user) => `<option value="${user.username}" data-user-id="${user.id}">`)
+          .join("");
       }
     } catch (err) {
-      console.error('Error loading users:', err);
+      console.error("Error loading users:", err);
     }
   }
 
@@ -132,28 +132,30 @@ export class ChallengesSubmitPage extends BasePage {
 
     try {
       const { data, error } = await this.supabase
-        .from('challenges')
-        .select('*')
-        .eq('created_by', this.userId)
-        .order('created_at', { ascending: false });
+        .from("challenges")
+        .select("*")
+        .eq("created_by", this.userId)
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
 
       // Fetch suggested usernames for challenges that have suggested_for
       if (data && data.length > 0) {
-        const assignedUserIds = [...new Set(data.filter(c => c.suggested_for).map(c => c.suggested_for))];
+        const assignedUserIds = [
+          ...new Set(data.filter((c) => c.suggested_for).map((c) => c.suggested_for)),
+        ];
 
         if (assignedUserIds.length > 0) {
           const { data: users, error: userError } = await this.supabase
-            .from('users')
-            .select('id, username')
-            .in('id', assignedUserIds);
+            .from("users")
+            .select("id, username")
+            .in("id", assignedUserIds);
 
           if (!userError && users) {
-            const usernameMap = Object.fromEntries(users.map(u => [u.id, u.username]));
+            const usernameMap = Object.fromEntries(users.map((u) => [u.id, u.username]));
 
             // Attach username to each challenge
-            data.forEach(challenge => {
+            data.forEach((challenge) => {
               if (challenge.suggested_for) {
                 challenge.suggested_for_username = usernameMap[challenge.suggested_for];
               }
@@ -164,8 +166,8 @@ export class ChallengesSubmitPage extends BasePage {
 
       this.submissionTable.render(data);
     } catch (err) {
-      console.error('Error loading submissions:', err);
-      this.submissionTable.showError('Error loading submissions. Please refresh the page.');
+      console.error("Error loading submissions:", err);
+      this.submissionTable.showError("Error loading submissions. Please refresh the page.");
     }
   }
 
@@ -175,34 +177,34 @@ export class ChallengesSubmitPage extends BasePage {
   async handleSubmit(e) {
     e.preventDefault();
 
-    const submitBtn = document.getElementById('submitChallengeBtn');
+    const submitBtn = document.getElementById("submitChallengeBtn");
     this.hideMessages();
 
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Submitting...';
+    submitBtn.textContent = "Submitting...";
 
     try {
-      const challengeName = document.getElementById('challengeName').value.trim();
-      const challengeDescription = document.getElementById('challengeDescription').value.trim();
-      const challengeMetric = document.getElementById('challengeMetric').value.trim();
-      const assignedToUsername = document.getElementById('assignedTo').value.trim();
+      const challengeName = document.getElementById("challengeName").value.trim();
+      const challengeDescription = document.getElementById("challengeDescription").value.trim();
+      const challengeMetric = document.getElementById("challengeMetric").value.trim();
+      const assignedToUsername = document.getElementById("assignedTo").value.trim();
 
       // Safely get brian mode value (field might be hidden for non-admin users)
-      const brianModeElement = document.getElementById('brianMode');
-      const brianMode = brianModeElement ? brianModeElement.value.trim() : '';
+      const brianModeElement = document.getElementById("brianMode");
+      const brianMode = brianModeElement ? brianModeElement.value.trim() : "";
 
       // Validate required fields only
       if (!challengeName || !challengeDescription) {
-        throw new Error('Please fill in all required fields (Name and Description).');
+        throw new Error("Please fill in all required fields (Name and Description).");
       }
 
       // Find user ID if assigned
       let assignedToUserId = null;
       if (assignedToUsername) {
         const { data: users, error: userError } = await this.supabase
-          .from('users')
-          .select('id, username')
-          .eq('username', assignedToUsername)
+          .from("users")
+          .select("id, username")
+          .eq("username", assignedToUsername)
           .limit(1);
 
         if (userError) throw userError;
@@ -210,7 +212,9 @@ export class ChallengesSubmitPage extends BasePage {
         if (users && users.length > 0) {
           assignedToUserId = users[0].id;
         } else {
-          throw new Error(`User "${assignedToUsername}" not found. Please select a valid user from the list.`);
+          throw new Error(
+            `User "${assignedToUsername}" not found. Please select a valid user from the list.`
+          );
         }
       }
 
@@ -221,11 +225,11 @@ export class ChallengesSubmitPage extends BasePage {
       const challengeData = {
         id: challengeId,
         title: escapeHTML(challengeName),
-        description: escapeHTML(challengeDescription),  // Just escape, preserve newlines/spacing
-        type: 'assigned',
+        description: escapeHTML(challengeDescription), // Just escape, preserve newlines/spacing
+        type: "assigned",
         created_by: this.userId,
         suggested_for: assignedToUserId,
-        approval_status: 'pending'
+        approval_status: "pending",
       };
 
       // Add optional fields if provided
@@ -237,13 +241,28 @@ export class ChallengesSubmitPage extends BasePage {
         challengeData.brian_mode = brianMode;
       }
 
-      const { error } = await this.supabase
-        .from('challenges')
-        .insert([challengeData]);
+      // Get Firebase ID token
+      const idToken = await firebaseAuth.getIdToken();
+      if (!idToken) throw new Error("User not authenticated. Please log in again.");
 
-      if (error) throw error;
+      // Send request to Edge Function endpoint
+      const edgeFunctionUrl =
+        "https://boyakwrjmxpqecyjpzjw.functions.supabase.co/validate-firebase-token/rest/v1/challenges";
+      const response = await fetch(edgeFunctionUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify([challengeData]),
+      });
 
-      this.showSuccess('Challenge submitted successfully! Awaiting admin approval.');
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to submit challenge: ${errorText}`);
+      }
+
+      this.showSuccess("Challenge submitted successfully! Awaiting admin approval.");
 
       // Reload submissions
       await this.loadSubmissions();
@@ -252,13 +271,12 @@ export class ChallengesSubmitPage extends BasePage {
       setTimeout(() => {
         this.closeModal();
       }, 2000);
-
     } catch (err) {
-      console.error('Error submitting challenge:', err);
-      this.showError(err.message || 'Failed to submit challenge. Please try again.');
+      console.error("Error submitting challenge:", err);
+      this.showError(err.message || "Failed to submit challenge. Please try again.");
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = 'SUBMIT CHALLENGE';
+      submitBtn.textContent = "SUBMIT CHALLENGE";
     }
   }
 }

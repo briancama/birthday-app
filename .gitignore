@@ -1,3 +1,5 @@
+# Supabase Edge Function environment variables
+supabase/functions/validate-firebase-token/.env
 # macOS
 .DS_Store
 .AppleDouble

@@ -1,24 +1,23 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>*** Birthday Challenge Zone ***</title>
+    <link rel="icon" type="image/png" href="images/favicon.jpg" />
+    <link rel="stylesheet" href="css/geocities.css" />
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="robots" content="noindex, nofollow">
-  <title>*** Birthday Challenge Zone ***</title>
-  <link rel="icon" type="image/png" href="images/favicon.jpg">
-  <link rel="stylesheet" href="css/geocities.css">
-  
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
-</head>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
+  </head>
 
-<body style="display: flex; justify-content: center; align-items: center; min-height: 100vh;">
-  <div class="login-container">
-    <h1 class="rainbow-text">WELCOME TO THE PARTY!</h1>
+  <body style="display: flex; justify-content: center; align-items: center; min-height: 100vh">
+    <div class="login-container">
+      <h1 class="rainbow-text">WELCOME TO THE PARTY!</h1>
 
-    <!-- Under Construction GIF
+      <!-- Under Construction GIF
     <img src="images/construction.gif" alt="Under Construction" class="construction-gif" onerror="this.style.display='none'">
 
     <div class="interior-container" style="text-align: center; background: #FFFF00; border: 4px dashed #FF00FF;">
@@ -27,204 +26,232 @@
       <p style="margin-top: 1rem;"><a href="invitation" style="color: #0000FF; text-decoration: underline; font-weight: bold;">View the Party Invitation →</a></p>
     </div> -->
 
-    <!-- Login form with Firebase phone auth -->
-    <form id="loginForm">
-      <!-- Phone Input Step -->
-      <div id="phoneStep" class="form-group">
-        <label for="phoneInput"><img src="images/phone.gif" alt="Phone Icon" class="icon-gif icon-gif--with-text"> ENTER YOUR PHONE NUMBER</label>
-        <input type="tel" inputmode="numeric" pattern="[0-9]*" id="phoneInput" name="phone" placeholder="(959) 867-5309" maxlength="14" required autocomplete="tel">
-        <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;">10-digit US phone number</p>
-        <div id="recaptchaContainer" style="margin: 1rem 0;"></div>
-        <button type="button" id="sendOTPBtn">>>> SEND CODE <<<</button>
-      </div>
+      <!-- Login form with Firebase phone auth -->
+      <form id="loginForm">
+        <!-- Phone Input Step -->
+        <div id="phoneStep" class="form-group">
+          <label for="phoneInput"
+            ><img src="images/phone.gif" alt="Phone Icon" class="icon-gif icon-gif--with-text" />
+            ENTER YOUR PHONE NUMBER</label
+          >
+          <input
+            type="tel"
+            inputmode="numeric"
+            id="phoneInput"
+            name="phone"
+            placeholder="(959) 867-5309"
+            maxlength="14"
+            required
+            autocomplete="tel"
+          />
+          <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #666">10-digit US phone number</p>
+          <div id="recaptchaContainer" style="margin: 1rem 0"></div>
+          <button type="button" id="sendOTPBtn">>>> SEND CODE <<<</button>
+        </div>
 
-      <!-- OTP Input Step -->
-      <div id="otpStep" class="form-group" style="display: none;">
-        <label for="otpInput">✔️ ENTER THE CODE FROM YOUR TEXT</label>
-        <input type="text" id="otpInput" name="otp" placeholder="000000" maxlength="6" required autocomplete="one-time-code">
-        <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;">Check your SMS for a 6-digit code</p>
-        <button type="submit" id="verifyOTPBtn">>>> VERIFY CODE <<<</button>
-        <button type="button" id="backBtn">← BACK</button>
-      </div>
+        <!-- OTP Input Step -->
+        <div id="otpStep" class="form-group" style="display: none">
+          <label for="otpInput">✔️ ENTER THE CODE FROM YOUR TEXT</label>
+          <input
+            type="text"
+            id="otpInput"
+            name="otp"
+            placeholder="000000"
+            maxlength="6"
+            required
+            autocomplete="one-time-code"
+          />
+          <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #666">
+            Check your SMS for a 6-digit code
+          </p>
+          <button type="submit" id="verifyOTPBtn">>>> VERIFY CODE <<<</button>
+          <button type="button" id="backBtn">← BACK</button>
+        </div>
 
-      <div id="error" class="error"></div>
-    </form>
-  </div>
+        <div id="error" class="error"></div>
+      </form>
+    </div>
 
-  <script type="module">
-    import { appState } from './js/app.js';
-    import { firebaseAuth } from './js/services/firebase-auth.js';
-    import { formatPhoneInput, toE164Format, isValidUSPhone } from './js/utils/phone-format.js';
+    <script type="module">
+      import { appState } from "./js/app.js";
+      import { firebaseAuth } from "./js/services/firebase-auth.js";
+      import { formatPhoneInput, toE164Format, isValidUSPhone } from "./js/utils/phone-format.js";
 
-    const form = document.getElementById('loginForm');
-    const phoneInput = document.getElementById('phoneInput');
-    const otpInput = document.getElementById('otpInput');
-    const phoneStep = document.getElementById('phoneStep');
-    const otpStep = document.getElementById('otpStep');
-    const sendOTPBtn = document.getElementById('sendOTPBtn');
-    const verifyOTPBtn = document.getElementById('verifyOTPBtn');
-    const backBtn = document.getElementById('backBtn');
-    const errorDiv = document.getElementById('error');
-    const recaptchaContainer = document.getElementById('recaptchaContainer');
+      const form = document.getElementById("loginForm");
+      const phoneInput = document.getElementById("phoneInput");
+      const otpInput = document.getElementById("otpInput");
+      const phoneStep = document.getElementById("phoneStep");
+      const otpStep = document.getElementById("otpStep");
+      const sendOTPBtn = document.getElementById("sendOTPBtn");
+      const verifyOTPBtn = document.getElementById("verifyOTPBtn");
+      const backBtn = document.getElementById("backBtn");
+      const errorDiv = document.getElementById("error");
+      const recaptchaContainer = document.getElementById("recaptchaContainer");
 
-    let phoneNumber = null;
-    let recaptchaReady = false;
+      let phoneNumber = null;
+      let recaptchaReady = false;
 
-    // Format phone number as user types: (XXX) XXX-XXXX
-    phoneInput.addEventListener('input', (e) => {
-      e.target.value = formatPhoneInput(e.target.value);
-    });
+      // Format phone number as user types: (XXX) XXX-XXXX
+      phoneInput.addEventListener("input", (e) => {
+        e.target.value = formatPhoneInput(e.target.value);
+      });
 
-    // Initialize Firebase
-    await firebaseAuth.init();
-    console.log('Firebase initialized, waiting for first interaction...');
+      // Initialize Firebase
+      await firebaseAuth.init();
+      console.log("Firebase initialized, waiting for first interaction...");
 
-    // Send OTP
-    sendOTPBtn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      errorDiv.textContent = '';
+      // Send OTP
+      sendOTPBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        errorDiv.textContent = "";
 
-      // Setup reCAPTCHA on first click if not already done
-      if (!recaptchaReady) {
-        try {
-          sendOTPBtn.disabled = true;
-          sendOTPBtn.textContent = 'Setting up...';
-          await firebaseAuth.setupRecaptcha('recaptchaContainer');
-          recaptchaReady = true;
-          sendOTPBtn.disabled = false;
-          sendOTPBtn.textContent = '>>> SEND CODE <<<';
-        } catch (err) {
-          errorDiv.textContent = 'Setup failed: ' + err.message;
-          sendOTPBtn.disabled = false;
-          sendOTPBtn.textContent = '>>> SEND CODE <<<';
+        // Setup reCAPTCHA on first click if not already done
+        if (!recaptchaReady) {
+          try {
+            sendOTPBtn.disabled = true;
+            sendOTPBtn.textContent = "Setting up...";
+            await firebaseAuth.setupRecaptcha("recaptchaContainer");
+            recaptchaReady = true;
+            sendOTPBtn.disabled = false;
+            sendOTPBtn.textContent = ">>> SEND CODE <<<";
+          } catch (err) {
+            errorDiv.textContent = "Setup failed: " + err.message;
+            sendOTPBtn.disabled = false;
+            sendOTPBtn.textContent = ">>> SEND CODE <<<";
+            return;
+          }
+        }
+
+        phoneNumber = phoneInput.value.trim();
+        if (!phoneNumber) {
+          errorDiv.textContent = "Please enter a phone number";
           return;
         }
-      }
 
-      phoneNumber = phoneInput.value.trim();
-      if (!phoneNumber) {
-        errorDiv.textContent = 'Please enter a phone number';
-        return;
-      }
+        // Validate and convert to E.164 format
+        try {
+          phoneNumber = toE164Format(phoneNumber);
+        } catch (err) {
+          errorDiv.textContent = err.message;
+          return;
+        }
 
-      // Validate and convert to E.164 format
-      try {
-        phoneNumber = toE164Format(phoneNumber);
-      } catch (err) {
-        errorDiv.textContent = err.message;
-        return;
-      }
+        sendOTPBtn.disabled = true;
+        sendOTPBtn.textContent = "Sending...";
 
-      sendOTPBtn.disabled = true;
-      sendOTPBtn.textContent = 'Sending...';
+        try {
+          await firebaseAuth.sendOTP(phoneNumber);
+          // Switch to OTP step
+          phoneStep.style.display = "none";
+          phoneInput.required = false;
+          otpStep.style.display = "block";
+          otpInput.focus();
+        } catch (err) {
+          console.error("Send OTP error:", err);
+          errorDiv.textContent = err.message || "Failed to send code. Try again.";
+          sendOTPBtn.disabled = false;
+          sendOTPBtn.textContent = ">>> SEND CODE <<<";
+        }
+      });
 
-      try {
-        await firebaseAuth.sendOTP(phoneNumber);
-        // Switch to OTP step
-        phoneStep.style.display = 'none';
-        otpStep.style.display = 'block';
-        otpInput.focus();
-      } catch (err) {
-        console.error('Send OTP error:', err);
-        errorDiv.textContent = err.message || 'Failed to send code. Try again.';
+      // Back button
+      backBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        phoneStep.style.display = "block";
+        otpStep.style.display = "none";
+        phoneInput.required = true;
+        errorDiv.textContent = "";
+        otpInput.value = "";
         sendOTPBtn.disabled = false;
-        sendOTPBtn.textContent = '>>> SEND CODE <<<';
-      }
-    });
+        sendOTPBtn.textContent = ">>> SEND CODE <<<";
+      });
 
-    // Back button
-    backBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      phoneStep.style.display = 'block';
-      otpStep.style.display = 'none';
-      errorDiv.textContent = '';
-      otpInput.value = '';
-      sendOTPBtn.disabled = false;
-      sendOTPBtn.textContent = '>>> SEND CODE <<<';
-    });
+      // Verify OTP
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        errorDiv.textContent = "";
 
-    // Verify OTP
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      errorDiv.textContent = '';
-
-      const code = otpInput.value.trim();
-      if (!code || code.length !== 6) {
-        errorDiv.textContent = 'Please enter a valid 6-digit code';
-        return;
-      }
-
-      verifyOTPBtn.disabled = true;
-      verifyOTPBtn.textContent = 'Verifying...';
-
-      try {
-        // Actually verify the OTP with Firebase
-        const userCredential = await firebaseAuth.verifyOTP(code);
-        
-        if (!userCredential?.user?.uid) {
-          throw new Error('Firebase verification failed');
+        const code = otpInput.value.trim();
+        if (!code || code.length !== 6) {
+          errorDiv.textContent = "Please enter a valid 6-digit code";
+          return;
         }
 
-        const firebaseUid = userCredential.user.uid;
-        const supabase = appState.getSupabase();
+        verifyOTPBtn.disabled = true;
+        verifyOTPBtn.textContent = "Verifying...";
 
-        // Look for existing user by phone number
-        const { data: existingUser, error: selectErr } = await supabase
-          .from('users')
-          .select('*')
-          .eq('phone_number', phoneNumber)
-          .maybeSingle();
+        try {
+          // Actually verify the OTP with Firebase
+          const userCredential = await firebaseAuth.verifyOTP(code);
 
-        if (selectErr) throw selectErr;
+          if (!userCredential?.user?.uid) {
+            throw new Error("Firebase verification failed");
+          }
 
-        let user = existingUser;
+          const firebaseUid = userCredential.user.uid;
+          const supabase = appState.getSupabase();
 
-        if (existingUser) {
-          // Update firebase_uid on existing user
-          const { error: updateErr } = await supabase
-            .from('users')
-            .update({ firebase_uid: firebaseUid })
-            .eq('id', existingUser.id);
+          // Look for existing user by phone number
+          const { data: existingUser, error: selectErr } = await supabase
+            .from("users")
+            .select("*")
+            .eq("phone_number", phoneNumber)
+            .maybeSingle();
 
-          if (updateErr) throw updateErr;
-          user = { ...existingUser, firebase_uid: firebaseUid };
-        } else {
-          // Create new user
-          const { data: newUser, error: insertErr } = await supabase
-            .from('users')
-            .insert([{
-              firebase_uid: firebaseUid,
-              phone_number: phoneNumber,
-              display_name: phoneNumber,
-              username: phoneNumber // Use phone as fallback username
-            }])
-            .select()
-            .single();
+          if (selectErr) throw selectErr;
 
-          if (insertErr) throw insertErr;
-          user = newUser;
+          let user = existingUser;
+
+          if (existingUser) {
+            // Update firebase_uid on existing user
+            const { error: updateErr } = await supabase
+              .from("users")
+              .update({ firebase_uid: firebaseUid })
+              .eq("id", existingUser.id);
+
+            if (updateErr) throw updateErr;
+            user = { ...existingUser, firebase_uid: firebaseUid };
+          } else {
+            // Create new user
+            const { data: newUser, error: insertErr } = await supabase
+              .from("users")
+              .insert([
+                {
+                  firebase_uid: firebaseUid,
+                  phone_number: phoneNumber,
+                  display_name: phoneNumber,
+                  username: phoneNumber, // Use phone as fallback username
+                },
+              ])
+              .select()
+              .single();
+
+            if (insertErr) throw insertErr;
+            user = newUser;
+          }
+
+          // Store firebase_uid in localStorage
+          localStorage.setItem("firebase_uid", firebaseUid);
+          localStorage.setItem("phone_number", phoneNumber);
+
+          const idToken = await firebaseAuth.getIdToken();
+          console.log("ID Token obtained:", idToken);
+          debugger;
+
+          // Redirect to dashboard
+          window.location.href = "dashboard";
+        } catch (err) {
+          console.error("Verify OTP error:", err);
+          errorDiv.textContent = err.message || "Verification failed. Try again.";
+          verifyOTPBtn.disabled = false;
+          verifyOTPBtn.textContent = ">>> VERIFY CODE <<<";
         }
+      });
 
-        // Store firebase_uid in localStorage
-        localStorage.setItem('firebase_uid', firebaseUid);
-        localStorage.setItem('phone_number', phoneNumber);
-
-        // Redirect to dashboard
-        window.location.href = 'dashboard';
-
-      } catch (err) {
-        console.error('Verify OTP error:', err);
-        errorDiv.textContent = err.message || 'Verification failed. Try again.';
-        verifyOTPBtn.disabled = false;
-        verifyOTPBtn.textContent = '>>> VERIFY CODE <<<';
+      // Check if already signed in
+      if (localStorage.getItem("firebase_uid")) {
+        window.location.href = "dashboard";
       }
-    });
-
-    // Check if already signed in
-    if (localStorage.getItem('firebase_uid')) {
-      window.location.href = 'dashboard';
-    }
-  </script>
-</body>
-
+    </script>
+  </body>
 </html>
