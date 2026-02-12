@@ -162,11 +162,24 @@ form.addEventListener("submit", async (e) => {
     localStorage.setItem("firebase_uid", firebaseUid);
     localStorage.setItem("phone_number", phoneNumber);
 
-    const idToken = await firebaseAuth.getIdToken();
+    // Wait for a valid Firebase ID token before redirecting
+    let idToken = null;
+    for (let i = 0; i < 10; i++) { // Try for up to ~2 seconds
+    idToken = await firebaseAuth.getIdToken();
+    if (idToken) break;
+    await new Promise(res => setTimeout(res, 200));
+    }
+    if (!idToken) {
+    errorDiv.textContent = "Failed to obtain authentication token. Please try again.";
+    verifyOTPBtn.disabled = false;
+    verifyOTPBtn.textContent = ">>> VERIFY CODE <<<";
+    return;
+    }
     console.log("ID Token obtained:", idToken);
 
     // Redirect to dashboard
     window.location.href = "dashboard";
+    
   } catch (err) {
     console.error("Verify OTP error:", err);
     errorDiv.textContent = err.message || "Verification failed. Try again.";
