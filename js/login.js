@@ -110,8 +110,32 @@ form.addEventListener("submit", async (e) => {
 
   try {
     // Actually verify the OTP with Firebase
+    let userCredential;
+    try {
+      userCredential = await firebaseAuth.verifyOTP(code);
+    } catch (otpErr) {
+      // Map common Firebase errors to user-friendly messages
+      let message = "Verification failed. Try again.";
+      if (otpErr.code === "auth/invalid-verification-code") {
+        message = "The code you entered is incorrect. Please try again.";
+      } else if (otpErr.code === "auth/code-expired") {
+        message = "This code has expired. Please request a new one.";
+      } else if (otpErr.code === "auth/too-many-requests") {
+        message = "Too many attempts. Please wait and try again later.";
+      } else if (otpErr.code) {
+        message = `Verification error: ${otpErr.message}`;
+      }
+      errorDiv.textContent = message;
+      verifyOTPBtn.disabled = false;
+      verifyOTPBtn.textContent = ">>> VERIFY CODE <<<";
+      return;
+    }
+
     if (!userCredential?.user?.uid) {
-      throw new Error("Firebase verification failed");
+      errorDiv.textContent = "Firebase verification failed. Please try again.";
+      verifyOTPBtn.disabled = false;
+      verifyOTPBtn.textContent = ">>> VERIFY CODE <<<";
+      return;
     }
 
     const firebaseUid = userCredential.user.uid;
