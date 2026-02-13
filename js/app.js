@@ -292,7 +292,6 @@ class AppState extends EventTarget {
 
 // Create and freeze singleton instance
 const appState = new AppState();
-Object.freeze(appState); // Prevent modification
 
 // Export both the instance, class, and config
 // Usage: Always import { appState } and use appState.getCurrentUser(), appState.getUserId(), appState.getSupabase()
