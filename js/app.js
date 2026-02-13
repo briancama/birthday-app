@@ -195,7 +195,7 @@ class AppState extends EventTarget {
       signOutError = err;
       console.error("Firebase signout error:", err);
       // Optionally, show a user-friendly message (if you have a global error UI)
-      if (typeof this.showError === 'function') {
+      if (typeof this.showError === "function") {
         this.showError("Logout failed. Please refresh the page or try again.");
       } else {
         alert("Logout failed. Please refresh the page or try again.");
@@ -244,8 +244,10 @@ class AppState extends EventTarget {
   }
 }
 
-// Create singleton instance
+// Create and freeze singleton instance
 const appState = new AppState();
+Object.freeze(appState); // Prevent modification
 
 // Export both the instance, class, and config
+// Usage: Always import { appState } and use appState.getCurrentUser(), appState.getUserId(), appState.getSupabase()
 export { appState, AppState, APP_CONFIG };
