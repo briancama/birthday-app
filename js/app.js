@@ -48,7 +48,17 @@ class AppState extends EventTarget {
 
   // Initialize the application
   async init() {
-    // Wait for Firebase auth state to be ready before proceeding
+    // Ensure Firebase is initialized before any auth logic
+    if (!firebaseAuth.auth) {
+      try {
+        await firebaseAuth.init();
+      } catch (err) {
+        console.error("Firebase failed to initialize:", err);
+        this.forceLogout();
+        return false;
+      }
+    }
+
     const firebaseUid = localStorage.getItem("firebase_uid");
     if (!firebaseUid) {
       this.redirectToLogin();
@@ -76,45 +86,21 @@ class AppState extends EventTarget {
 
   async loadUserProfile(firebaseUid) {
     try {
-      // Emit loading event
-      this.dispatchEvent(new CustomEvent("user:loading"));
-      EventBus.instance.emit(EventBus.EVENTS.USER.LOADING);
-
-      // Get Firebase ID token and set it as Supabase session for RLS
-      const idToken = await firebaseAuth.getIdToken();
-      if (idToken) {
-        // For Supabase JS v2: setSession expects both access_token and refresh_token, but refresh_token is optional for custom JWT
-        await this.supabase.auth.setSession({ access_token: idToken, refresh_token: idToken });
-      } else {
-        console.warn("No Firebase ID token found; Supabase requests may not be authenticated.");
-      }
-
+      // Fetch user profile from Supabase using firebaseUid
       const { data, error } = await this.supabase
         .from("users")
-        .select("id, username, display_name, firebase_uid, created_at")
+        .select("*")
         .eq("firebase_uid", firebaseUid)
         .single();
 
-      if (error) throw error;
+      if (error || !data) {
+        throw new Error(error?.message || "User not found");
+      }
 
-      // Store user ID for other queries
+      this.currentUser = data;
       this.userId = data.id;
 
-      // Check if user is admin
-      const adminUsernames = ["brianc", "admin"];
-      const isAdmin = adminUsernames.includes(data.username);
-
-      this.currentUser = {
-        id: this.userId,
-        firebase_uid: firebaseUid,
-        username: data.username,
-        display_name: data.display_name,
-        name: data.display_name || data.username,
-        created_at: data.created_at,
-        isAdmin: isAdmin,
-      };
-
-      // Emit user loaded events
+      // Emit user loaded event
       const userLoadedEvent = new CustomEvent("user:loaded", {
         detail: this.currentUser,
       });
@@ -142,6 +128,66 @@ class AppState extends EventTarget {
 
       this.redirectToLogin();
     }
+  }
+
+  async logout() {
+    const previousUser = this.currentUser;
+    let signOutError = null;
+    try {
+      // Ensure Firebase is initialized before signOut
+      if (!firebaseAuth.auth) {
+        await firebaseAuth.init();
+      }
+      await firebaseAuth.signOut();
+    } catch (err) {
+      signOutError = err;
+      console.error("Firebase signout error:", err);
+      // Fallback: if Firebase is not initialized, force logout
+      if (!firebaseAuth.auth) {
+        this.forceLogout();
+        return;
+      }
+      // Optionally, show a user-friendly message (if you have a global error UI)
+      if (typeof this.showError === "function") {
+        this.showError("Logout failed. Please refresh the page or try again.");
+      } else {
+        alert("Logout failed. Please refresh the page or try again.");
+      }
+    }
+
+    // Clear localStorage regardless of signOut result
+    localStorage.removeItem("firebase_uid");
+    localStorage.removeItem("phone_number");
+
+    this.currentUser = null;
+    this.userId = null;
+
+    // Emit logout events
+    const logoutDetail = {
+      previousUser,
+      timestamp: new Date().toISOString(),
+      signOutError,
+    };
+
+    this.dispatchEvent(
+      new CustomEvent("user:logout", {
+        detail: logoutDetail,
+      })
+    );
+    EventBus.instance.emit(EventBus.EVENTS.USER.LOGOUT, logoutDetail);
+
+    this.redirectToLogin();
+  }
+
+  // Fallback: force logout if Firebase cannot be initialized
+  forceLogout() {
+    localStorage.removeItem("firebase_uid");
+    localStorage.removeItem("phone_number");
+    this.currentUser = null;
+    this.userId = null;
+    this.dispatchEvent(new CustomEvent("user:logout", { detail: { forced: true } }));
+    EventBus.instance.emit(EventBus.EVENTS.USER.LOGOUT, { forced: true });
+    this.redirectToLogin();
   }
 
   initializeNavigation() {
