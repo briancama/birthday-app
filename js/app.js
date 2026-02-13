@@ -184,13 +184,25 @@ class AppState extends EventTarget {
   }
 
   // Authentication methods
-  logout() {
+  async logout() {
     const previousUser = this.currentUser;
+    let signOutError = null;
+    try {
+      // Ensure Firebase is initialized before signOut
+      await firebaseAuth.init();
+      await firebaseAuth.signOut();
+    } catch (err) {
+      signOutError = err;
+      console.error("Firebase signout error:", err);
+      // Optionally, show a user-friendly message (if you have a global error UI)
+      if (typeof this.showError === 'function') {
+        this.showError("Logout failed. Please refresh the page or try again.");
+      } else {
+        alert("Logout failed. Please refresh the page or try again.");
+      }
+    }
 
-    // Clear Firebase auth
-    firebaseAuth.signOut().catch((err) => console.error("Firebase signout error:", err));
-
-    // Clear localStorage
+    // Clear localStorage regardless of signOut result
     localStorage.removeItem("firebase_uid");
     localStorage.removeItem("phone_number");
 
@@ -201,6 +213,7 @@ class AppState extends EventTarget {
     const logoutDetail = {
       previousUser,
       timestamp: new Date().toISOString(),
+      signOutError,
     };
 
     this.dispatchEvent(

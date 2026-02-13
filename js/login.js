@@ -110,14 +110,29 @@ form.addEventListener("submit", async (e) => {
 
   try {
     // Actually verify the OTP with Firebase
-    const userCredential = await firebaseAuth.verifyOTP(code);
-
     if (!userCredential?.user?.uid) {
       throw new Error("Firebase verification failed");
     }
 
     const firebaseUid = userCredential.user.uid;
     const supabase = appState.getSupabase();
+
+    // Get and set Firebase ID token for Supabase session
+    let idToken = null;
+    for (let i = 0; i < 10; i++) {
+      // Try for up to ~2 seconds
+      idToken = await firebaseAuth.getIdToken();
+      if (idToken) break;
+      await new Promise((res) => setTimeout(res, 200));
+    }
+    if (!idToken) {
+      errorDiv.textContent = "Failed to obtain authentication token. Please try again.";
+      verifyOTPBtn.disabled = false;
+      verifyOTPBtn.textContent = ">>> VERIFY CODE <<<";
+      return;
+    }
+    await supabase.auth.setSession({ access_token: idToken, refresh_token: idToken });
+    console.log("ID Token set for Supabase session:", idToken);
 
     // Look for existing user by phone number
     const { data: existingUser, error: selectErr } = await supabase
@@ -163,23 +178,25 @@ form.addEventListener("submit", async (e) => {
     localStorage.setItem("phone_number", phoneNumber);
 
     // Wait for a valid Firebase ID token before redirecting
-    let idToken = null;
-    for (let i = 0; i < 10; i++) { // Try for up to ~2 seconds
-    idToken = await firebaseAuth.getIdToken();
-    if (idToken) break;
-    await new Promise(res => setTimeout(res, 200));
+    let idTokenRetry = null;
+    for (let i = 0; i < 10; i++) {
+      // Try for up to ~2 seconds
+      idTokenRetry = await firebaseAuth.getIdToken();
+      if (idTokenRetry) break;
+      await new Promise((res) => setTimeout(res, 200));
     }
     if (!idToken) {
-    errorDiv.textContent = "Failed to obtain authentication token. Please try again.";
-    verifyOTPBtn.disabled = false;
-    verifyOTPBtn.textContent = ">>> VERIFY CODE <<<";
-    return;
+      if (!idTokenRetry) {
+        errorDiv.textContent = "Failed to obtain authentication token. Please try again.";
+        verifyOTPBtn.disabled = false;
+        verifyOTPBtn.textContent = ">>> VERIFY CODE <<<";
+        return;
+      }
     }
-    console.log("ID Token obtained:", idToken);
+    console.log("ID Token obtained:", idTokenRetry);
 
     // Redirect to dashboard
     window.location.href = "dashboard";
-    
   } catch (err) {
     console.error("Verify OTP error:", err);
     errorDiv.textContent = err.message || "Verification failed. Try again.";
