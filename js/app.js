@@ -273,6 +273,11 @@ class AppState extends EventTarget {
   }
 
   redirectToLogin() {
+    // Prevent redirect loop if already on login page (index.html or /)
+    const path = window.location.pathname.replace(/^\/+/, "");
+    if (path === "" || path === "index.html") {
+      return;
+    }
     window.location.href = "/";
   }
 
