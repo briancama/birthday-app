@@ -2,6 +2,7 @@
 // Handles login form logic for index.html (Firebase phone auth + Supabase user creation)
 
 import { appState } from "./app.js";
+import { BasePage } from "./base-page.js";
 import { firebaseAuth } from "./services/firebase-auth.js";
 import { formatPhoneInput, toE164Format, isValidUSPhone } from "./utils/phone-format.js";
 
