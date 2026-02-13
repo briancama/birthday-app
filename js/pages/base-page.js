@@ -17,7 +17,8 @@ class BasePage {
         console.log('📍 Initializing appState...');
         const isAuthenticated = await appState.init();
         if (!isAuthenticated) {
-            console.error('User not authenticated');
+            // Not being authenticated is normal on the login page (index.html)
+            console.info('User not authenticated (expected on login page)');
             return;
         }
         
