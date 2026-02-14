@@ -7,24 +7,24 @@
 :root {
   /* Colors */
   --primary-bg: #000080;
-  --section-bg: #C0C0C0;
+  --section-bg: #c0c0c0;
   --text-dark: hsl(0, 0%, 0%);
   --text-gray: #c6c6c6;
-  --text-light: #FFF;
-  --accent-magenta: #FF00FF;
-  --accent-cyan: #00FFFF;
-  --accent-yellow: #FFFF00;
-  --accent-red: #FF0000;
-  --accent-green: #00FF00;
-  --accent-blue: #0000FF;
+  --text-light: #fff;
+  --accent-magenta: #ff00ff;
+  --accent-cyan: #00ffff;
+  --accent-yellow: #ffff00;
+  --accent-red: #ff0000;
+  --accent-green: #00ff00;
+  --accent-blue: #0000ff;
 
   /* Spacing */
   --spacing-xs: 0.5rem;
   --spacing-sm: 0.75rem;
   --spacing-md: 1rem;
   --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  --spacing-xxl: 2.5rem;
+  --spacing-xl: 3rem;
+  --spacing-xxl: 6rem;
 
   /* Container spacing */
   --container-padding: var(--spacing-lg);
@@ -36,15 +36,15 @@
   --border-width: 3px;
   --border-thick: 4px;
   --border-style: outset;
-  --border-color: #FFFFFF;
+  --border-color: #ffffff;
 
   /* Typography */
-  --font-primary: 'Comic Sans MS', 'Arial', sans-serif;
-  --font-heading: 'Arial Black', 'Arial', sans-serif;
-  --font-mono: 'Courier New', monospace;
+  --font-primary: "Comic Sans MS", "Arial", sans-serif;
+  --font-heading: "Arial Black", "Arial", sans-serif;
+  --font-mono: "Courier New", monospace;
   --text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   --text-shadow-light: 1px 1px 2px rgba(0, 0, 0, 0.3);
-  --text-shadow-strong: 3px 3px 0px #000000, -1px -1px 0px #FFFFFF;
+  --text-shadow-strong: 3px 3px 0px #000000, -1px -1px 0px #ffffff;
 
   /* Font Sizes (base: 16px = 1rem) */
   --text-xs: 0.75rem;
@@ -95,7 +95,7 @@
 @layer base {
   body {
     font-family: var(--font-primary);
-    background-image: url('../images/background.gif');
+    background-image: url("../images/background.gif");
     background-repeat: repeat;
     background-color: var(--primary-bg);
     min-height: 100vh;
@@ -106,7 +106,7 @@
   /* Typography */
   h1 {
     font-family: var(--font-heading);
-    font-size: var(--spacing-xxl);
+    font-size: var(--spacing-xl);
     text-align: center;
     margin-bottom: var(--spacing-md);
     text-shadow: var(--text-shadow-strong);
@@ -166,17 +166,52 @@
 
   .login-container {
     background: var(--section-bg);
-    padding: var(--spacing-xl);
+    padding: var(--spacing-lg);
     border: 5px ridge var(--border-color);
-    width: 90%;
+    width: 100%;
     max-width: 500px;
-    margin: var(--spacing-xl) auto;
+    margin-top: var(--spacing-lg);
+    margin-bottom: var(--spacing--lg);
+    margin-right: auto;
+    margin-left: auto;
     box-shadow: 10px 10px 0px #000000;
   }
 
+  .secret-arnold {
+    display: block;
+    width: 0;
+    font-size: var(--text-lg);
+    color: #c4c4c4;
+    text-shadow: none;
+    width: 100%;
+    text-align: center;
+  }
+
+  .login-container .form-group {
+    padding: var(--spacing-md);
+  }
+
+  .login-container legend {
+    font-family: var(--font-heading);
+  }
+
   .interior-container {
-    margin: var(--spacing-xl) 0;
-    padding: var(--spacing-xl);
+    margin: var(--spacing-sm) 0;
+    padding: var(--spacing-sm);
+  }
+
+  .phone-input {
+    width: 100%;
+    max-width: 300px;
+    padding: var(--spacing-xs);
+    font-size: var(--text-lg);
+    margin-top: var(--spacing-sm);
+    margin-bottom: 4px;
+  }
+
+  .input-help {
+    margin-bottom: var(--spacing-md);
+    font-size: var(--text-sm);
   }
 
   .header {
@@ -196,7 +231,6 @@
 
 /* === COMPONENT LAYER === */
 @layer components {
-
   /* Animations */
   @keyframes rainbow {
     0% {
@@ -204,7 +238,7 @@
     }
 
     14% {
-      color: #FF7F00;
+      color: #ff7f00;
     }
 
     28% {
@@ -220,11 +254,11 @@
     }
 
     71% {
-      color: #4B0082;
+      color: #4b0082;
     }
 
     85% {
-      color: #9400D3;
+      color: #9400d3;
     }
 
     100% {
@@ -233,7 +267,6 @@
   }
 
   @keyframes blink {
-
     0%,
     50% {
       opacity: 1;
@@ -246,7 +279,6 @@
   }
 
   @keyframes sparkle {
-
     0%,
     100% {
       transform: scale(1) rotate(0deg);
@@ -320,12 +352,12 @@
   button,
   input[type="submit"] {
     padding: 0.75rem var(--spacing-lg);
-    background: linear-gradient(to bottom, var(--accent-magenta), #9400D3);
+    background: linear-gradient(to bottom, var(--accent-magenta), #9400d3);
     color: var(--accent-yellow);
     border: var(--border-width) var(--border-style) var(--border-color);
     font-weight: bold;
     cursor: pointer;
-    font-family: 'Arial', sans-serif;
+    font-family: "Arial", sans-serif;
     font-size: 1rem;
     text-shadow: 1px 1px 0px #000000;
   }
@@ -354,7 +386,7 @@
     border: var(--border-width) var(--border-style) var(--border-color);
     font-weight: bold;
     cursor: pointer;
-    font-family: 'Arial', sans-serif;
+    font-family: "Arial", sans-serif;
     font-size: 1rem;
     text-shadow: 1px 1px 0px #000000;
     text-decoration: none;
@@ -371,7 +403,7 @@
   }
 
   .btn-primary {
-    background: linear-gradient(to bottom, var(--accent-magenta), #9400D3);
+    background: linear-gradient(to bottom, var(--accent-magenta), #9400d3);
     color: var(--accent-yellow);
     border-color: var(--border-color);
   }
@@ -381,13 +413,13 @@
   }
 
   .btn-secondary {
-    background: linear-gradient(to bottom, var(--accent-red), #8B0000);
+    background: linear-gradient(to bottom, var(--accent-red), #8b0000);
     color: var(--text-light);
     border-color: var(--border-color);
   }
 
   .btn-secondary:hover {
-    background: linear-gradient(to bottom, #FF6347, var(--accent-red));
+    background: linear-gradient(to bottom, #ff6347, var(--accent-red));
   }
 
   .btn-tertiary {
@@ -397,16 +429,16 @@
   }
 
   .btn-tertiary:hover {
-    background: linear-gradient(to bottom, #4169E1, var(--accent-blue));
+    background: linear-gradient(to bottom, #4169e1, var(--accent-blue));
   }
 
   button.secondary {
-    background: linear-gradient(to bottom, var(--accent-red), #8B0000);
+    background: linear-gradient(to bottom, var(--accent-red), #8b0000);
     color: var(--text-light);
   }
 
   button.secondary:hover {
-    background: linear-gradient(to bottom, #FF6347, var(--accent-red));
+    background: linear-gradient(to bottom, #ff6347, var(--accent-red));
   }
 
   button.success-btn {
@@ -416,7 +448,7 @@
   }
 
   button.failure-btn {
-    background: linear-gradient(to bottom, var(--accent-red), #8B0000);
+    background: linear-gradient(to bottom, var(--accent-red), #8b0000);
     color: var(--accent-yellow);
   }
 
@@ -425,13 +457,13 @@
     position: absolute;
     top: 10px;
     right: 10px;
-    background: linear-gradient(180deg, #FF0000 0%, #CC0000 100%);
-    color: #FFFF00;
-    border: 3px outset #FF0000;
+    background: linear-gradient(180deg, #ff0000 0%, #cc0000 100%);
+    color: #ffff00;
+    border: 3px outset #ff0000;
     padding: 0.5rem 0.5rem;
     font-weight: bold;
     cursor: pointer;
-    font-family: 'Comic Sans MS', cursive;
+    font-family: "Comic Sans MS", cursive;
     font-size: 0.9rem;
     text-shadow: 1px 1px 0px #000000;
     z-index: 1000;
@@ -439,7 +471,7 @@
   }
 
   .close-btn:hover {
-    background: linear-gradient(180deg, #CC0000 0%, #990000 100%);
+    background: linear-gradient(180deg, #cc0000 0%, #990000 100%);
     border-style: inset;
   }
 
@@ -450,7 +482,8 @@
 
   /* Forms */
   .form-group {
-    margin-bottom: var(--spacing-lg);
+    margin-top: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
   }
 
   label {
@@ -476,7 +509,7 @@
   input:focus,
   textarea:focus {
     outline: var(--border-width) solid var(--accent-magenta);
-    background: #FFFFCC;
+    background: #ffffcc;
   }
 
   /* Marquee */
@@ -486,7 +519,7 @@
     color: var(--accent-red);
     font-weight: bold;
     padding: var(--spacing-xs);
-    border: var(--border-width) ridge #FFD700;
+    border: var(--border-width) ridge #ffd700;
     margin-bottom: var(--spacing-md);
     font-size: 1.1rem;
   }
@@ -501,7 +534,7 @@
   .challenge-card {
     border: var(--border-thick) groove var(--border-color);
     padding: var(--spacing-md);
-    background: #FFFFE0;
+    background: #ffffe0;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -510,35 +543,35 @@
   }
 
   .challenge-card.locked {
-    background: #D3D3D3;
+    background: #d3d3d3;
     opacity: 0.7;
   }
 
   .challenge-card.unrevealed {
     display: flex;
     align-items: center;
-    background: #FFD700;
+    background: #ffd700;
     cursor: pointer;
     border: var(--border-thick) var(--border-style) var(--border-color);
   }
 
   .challenge-card.unrevealed:hover {
-    background: #FFA500;
+    background: #ffa500;
     border: var(--border-thick) ridge var(--border-color);
   }
 
   .challenge-card.revealed {
-    background: #98FB98;
+    background: #98fb98;
     border: var(--border-thick) inset var(--border-color);
   }
 
   .challenge-card.completed.success {
-    background: #90EE90;
+    background: #90ee90;
     border: var(--border-thick) double var(--accent-green);
   }
 
   .challenge-card.completed.failure {
-    background: #FFB6C1;
+    background: #ffb6c1;
     border: var(--border-thick) double var(--accent-red);
   }
 
@@ -547,7 +580,6 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    ;
   }
 
   .challenge-badge {
@@ -594,29 +626,29 @@
 
   .challenge-description {
     margin-bottom: var(--spacing-xs);
-    font-family: 'Arial', sans-serif;
+    font-family: "Arial", sans-serif;
   }
 
   .success-metric {
     margin-top: var(--spacing-xs);
     padding: 0.75rem;
     background: rgba(255, 255, 0, 0.2);
-    border: 2px dashed #FFA500;
+    border: 2px dashed #ffa500;
     border-radius: 4px;
     font-size: 0.95rem;
-    font-family: 'Arial', sans-serif;
+    font-family: "Arial", sans-serif;
   }
 
   .success-metric summary {
     cursor: pointer;
-    color: #FF8C00;
+    color: #ff8c00;
     font-weight: bold;
     user-select: none;
     list-style-position: inside;
   }
 
   .success-metric summary:hover {
-    color: #FF6500;
+    color: #ff6500;
   }
 
   .success-metric p {
@@ -721,11 +753,11 @@
 
   .stat-box {
     background: #000;
-    color: #00FF00;
+    color: #00ff00;
     padding: 1rem;
-    border: 3px ridge #00FF00;
+    border: 3px ridge #00ff00;
     text-align: center;
-    font-family: 'Courier New', monospace;
+    font-family: "Courier New", monospace;
     position: relative;
     overflow: hidden;
   }
@@ -772,7 +804,7 @@
   .stat-label {
     font-size: 0.9rem;
     margin-bottom: 0.5rem;
-    color: #00FFFF;
+    color: #00ffff;
     text-transform: uppercase;
     visibility: hidden;
   }
@@ -797,7 +829,7 @@
   .stat-value {
     font-size: 2rem;
     font-weight: bold;
-    text-shadow: 0 0 10px #00FF00;
+    text-shadow: 0 0 10px #00ff00;
   }
 
   /* === LEADERBOARD TABLE === */
@@ -808,8 +840,8 @@
   }
 
   .scoreboard-table th {
-    background: linear-gradient(to bottom, #0000FF, #000080);
-    color: #FFFF00;
+    background: linear-gradient(to bottom, #0000ff, #000080);
+    color: #ffff00;
     padding: 1rem;
     text-align: left;
     border: 2px solid #000;
@@ -821,16 +853,16 @@
   .scoreboard-table td {
     padding: 0.75rem;
     border: 2px solid #000;
-    font-family: 'Arial', sans-serif;
+    font-family: "Arial", sans-serif;
   }
 
   .scoreboard-table tr:nth-child(odd) {
-    background: #FFFF99;
+    background: #ffff99;
     /* Light yellow */
   }
 
   .scoreboard-table tr:nth-child(even) {
-    background: #CCFFCC;
+    background: #ccffcc;
     /* Light green */
   }
 
@@ -841,13 +873,13 @@
   }
 
   .scoreboard-table tr.current-user {
-    background: #00FFFF !important;
+    background: #00ffff !important;
     font-weight: bold;
-    border: 3px solid #FF0000;
+    border: 3px solid #ff0000;
   }
 
   .scoreboard-table tr.current-user:hover {
-    background: #00CED1 !important;
+    background: #00ced1 !important;
   }
 
   .rank-medal {
@@ -864,15 +896,15 @@
 
   .counter-digit {
     background: #000;
-    color: #00FF00;
-    border: 2px ridge #00FF00;
+    color: #00ff00;
+    border: 2px ridge #00ff00;
     padding: 0.5rem;
-    font-family: 'Courier New', monospace;
+    font-family: "Courier New", monospace;
     font-size: 1.5rem;
     font-weight: bold;
     min-width: 40px;
     text-align: center;
-    text-shadow: 0 0 10px #00FF00;
+    text-shadow: 0 0 10px #00ff00;
   }
 
   /* === DIVIDERS === */
@@ -922,7 +954,7 @@
 @layer utilities {
   .loading {
     text-align: center;
-    padding: var(--spacing-xl);
+    padding: var(--spacing-lg);
     font-size: 1.2rem;
     color: var(--accent-magenta);
     font-weight: bold;
@@ -930,7 +962,7 @@
 
   .empty {
     text-align: center;
-    padding: var(--spacing-xl);
+    padding: var(--spacing-lg);
     color: #666;
     font-style: italic;
   }
@@ -938,7 +970,6 @@
   .text-center {
     text-align: center;
   }
-
 
   /* Icon GIFs */
 
@@ -1107,9 +1138,11 @@
   }
 
   .login-container {
-    padding: var(--spacing-xl) var(--spacing-md);
-    margin: var(--spacing-xl) var(--spacing-xs);
-    width: 100%;
+    padding: var(--spacing-sm);
+  }
+
+  .phone-label {
+    font-size: 1rem;
   }
 
   .interior-container {
@@ -1123,6 +1156,10 @@
   .hide-desktop {
     display: none !important;
   }
+
+  .site-awards-img {
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1130,7 +1167,6 @@
     display: block !important;
   }
 }
-
 
 /*
 	Improved screen reader only CSS class
@@ -1184,7 +1220,6 @@
   position: absolute !important;
 }
 
-
 /*
 	Prevent overflowing children from being focusable.
 	@author Django Janny
@@ -1203,17 +1238,17 @@
   left: 0;
   right: 0;
   height: 60px;
-  background: linear-gradient(180deg, #FF00FF, #0000FF);
-  border-top: 3px solid #FFFF00;
+  background: linear-gradient(180deg, #ff00ff, #0000ff);
+  border-top: 3px solid #ffff00;
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
   z-index: 100;
-  
+
   /* Respect browser UI and safe areas */
   padding-bottom: max(0px, env(safe-area-inset-bottom));
   justify-content: space-around;
   align-items: center;
   gap: 0;
-  
+
   /* Animation */
   opacity: 0;
   transition: opacity 0.4s ease-in-out;
@@ -1229,12 +1264,12 @@
   border-radius: 6px;
   padding: 0.5rem 1rem;
   margin-bottom: 1rem;
-  font-family: 'Comic Sans MS', cursive, sans-serif;
+  font-family: "Comic Sans MS", cursive, sans-serif;
 }
 
 .challenge-info-summary {
   color: #0000cc;
-  font-family: 'Comic Sans MS', cursive, sans-serif;
+  font-family: "Comic Sans MS", cursive, sans-serif;
   outline: none;
 }
 
@@ -1259,7 +1294,7 @@
   .bottom-menu {
     display: flex;
   }
-  
+
   /* Adjust body to account for fixed menu */
   body {
     padding-bottom: 60px;
@@ -1274,15 +1309,17 @@
   flex: 1;
   height: 100%;
   text-decoration: none;
-  color: #FFF;
+  color: #fff;
   background: transparent;
   border: none;
   cursor: pointer;
   font-weight: bold;
-  font-family: 'Comic Sans MS', cursive;
+  font-family: "Comic Sans MS", cursive;
   font-size: 10px;
-  transition: background-color 0.2s, transform 0.1s;
-  
+  transition:
+    background-color 0.2s,
+    transform 0.1s;
+
   /* Touch target minimum size */
   min-height: 44px;
 }
@@ -1294,7 +1331,7 @@
 
 .bottom-menu-item.active {
   background: rgba(255, 255, 0, 0.2);
-  border-bottom: 3px solid #FFFF00;
+  border-bottom: 3px solid #ffff00;
 }
 
 .bottom-menu-item:active {
@@ -1344,26 +1381,26 @@
 }
 
 .error-message {
-  background: linear-gradient(135deg, #FF0000, #FF6600);
-  color: #FFF;
+  background: linear-gradient(135deg, #ff0000, #ff6600);
+  color: #fff;
   padding: 12px 16px;
   border: 3px solid #000;
   border-radius: 4px;
   font-weight: bold;
-  font-family: 'Comic Sans MS', cursive;
+  font-family: "Comic Sans MS", cursive;
   font-size: 13px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   animation: slideIn 0.3s ease-out;
 }
 
 .success-message {
-  background: linear-gradient(135deg, #00FF00, #00CC00);
+  background: linear-gradient(135deg, #00ff00, #00cc00);
   color: #000;
   padding: 12px 16px;
   border: 3px solid #000;
   border-radius: 4px;
   font-weight: bold;
-  font-family: 'Comic Sans MS', cursive;
+  font-family: "Comic Sans MS", cursive;
   font-size: 13px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   animation: slideIn 0.3s ease-out;

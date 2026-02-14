@@ -13,64 +13,115 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
   </head>
 
-  <body style="display: flex; justify-content: center; align-items: center; min-height: 100vh">
-    <div class="login-container">
-      <h1 class="rainbow-text">WELCOME TO THE PARTY!</h1>
+  <body>
+    <main class="main-center">
+      <section class="login-section">
+        <div class="login-container">
+          <h1 class="rainbow-text">
+            WELCOME TO THE PARTY! <span id="secretArnold" class="secret-arnold">RICHTER</span>
+          </h1>
 
-      <!-- Under Construction GIF
-    <img src="images/construction.gif" alt="Under Construction" class="construction-gif" onerror="this.style.display='none'">
+          <!-- Login form with Firebase phone auth -->
+          <form id="loginForm">
+            <fieldset>
+              <legend>Sign In</legend>
+              <!-- Phone Input Step -->
+              <div id="phoneStep" class="form-group">
+                <label for="phoneInput">
+                  <img
+                    src="images/phone.gif"
+                    alt="Phone Icon"
+                    class="icon-gif icon-gif--with-text phone-label"
+                  />
+                  ENTER YOUR PHONE NUMBER
+                </label>
+                <input
+                  type="tel"
+                  inputmode="numeric"
+                  id="phoneInput"
+                  name="phone"
+                  placeholder="(959) 867-5309"
+                  maxlength="14"
+                  required
+                  autocomplete="tel"
+                  class="phone-input"
+                />
+                <p class="input-help">10-digit US phone number</p>
+                <div id="recaptchaContainer" class="recaptcha-container"></div>
+                <button type="button" id="sendOTPBtn">>>> SEND CODE <<<</button>
+              </div>
 
-    <div class="interior-container" style="text-align: center; background: #FFFF00; border: 4px dashed #FF00FF;">
-      <h2 style="color: #FF0000; margin: 0 0 1rem 0;"><img class="icon-gif icon-gif--sm" src="images/construction_sign.gif" alt="Under Construction">COMING SOON!<img class="icon-gif icon-gif--sm" src="images/construction_sign.gif" alt="Under Construction"></h2>
-      <p style="font-size: 1.2rem; margin: 0; color: #000;">The challenge zone is currently under construction! Check back soon!!!</p>
-      <p style="margin-top: 1rem;"><a href="invitation" style="color: #0000FF; text-decoration: underline; font-weight: bold;">View the Party Invitation →</a></p>
-    </div> -->
+              <!-- OTP Input Step -->
+              <div id="otpStep" class="form-group" style="display: none">
+                <label for="otpInput">✔️ ENTER THE CODE FROM YOUR TEXT</label>
+                <input
+                  type="text"
+                  id="otpInput"
+                  name="otp"
+                  placeholder="000000"
+                  maxlength="6"
+                  required
+                  autocomplete="one-time-code"
+                />
+                <p class="input-help">Check your SMS for a 6-digit code</p>
+                <button type="submit" id="verifyOTPBtn">>>> VERIFY CODE <<<</button>
+                <button type="button" id="backBtn">← BACK</button>
+              </div>
 
-      <!-- Login form with Firebase phone auth -->
-      <form id="loginForm">
-        <!-- Phone Input Step -->
-        <div id="phoneStep" class="form-group">
-          <label for="phoneInput"
-            ><img src="images/phone.gif" alt="Phone Icon" class="icon-gif icon-gif--with-text" />
-            ENTER YOUR PHONE NUMBER</label
-          >
-          <input
-            type="tel"
-            inputmode="numeric"
-            id="phoneInput"
-            name="phone"
-            placeholder="(959) 867-5309"
-            maxlength="14"
-            required
-            autocomplete="tel"
-          />
-          <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #666">10-digit US phone number</p>
-          <div id="recaptchaContainer" style="margin: 1rem 0"></div>
-          <button type="button" id="sendOTPBtn">>>> SEND CODE <<<</button>
+              <div id="error" class="error"></div>
+            </fieldset>
+          </form>
         </div>
+      </section>
+    </main>
+    <script type="module">
+      import { LoginPage } from "./js/pages/login.js";
+      (async () => {
+        try {
+          console.log("🚀 Starting login initialization...");
+          const page = new LoginPage();
+          await page.init();
+          console.log("✅ Login fully initialized");
+        } catch (err) {
+          console.error("❌ Login initialization failed:", err);
+        }
+      })();
+    </script>
+    <!-- Arnold Easter Egg-->
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const arnold = document.getElementById("secretArnold");
+        if (arnold) {
+          arnold.addEventListener("click", () => {
+            const modal = document.createElement("div");
+            modal.style.position = "fixed";
+            modal.style.top = "0";
+            modal.style.left = "0";
+            modal.style.width = "100vw";
+            modal.style.height = "100vh";
+            modal.style.background = "rgba(0,0,0,0.7)";
+            modal.style.display = "flex";
+            modal.style.flexDirection = "column";
+            modal.style.justifyContent = "center";
+            modal.style.alignItems = "center";
+            modal.style.zIndex = "9999";
 
-        <!-- OTP Input Step -->
-        <div id="otpStep" class="form-group" style="display: none">
-          <label for="otpInput">✔️ ENTER THE CODE FROM YOUR TEXT</label>
-          <input
-            type="text"
-            id="otpInput"
-            name="otp"
-            placeholder="000000"
-            maxlength="6"
-            required
-            autocomplete="one-time-code"
-          />
-          <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #666">
-            Check your SMS for a 6-digit code
-          </p>
-          <button type="submit" id="verifyOTPBtn">>>> VERIFY CODE <<<</button>
-          <button type="button" id="backBtn">← BACK</button>
+            modal.innerHTML = `
+        <div style="background:#fff; padding:2rem; border-radius:12px; text-align:center; box-shadow:0 0 24px #000;">
+          <h2>Winner! Winner! Winner!</h2>
+          <p>You found the secret Arnold easter egg.<br>
+          Don't worry it's not a tumor<br>
+          Get to the chopper and I'll be back with your prize!<br>
+          <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" style="display:inline-block; margin-top:1rem; padding:0.5rem 1.5rem; background:#ff0000; color:#fff; border-radius:6px; text-decoration:none; font-weight:bold;">Claim Prize</a>
+          <br><br>
+          <button style="margin-top:1rem;" id="close-arnold">Close</button>
         </div>
-
-        <div id="error" class="error"></div>
-      </form>
-    </div>
-    <script type="module" src="./js/login.js"></script>
+      `;
+            document.body.appendChild(modal);
+            document.getElementById("close-arnold").onclick = () => modal.remove();
+          });
+        }
+      });
+    </script>
   </body>
 </html>

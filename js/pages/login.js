@@ -1,14 +1,12 @@
-// js/login.js
 // Handles login form logic for index.html (Firebase phone auth + Supabase user creation)
-
-import { appState } from "./app.js";
-import { BasePage } from "./pages/base-page.js";
-import { firebaseAuth } from "./services/firebase-auth.js";
-import { formatPhoneInput, toE164Format, isValidUSPhone } from "./utils/phone-format.js";
+import { appState } from "../app.js";
+import { BasePage } from "./base-page.js";
+import { firebaseAuth } from "../services/firebase-auth.js";
+import { formatPhoneInput, toE164Format, isValidUSPhone } from "../utils/phone-format.js";
 
 class LoginPage extends BasePage {
   constructor() {
-    super();
+    super({ requiresAuth: false });
     this.phoneNumber = null;
     this.recaptchaReady = false;
     this.form = document.getElementById("loginForm");
@@ -86,6 +84,7 @@ class LoginPage extends BasePage {
     });
 
     this.form.addEventListener("submit", async (e) => {
+      console.log("Form submit event fired");
       e.preventDefault();
       this.errorDiv.textContent = "";
       const code = this.otpInput.value.trim();
@@ -198,9 +197,4 @@ class LoginPage extends BasePage {
   }
 }
 
-// Instantiate LoginPage on DOMContentLoaded
-window.addEventListener("DOMContentLoaded", () => {
-  const loginPage = new LoginPage();
-  loginPage.init();
-});
-verifyOTPBtn.textContent = ">>> VERIFY CODE <<<";
+export { LoginPage };
