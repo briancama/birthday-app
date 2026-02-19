@@ -23,6 +23,46 @@ class LoginPage extends BasePage {
 
   async onReady() {
     await firebaseAuth.init();
+
+    // Surface any previous auth redirect reason (helpful for debugging)
+    try {
+      const redirectRaw = sessionStorage.getItem("auth:redirect");
+      if (redirectRaw) {
+        const info = JSON.parse(redirectRaw);
+        console.warn("[LOGIN] previous auth redirect info:", info);
+        if (this.errorDiv) {
+          this.errorDiv.textContent = `Auth redirect: ${info.reason || info.message || JSON.stringify(info)}`;
+        }
+        sessionStorage.removeItem("auth:redirect");
+      }
+    } catch (e) {
+      console.warn("Failed to read auth redirect info", e);
+    }
+
+    // Clear stale localStorage if Firebase SDK does not have an active user
+    try {
+      const storedUid = localStorage.getItem("firebase_uid");
+      const sdkUser = firebaseAuth.getCurrentUser();
+      if (storedUid && !sdkUser) {
+        console.warn("[LOGIN] Clearing stale localStorage.firebase_uid (no SDK user)", storedUid);
+        localStorage.removeItem("firebase_uid");
+        localStorage.removeItem("phone_number");
+        if (this.errorDiv) {
+          this.errorDiv.textContent = "Cleared stale local session data — please sign in.";
+        }
+      }
+
+      // Show if auth redirects are currently suppressed for debugging
+      const redirectsSuppressed = sessionStorage.getItem("auth:disableRedirect") === "true";
+      if (redirectsSuppressed && this.errorDiv) {
+        this.errorDiv.textContent = (this.errorDiv.textContent ? this.errorDiv.textContent + ' | ' : '') +
+          'Redirects are currently DISABLED (debug)';
+        console.warn('[LOGIN] Auth redirects are suppressed (auth:disableRedirect=true)');
+      }
+    } catch (e) {
+      console.warn("Failed to validate/clear stale localStorage", e);
+    }
+
     this.phoneInput.addEventListener("input", (e) => {
       e.target.value = formatPhoneInput(e.target.value);
     });
@@ -134,8 +174,7 @@ class LoginPage extends BasePage {
           this.verifyOTPBtn.textContent = ">>> VERIFY CODE <<<";
           return;
         }
-        await supabase.auth.setSession({ access_token: idToken, refresh_token: idToken });
-        console.log("ID Token set for Supabase session:", idToken);
+        // No need to set Supabase session. Just use Firebase UID for user identity.
         const { data: existingUser, error: selectErr } = await supabase
           .from("users")
           .select("*")
@@ -167,17 +206,27 @@ class LoginPage extends BasePage {
           user = newUser;
         }
         localStorage.setItem("firebase_uid", firebaseUid);
+        console.log("[LOGIN] Set localStorage.firebase_uid:", firebaseUid);
         localStorage.setItem("phone_number", this.phoneNumber);
-        appState.emit("user:loaded", {
-          id: user.id,
-          firebase_uid: firebaseUid,
-          username: user.username,
-          display_name: user.display_name,
-          name: user.display_name || user.username,
-          created_at: user.created_at,
-          isAdmin: user.isAdmin || false,
-        });
-        window.location.href = "dashboard";
+        // Wait for appState.init() to confirm auth and user profile
+        const authSuccess = await appState.init();
+        if (authSuccess) {
+          // Optionally emit user:loaded for legacy listeners
+          appState.emit("user:loaded", {
+            id: user.id,
+            firebase_uid: firebaseUid,
+            username: user.username,
+            display_name: user.display_name,
+            name: user.display_name || user.username,
+            created_at: user.created_at,
+            isAdmin: user.isAdmin || false,
+          });
+          window.location.href = "dashboard";
+        } else {
+          this.errorDiv.textContent = "Authentication failed. Please try again.";
+          this.verifyOTPBtn.disabled = false;
+          this.verifyOTPBtn.textContent = ">>> VERIFY CODE <<<";
+        }
       } catch (err) {
         console.error("Verify OTP error:", err);
         this.errorDiv.textContent = err.message || "Verification failed. Try again.";
@@ -186,9 +235,11 @@ class LoginPage extends BasePage {
       }
     });
 
-    // If already signed in, redirect
-    if (appState.getCurrentUser() && appState.getUserId()) {
+    // If already signed in, validate session before redirecting
+    const alreadyAuthed = await appState.init();
+    if (alreadyAuthed) {
       window.location.href = "dashboard";
+      return;
     }
   }
 

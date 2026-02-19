@@ -59,21 +59,46 @@ class AppState extends EventTarget {
       }
     }
 
-    const firebaseUid = localStorage.getItem("firebase_uid");
-    if (!firebaseUid) {
-      this.redirectToLogin();
-      return false;
-    }
-
     // Wait for Firebase to restore session and user to be available
     await new Promise((resolve) => {
       const unsub = firebaseAuth.onAuthStateChanged((user) => {
-        if (user) {
-          unsub();
-          resolve();
-        }
+        unsub();
+        resolve();
       });
     });
+
+    // Determine firebaseUid: prefer persisted value, fall back to Firebase SDK
+    let firebaseUid =
+      localStorage.getItem("firebase_uid") || firebaseAuth.getCurrentUser()?.uid || null;
+
+    // Persist firebaseUid if it exists but wasn't stored
+    if (!localStorage.getItem("firebase_uid") && firebaseUid) {
+      try {
+        localStorage.setItem("firebase_uid", firebaseUid);
+        console.log("[APP] Persisted firebase_uid from Firebase SDK:", firebaseUid);
+      } catch (e) {
+        console.warn("[APP] Failed to persist firebase_uid to localStorage", e);
+      }
+    }
+
+    if (!firebaseUid) {
+      const redirectInfo = {
+        reason: "missing_firebase_uid",
+        firebaseUid: firebaseUid,
+        pathname: window.location.pathname,
+        time: new Date().toISOString(),
+        stack: new Error().stack,
+      };
+      try {
+        sessionStorage.setItem("auth:redirect", JSON.stringify(redirectInfo));
+      } catch (e) {
+        console.warn("Failed to write auth redirect info", e);
+      }
+      console.warn("[APP] No firebase_uid available after SDK check:", redirectInfo);
+      console.trace();
+      this.redirectToLogin();
+      return false;
+    }
 
     // Load full user profile using firebase_uid
     await this.loadUserProfile(firebaseUid);
@@ -86,12 +111,30 @@ class AppState extends EventTarget {
 
   async loadUserProfile(firebaseUid) {
     try {
-      // Fetch user profile from Supabase using firebaseUid
-      const { data, error } = await this.supabase
-        .from("users")
-        .select("*")
-        .eq("firebase_uid", firebaseUid)
-        .single();
+      let result;
+
+      if (firebaseUid) {
+        // Fetch by firebase_uid when available
+        result = await this.supabase
+          .from("users")
+          .select("*")
+          .eq("firebase_uid", firebaseUid)
+          .single();
+      } else {
+        // Fallback: try to find a user by phone_number stored in localStorage
+        const phone = localStorage.getItem("phone_number");
+        if (phone) {
+          result = await this.supabase
+            .from("users")
+            .select("*")
+            .eq("phone_number", phone)
+            .maybeSingle();
+        } else {
+          throw new Error("No firebaseUid or phone_number available to load profile");
+        }
+      }
+
+      const { data, error } = result || {};
 
       if (error || !data) {
         throw new Error(error?.message || "User not found");
@@ -126,6 +169,22 @@ class AppState extends EventTarget {
       );
       EventBus.instance.emit(EventBus.EVENTS.USER.ERROR, errorDetail);
 
+      // Persist debug info so the login page can show why we redirected
+      const redirectInfo = {
+        reason: "loadUserProfile_failed",
+        message: error.message,
+        action: "loadProfile",
+        firebaseUid,
+        time: new Date().toISOString(),
+        stack: error.stack || null,
+      };
+      try {
+        sessionStorage.setItem("auth:redirect", JSON.stringify(redirectInfo));
+      } catch (e) {
+        console.warn("Failed to write auth redirect info", e);
+      }
+      console.warn("[APP] loadUserProfile failed; redirecting to login:", redirectInfo);
+      console.trace();
       this.redirectToLogin();
     }
   }
@@ -229,6 +288,29 @@ class AppState extends EventTarget {
     });
   }
 
+  // Debug helpers to suppress redirects during investigation
+  disableRedirectsForDebug() {
+    try {
+      sessionStorage.setItem("auth:disableRedirect", "true");
+      console.warn("[APP] Auth redirects disabled (debug)");
+    } catch (e) {
+      console.warn("Failed to set debug redirect flag", e);
+    }
+  }
+
+  enableRedirects() {
+    try {
+      sessionStorage.removeItem("auth:disableRedirect");
+      console.warn("[APP] Auth redirects enabled");
+    } catch (e) {
+      console.warn("Failed to remove debug redirect flag", e);
+    }
+  }
+
+  redirectsSuppressed() {
+    return sessionStorage.getItem("auth:disableRedirect") === "true" || !!APP_CONFIG.disableAuthRedirects;
+  }
+
   // Authentication methods
   async logout() {
     const previousUser = this.currentUser;
@@ -249,6 +331,7 @@ class AppState extends EventTarget {
     }
 
     // Clear localStorage regardless of signOut result
+    console.log("[APP] Removed localStorage.firebase_uid (on logout)");
     localStorage.removeItem("firebase_uid");
     localStorage.removeItem("phone_number");
 
@@ -278,6 +361,38 @@ class AppState extends EventTarget {
     if (path === "" || path === "index.html") {
       return;
     }
+
+    // If debug suppression is enabled, do not navigate away — just log
+    if (this.redirectsSuppressed()) {
+      console.warn("[APP] redirectToLogin suppressed by debug flag. would-have-redirected-from:", path);
+      try {
+        sessionStorage.setItem(
+          "auth:redirect",
+          JSON.stringify({ reason: "redirect_suppressed", path, time: new Date().toISOString() })
+        );
+      } catch (e) {
+        /* ignore */
+      }
+      return;
+    }
+
+    // store minimal context for debugging
+    try {
+      const debug = {
+        reason: "redirectToLogin_called",
+        path,
+        time: new Date().toISOString(),
+        firebaseUid: localStorage.getItem("firebase_uid"),
+        currentUser: this.currentUser
+          ? { id: this.currentUser.id, username: this.currentUser.username }
+          : null,
+      };
+      sessionStorage.setItem("auth:redirect", JSON.stringify(debug));
+    } catch (e) {
+      /* ignore storage failures */
+    }
+    console.warn("[APP] redirectToLogin()", { path });
+    console.trace();
     window.location.href = "/";
   }
 
