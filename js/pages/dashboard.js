@@ -5,6 +5,7 @@ import { EventBus } from "../events/event-bus.js";
 import { featureFlags } from "../utils/feature-flags.js";
 import { initNavigation } from "../components/navigation.js";
 import { appState, APP_CONFIG } from "../app.js";
+import { firebaseAuth } from "../services/firebase-auth.js";
 
 class DashboardPage extends BasePage {
   constructor() {
@@ -17,6 +18,20 @@ class DashboardPage extends BasePage {
   }
 
   async onReady() {
+    // Ensure Firebase session is valid before proceeding
+    await firebaseAuth.init();
+    const sdkUser = firebaseAuth.getCurrentUser();
+    if (!sdkUser || !sdkUser.uid) {
+      this.showError("Authentication required. Please log in.");
+      window.location.href = "/";
+      return;
+    }
+
+    // Load user profile from appState
+    await appState.init();
+    this.currentUser = appState.getCurrentUser();
+    this.userId = appState.getUserId();
+
     this.setupEventListeners();
     initNavigation();
     this.setPageTitle("Dashboard");
@@ -123,13 +138,16 @@ class DashboardPage extends BasePage {
 
   updateMarqueeUsername() {
     const marqueeUsername = document.getElementById("marqueeUsername");
-    if (marqueeUsername && this.currentUser) {
+    if (marqueeUsername && this.currentUser && typeof this.currentUser.name === "string") {
       marqueeUsername.textContent = `, ${this.currentUser.name.toUpperCase()}`;
       // Fade in the username
       setTimeout(() => {
         marqueeUsername.style.transition = "opacity 0.5s ease-in";
         marqueeUsername.style.opacity = "1";
       }, 100);
+    } else if (marqueeUsername) {
+      marqueeUsername.textContent = "";
+      marqueeUsername.style.opacity = "0";
     }
   }
 

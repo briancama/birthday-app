@@ -33,6 +33,9 @@ class BasePage {
     const userLoadedCleanup = appState.on("user:loaded", (e) => {
       console.log("📡 user:loaded event received:", e.detail);
       this.handleStateChange("user-loaded", e.detail);
+      this.supabase = appState.getSupabase();
+      this.userId = appState.getUserId();
+      this.currentUser = appState.getCurrentUser();
     });
     const userErrorCleanup = appState.on("user:error", (e) => {
       console.log("❌ user:error event received:", e.detail);
@@ -41,11 +44,15 @@ class BasePage {
     const userLogoutCleanup = appState.on("user:logout", (e) => {
       console.log("👋 user:logout event received:", e.detail);
       this.handleStateChange("user-logout", e.detail);
+      this.supabase = appState.getSupabase();
+      this.userId = appState.getUserId();
+      this.currentUser = appState.getCurrentUser();
     });
     this.eventCleanup.push(userLoadedCleanup, userErrorCleanup, userLogoutCleanup);
-    this.currentUser = appState.getCurrentUser();
+    this.supabase = appState.getSupabase();
     this.userId = appState.getUserId();
-    console.log("✅ User already loaded from appState:", this.currentUser.username);
+    this.currentUser = appState.getCurrentUser();
+    console.log("✅ User already loaded from appState:", this.currentUser?.username);
   }
 
   async initAudio() {

@@ -1,113 +1,170 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Cocktail Judging - Birthday Challenge Zone</title>
+    <link rel="icon" type="image/png" href="images/favicon.jpg" />
+    <link rel="stylesheet" href="css/geocities.css" />
+    <link rel="stylesheet" href="css/components/navigation.css" />
+    <link rel="stylesheet" href="css/components/submissions.css" />
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="robots" content="noindex, nofollow">
-  <title>Cocktail Judging - Birthday Challenge Zone</title>
-  <link rel="icon" type="image/png" href="images/favicon.jpg">
-  <link rel="stylesheet" href="css/geocities.css">
-  <link rel="stylesheet" href="css/components/navigation.css">
-  <link rel="stylesheet" href="css/components/submissions.css">
-</head>
+  <body>
+    <div class="container">
+      <!-- Scrolling Marquee -->
+      <marquee behavior="scroll" direction="left" scrollamount="6">
+        *** COCKTAIL JUDGING ZONE! *** Rate each cocktail on a 1-5 scale * Pick your favorite!
+      </marquee>
 
-<body>
-  <div class="container">
-    <!-- Scrolling Marquee -->
-    <marquee behavior="scroll" direction="left" scrollamount="6">
-      *** COCKTAIL JUDGING ZONE! *** Rate each cocktail on a 1-5 scale * Pick your favorite!
-    </marquee>
+      <!-- Navigation Component -->
+      <nav class="site-navigation">
+        <!-- Mobile Menu Toggle -->
+        <button class="mobile-menu-toggle" data-sound="menu" aria-label="Toggle navigation menu">
+          <span class="hamburger-icon">☰</span>
+        </button>
 
-    <!-- Navigation Component -->
-    <nav class="site-navigation">
-      <!-- Mobile Menu Toggle -->
-      <button class="mobile-menu-toggle" data-sound="menu" aria-label="Toggle navigation menu">
-        <span class="hamburger-icon">☰</span>
-      </button>
-
-      <!-- Page Title / User Info -->
-      <div class="nav-user-info">
-        <div class="user-welcome">
-          <img src="images/star_icon.gif" alt="star" class="icon-gif hide-mobile">
-          <span data-nav="page-title">Cocktail Judging</span>
-          <img src="images/star_icon.gif" alt="star" class="icon-gif">
+        <!-- Page Title / User Info -->
+        <div class="nav-user-info">
+          <div class="user-welcome">
+            <img src="images/star_icon.gif" alt="star" class="icon-gif hide-mobile" />
+            <span data-nav="page-title">Cocktail Judging</span>
+            <img src="images/star_icon.gif" alt="star" class="icon-gif" />
+          </div>
         </div>
-      </div>
 
-      <!-- Navigation Menu -->
-      <div class="nav-menu">
-        <!-- Navigation Links -->
-        <div class="nav-tabs">
-          <a href="dashboard" class="nav-tab" data-sound="menu" data-page="dashboard">
-            <img src="images/home.gif" alt="home" class="icon-gif icon-gif--lg icon-gif--with-text">
-            <span>DASHBOARD</span>
-          </a>
-          <a href="challenges-submit" class="nav-tab" data-sound="menu" data-page="challenges-submit">
-            <img src="images/star_icon.gif" alt="star" class="icon-gif icon-gif--with-text">
-            <span>SUBMIT CHALLENGE</span>
-          </a>
-          <a href="leaderboard" class="nav-tab" data-sound="menu" data-page="leaderboard">
-            <img src="images/trophy.gif" alt="trophy" class="icon-gif icon-gif--with-text">
-            <span>LEADERBOARD</span>
-          </a>
-          <a href="cocktail-judging" class="nav-tab active" data-sound="menu" data-page="cocktail-judging">
-            <img src="images/cocktail_stirrer.gif" alt="cocktail" class="icon-gif icon-gif--with-text">
-            <span>JUDGE COCKTAILS</span>
-          </a>
-          <a href="admin-approvals" class="nav-tab" data-sound="menu" data-page="admin-approvals" data-admin-only style="display: none;">
-            <img src="images/star_icon.gif" alt="admin" class="icon-gif icon-gif--with-text">
-            <span>🔐 ADMIN</span>
-          </a>
-          <button class="nav-tab logout-btn">
-            <img src="images/logout.gif" alt="logout" class="icon-gif icon-gif--lg icon-gif--with-text">
-            <span>LOGOUT</span>
-          </button>
+        <!-- Navigation Menu -->
+        <div class="nav-menu">
+          <!-- Navigation Links -->
+          <div class="nav-tabs">
+            <a href="dashboard" class="nav-tab" data-sound="menu" data-page="dashboard">
+              <img
+                src="images/home.gif"
+                alt="home"
+                class="icon-gif icon-gif--lg icon-gif--with-text"
+              />
+              <span>DASHBOARD</span>
+            </a>
+            <a
+              href="challenges-submit"
+              class="nav-tab"
+              data-sound="menu"
+              data-page="challenges-submit"
+            >
+              <img src="images/star_icon.gif" alt="star" class="icon-gif icon-gif--with-text" />
+              <span>SUBMIT CHALLENGE</span>
+            </a>
+            <a href="leaderboard" class="nav-tab" data-sound="menu" data-page="leaderboard">
+              <img src="images/trophy.gif" alt="trophy" class="icon-gif icon-gif--with-text" />
+              <span>LEADERBOARD</span>
+            </a>
+            <a
+              href="cocktail-judging"
+              class="nav-tab active"
+              data-sound="menu"
+              data-page="cocktail-judging"
+            >
+              <img
+                src="images/cocktail_stirrer.gif"
+                alt="cocktail"
+                class="icon-gif icon-gif--with-text"
+              />
+              <span>JUDGE COCKTAILS</span>
+            </a>
+            <a
+              href="admin-approvals"
+              class="nav-tab"
+              data-sound="menu"
+              data-page="admin-approvals"
+              data-admin-only
+              style="display: none"
+            >
+              <img src="images/star_icon.gif" alt="admin" class="icon-gif icon-gif--with-text" />
+              <span>🔐 ADMIN</span>
+            </a>
+            <button class="nav-tab logout-btn">
+              <img
+                src="images/logout.gif"
+                alt="logout"
+                class="icon-gif icon-gif--lg icon-gif--with-text"
+              />
+              <span>LOGOUT</span>
+            </button>
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
 
-    <div class="section">
-      <h1 class="text-shadow-light" style="text-align:left;">COCKTAIL ENTRIES</h1>
-      <p style="max-width: 600px; margin-bottom: 1rem;">Rate each cocktail on the rubric criteria (1-5 scale), then pick your favorite to crown the champion!</p>
-      
-      <!-- Rubric Button + Progress Indicator Row -->
-      <div style="min-height: 60px; display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem;z-index: 10;">
-        <a href="cocktail-rubric.html" target="_blank" class="btn btn-secondary" style="flex-shrink: 0;">RUBRIC</a>
-        <div id="judgingStatus" style="padding: 0.5rem 1rem; background: rgba(255, 255, 0, 0.9); border: 2px solid #000; font-weight: bold; font-size: 0.9rem;">
-          <p style="margin: 0;">Loading...</p>
+      <div class="section">
+        <h1 class="text-shadow-light" style="text-align: left">COCKTAIL ENTRIES</h1>
+        <p style="max-width: 600px; margin-bottom: 1rem">
+          Rate each cocktail on the rubric criteria (1-5 scale), then pick your favorite to crown
+          the champion!
+        </p>
+
+        <!-- Rubric Button + Progress Indicator Row -->
+        <div
+          style="
+            min-height: 60px;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            z-index: 10;
+          "
+        >
+          <a
+            href="cocktail-rubric.html"
+            target="_blank"
+            class="btn btn-secondary"
+            style="flex-shrink: 0"
+            >RUBRIC</a
+          >
+          <div
+            id="judgingStatus"
+            style="
+              padding: 0.5rem 1rem;
+              background: rgba(255, 255, 0, 0.9);
+              border: 2px solid #000;
+              font-weight: bold;
+              font-size: 0.9rem;
+            "
+          >
+            <p style="margin: 0">Loading...</p>
+          </div>
         </div>
-      </div>
-      
-      <div id="entriesList" class="entries-grid">
-        <div class="loading">Loading entries...</div>
+
+        <div id="entriesList" class="entries-grid">
+          <div class="loading">Loading entries...</div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <script type="module">
-    import { appState } from './js/app.js';
-    import { initNavigation } from './js/components/navigation.js';
-    import { CocktailJudgingPage } from './js/pages/cocktail-judging.js';
+    <script type="module">
+      import { appState } from "./js/app.js";
+      import { initNavigation } from "./js/components/navigation.js";
+      import { CocktailJudgingPage } from "./js/pages/cocktail-judging.js";
 
-    // Initialize application
-    async function init() {
-      const isAuthenticated = await appState.init();
+      // Initialize application
+      async function init() {
+        const isAuthenticated = await appState.init();
 
-      if (isAuthenticated) {
-        // Initialize navigation controller
-        initNavigation();
+        if (isAuthenticated) {
+          // Initialize navigation controller
+          initNavigation();
 
-        const judgingPage = new CocktailJudgingPage();
-        await judgingPage.init();
+          const judgingPage = new CocktailJudgingPage();
+          await judgingPage.init();
+        }
       }
-    }
 
-    init();
-  </script>
-  <!-- Add before closing </body> -->
-  <bottom-menu></bottom-menu>
-  <script type="module" src="js/components/bottom-menu.js"></script>
-</body>
-
+      init();
+    </script>
+    <!-- Add before closing </body> -->
+    <bottom-menu></bottom-menu>
+    <script type="module" src="js/components/bottom-menu.js"></script>
+  </body>
 </html>
