@@ -1,179 +1,243 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Challenge Workshop - Birthday Challenge Zone</title>
+    <link rel="icon" type="image/png" href="images/favicon.jpg" />
+    <link rel="stylesheet" href="css/geocities.css" />
+    <link rel="stylesheet" href="css/components/navigation.css" />
+    <link rel="stylesheet" href="css/components/forms.css" />
+    <link rel="stylesheet" href="css/components/submissions.css" />
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="robots" content="noindex, nofollow">
-  <title>Challenge Workshop - Birthday Challenge Zone</title>
-  <link rel="icon" type="image/png" href="images/favicon.jpg">
-  <link rel="stylesheet" href="css/geocities.css">
-  <link rel="stylesheet" href="css/components/navigation.css">
-  <link rel="stylesheet" href="css/components/forms.css">
-  <link rel="stylesheet" href="css/components/submissions.css">
-</head>
+  <body>
+    <div class="container">
+      <marquee class="marquee" behavior="scroll" direction="left">
+        HELLO <span data-marquee="username">FRIEND</span> SUBMIT CHALLENGES HERE FOR OTHER ATTENDEES
+        TO COMPLETE!
+      </marquee>
+      <!-- Navigation Component -->
+      <nav class="site-navigation">
+        <!-- Mobile Menu Toggle -->
+        <button class="mobile-menu-toggle" data-sound="menu" aria-label="Toggle navigation menu">
+          <span class="hamburger-icon">☰</span>
+        </button>
 
-<body>
-  <div class="container">
-
-    <marquee class="marquee" behavior="scroll" direction="left">
-      HELLO <span data-marquee="username">FRIEND</span> SUBMIT CHALLENGES HERE FOR OTHER ATTENDEES TO COMPLETE!
-    </marquee>
-    <!-- Navigation Component -->
-    <nav class="site-navigation">
-      <!-- Mobile Menu Toggle -->
-      <button class="mobile-menu-toggle" data-sound="menu" aria-label="Toggle navigation menu">
-        <span class="hamburger-icon">☰</span>
-      </button>
-
-      <!-- Page Title / User Info -->
-      <div class="nav-user-info">
-        <div class="user-welcome">
-          <img src="images/star_icon.gif" alt="star" class="icon-gif hide-mobile">
-          <span data-nav="page-title">Challenge Workshop</span>
-          <img src="images/star_icon.gif" alt="star" class="icon-gif">
+        <!-- Page Title / User Info -->
+        <div class="nav-user-info">
+          <div class="user-welcome">
+            <img src="images/star_icon.gif" alt="star" class="icon-gif hide-mobile" />
+            <span data-nav="page-title">Challenge Workshop</span>
+            <img src="images/star_icon.gif" alt="star" class="icon-gif" />
+          </div>
         </div>
-      </div>
 
-      <!-- Navigation Menu -->
-      <div class="nav-menu">
-        <!-- Navigation Links -->
-        <div class="nav-tabs">
-          <a href="dashboard" class="nav-tab" data-sound="menu" data-page="dashboard">
-            <img src="images/home.gif" alt="home" class="icon-gif icon-gif--lg icon-gif--with-text">
-            <span>DASHBOARD</span>
-          </a>
-          <a href="challenges-submit" class="nav-tab active" data-sound="menu" data-page="challenges-submit">
-            <img src="images/star_icon.gif" alt="star" class="icon-gif icon-gif--with-text">
-            <span>SUBMIT CHALLENGE</span>
-          </a>
-          <a href="leaderboard" class="nav-tab" data-sound="menu" data-page="leaderboard">
-            <img src="images/trophy.gif" alt="trophy" class="icon-gif icon-gif--with-text">
-            <span>LEADERBOARD</span>
-          </a>
-          <a href="cocktail-judging" class="nav-tab" data-sound="menu" data-page="cocktail-judging">
-            <img src="images/cocktail_stirrer.gif" alt="cocktail" class="icon-gif icon-gif--with-text">
-            <span>JUDGE COCKTAILS</span>
-          </a>
-          <a href="admin-approvals" class="nav-tab" data-sound="menu" data-page="admin-approvals" data-admin-only style="display: none;">
-            <img src="images/star_icon.gif" alt="admin" class="icon-gif icon-gif--with-text">
-            <span>🔐 ADMIN</span>
-          </a>
-          <button class="nav-tab logout-btn">
-            <img src="images/logout.gif" alt="logout" class="icon-gif icon-gif--lg icon-gif--with-text">
-            <span>LOGOUT</span>
-          </button>
+        <!-- Navigation Menu -->
+        <div class="nav-menu">
+          <!-- Navigation Links -->
+          <div class="nav-tabs">
+            <a href="dashboard" class="nav-tab" data-sound="menu" data-page="dashboard">
+              <img
+                src="images/home.gif"
+                alt="home"
+                class="icon-gif icon-gif--lg icon-gif--with-text"
+              />
+              <span>DASHBOARD</span>
+            </a>
+            <a
+              href="challenges-submit"
+              class="nav-tab active"
+              data-sound="menu"
+              data-page="challenges-submit"
+            >
+              <img src="images/star_icon.gif" alt="star" class="icon-gif icon-gif--with-text" />
+              <span>SUBMIT CHALLENGE</span>
+            </a>
+            <a href="leaderboard" class="nav-tab" data-sound="menu" data-page="leaderboard">
+              <img src="images/trophy.gif" alt="trophy" class="icon-gif icon-gif--with-text" />
+              <span>LEADERBOARD</span>
+            </a>
+            <a
+              href="cocktail-judging"
+              class="nav-tab"
+              data-sound="menu"
+              data-page="cocktail-judging"
+            >
+              <img
+                src="images/cocktail_stirrer.gif"
+                alt="cocktail"
+                class="icon-gif icon-gif--with-text"
+              />
+              <span>JUDGE COCKTAILS</span>
+            </a>
+            <a
+              href="admin-approvals"
+              class="nav-tab"
+              data-sound="menu"
+              data-page="admin-approvals"
+              data-admin-only
+              style="display: none"
+            >
+              <img src="images/star_icon.gif" alt="admin" class="icon-gif icon-gif--with-text" />
+              <span>🔐 ADMIN</span>
+            </a>
+            <button class="nav-tab logout-btn">
+              <img
+                src="images/logout.gif"
+                alt="logout"
+                class="icon-gif icon-gif--lg icon-gif--with-text"
+              />
+              <span>LOGOUT</span>
+            </button>
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
 
-    <div class="section">
-
-      <button id="addChallengeBtn" class="add-challenge-btn">✨ ADD CHALLENGE ✨</button>
-      <!-- Retro collapsible details for challenge info -->
-      <details class="challenge-info-details" style="margin: 1rem 0;">
-        <summary class="challenge-info-summary" style="cursor: pointer; font-weight: bold; font-size: 1.1rem;">
-          <img src="images/question.gif" alt="?" class="icon-gif" style="vertical-align: middle; margin-right: 6px;">
-          What are Challenges?
-        </summary>
-        <div class="challenge-info-content" style="padding: 1rem 0 0 0;">
-          <p style="margin: 0.5rem 0;">
-            Challenges are quick, fun activities that take <strong>30 seconds to 1 minute</strong> to complete. During the weekend, anyone can challenge you to perform one of these predetermined tasks—check the app and give it your best shot!
-          </p>
-          <p style="margin: 0.5rem 0;">
-            <strong>Have an idea?</strong> I've got plenty of challenges already created, but feel free to submit your own! Whether it's a general challenge for anyone or a specific one tailored for a particular person, you can add your challenge from this page.
-          </p>
-          <p style="margin: 0.5rem 0;">
-            <strong>What is Brian Mode?</strong> Some challenges can be marked as <span style="color: #cc00cc; font-weight: bold;">Brian Mode</span>! If you select <b>VS Brian</b>, Brian will be assigned the challenge as your rival—if you succeed, he must fail (and vice versa). If you select <b>WITH Brian</b>, Brian will be assigned a cooperative challenge and you’ll both try to complete it together. Look, I love a little competition and might just be looking for a few extra points to help me win this totally not rigged event.<img src="images/silly.gif" alt="wink" class="icon-gif" class="icon-gif icon-gif--with-text">
-          </p>
-          <p style="margin: 0.5rem 0; font-style: italic; font-size: 0.9rem; text-align: center;">
-            Once the event starts, be ready to accept some challenges and climb the leaderboard!
-          </p>
+      <div class="section">
+        <button id="addChallengeBtn" class="add-challenge-btn">✨ ADD CHALLENGE ✨</button>
+        <!-- Retro collapsible details for challenge info -->
+        <details class="challenge-info-details" style="margin: 1rem 0">
+          <summary
+            class="challenge-info-summary"
+            style="cursor: pointer; font-weight: bold; font-size: 1.1rem"
+          >
+            <img
+              src="images/question.gif"
+              alt="?"
+              class="icon-gif"
+              style="vertical-align: middle; margin-right: 6px"
+            />
+            What are Challenges?
+          </summary>
+          <div class="challenge-info-content" style="padding: 1rem 0 0 0">
+            <p style="margin: 0.5rem 0">
+              Challenges are quick, fun activities that take
+              <strong>30 seconds to 1 minute</strong> to complete. During the weekend, anyone can
+              challenge you to perform one of these predetermined tasks—check the app and give it
+              your best shot!
+            </p>
+            <p style="margin: 0.5rem 0">
+              <strong>Have an idea?</strong> I've got plenty of challenges already created, but feel
+              free to submit your own! Whether it's a general challenge for anyone or a specific one
+              tailored for a particular person, you can add your challenge from this page.
+            </p>
+            <p style="margin: 0.5rem 0">
+              <strong>What is Brian Mode?</strong> Some challenges can be marked as
+              <span style="color: #cc00cc; font-weight: bold">Brian Mode</span>! If you select
+              <b>VS Brian</b>, Brian will be assigned the challenge as your rival—if you succeed, he
+              must fail (and vice versa). If you select <b>WITH Brian</b>, Brian will be assigned a
+              cooperative challenge and you’ll both try to complete it together. Look, I love a
+              little competition and might just be looking for a few extra points to help me win
+              this totally not rigged event.<img
+                src="images/silly.gif"
+                alt="wink"
+                class="icon-gif"
+                class="icon-gif icon-gif--with-text"
+              />
+            </p>
+            <p style="margin: 0.5rem 0; font-style: italic; font-size: 0.9rem; text-align: center">
+              Once the event starts, be ready to accept some challenges and climb the leaderboard!
+            </p>
+          </div>
+        </details>
+        <h2 class="text-shadow-light">Your Submitted Challenges</h2>
+        <div id="submissionsContainer">
+          <div class="empty-state">Loading your submissions...</div>
         </div>
-      </details>
-      <h2 class="text-shadow-light">Your Submitted Challenges</h2>
-      <div id="submissionsContainer">
-        <div class="empty-state">Loading your submissions...</div>
       </div>
     </div>
-  </div>
 
-  <!-- Challenge Submission Modal -->
-  <div id="challengeModal" class="challenge-modal">
-    <div class="challenge-modal-overlay"></div>
-    <div class="challenge-modal-content">
-      <button id="closeChallengeModal" class="close-btn">✖️</button>
+    <!-- Challenge Submission Modal -->
+    <div id="challengeModal" class="challenge-modal">
+      <div class="challenge-modal-overlay"></div>
+      <div class="challenge-modal-content">
+        <button id="closeChallengeModal" class="close-btn">✖️</button>
 
-      <h2 class="text-center rainbow-text">SUBMIT A NEW CHALLENGE!</h2>
+        <h2 class="text-center rainbow-text">NEW CHALLENGE!</h2>
 
-      <form id="challengeForm">
-        <div class="form-group">
-          <label for="challengeName">Challenge Name *</label>
-          <input type="text" id="challengeName" required maxlength="100">
-          <small>Max 100 characters</small>
-        </div>
+        <form id="challengeForm">
+          <div class="form-group">
+            <label for="challengeName">Challenge Name *</label>
+            <input type="text" id="challengeName" required maxlength="100" />
+            <small>Max 100 characters</small>
+          </div>
 
-        <div class="form-group">
-          <label for="challengeDescription">Challenge Description *</label>
-          <textarea id="challengeDescription" required maxlength="500"></textarea>
-          <small>Max 500 characters. Describe what needs to be done.</small>
-        </div>
+          <div class="form-group">
+            <label for="challengeDescription">Challenge Description *</label>
+            <textarea id="challengeDescription" required maxlength="500"></textarea>
+            <small>Max 500 characters. Describe what needs to be done.</small>
+          </div>
 
-        <div class="form-group">
-          <label for="challengeMetric">Success Metric (Optional)</label>
-          <input type="text" id="challengeMetric" maxlength="200">
-          <small>Max 200 characters. How will success be measured? Leave blank if not applicable.</small>
-        </div>
+          <div class="form-group">
+            <label for="challengeMetric">Success Metric (Optional)</label>
+            <input type="text" id="challengeMetric" maxlength="200" />
+            <small
+              >Max 200 characters. How will success be measured? Leave blank if not
+              applicable.</small
+            >
+          </div>
 
-        <div class="form-group" id="brianModeGroup">
-          <label for="brianMode">Brian Participation (Optional)</label>
-          <select id="brianMode">
-            <option value="" selected>None (Regular Challenge)</option>
-            <option value="vs">⚔️ VS Brian (Competitive)</option>
-            <option value="with">🤝 WITH Brian (Collaborative)</option>
-          </select>
-          <small><strong>VS:</strong> Brian must fail if you succeed (and vice versa) • <strong>WITH:</strong> Brian must complete the same challenge as you</small>
-        </div>
+          <div class="form-group" id="brianModeGroup">
+            <label for="brianMode">Brian Participation (Optional)</label>
+            <select id="brianMode">
+              <option value="" selected>None (Regular Challenge)</option>
+              <option value="vs">⚔️ VS Brian (Competitive)</option>
+              <option value="with">🤝 WITH Brian (Collaborative)</option>
+            </select>
+            <small
+              ><strong>VS:</strong> Brian must fail if you succeed (and vice versa) •
+              <strong>WITH:</strong> Brian must complete the same challenge as you</small
+            >
+          </div>
 
-        <div class="form-group">
-          <label for="assignedTo">Suggest For (Optional)</label>
-          <input type="text" id="assignedTo" list="usersDatalist" placeholder="Start typing a username...">
-          <datalist id="usersDatalist"></datalist>
-          <small>Leave blank for anyone to accept, or suggest for a specific user.</small>
-        </div>
+          <div class="form-group">
+            <label for="assignedTo">Suggest For (Optional)</label>
+            <input
+              type="text"
+              id="assignedTo"
+              list="usersDatalist"
+              placeholder="Start typing a username..."
+            />
+            <datalist id="usersDatalist"></datalist>
+            <small>Leave blank for anyone to accept, or suggest for a specific user.</small>
+          </div>
 
-        <button type="submit" id="submitChallengeBtn">🚀 SUBMIT CHALLENGE 🚀</button>
+          <button type="submit" id="submitChallengeBtn">🚀 SUBMIT CHALLENGE 🚀</button>
 
-        <div id="formError" class="error-message"></div>
-        <div id="formSuccess" class="success-message"></div>
-      </form>
+          <div id="formError" class="error-message"></div>
+          <div id="formSuccess" class="success-message"></div>
+        </form>
+      </div>
     </div>
-  </div>
 
-  <script type="module">
-    import { appState } from './js/app.js';
-    import { initNavigation } from './js/components/navigation.js';
-    import { ChallengesSubmitPage } from './js/pages/challenges-submit.js';
+    <script type="module">
+      import { appState } from "./js/app.js";
+      import { initNavigation } from "./js/components/navigation.js";
+      import { ChallengesSubmitPage } from "./js/pages/challenges-submit.js";
 
-    async function init() {
-      // Initialize app state (handles auth and navigation)
-      const isAuthenticated = await appState.init();
+      async function init() {
+        // Initialize app state (handles auth and navigation)
+        const isAuthenticated = await appState.init();
 
-      if (isAuthenticated) {
-        // Initialize navigation controller
-        initNavigation();
+        if (isAuthenticated) {
+          // Initialize navigation controller
+          initNavigation();
 
-        // Initialize page
-        const page = new ChallengesSubmitPage();
-        await page.init();
+          // Initialize page
+          const page = new ChallengesSubmitPage();
+          await page.init();
+        }
       }
-    }
 
-    init();
-  </script>
-  <!-- Add before closing </body> -->
-  <bottom-menu></bottom-menu>
-  <script type="module" src="js/components/bottom-menu.js"></script>
-</body>
-
+      init();
+    </script>
+    <!-- Add before closing </body> -->
+    <bottom-menu></bottom-menu>
+    <script type="module" src="js/components/bottom-menu.js"></script>
+  </body>
 </html>

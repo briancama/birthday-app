@@ -114,7 +114,7 @@ this.currentUser = appState.getCurrentUser(); // loaded from Supabase
 
 ### Development Workflow
 
-1. **Local Server**: `python3 -m http.server 8000` (add as `serve` alias)
+1. **Local Server**: Use Node.js Express server for reliability: `node server.js` (see docs/LOCAL_SERVER_SETUP.md).
 2. **Config Setup**: Copy and modify `js/config.js` with your Supabase credentials
 3. **Supabase Setup**: Run SQL from project docs to initialize database schema
 4. **File Editing**: Use absolute paths from workspace root in all imports

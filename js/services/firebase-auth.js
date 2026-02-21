@@ -27,7 +27,26 @@ class FirebaseAuthService {
       this.app = firebase.initializeApp(FIREBASE_CONFIG);
       this.auth = firebase.auth();
 
-      console.log("✅ Firebase initialized");
+      // Ensure persistence so sessions survive reloads (LOCAL persistence)
+      try {
+        if (this.auth.setPersistence) {
+          await this.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+          console.log("✅ Firebase auth persistence set to LOCAL");
+        }
+      } catch (pErr) {
+        console.warn("⚠️ Could not set Firebase persistence:", pErr);
+      }
+
+      // Wait for Firebase Auth initial state to be determined
+      await new Promise((resolve) => {
+        const unsub = this.auth.onAuthStateChanged((user) => {
+          console.log("[firebaseAuth] initial auth state:", !!user);
+          unsub();
+          resolve();
+        });
+      });
+
+      console.log("✅ Firebase initialized", { currentUser: this.auth.currentUser });
       return this;
     } catch (err) {
       console.error("✖️ Firebase init failed:", err);

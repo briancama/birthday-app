@@ -1,5 +1,6 @@
 import { BasePage } from "./base-page.js";
 import { SubmissionTable } from "../components/submission.js";
+import { firebaseAuth } from "../services/firebase-auth.js";
 import { escapeHTML } from "../utils/text-format.js";
 
 export class ChallengesSubmitPage extends BasePage {

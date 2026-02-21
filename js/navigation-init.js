@@ -1,43 +1,33 @@
 // Navigation initialization and user management
 
-import { SiteNavigation } from './components/navigation.js';
-import { SUPABASE_CONFIG } from './config.js';
+import { SiteNavigation } from "./components/navigation.js";
+import { appState } from "./app.js";
 
-// Initialize navigation with current user
-document.addEventListener('DOMContentLoaded', async () => {
-    const navigation = document.querySelector('site-navigation');
+// Initialize navigation with current user (driven by appState; guest-friendly)
+document.addEventListener("DOMContentLoaded", () => {
+  const navigation = document.querySelector("site-navigation");
+  if (!navigation) return;
 
-    if (navigation) {
-        // Get current user from session storage
-        const currentUserData = sessionStorage.getItem('currentUser');
+  // Immediately set whatever appState currently has (may be null -> guest)
+  navigation.setCurrentUser(appState.getCurrentUser() || null);
 
-        if (currentUserData) {
-            try {
-                const currentUser = JSON.parse(currentUserData);
-                navigation.setCurrentUser(currentUser);
-            } catch (error) {
-                console.error('Error parsing user data:', error);
-                // Redirect to login if user data is corrupted
-                window.location.href = '/';
-            }
-        } else {
-            // No user found, redirect to login
-            window.location.href = 'index.html';
-        }
-    }
+  // Keep navigation in sync with global state changes
+  appState.on("user:loaded", (e) => navigation.setCurrentUser(e.detail));
+  appState.on("user:logout", () => navigation.setCurrentUser(null));
+  appState.on("user:error", () => navigation.setCurrentUser(null));
 });
 
 // Export navigation utilities
 export function updateNavigationUser(userData) {
-    const navigation = document.querySelector('site-navigation');
-    if (navigation) {
-        navigation.setCurrentUser(userData);
-    }
+  const navigation = document.querySelector("site-navigation");
+  if (navigation) {
+    navigation.setCurrentUser(userData);
+  }
 }
 
 export function clearNavigationUser() {
-    const navigation = document.querySelector('site-navigation');
-    if (navigation) {
-        navigation.setCurrentUser(null);
-    }
+  const navigation = document.querySelector("site-navigation");
+  if (navigation) {
+    navigation.setCurrentUser(null);
+  }
 }

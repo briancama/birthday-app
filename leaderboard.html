@@ -1,113 +1,148 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Leaderboard - Birthday Challenge Zone</title>
+    <link rel="icon" type="image/png" href="images/favicon.jpg" />
+    <link rel="stylesheet" href="css/geocities.css" />
+    <link rel="stylesheet" href="css/components/navigation.css" />
+    <link rel="stylesheet" href="css/components/leaderboard.css" />
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="robots" content="noindex, nofollow">
-  <title>Leaderboard - Birthday Challenge Zone</title>
-  <link rel="icon" type="image/png" href="images/favicon.jpg">
-  <link rel="stylesheet" href="css/geocities.css">
-  <link rel="stylesheet" href="css/components/navigation.css">
-  <link rel="stylesheet" href="css/components/leaderboard.css">
-</head>
+  <body>
+    <div class="container">
+      <!-- Scrolling Marquee -->
+      <marquee behavior="scroll" direction="left" scrollamount="6">
+        *** LEADERBOARD! *** Who's on top? * Check your ranking! * Competition is fierce! ***
+      </marquee>
 
-<body>
-  <div class="container">
-    <!-- Scrolling Marquee -->
-    <marquee behavior="scroll" direction="left" scrollamount="6">
-      *** LEADERBOARD! *** Who's on top? * Check your ranking! * Competition is fierce! ***
-    </marquee>
+      <!-- Navigation Component -->
+      <nav class="site-navigation">
+        <!-- Mobile Menu Toggle -->
+        <button class="mobile-menu-toggle" data-sound="menu" aria-label="Toggle navigation menu">
+          <span class="hamburger-icon">☰</span>
+        </button>
 
-    <!-- Navigation Component -->
-    <nav class="site-navigation">
-      <!-- Mobile Menu Toggle -->
-      <button class="mobile-menu-toggle" data-sound="menu" aria-label="Toggle navigation menu">
-        <span class="hamburger-icon">☰</span>
-      </button>
-
-      <!-- Page Title / User Info -->
-      <div class="nav-user-info">
-        <div class="user-welcome">
-          <img src="images/star_icon.gif" alt="star" class="icon-gif hide-mobile">
-          <span data-nav="page-title">Leaderboard</span>
-          <img src="images/star_icon.gif" alt="star" class="icon-gif">
+        <!-- Page Title / User Info -->
+        <div class="nav-user-info">
+          <div class="user-welcome">
+            <img src="images/star_icon.gif" alt="star" class="icon-gif hide-mobile" />
+            <span data-nav="page-title">Leaderboard</span>
+            <img src="images/star_icon.gif" alt="star" class="icon-gif" />
+          </div>
         </div>
-      </div>
 
-      <!-- Navigation Menu -->
-      <div class="nav-menu">
-        <!-- Navigation Links -->
-        <div class="nav-tabs">
-          <a href="dashboard" class="nav-tab" data-sound="menu" data-page="dashboard">
-            <img src="images/home.gif" alt="home" class="icon-gif icon-gif--lg icon-gif--with-text">
-            <span>DASHBOARD</span>
-          </a>
-          <a href="challenges-submit" class="nav-tab" data-sound="menu" data-page="challenges-submit">
-            <img src="images/star_icon.gif" alt="star" class="icon-gif icon-gif--with-text">
-            <span>SUBMIT CHALLENGE</span>
-          </a>
-          <a href="leaderboard" class="nav-tab active" data-sound="menu" data-page="leaderboard">
-            <img src="images/trophy.gif" alt="trophy" class="icon-gif icon-gif--with-text">
-            <span>LEADERBOARD</span>
-          </a>
-          <a href="cocktail-judging" class="nav-tab" data-sound="menu" data-page="cocktail-judging">
-            <img src="images/cocktail_stirrer.gif" alt="cocktail" class="icon-gif icon-gif--with-text">
-            <span>JUDGE COCKTAILS</span>
-          </a>
-          <a href="admin-approvals" class="nav-tab" data-sound="menu" data-page="admin-approvals" data-admin-only style="display: none;">
-            <img src="images/star_icon.gif" alt="admin" class="icon-gif icon-gif--with-text">
-            <span>🔐 ADMIN</span>
-          </a>
-          <button class="nav-tab logout-btn">
-            <img src="images/logout.gif" alt="logout" class="icon-gif icon-gif--lg icon-gif--with-text">
-            <span>LOGOUT</span>
-          </button>
+        <!-- Navigation Menu -->
+        <div class="nav-menu">
+          <!-- Navigation Links -->
+          <div class="nav-tabs">
+            <a href="dashboard" class="nav-tab" data-sound="menu" data-page="dashboard">
+              <img
+                src="images/home.gif"
+                alt="home"
+                class="icon-gif icon-gif--lg icon-gif--with-text"
+              />
+              <span>DASHBOARD</span>
+            </a>
+            <a
+              href="challenges-submit"
+              class="nav-tab"
+              data-sound="menu"
+              data-page="challenges-submit"
+            >
+              <img src="images/star_icon.gif" alt="star" class="icon-gif icon-gif--with-text" />
+              <span>SUBMIT CHALLENGE</span>
+            </a>
+            <a href="leaderboard" class="nav-tab active" data-sound="menu" data-page="leaderboard">
+              <img src="images/trophy.gif" alt="trophy" class="icon-gif icon-gif--with-text" />
+              <span>LEADERBOARD</span>
+            </a>
+            <a
+              href="cocktail-judging"
+              class="nav-tab"
+              data-sound="menu"
+              data-page="cocktail-judging"
+            >
+              <img
+                src="images/cocktail_stirrer.gif"
+                alt="cocktail"
+                class="icon-gif icon-gif--with-text"
+              />
+              <span>JUDGE COCKTAILS</span>
+            </a>
+            <a
+              href="admin-approvals"
+              class="nav-tab"
+              data-sound="menu"
+              data-page="admin-approvals"
+              data-admin-only
+              style="display: none"
+            >
+              <img src="images/star_icon.gif" alt="admin" class="icon-gif icon-gif--with-text" />
+              <span>🔐 ADMIN</span>
+            </a>
+            <button class="nav-tab logout-btn">
+              <img
+                src="images/logout.gif"
+                alt="logout"
+                class="icon-gif icon-gif--lg icon-gif--with-text"
+              />
+              <span>LOGOUT</span>
+            </button>
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
 
-    <div class="section">
-      <div class="leaderboard-header">
-        <h2 class="text-shadow-light">TOP PLAYERS<img src="images/trophy.gif" alt="Trophy" class="trophy-gif"></h2>
-        <div class="leaderboard-controls">
-          <button id="refreshButton" class="refresh-btn"><img src="images/refresh.gif" alt="Refresh" class="icon-gif icon-gif--with-text"> <span class="refresh-text">Refresh</span></button>
-          <div id="lastUpdated" class="last-updated"></div>
+      <div class="section">
+        <div class="leaderboard-header">
+          <h2 class="text-shadow-light">
+            TOP PLAYERS<img src="images/trophy.gif" alt="Trophy" class="trophy-gif" />
+          </h2>
+          <div class="leaderboard-controls">
+            <button id="refreshButton" class="refresh-btn">
+              <img src="images/refresh.gif" alt="Refresh" class="icon-gif icon-gif--with-text" />
+              <span class="refresh-text">Refresh</span>
+            </button>
+            <div id="lastUpdated" class="last-updated"></div>
+          </div>
         </div>
-      </div>
 
-      <div id="scoreboard">
-        <div class="loading">Loading leaderboard...</div>
+        <div id="scoreboard">
+          <div class="loading">Loading leaderboard...</div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <script type="module">
-    import { appState } from './js/app.js';
-    import { initNavigation } from './js/components/navigation.js';
-    import { LeaderboardPage } from './js/pages/leaderboard.js';
+    <script type="module">
+      import { appState } from "./js/app.js";
+      import { initNavigation } from "./js/components/navigation.js";
+      import { LeaderboardPage } from "./js/pages/leaderboard.js";
 
-    // Initialize application
-    async function init() {
-      // Initialize app state (handles auth, user loading, navigation)
-      const isAuthenticated = await appState.init();
+      // Initialize application
+      async function init() {
+        // Initialize app state (handles auth, user loading, navigation)
+        const isAuthenticated = await appState.init();
 
-      if (isAuthenticated) {
-        // Initialize navigation controller
-        initNavigation();
+        if (isAuthenticated) {
+          // Initialize navigation controller
+          initNavigation();
 
-        // Initialize leaderboard-specific functionality
-        const leaderboard = new LeaderboardPage();
-        await leaderboard.init();
+          // Initialize leaderboard-specific functionality
+          const leaderboard = new LeaderboardPage();
+          await leaderboard.init();
+        }
       }
-    }
 
-    // Start the application
-    init();
-  </script>
-  <!-- Add before closing </body> -->
-  <bottom-menu></bottom-menu>
-  <script type="module" src="js/components/bottom-menu.js"></script>
-</body>
-
+      // Start the application
+      init();
+    </script>
+    <!-- Add before closing </body> -->
+    <bottom-menu></bottom-menu>
+    <script type="module" src="js/components/bottom-menu.js"></script>
+  </body>
 </html>
