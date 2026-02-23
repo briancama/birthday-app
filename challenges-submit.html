@@ -3,100 +3,63 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="noindex, nofollow" />
-    <title>Challenge Workshop - Birthday Challenge Zone</title>
-    <link rel="icon" type="image/png" href="images/favicon.jpg" />
+    <title>Birthday Challenge Zone: Challenge Workshop</title>
     <link rel="stylesheet" href="css/geocities.css" />
     <link rel="stylesheet" href="css/components/navigation.css" />
+    <link rel="stylesheet" href="css/components/leaderboard.css" />
     <link rel="stylesheet" href="css/components/forms.css" />
-    <link rel="stylesheet" href="css/components/submissions.css" />
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
   </head>
-
   <body>
-    <div class="container">
-      <marquee class="marquee" behavior="scroll" direction="left">
-        HELLO <span data-marquee="username">FRIEND</span> SUBMIT CHALLENGES HERE FOR OTHER ATTENDEES
-        TO COMPLETE!
-      </marquee>
-      <!-- Navigation Component -->
-      <nav class="site-navigation">
-        <!-- Mobile Menu Toggle -->
-        <button class="mobile-menu-toggle" data-sound="menu" aria-label="Toggle navigation menu">
-          <span class="hamburger-icon">☰</span>
-        </button>
-
-        <!-- Page Title / User Info -->
-        <div class="nav-user-info">
-          <div class="user-welcome">
-            <img src="images/star_icon.gif" alt="star" class="icon-gif hide-mobile" />
-            <span data-nav="page-title">Challenge Workshop</span>
-            <img src="images/star_icon.gif" alt="star" class="icon-gif" />
-          </div>
+    <nav class="site-navigation mobile-menu-default">
+      <!-- Mobile Menu Toggle (always visible) -->
+      <button class="mobile-menu-toggle active" data-sound="menu" aria-label="Toggle navigation menu">
+        <span class="hamburger-icon">☰</span>
+      </button>
+      <!-- Page Title / User Info -->
+      <div class="nav-user-info">
+        <div class="user-welcome">
+          <img src="images/star_icon.gif" alt="star" class="icon-gif" />
+          <span data-nav="page-title">Challenge Workshop</span>
+          <img src="images/star_icon.gif" alt="star" class="icon-gif" />
         </div>
-
-        <!-- Navigation Menu -->
-        <div class="nav-menu">
-          <!-- Navigation Links -->
-          <div class="nav-tabs">
-            <a href="dashboard" class="nav-tab" data-sound="menu" data-page="dashboard">
-              <img
-                src="images/home.gif"
-                alt="home"
-                class="icon-gif icon-gif--lg icon-gif--with-text"
-              />
-              <span>DASHBOARD</span>
-            </a>
-            <a
-              href="challenges-submit"
-              class="nav-tab active"
-              data-sound="menu"
-              data-page="challenges-submit"
-            >
-              <img src="images/star_icon.gif" alt="star" class="icon-gif icon-gif--with-text" />
-              <span>SUBMIT CHALLENGE</span>
-            </a>
-            <a href="leaderboard" class="nav-tab" data-sound="menu" data-page="leaderboard">
-              <img src="images/trophy.gif" alt="trophy" class="icon-gif icon-gif--with-text" />
-              <span>LEADERBOARD</span>
-            </a>
-            <a
-              href="cocktail-judging"
-              class="nav-tab"
-              data-sound="menu"
-              data-page="cocktail-judging"
-            >
-              <img
-                src="images/cocktail_stirrer.gif"
-                alt="cocktail"
-                class="icon-gif icon-gif--with-text"
-              />
-              <span>JUDGE COCKTAILS</span>
-            </a>
-            <a
-              href="admin-approvals"
-              class="nav-tab"
-              data-sound="menu"
-              data-page="admin-approvals"
-              data-admin-only
-              style="display: none"
-            >
-              <img src="images/star_icon.gif" alt="admin" class="icon-gif icon-gif--with-text" />
-              <span>🔐 ADMIN</span>
-            </a>
-            <button class="nav-tab logout-btn">
-              <img
-                src="images/logout.gif"
-                alt="logout"
-                class="icon-gif icon-gif--lg icon-gif--with-text"
-              />
-              <span>LOGOUT</span>
-            </button>
-          </div>
+      </div>
+      <!-- Navigation Menu (always open) -->
+      <div class="nav-menu">
+        <div class="nav-tabs">
+          <a href="dashboard" class="nav-tab" data-sound="menu" data-page="dashboard">
+            <img src="images/home.gif" alt="home" class="icon-gif icon-gif--lg icon-gif--with-text" />
+            <span>DASHBOARD</span>
+          </a>
+          <a href="event-info" class="nav-tab" data-sound="menu" data-page="event-info">
+            <img src="images/question.gif" alt="info" class="icon-gif icon-gif--with-text" />
+            <span>EVENT INFO</span>
+          </a>
+          <a href="challenges-submit" class="nav-tab" data-sound="menu" data-page="challenges-submit">
+            <img src="images/star_icon.gif" alt="star" class="icon-gif icon-gif--with-text" />
+            <span>SUBMIT CHALLENGE</span>
+          </a>
+          <a href="leaderboard" class="nav-tab" data-sound="menu" data-page="leaderboard">
+            <img src="images/trophy.gif" alt="trophy" class="icon-gif icon-gif--with-text" />
+            <span>LEADERBOARD</span>
+          </a>
+          <a href="cocktail-judging" class="nav-tab" data-sound="menu" data-page="cocktail-judging">
+            <img src="images/cocktail_stirrer.gif" alt="cocktail" class="icon-gif icon-gif--with-text" />
+            <span>JUDGE COCKTAILS</span>
+          </a>
+          <a href="admin-approvals" class="nav-tab" data-sound="menu" data-page="admin-approvals" data-admin-only style="display: none">
+            <img src="images/star_icon.gif" alt="admin" class="icon-gif icon-gif--with-text" />
+            <span>🔐 ADMIN</span>
+          </a>
+          <button class="nav-tab logout-btn">
+            <img src="images/logout.gif" alt="logout" class="icon-gif icon-gif--lg icon-gif--with-text" />
+            <span>LOGOUT</span>
+          </button>
         </div>
-      </nav>
+      </div>
+    </nav>
 
       <div class="section">
         <button id="addChallengeBtn" class="add-challenge-btn">✨ ADD CHALLENGE ✨</button>
@@ -153,7 +116,7 @@
     </div>
 
     <!-- Challenge Submission Modal -->
-    <div id="challengeModal" class="challenge-modal">
+    <div id="challengeModal" class="challenge-modal" style="display: none;">
       <div class="challenge-modal-overlay"></div>
       <div class="challenge-modal-content">
         <button id="closeChallengeModal" class="close-btn">✖️</button>

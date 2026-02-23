@@ -17,6 +17,12 @@
   --accent-red: #ff0000;
   --accent-green: #00ff00;
   --accent-blue: #0000ff;
+  --myspace-dark-blue: #003399;
+  --myspace-mid-blue: #336699;
+  --myspace-light-blue: #b6cdfb;
+  --myspace-light-orange: #ffcc99;
+  --myspace-orange: #ff6503;
+  --myspace-red: #cc0100;
 
   /* Spacing */
   --spacing-xs: 0.5rem;
@@ -1090,6 +1096,20 @@
 
   .hide-xs {
     display: none !important;
+  }
+
+  /* Utility: Full-width content area */
+  .full-width-content {
+    width: 100vw;
+    margin-left: calc(-1 * var(--spacing-md));
+    margin-right: calc(-1 * var(--spacing-md));
+    box-sizing: border-box;
+  }
+  @media (max-width: 768px) {
+    .full-width-content {
+      margin-left: calc(-1 * var(--spacing-xs));
+      margin-right: calc(-1 * var(--spacing-xs));
+    }
   }
 }
 

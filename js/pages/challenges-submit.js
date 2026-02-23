@@ -109,15 +109,18 @@ export class ChallengesSubmitPage extends BasePage {
     try {
       const { data, error } = await this.supabase
         .from("users")
-        .select("id, username")
-        .order("username");
+        .select("id, username, first_name")
+        .order("first_name");
 
       if (error) throw error;
 
       const datalist = document.getElementById("usersDatalist");
       if (datalist) {
         datalist.innerHTML = data
-          .map((user) => `<option value="${user.username}" data-user-id="${user.id}">`)
+          .map((user) => {
+            const display = user.first_name || user.username;
+            return `<option value="${display}" data-user-id="${user.id}">`;
+          })
           .join("");
       }
     } catch (err) {

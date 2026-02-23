@@ -26,12 +26,15 @@
       </marquee>
 
       <!-- Navigation Component -->
-      <nav class="site-navigation">
-        <!-- Mobile Menu Toggle -->
-        <button class="mobile-menu-toggle" data-sound="menu" aria-label="Toggle navigation menu">
+      <nav class="site-navigation mobile-menu-default">
+        <!-- Mobile Menu Toggle (always visible) -->
+        <button
+          class="mobile-menu-toggle active"
+          data-sound="menu"
+          aria-label="Toggle navigation menu"
+        >
           <span class="hamburger-icon">☰</span>
         </button>
-
         <!-- Page Title / User Info -->
         <div class="nav-user-info">
           <div class="user-welcome">
@@ -39,10 +42,8 @@
             <span data-nav="page-title">Dashboard</span>
           </div>
         </div>
-
-        <!-- Navigation Menu -->
+        <!-- Navigation Menu (always open) -->
         <div class="nav-menu">
-          <!-- Navigation Links -->
           <div class="nav-tabs">
             <a href="dashboard" class="nav-tab active" data-sound="menu" data-page="dashboard">
               <img
@@ -51,6 +52,10 @@
                 class="icon-gif icon-gif--lg icon-gif--with-text"
               />
               <span>DASHBOARD</span>
+            </a>
+            <a href="event-info" class="nav-tab" data-sound="menu" data-page="event-info">
+              <img src="images/question.gif" alt="info" class="icon-gif icon-gif--with-text" />
+              <span>EVENT INFO</span>
             </a>
             <a
               href="challenges-submit"

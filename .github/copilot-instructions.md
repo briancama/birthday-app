@@ -1,3 +1,41 @@
+# EventInfoPage & New Page Conventions (2026 Update)
+
+## New Page/Component Rules
+
+- All pages must extend BasePage (js/pages/base-page.js) for lifecycle, event handling, and UI updates.
+- Use appState for all user/session/auth state and event-driven updates.
+- Render UI via component classes or functions—no direct DOM manipulation or inline scripts.
+- Move all custom styles to CSS files (no inline styles).
+- Use EventTarget/event-driven architecture for component communication.
+- Clean up all event listeners in cleanup().
+- Document new shared patterns in copilot-instructions.md before implementation.
+
+## Example: EventInfoPage
+
+- See js/pages/event-info.js for BasePage inheritance, appState usage, and componentized event cards.
+- All custom styles in css/components/event-info.css.
+- event-info.html renders via EventInfoPage class, not inline HTML.
+
+## Migration Guidance
+
+- Refactor legacy pages to follow these conventions as features are updated.
+- New features/components must follow this pattern for maintainability and consistency.
+
+### Module Import/Export Consistency
+
+For all shared modules (e.g., navigationController, appState, EventBus):
+
+- Always use named exports in the module file.
+- Always use named imports in consuming files/pages.
+- Example:
+  - In js/components/navigation.js:
+    export { navigationController };
+  - In HTML or JS:
+    import { navigationController } from './js/components/navigation.js';
+- Do not use default exports for shared modules.
+- Ensure the export statement is present in the module file before importing.
+- If you need a singleton, export the instance (not the class).
+
 # Unified Code Design Pattern (2026 Update)
 
 ## AppState Singleton
@@ -31,6 +69,24 @@ All DOM updates must go through component/page render methods or APIs.
 ## Lifecycle Management
 
 Always implement and call `cleanup()` in pages/components to remove event listeners and intervals.
+
+### Global Component Update Policy (2026)
+
+**Global Navigation & Mobile Menu:**
+
+- Any changes to navigation markup, mobile menu treatment, or navigation logic must be applied to ALL pages and components that use navigation.
+- Navigation markup and logic are defined in js/components/navigation.js and must be kept consistent across dashboard.html, challenges-submit.html, leaderboard.html, invitation.html, admin-approvals.html, event-info.html, and any new pages.
+- When updating navigation or global components, always update all relevant HTML files and shared JS modules.
+- Document the global update pattern in copilot-instructions.md before implementation.
+- For mobile menu: default is closed, users must open via toggle, and markup/classes must match across all pages.
+
+**Instructions for Contributors:**
+
+- When making changes to navigation or global UI components, search for all usages and update them globally.
+- Confirm consistency in markup, CSS, and JS logic for navigation and mobile menu.
+- Add a note in copilot-instructions.md describing the update and affected files/components.
+
+---
 
 ### Rules for New Updates
 
