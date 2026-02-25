@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="images/brispace_favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Birthday Challenge Zone: Event Info</title>
     <link rel="stylesheet" href="css/geocities.css" />
@@ -9,6 +10,8 @@
     <link rel="stylesheet" href="css/components/leaderboard.css" />
     <link rel="stylesheet" href="css/components/forms.css" />
     <link rel="stylesheet" href="css/components/myspace.css" />
+    <link rel="stylesheet" href="css/components/myspace-comments.css" />
+    <link rel="stylesheet" href="css/components/event-card.css" />
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
@@ -132,13 +135,13 @@
                 <div class="event-details-label">Party Jams</div>
                 <div class="event-details-value">
                   OutKast, TLC, Eminem, Nelly, Usher, Linkin Park, Blink-182, Sum 41, The Killers,
-                  Fall Out Boy, My Chemical Romance, No Doubt, The White Stripes, The Strokes, Red
-                  Hot Chili Peppers, Maroon 5, 50 Cent, Ja Rule, Ashanti, Shakira, Evanescence, Foo
-                  Fighters, Incubus, System of a Down, Muse, The Offspring, Jimmy Eat World,
-                  Gorillaz, Franz Ferdinand, Modest Mouse, Dashboard Confessional, Good Charlotte,
-                  Papa Roach, Jet, Alien Ant Farm, Lit, Puddle of Mudd, Lifehouse, Coldplay, Snow
-                  Patrol, The All-American Rejects, Bowling For Soup, Reel Big Fish, The Darkness,
-                  Coheed and Cambria, Yellowcard, Ashlee Simpson, Weezer
+                  Fall Out Boy, My Chemical Romance, No Doubt, The White Stripes, Yeah Yeah Yeahs,
+                  The Strokes, Red Hot Chili Peppers, Maroon 5, 50 Cent, Ja Rule, Ashanti, Shakira,
+                  Evanescence, Foo Fighters, Incubus, System of a Down, Muse, The Offspring, Jimmy
+                  Eat World, Gorillaz, Franz Ferdinand, Modest Mouse, Dashboard Confessional, Tegan
+                  and Sara, Good Charlotte, Papa Roach, Jet, Alien Ant Farm, Lit, Puddle of Mudd,
+                  Lifehouse, Coldplay, Snow Patrol, The All-American Rejects, Bowling For Soup, Reel
+                  Big Fish, The Darkness, Coheed and Cambria, Yellowcard, Ashlee Simpson, Weezer
                 </div>
               </div>
               <div class="event-details-row">
@@ -157,22 +160,55 @@
         <main class="myspace-main">
           <div class="myspace-section">
             <h3>Schedule</h3>
-            <ul class="event-list" id="event-list">
-              <li class="event-item" data-event="cocktail">
-                <div>
-                  <strong>Cocktail Challenge</strong> <span style="float: right">Sat 7pm</span
-                  ><br />
-                  <small>Bring your best mix! Judging starts at 7:30pm.</small>
-                </div>
-                <div class="event-actions">
-                  <button class="like-btn" title="Like">
-                    <span>👍</span> <span class="like-count">0</span>
-                  </button>
-                  <button class="rsvp-btn" title="RSVP">RSVP</button>
-                </div>
-              </li>
-              <!-- More events can be added here -->
+            <ul id="eventSchedule" class="event-schedule">
+              <p>Loading schedule...</p>
             </ul>
+          </div>
+          <div class="myspace-section myspace-guestbook">
+            <h3>Event Comments</h3>
+            <div class="myspace-comments-header">
+              Displaying <span id="commentsCount">0</span> of
+              <span id="commentsTotal">0</span> comments (<a href="#" id="viewAllComments"
+                >View/Edit All Comments</a
+              >)
+            </div>
+            <div class="myspace-comments-list" id="myspaceCommentsList">
+              <p class="text-center">Loading comments...</p>
+            </div>
+            <div class="myspace-comments-actions">
+              <a href="#" id="addCommentBtn" class="add-comment-link">Add Comment</a>
+            </div>
+            <!-- Modal for add/edit comment (reuses existing modal structure, hidden by default) -->
+            <div id="guestbookModal" class="guestbook-modal" style="display: none">
+              <div class="guestbook-modal-overlay"></div>
+              <div class="guestbook-modal-content myspace-add-comment-modal">
+                <button id="closeGuestbook" class="close-btn" aria-label="Close">✖️</button>
+                <h1 class="add-comment-title">Add Comment</h1>
+                <div class="add-comment-subheader">Be nice.</div>
+                <form id="guestbookForm" class="guestbook-form">
+                  <div class="form-group">
+                    <label for="guestMessage" class="add-comment-label"><b>Your Comment:</b></label>
+                    <textarea
+                      id="guestMessage"
+                      required
+                      maxlength="200"
+                      rows="6"
+                      class="add-comment-textarea"
+                    ></textarea>
+                  </div>
+                  <div class="add-comment-actions">
+                    <button type="button" id="signGuestbook" class="add-comment-btn">
+                      Add Comment
+                    </button>
+                    <button type="button" id="cancelGuestbook" class="cancel-comment-btn">
+                      Cancel
+                    </button>
+                  </div>
+                  <div id="guestbookError" class="error-message"></div>
+                  <div id="guestbookSuccess" class="success-message"></div>
+                </form>
+              </div>
+            </div>
           </div>
           <div class="myspace-section">
             <h2>Top Friends</h2>
@@ -194,59 +230,6 @@
                 <div>Sam</div>
               </div>
             </div>
-          </div>
-          <div class="myspace-section myspace-guestbook">
-            <h2>Guestbook</h2>
-            <div class="guestbook-counter-container">
-              <div>
-                <img
-                  id="guestbookTrigger"
-                  class="guestbook-trigger"
-                  alt="Click to sign guestbook!"
-                  style="cursor: pointer"
-                />
-              </div>
-              <div class="view-counter-container">
-                <p class="page-views-header">
-                  <img src="images/party-hats.gif" alt="" class="icon-gif" />
-                  PAGE VIEWS
-                  <img src="images/party-hats.gif" alt="" class="icon-gif" />
-                </p>
-                <div class="view-counter" id="viewCounter"></div>
-              </div>
-            </div>
-            <div id="guestbookModal" class="guestbook-modal" style="display: none">
-              <div class="guestbook-modal-overlay"></div>
-              <div class="guestbook-modal-content">
-                <button id="closeGuestbook" class="close-btn">✖️</button>
-                <h2 class="text-center rainbow-text">
-                  <img src="images/sparkle.gif" alt="" class="icon-gif" />
-                  SIGN THE GUESTBOOK!!!
-                  <img src="images/sparkle.gif" alt="" class="icon-gif" />
-                </h2>
-                <form id="guestbookForm" class="guestbook-form">
-                  <div class="form-group">
-                    <label for="guestName">Your Name *</label>
-                    <input type="text" id="guestName" required maxlength="50" />
-                    <small>Max 50 characters</small>
-                  </div>
-                  <div class="form-group">
-                    <label for="guestMessage">Your Message *</label>
-                    <textarea id="guestMessage" required maxlength="200" rows="3"></textarea>
-                    <small>Max 200 characters</small>
-                  </div>
-                  <button type="button" id="signGuestbook">SIGN IT!!!</button>
-                  <div id="guestbookError" class="error-message"></div>
-                  <div id="guestbookSuccess" class="success-message"></div>
-                </form>
-                <div id="guestbookEntries" class="guestbook-entries">
-                  <p class="text-center">Loading guestbook entries...</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="myspace-section">
-            <button id="add-calendar-btn">Add to Calendar</button>
           </div>
         </main>
       </div>

@@ -1,0 +1,213 @@
+/* Add Comment Modal Styles */
+.guestbook-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.myspace-add-comment-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border: 3px solid #222;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  z-index: 1001;
+  padding: 32px 32px 24px 32px;
+  min-width: 340px;
+  max-width: 98vw;
+  width: 500px;
+  border-radius: 0;
+  font-family: Verdana, Arial, sans-serif;
+}
+
+.add-comment-title {
+  font-size: 2em;
+  font-weight: bold;
+  color: #111;
+  margin-bottom: 8px;
+  margin-top: 0;
+  text-shadow: none;
+}
+
+.add-comment-subheader {
+  font-size: 1.1em;
+  color: #222;
+  margin-bottom: 18px;
+}
+
+.add-comment-label {
+  font-size: 1.1em;
+  color: #111;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.add-comment-textarea {
+  width: 100%;
+  min-height: 120px;
+  font-size: 1.1em;
+  font-family: Verdana, Arial, sans-serif;
+  border: 2px solid #1976d2;
+  border-radius: 0;
+  margin-bottom: 16px;
+  padding: 8px;
+  color: #111;
+  background: #fff;
+  resize: vertical;
+}
+
+.add-comment-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.add-comment-btn,
+.cancel-comment-btn {
+  font-size: 1.1em;
+  font-family: Verdana, Arial, sans-serif;
+  border: 2px solid #222;
+  border-color: var(--myspace-dark-blue);
+  background: #fff;
+  color: var(--myspace-dark-blue);
+  padding: 6px 18px;
+  border-radius: 0;
+  cursor: pointer;
+  margin-right: 4px;
+  text-shadow: none;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.add-comment-btn:hover,
+.cancel-comment-btn:hover {
+  background: #ffe0b2;
+  color: #e67e22;
+}
+.add-comment-btn:active,
+.cancel-comment-btn:active {
+  background: #ffd699;
+  color: #b35400;
+}
+
+.close-btn {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  color: #888;
+  cursor: pointer;
+  z-index: 1002;
+}
+
+@media (max-width: 600px) {
+  .myspace-add-comment-modal {
+    width: 98vw;
+    min-width: 0;
+    padding: 16px 4vw 12px 4vw;
+  }
+  .add-comment-title {
+    font-size: 1.3em;
+  }
+}
+/* MySpace Comments - Retro Style */
+.myspace-comments-header {
+  font-family: "Verdana", Arial, sans-serif;
+  font-size: 1.1em;
+  background: #fff;
+  border-bottom: 2px solid #e67e22;
+  padding: 8px 12px;
+  color: #e67e22;
+  font-weight: bold;
+}
+
+.myspace-comment-name {
+  margin-bottom: 8px;
+}
+
+.myspace-comments-list {
+  margin: 0;
+  padding: 0;
+}
+
+.myspace-comment-card {
+  display: flex;
+  background: #ffcc99;
+  border: 1px solid #e67e22;
+  margin-bottom: 12px;
+  font-family: "Verdana", Arial, sans-serif;
+  min-height: 90px;
+}
+
+.myspace-comment-sidebar {
+  width: 180px;
+  padding: 12px;
+  background: #ffa54f;
+  border-right: 2px solid #e67e22;
+}
+
+.myspace-comment-content {
+  flex: 1;
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.myspace-comment-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+  color: #e67e22;
+  margin-bottom: 4px;
+}
+
+.myspace-comment-avatar {
+  object-fit: contain;
+  width: 100%;
+}
+
+.myspace-comment-name {
+  font-size: 1em;
+  font-weight: bold;
+  color: var(--myspace-dark-blue);
+}
+
+.myspace-comment-date {
+  font-size: 1em;
+  color: #000;
+}
+
+.myspace-comment-message {
+  font-size: 1em;
+  color: #000;
+  margin-bottom: 8px;
+  margin-top: 2px;
+}
+
+.myspace-comment-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.myspace-comment-actions a {
+  font-size: 0.95em;
+  color: #e67e22;
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.myspace-comment-actions a.edit-btn {
+  color: #666;
+}

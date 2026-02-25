@@ -92,6 +92,13 @@ EventBus.EVENTS = {
     APP: {
         READY: 'app:ready',
         ERROR: 'app:error'
+    },
+
+    // Event and RSVP events
+    EVENT: {
+        RSVP: 'event:rsvp',                 // RSVP action (user toggles RSVP)
+        UPDATED: 'event:updated',           // Event details updated
+        RSVP_UPDATED: 'event:rsvp-updated', // RSVP list/counts updated
     }
 };
 

@@ -1,0 +1,96 @@
+/* This file was renamed to event-card.css. All styles are now in event-card.css. */
+.event-card-desc {
+  margin-bottom: var(--spacing-xs);
+}
+
+/* Separator between event cards (not last) */
+.event-list-item {
+  margin-bottom: 24px;
+  position: relative;
+}
+.event-list-item:not(:last-child)::after {
+  content: "";
+  display: block;
+  height: 1px;
+  background: linear-gradient(90deg, #e3e3e3 0%, #f9f9f9 100%);
+  opacity: 0.45;
+  margin: 24px 0 0 0;
+}
+
+.event-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+}
+
+/* EventCard avatar: small, square, cropped */
+.event-card-avatar {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border: 1px solid var(--myspace-dark-blue);
+  background: #fff;
+  margin-right: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* MySpace-style RSVP buttons for EventCard */
+.event-card--myspace .event-card-title {
+  color: var(--myspace-dark-blue, #3366cc);
+  font-size: 1.35em;
+  font-family: "Tahoma", "Geneva", sans-serif;
+  font-weight: bold;
+  margin-bottom: 0.35em;
+  display: inline-block;
+}
+
+.event-card--myspace .event-card-datetime {
+  color: #666;
+  font-size: 1em;
+  font-family: "Tahoma", "Geneva", sans-serif;
+  margin-left: 1em;
+  white-space: nowrap;
+  align-self: flex-start;
+}
+
+.event-card--myspace .event-card-rsvp {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  margin: 12px 0;
+}
+.event-card--myspace .rsvp-btn {
+  background: white;
+  border: 1px outset var(--myspace-light-blue, #99ccff);
+  border-radius: 0;
+  color: #222;
+  font-size: 1.1em;
+  font-family: "Tahoma", "Geneva", sans-serif;
+  font-weight: bold;
+  padding: 8px 18px;
+  text-align: left;
+  box-shadow: none;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    border 0.2s,
+    color 0.2s;
+  outline: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-shadow: none;
+}
+.event-card--myspace .rsvp-btn.active {
+  background: #ffe680;
+  border-color: #e6b800;
+  color: #b36b00;
+}
+.event-card--myspace .rsvp-btn:hover:not(.active) {
+  background: #e0eaff;
+  border-color: #7dafff;
+  color: #1a3a6b;
+}

@@ -98,7 +98,7 @@ body {
 
 .myspace-layout {
   display: flex;
-  gap: 2rem;
+  gap: 1rem;
   margin: 0 auto;
   padding-top: 2rem;
   max-width: 1000px;

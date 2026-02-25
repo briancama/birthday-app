@@ -63,6 +63,7 @@ export class Guestbook {
 
   async loadEntries(entriesId) {
     const container = document.getElementById(entriesId);
+    if (!container) return;
     try {
       const { data, error } = await supabase
         .from("guestbook")
