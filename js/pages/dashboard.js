@@ -5,6 +5,7 @@ import { EventBus } from "../events/event-bus.js";
 import { featureFlags } from "../utils/feature-flags.js";
 import { initNavigation } from "../components/navigation.js";
 import { appState, APP_CONFIG } from "../app.js";
+import { UserEventsSection } from "../components/user-events-section.js";
 import { firebaseAuth } from "../services/firebase-auth.js";
 
 class DashboardPage extends BasePage {
@@ -42,7 +43,18 @@ class DashboardPage extends BasePage {
       this.currentUser = e.detail;
       this.userId = e.detail.id;
       this.updateMarqueeUsername();
+      if (!this.userEventsSection) {
+        this.userEventsSection = new UserEventsSection("userEventsSection");
+      }
+      this.userEventsSection.render();
     });
+    // Render RSVP'd events section if user already loaded
+    if (this.currentUser && this.userId) {
+      if (!this.userEventsSection) {
+        this.userEventsSection = new UserEventsSection("userEventsSection");
+      }
+      this.userEventsSection.render();
+    }
     this.userErrorCleanup = appState.on("user:error", (e) => {
       this.showError(e.detail.error || "Authentication error");
     });

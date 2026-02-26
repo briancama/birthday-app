@@ -3,13 +3,21 @@
 import { EventBus } from "../events/event-bus.js";
 
 export class EventCard extends EventTarget {
-  constructor({ event, rsvpStatus, rsvpCounts, rsvpUsers, variant = "myspace" }) {
+  constructor({
+    event,
+    rsvpStatus,
+    rsvpCounts,
+    rsvpUsers,
+    variant = "myspace",
+    showRSVPButtons = true,
+  }) {
     super();
     this.event = event;
     this.rsvpStatus = rsvpStatus;
     this.rsvpCounts = rsvpCounts || {};
     this.rsvpUsers = rsvpUsers || [];
     this.variant = variant;
+    this.showRSVPButtons = showRSVPButtons;
   }
 
   updateRSVPState({ rsvpStatus, rsvpCounts, rsvpUsers }) {
@@ -31,7 +39,7 @@ export class EventCard extends EventTarget {
         if (u.status === "going") {
           const img = document.createElement("img");
           img.className = "event-card-avatar";
-          img.src = u.headshot_url || "images/headshot.jpg";
+          img.src = u.headshot_url ? `images/${u.headshot_url}` : "images/headshot.jpg";
           img.alt = u.display_name;
           img.title = u.display_name;
           avatarsDiv.appendChild(img);
@@ -94,27 +102,16 @@ export class EventCard extends EventTarget {
       if (this.event.time_label) {
         timeStr = this.event.time_label;
       } else if (this.event.time_start) {
-        // Only format the time as Pacific Time
-        const pacificOptions = { timeZone: "America/Los_Angeles" };
+        // Display the time as stored (no timezone conversion)
         const [h, m, s] = this.event.time_start.split(":").map(Number);
-        // Use a fixed date (e.g., Jan 1, 2000) to avoid DST issues for time-only
-        const timeDate = new Date(Date.UTC(2000, 0, 1, h, m, s || 0));
-        timeStr = timeDate.toLocaleTimeString(undefined, {
-          ...pacificOptions,
-          hour: "numeric",
-          minute: "2-digit",
-        });
+        const pad = (n) => n.toString().padStart(2, "0");
+        let startStr = `${h % 12 === 0 ? 12 : h % 12}:${pad(m)}${s ? ":" + pad(s) : ""} ${h < 12 ? "AM" : "PM"}`;
+        let endStr = "";
         if (this.event.time_end) {
           const [eh, em, es] = this.event.time_end.split(":").map(Number);
-          const endTimeDate = new Date(Date.UTC(2000, 0, 1, eh, em, es || 0));
-          timeStr +=
-            " - " +
-            endTimeDate.toLocaleTimeString(undefined, {
-              ...pacificOptions,
-              hour: "numeric",
-              minute: "2-digit",
-            });
+          endStr = `${eh % 12 === 0 ? 12 : eh % 12}:${pad(em)}${es ? ":" + pad(es) : ""} ${eh < 12 ? "AM" : "PM"}`;
         }
+        timeStr = endStr ? `${startStr} - ${endStr}` : startStr;
       }
       dateTimeStr = dateStr;
       if (timeStr) dateTimeStr += ` • ${timeStr}`;
@@ -161,29 +158,10 @@ export class EventCard extends EventTarget {
       card.appendChild(link);
     }
 
-    // RSVP buttons
-    const rsvpSection = document.createElement("div");
-    rsvpSection.className = "event-card-rsvp";
-    ["going", "interested", "not_going"].forEach((status) => {
-      const btn = document.createElement("button");
-      btn.className = `rsvp-btn rsvp-btn--${status}`;
-      btn.dataset.status = status;
-      // Use emoji and label for MySpace style
-      let label = "";
-      if (status === "going") label = "✅ Going";
-      else if (status === "interested") label = "⭐ Interested";
-      else if (status === "not_going") label = "❌ Not Going";
-      btn.textContent = label;
-      if (this.rsvpStatus === status) btn.classList.add("active");
-      btn.addEventListener("click", () => {
-        EventBus.instance.emit(EventBus.EVENTS.EVENT.RSVP, {
-          eventId: this.event.id,
-          status,
-        });
-      });
-      rsvpSection.appendChild(btn);
-    });
-    card.appendChild(rsvpSection);
+    // RSVP buttons (optional)
+    if (this.showRSVPButtons) {
+      card.appendChild(this.renderRSVPButtons());
+    }
 
     // RSVP user avatars (optional)
     if (this.rsvpUsers && this.rsvpUsers.length > 0) {
@@ -193,7 +171,7 @@ export class EventCard extends EventTarget {
         if (u.status === "going") {
           const img = document.createElement("img");
           img.className = "event-card-avatar";
-          img.src = u.headshot_url || "images/headshot.jpg";
+          img.src = u.headshot_url ? `images/${u.headshot_url}` : "images/headshot.jpg";
           img.alt = u.display_name;
           img.title = u.display_name;
           avatars.appendChild(img);
@@ -218,5 +196,32 @@ export class EventCard extends EventTarget {
     }
 
     return card;
+  }
+
+  renderRSVPButtons() {
+    const rsvpSection = document.createElement("div");
+    rsvpSection.className = "event-card-rsvp";
+    ["going", "interested", "not_going"].forEach((status) => {
+      const btn = document.createElement("button");
+      btn.className = `rsvp-btn rsvp-btn--${status}`;
+      btn.dataset.status = status;
+      let label = "";
+      if (status === "going")
+        label = '<img class="icon-gif" src="images/yes_face.gif" alt="✅" /> I\'m in';
+      else if (status === "interested")
+        label = '<img class="icon-gif" src="images/maybe_face.gif" alt="✨" /> Hmmm';
+      else if (status === "not_going")
+        label = '<img class="icon-gif" src="images/nope_face.gif" alt="❌" /> Nope';
+      btn.innerHTML = label;
+      if (this.rsvpStatus === status) btn.classList.add("active");
+      btn.addEventListener("click", () => {
+        EventBus.instance.emit(EventBus.EVENTS.EVENT.RSVP, {
+          eventId: this.event.id,
+          status,
+        });
+      });
+      rsvpSection.appendChild(btn);
+    });
+    return rsvpSection;
   }
 }

@@ -22,7 +22,7 @@ class EventInfoPage extends BasePage {
     "images/fallback11.jpg",
     "images/fallback12.jpg",
     // Add more as needed
-  ];
+  ].reverse();
   constructor() {
     super();
     this.components = [];
@@ -79,17 +79,21 @@ class EventInfoPage extends BasePage {
       }
       eventList.innerHTML = "";
       for (const event of events) {
-        // Fetch RSVP counts
+        // Fetch RSVP counts and users (with join)
         const { data: rsvps } = await supabase
           .from("event_rsvps")
-          .select("status, user_id")
+          .select("status, user_id, user:users(display_name, headshot)")
           .eq("event_id", event.id);
         const rsvpCounts = { going: 0, maybe: 0, interested: 0, not_going: 0 };
         const rsvpUsers = [];
         if (rsvps) {
           rsvps.forEach((r) => {
             if (rsvpCounts[r.status] !== undefined) rsvpCounts[r.status]++;
-            rsvpUsers.push({ user_id: r.user_id, status: r.status });
+            rsvpUsers.push({
+              ...r,
+              display_name: r.user?.display_name,
+              headshot_url: r.user?.headshot,
+            });
           });
         }
         // Determine current user's RSVP status
@@ -198,7 +202,7 @@ class EventInfoPage extends BasePage {
     guestbook.init({
       triggerId: "guestbookTrigger",
       modalId: "guestbookModal",
-      formId: "guestbookForm",
+      formId: null,
       entriesId: "guestbookEntries",
       errorId: "guestbookError",
       successId: "guestbookSuccess",
@@ -243,6 +247,52 @@ class EventInfoPage extends BasePage {
         document.body.style.overflow = "auto";
       }
     });
+
+    // Add comment button handler
+    const submitBtn = document.getElementById("commentSubmit");
+    if (submitBtn) {
+      submitBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        const messageInput = document.getElementById("guestMessage");
+        const errorDiv = document.getElementById("guestbookError");
+        const successDiv = document.getElementById("guestbookSuccess");
+        errorDiv.textContent = "";
+        errorDiv.style.display = "none";
+        successDiv.textContent = "";
+        successDiv.style.display = "none";
+        if (!messageInput) {
+          errorDiv.textContent = "Comment form not loaded. Please try again.";
+          errorDiv.style.display = "block";
+          return;
+        }
+        const user = appState.getCurrentUser();
+        const name = (user && user.display_name) || "Anonymous";
+        const message = messageInput.value.trim();
+        if (!message) {
+          errorDiv.textContent = "Please enter a message.";
+          errorDiv.style.display = "block";
+          return;
+        }
+        try {
+          await import("../components/guestbook.js").then(({ addComment }) =>
+            addComment({
+              name,
+              message,
+              user_id: user ? user.id : null,
+              event_id: null,
+              created_at: new Date().toISOString(),
+            })
+          );
+          successDiv.textContent = "Comment added!";
+          successDiv.style.display = "block";
+          messageInput.value = "";
+          this.guestbook.loadEntries("guestbookEntries");
+        } catch (err) {
+          errorDiv.textContent = "Failed to add comment: " + err.message;
+          errorDiv.style.display = "block";
+        }
+      });
+    }
   }
 
   async loadMyspaceComments() {
@@ -272,8 +322,38 @@ class EventInfoPage extends BasePage {
       }
       countElem.textContent = data.length;
       totalElem.textContent = count || data.length;
-      commentsList.innerHTML = data
-        .map((entry, idx) => this.renderMyspaceComment(entry, idx))
+      // Assign fallback avatars only to oldest 12 legacy comments (no user_id)
+      let fallbackIdx = 0;
+      // Build userId->headshot map from all users using existing supabase client
+      const userHeadshots = {};
+      const { data: users } = await supabase.from("users").select("id, headshot");
+      if (users) {
+        users.forEach((u) => {
+          if (u.headshot) userHeadshots[u.id] = u.headshot;
+        });
+      }
+      // Separate legacy and user_id comments
+      const legacyComments = data.filter((entry) => !entry.user_id);
+      const userComments = data.filter((entry) => entry.user_id);
+      // Sort legacy comments oldest first
+      legacyComments.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      // Take oldest 12
+      const legacyToShow = legacyComments.slice(0, 12);
+      // Sort user_id comments newest first
+      userComments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      // Combine with legacy comments
+      const combined = [...legacyToShow, ...userComments];
+      // Reverse so newest overall appears first
+      commentsList.innerHTML = combined
+        .reverse()
+        .map((entry) => {
+          let avatarIdx = null;
+          if (!entry.user_id && fallbackIdx < this.fallbackAvatars.length) {
+            avatarIdx = fallbackIdx;
+            fallbackIdx++;
+          }
+          return this.renderMyspaceComment(entry, avatarIdx, userHeadshots);
+        })
         .join("");
     } catch (err) {
       commentsList.innerHTML = `<p class="text-center" style="color: #FF0000;">Error loading comments: ${err.message}</p>`;
@@ -290,16 +370,16 @@ class EventInfoPage extends BasePage {
     const canEdit =
       currentUser && currentUser.display_name && currentUser.display_name === entry.name;
 
-    // Avatar logic: use user profile image if user_id is present, else fallback
+    // Avatar logic: fallback only if no user_id, otherwise use headshot
     let avatar = "";
-    // Accept idx as second argument
-    const idx = arguments[1] || 0;
-    if (entry.user_id && entry.user_profile_image) {
-      avatar = entry.user_profile_image;
+    const avatarIdx = arguments[1];
+    const userHeadshots = arguments[2] || {};
+    if (entry.user_id && userHeadshots[entry.user_id]) {
+      avatar = `images/${userHeadshots[entry.user_id]}`;
+    } else if (!entry.user_id && avatarIdx !== null && avatarIdx !== undefined) {
+      avatar = this.fallbackAvatars[avatarIdx];
     } else {
-      // Use fallback avatar in order by array index
-      const fallbackArr = this.fallbackAvatars;
-      avatar = fallbackArr[(fallbackArr.length - 1 - idx) % fallbackArr.length];
+      avatar = "images/headshot.jpg";
     }
 
     return `
@@ -313,9 +393,6 @@ class EventInfoPage extends BasePage {
             <span class="myspace-comment-date">${date}</span>
           </div>
           <div class="myspace-comment-message">${message}</div>
-          <div class="myspace-comment-actions">
-            ${canEdit ? '<a href=\"#\" class=\"edit-btn\">Edit</a>' : ""}
-          </div>
         </div>
       </div>
     `;

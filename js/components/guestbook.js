@@ -2,6 +2,7 @@
 // Shared Guestbook logic for modal, form, and Supabase integration
 
 import { SUPABASE_CONFIG } from "../config.js";
+import { appState } from "../app.js";
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.94.1/+esm";
 
 const supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
@@ -131,8 +132,7 @@ export class Guestbook {
     button.disabled = true;
     button.textContent = "SIGNING...";
     try {
-      const { error } = await supabase.from("guestbook").insert([{ name, message }]);
-      if (error) throw error;
+      await addComment({ name, message });
       localStorage.setItem("lastGuestbookSubmit", Date.now().toString());
       successDiv.textContent = "✓ SUCCESS!!! Your message has been signed!!!";
       successDiv.style.display = "block";
@@ -156,4 +156,27 @@ export class Guestbook {
     div.textContent = text;
     return div.innerHTML;
   }
+}
+
+/**
+ * addComment: statelessly adds a guestbook entry
+ * @param {Object} data - { name, message, user_id, event_id, ... }
+ * @returns {Promise}
+ */
+export function addComment(data) {
+  const supabase = appState.getSupabase();
+  // Only pass allowed fields
+  const entry = {
+    name: data.name,
+    message: data.message,
+    user_id: data.user_id,
+    created_at: data.created_at || new Date().toISOString(),
+    // ...add more fields as needed
+  };
+  return supabase.from("guestbook").insert([entry]);
+}
+
+// Legacy sign function for backward compatibility
+export function sign(name, message, options = {}) {
+  return addComment({ name, message, ...options });
 }
