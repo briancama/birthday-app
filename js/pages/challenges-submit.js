@@ -109,8 +109,8 @@ export class ChallengesSubmitPage extends BasePage {
     try {
       const { data, error } = await this.supabase
         .from("users")
-        .select("id, username, first_name")
-        .order("first_name");
+        .select("id, username, display_name")
+        .order("display_name");
 
       if (error) throw error;
 
@@ -118,7 +118,8 @@ export class ChallengesSubmitPage extends BasePage {
       if (datalist) {
         datalist.innerHTML = data
           .map((user) => {
-            const display = user.first_name || user.username;
+            const display = user.display_name || user.username;
+            // Option value is always display_name (or username fallback), store user id as data attribute
             return `<option value="${display}" data-user-id="${user.id}">`;
           })
           .join("");
@@ -191,7 +192,8 @@ export class ChallengesSubmitPage extends BasePage {
       const challengeName = document.getElementById("challengeName").value.trim();
       const challengeDescription = document.getElementById("challengeDescription").value.trim();
       const challengeMetric = document.getElementById("challengeMetric").value.trim();
-      const assignedToUsername = document.getElementById("assignedTo").value.trim();
+      const assignedToInput = document.getElementById("assignedTo");
+      const assignedToValue = assignedToInput.value.trim();
 
       // Safely get brian mode value (field might be hidden for non-admin users)
       const brianModeElement = document.getElementById("brianMode");
@@ -204,22 +206,22 @@ export class ChallengesSubmitPage extends BasePage {
 
       // Find user ID if assigned
       let assignedToUserId = null;
-      if (assignedToUsername) {
-        const { data: users, error: userError } = await this.supabase
-          .from("users")
-          .select("id, username")
-          .eq("username", assignedToUsername)
-          .limit(1);
-
-        if (userError) throw userError;
-
-        if (users && users.length > 0) {
-          assignedToUserId = users[0].id;
-        } else {
+      if (assignedToValue) {
+        // Try to resolve user id from datalist option
+        const datalist = document.getElementById("usersDatalist");
+        let userId = null;
+        if (datalist) {
+          const option = Array.from(datalist.options).find((opt) => opt.value === assignedToValue);
+          if (option && option.dataset.userId) {
+            userId = option.dataset.userId;
+          }
+        }
+        if (!userId) {
           throw new Error(
-            `User "${assignedToUsername}" not found. Please select a valid user from the list.`
+            `User "${assignedToValue}" not found. Please select a valid user from the list.`
           );
         }
+        assignedToUserId = userId;
       }
 
       // Generate unique ID for challenge
@@ -245,25 +247,11 @@ export class ChallengesSubmitPage extends BasePage {
         challengeData.brian_mode = brianMode;
       }
 
-      // Get Firebase ID token
-      const idToken = await firebaseAuth.getIdToken();
-      if (!idToken) throw new Error("User not authenticated. Please log in again.");
+      // Insert challenge directly into Supabase
+      const { error: insertError } = await this.supabase.from("challenges").insert([challengeData]);
 
-      // Send request to Edge Function endpoint
-      const edgeFunctionUrl =
-        "https://boyakwrjmxpqecyjpzjw.functions.supabase.co/validate-firebase-token/rest/v1/challenges";
-      const response = await fetch(edgeFunctionUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${idToken}`,
-        },
-        body: JSON.stringify([challengeData]),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to submit challenge: ${errorText}`);
+      if (insertError) {
+        throw new Error(`Failed to submit challenge: ${insertError.message}`);
       }
 
       this.showSuccess("Challenge submitted successfully! Awaiting admin approval.");

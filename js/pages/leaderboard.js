@@ -130,7 +130,7 @@ class LeaderboardPage extends BasePage {
                             <span class="leaderboard-card__stat-value">${row.challenges_completed}</span>
                         </div>
                         <div class="stat-item">
-                            <span class="leaderboard-card__stat-label">Brodown</span>
+                            <span class="leaderboard-card__stat-label">Contest</span>
                             <span class="leaderboard-card__stat-value">${row.competition_points}</span>
                         </div>
                     </div>

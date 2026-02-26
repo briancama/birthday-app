@@ -38,9 +38,9 @@ export class BottomMenu extends HTMLElement {
           <span class="bottom-menu-label">Home</span>
         </a>
 
-        <a href="leaderboard.html" class="bottom-menu-item" data-page="leaderboard" title="Leaderboard">
-          <span class="bottom-menu-icon"><img src="images/trophy.gif" alt="Trophy Icon"></span>
-          <span class="bottom-menu-label">Scores</span>
+        <a href="event-info.html" class="bottom-menu-item" data-page="event-info" title="Event Info">
+          <span class="bottom-menu-icon"><img src="images/info.gif" alt="Info Icon"></span>
+          <span class="bottom-menu-label">Info</span>
         </a>
 
         <a href="challenges-submit.html" class="bottom-menu-item" data-page="challenges-submit" title="Submit Challenge">

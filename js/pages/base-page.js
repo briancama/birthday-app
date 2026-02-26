@@ -92,7 +92,7 @@ class BasePage {
 
   setPageTitle(title) {
     const user = appState.getCurrentUser();
-    const fullTitle = user && title === "Dashboard" ? `${user.name}'s ${title}` : title;
+    const fullTitle = user && title === "Dashboard" ? `${user.display_name}'s ${title}` : title;
     document.title = `${fullTitle} - Birthday Challenge Zone`;
   }
 
