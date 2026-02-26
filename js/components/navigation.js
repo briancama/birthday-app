@@ -141,9 +141,8 @@ class NavigationController {
     this.updateMenuOptions();
   }
   updateMenuOptions() {
-    // Show/hide nav menu options based on auth status
+    // Show/hide nav menu options based on auth status (except admin link)
     const navTabs = document.querySelectorAll(".nav-tab[data-page]");
-    const adminLink = document.querySelector("[data-admin-only]");
     const logoutBtn = document.querySelector(".logout-btn");
 
     // If not logged in, only show dashboard/home and hide others
@@ -152,17 +151,24 @@ class NavigationController {
         const page = tab.dataset.page;
         if (page === "dashboard" || page === "home" || page === "index") {
           tab.style.display = "";
-        } else {
+        } else if (!tab.hasAttribute("data-admin-only")) {
           tab.style.display = "none";
         }
+        // Do not touch admin link here
       });
-      if (adminLink) adminLink.style.display = "none";
-      if (logoutBtn) logoutBtn.style.display = "none";
+      if (logoutBtn) {
+        logoutBtn.style.display = "none";
+      }
     } else {
       navTabs.forEach((tab) => {
-        tab.style.display = "";
+        if (!tab.hasAttribute("data-admin-only")) {
+          tab.style.display = "";
+        }
+        // Do not touch admin link here
       });
-      if (logoutBtn) logoutBtn.style.display = "";
+      if (logoutBtn) {
+        logoutBtn.style.display = "";
+      }
       // Admin link handled by updateAdminVisibility
     }
   }
