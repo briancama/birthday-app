@@ -97,6 +97,30 @@ Always implement and call `cleanup()` in pages/components to remove event listen
 - All event listeners must be cleaned up in cleanup().
 - Document any new shared patterns in copilot-instructions.md before implementation.
 
+## Headshot Upload & Event-Driven Avatar Updates (2026)
+
+### Headshot Upload Pattern
+
+- Headshot uploads are handled by HeadshotUpload (js/components/headshot-upload.js).
+- On successful upload, a CustomEvent 'user:headshot-updated' is dispatched on window with `{ userId, headshotUrl }`.
+- All avatar images use `data-headshot="user-{userId}"` for targeting.
+- BasePage (js/pages/base-page.js) listens for 'user:headshot-updated' on window and updates all matching images.
+- No child page/component should register its own headshot update listener; BasePage handles this globally.
+
+### Comments Functionality (EventInfoPage)
+
+- Comments are rendered in EventInfoPage (js/pages/event-info.js) using guestbook entries from Supabase.
+- Each comment avatar uses `data-headshot="user-{userId}"` if user_id is present, or a fallback avatar otherwise.
+- Avatar updates propagate automatically via the headshot event system.
+- Comments are submitted via Guestbook component (js/components/guestbook.js), with error/success feedback using BasePage methods.
+- Legacy comments (no user_id) use fallback avatars, newest user comments use headshot avatars.
+
+### Migration Guidance
+
+- When adding new avatar images, always use `data-headshot="user-{userId}"`.
+- For new comment features, ensure avatars follow the same pattern for event-driven updates.
+- Document any new event-driven avatar logic here before implementation.
+
 # GitHub Copilot Instructions
 
 ## Project Overview

@@ -5,6 +5,7 @@ import { Guestbook } from "../components/guestbook.js";
 
 import { EventCard } from "../components/event-card.js";
 import { EventBus } from "../events/event-bus.js";
+import { MUSIC_SONGS } from "../constants/music-songs.js";
 
 class EventInfoPage extends BasePage {
   // Fallback avatars for comments without user_id
@@ -26,15 +27,51 @@ class EventInfoPage extends BasePage {
   constructor() {
     super();
     this.components = [];
+    this.headshotUpload = null;
+  }
+
+  async init() {
+    await super.init();
   }
 
   onReady() {
     this.setupPageTitleAndUser();
     this.setupHeadshot();
+    this.setupHeadshotUpload();
+    this.setupMusicPlayer();
     this.loadAndRenderEvents();
     this.setupGuestbook();
     this.loadMyspaceComments();
     this.setupAddCommentLink();
+  }
+
+  /**
+   * Insert and initialize the retro MusicPlayer component
+   */
+  setupMusicPlayer() {
+    // Dynamically import the MusicPlayer web component
+    import("../components/music-player.js").then(({ MusicPlayer }) => {
+      // Find or create the container for the music player
+      let container = document.getElementById("musicPlayerContainer");
+      if (!container) {
+        container = document.createElement("div");
+        container.id = "musicPlayerContainer";
+        // Insert at the top of the .myspace-about section if present
+        const aboutDiv = document.querySelector(".myspace-about");
+        if (aboutDiv) {
+          aboutDiv.insertBefore(container, aboutDiv.firstChild);
+        } else {
+          document.body.insertBefore(container, document.body.firstChild);
+        }
+      }
+      // Use static song list
+      const player = document.createElement("music-player");
+      player.setSongs(MUSIC_SONGS);
+      container.innerHTML = "";
+      container.appendChild(player);
+      // Optionally: handle song select event
+      // player.setOnSongSelect((song) => { ... });
+    });
   }
 
   setupPageTitleAndUser() {
@@ -52,8 +89,23 @@ class EventInfoPage extends BasePage {
     const user = appState.getCurrentUser();
     const headshotElem = document.querySelector(".myspace-headshot");
     if (headshotElem) {
-      headshotElem.src = user && user.headshot ? `images/${user.headshot}` : "images/headshot.jpg";
+      headshotElem.src = user && user.headshot ? user.headshot : "images/headshot.jpg";
+      // Always set data-headshot to user-{userId} (or user-unknown if not logged in)
+      const userId = user && user.id ? user.id : "unknown";
+      headshotElem.setAttribute("data-headshot", `user-${userId}`);
     }
+  }
+
+  setupHeadshotUpload() {
+    // Insert upload link into .myspace-about
+    import("../components/headshot-upload.js").then(({ HeadshotUpload }) => {
+      const aboutDiv = document.querySelector(".myspace-about");
+      if (!aboutDiv) return;
+      this.headshotUpload = new HeadshotUpload();
+      this.headshotUpload.init().then((uploadEl) => {
+        aboutDiv.appendChild(uploadEl);
+      });
+    });
   }
 
   async loadAndRenderEvents() {
@@ -114,6 +166,19 @@ class EventInfoPage extends BasePage {
         const li = document.createElement("li");
         li.className = "event-list-item";
         const cardEl = card.create();
+        // Add data-headshot to event avatar images
+        const eventAvatarImgs = cardEl.querySelectorAll(".event-avatar, .myspace-event-avatar");
+        eventAvatarImgs.forEach((img) => {
+          // Set data-headshot to user-{userId} for RSVP avatars
+          const rsvpUser = rsvpUsers.find(
+            (u) => u.user_id && img.classList.contains("event-avatar")
+          );
+          if (rsvpUser && rsvpUser.user_id) {
+            img.setAttribute("data-headshot", `user-${rsvpUser.user_id}`);
+          } else {
+            img.setAttribute("data-headshot", `user-default`);
+          }
+        });
         li.appendChild(cardEl);
         eventList.appendChild(li);
         // Store reference for per-card updates
@@ -374,19 +439,23 @@ class EventInfoPage extends BasePage {
     let avatar = "";
     const avatarIdx = arguments[1];
     const userHeadshots = arguments[2] || {};
+    let dataAttr = "";
     if (entry.user_id && userHeadshots[entry.user_id]) {
-      avatar = `images/${userHeadshots[entry.user_id]}`;
+      avatar = `${userHeadshots[entry.user_id]}`;
+      dataAttr = `data-headshot='user-${entry.user_id}'`;
     } else if (!entry.user_id && avatarIdx !== null && avatarIdx !== undefined) {
       avatar = this.fallbackAvatars[avatarIdx];
+      dataAttr = `data-headshot='user-fallback-${avatarIdx}'`;
     } else {
       avatar = "images/headshot.jpg";
+      dataAttr = `data-headshot='user-default'`;
     }
 
     return `
       <div class="myspace-comment-card">
         <div class="myspace-comment-sidebar">
           <div class="myspace-comment-name">${name}</div>
-          <img src="${avatar}" alt="avatar" class="myspace-comment-avatar" />
+          <img src="${avatar}" alt="avatar" class="myspace-comment-avatar" ${dataAttr} />
         </div>
         <div class="myspace-comment-content">
           <div class="myspace-comment-header">

@@ -42,6 +42,9 @@ export class EventCard extends EventTarget {
           img.src = u.headshot_url ? `images/${u.headshot_url}` : "images/headshot.jpg";
           img.alt = u.display_name;
           img.title = u.display_name;
+          if (u.user_id) {
+            img.setAttribute("data-headshot", `user-${u.user_id}`);
+          }
           avatarsDiv.appendChild(img);
         }
       });
@@ -171,9 +174,10 @@ export class EventCard extends EventTarget {
         if (u.status === "going") {
           const img = document.createElement("img");
           img.className = "event-card-avatar";
-          img.src = u.headshot_url ? `images/${u.headshot_url}` : "images/headshot.jpg";
+          img.src = u.headshot_url ? `${u.headshot_url}` : "images/headshot.jpg";
           img.alt = u.display_name;
           img.title = u.display_name;
+          img.dataset.headshot = u.user_id ? `user-${u.user_id}` : "user-default";
           avatars.appendChild(img);
         }
       });

@@ -17,6 +17,7 @@ class BasePage {
     if (this.requiresAuth) {
       await this.initAuth();
     }
+    this.setupHeadshotEventUpdates();
     await this.initAudio();
     await this.onReady();
   }
@@ -238,7 +239,36 @@ class BasePage {
   cleanup() {
     // Clean up event listeners
     this.eventCleanup.forEach((cleanup) => cleanup());
+    if (this.headshotUpdateCleanup) {
+      this.headshotUpdateCleanup();
+      this.headshotUpdateCleanup = null;
+    }
     this.eventCleanup = [];
+  }
+
+  /**
+   * Listen for headshot update events and update all data-headshot images
+   */
+  setupHeadshotEventUpdates() {
+    const handler = (e) => {
+      const { headshotUrl, userId } = e.detail;
+      console.log("[HeadshotEvent] Received user:headshot-updated", { userId, headshotUrl });
+      if (!userId) {
+        console.warn("[HeadshotEvent] No userId in event detail", e.detail);
+        return;
+      }
+      const imgs = document.querySelectorAll(`[data-headshot="user-${userId}"]`);
+      console.log(`[HeadshotEvent] Found ${imgs.length} images for user-${userId}`);
+      imgs.forEach((img) => {
+        console.log("[HeadshotEvent] Updating headshot src", { img, headshotUrl });
+        img.src = headshotUrl;
+      });
+    };
+    console.log("[BasePage] Setting up headshot update listener");
+    window.addEventListener("user:headshot-updated", handler);
+    this.headshotUpdateCleanup = () => {
+      window.removeEventListener("user:headshot-updated", handler);
+    };
   }
 
   setupAudio() {
