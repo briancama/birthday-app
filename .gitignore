@@ -41,6 +41,9 @@ yarn.lock
 dist/
 build/
 
+#mp3 folder
+songs/
+
 # OS generated files
 ehthumbs.db
 Desktop.ini
