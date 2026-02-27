@@ -11,7 +11,8 @@
   font-size: 12px;
   padding: 4px 10px;
 }
-.event-details-list {
+.event-schedule {
+  padding-left: 0;
 }
 .event-details-row {
   display: flex;
@@ -103,6 +104,7 @@ body {
   padding-top: 2rem;
   max-width: 1000px;
 }
+
 .myspace-sidebar {
   width: 360px;
   padding: 1rem;
@@ -129,6 +131,10 @@ body {
 
 .myspace-section {
   margin-bottom: 2rem;
+}
+
+.myspace-section:last-child {
+  margin-bottom: 0;
 }
 
 .myspace-section h3 {
@@ -174,6 +180,5 @@ body {
   }
   .myspace-sidebar {
     width: 100%;
-    margin-bottom: 1.5rem;
   }
 }

@@ -3,6 +3,8 @@ import { appState } from "../app.js";
 import { BasePage } from "./base-page.js";
 import { firebaseAuth } from "../services/firebase-auth.js";
 import { formatPhoneInput, toE164Format, isValidUSPhone } from "../utils/phone-format.js";
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.94.1/+esm";
+import { SUPABASE_CONFIG } from "../config.js";
 
 class LoginPage extends BasePage {
   constructor() {
@@ -22,6 +24,13 @@ class LoginPage extends BasePage {
     // Store handler references for cleanup
     this._phoneInputHandler = (e) => {
       e.target.value = formatPhoneInput(e.target.value);
+    };
+    this._phoneKeyHandler = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        // Trigger the same flow as clicking the send OTP button
+        this._sendOTPHandler(e);
+      }
     };
     this._sendOTPHandler = async (e) => {
       e.preventDefault();
@@ -52,6 +61,28 @@ class LoginPage extends BasePage {
         this.showError(err.message);
         return;
       }
+      // Pre-check: ensure phone number exists in our users table before sending OTP
+      try {
+        const supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+        const { data: userMatch, error: userErr } = await supabase
+          .from("users")
+          .select("id")
+          .eq("phone_number", this.phoneNumber)
+          .maybeSingle();
+        if (userErr) {
+          console.warn("Supabase lookup error:", userErr);
+          // If lookup fails for unexpected reasons, allow OTP flow to continue
+        }
+        if (!userMatch) {
+          this.showError(
+            "Sorry — that phone number is not authorized. Contact Brian if you'd like access."
+          );
+          return;
+        }
+      } catch (lookupErr) {
+        console.error("Phone lookup failed:", lookupErr);
+        // Don't block OTP on lookup infrastructure errors; continue
+      }
       this.sendOTPBtn.disabled = true;
       this.sendOTPBtn.textContent = "Sending...";
       try {
@@ -80,6 +111,11 @@ class LoginPage extends BasePage {
     this._formSubmitHandler = async (e) => {
       console.log("Form submit event fired");
       e.preventDefault();
+      // If we're still on the phone step, route submit to send OTP
+      if (this.phoneStep && this.phoneStep.style.display !== "none") {
+        await this._sendOTPHandler(e);
+        return;
+      }
       this.errorDiv.textContent = "";
       const code = this.otpInput.value.trim();
       if (!code || code.length !== 6) {
@@ -180,6 +216,7 @@ class LoginPage extends BasePage {
 
     // Attach event listeners with handler references
     this.phoneInput.addEventListener("input", this._phoneInputHandler);
+    this.phoneInput.addEventListener("keydown", this._phoneKeyHandler);
     this.sendOTPBtn.addEventListener("click", this._sendOTPHandler);
     this.backBtn.addEventListener("click", this._backBtnHandler);
     this.form.addEventListener("submit", this._formSubmitHandler);
@@ -198,6 +235,7 @@ class LoginPage extends BasePage {
   cleanup() {
     // Remove all event listeners to prevent stale state
     this.phoneInput?.removeEventListener("input", this._phoneInputHandler);
+    this.phoneInput?.removeEventListener("keydown", this._phoneKeyHandler);
     this.sendOTPBtn?.removeEventListener("click", this._sendOTPHandler);
     this.backBtn?.removeEventListener("click", this._backBtnHandler);
     this.form?.removeEventListener("submit", this._formSubmitHandler);
