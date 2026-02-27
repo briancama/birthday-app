@@ -9,6 +9,7 @@ We now use a Node.js Express server for local development. This improves reliabi
 1. Install Node.js (https://nodejs.org/)
 2. In your project folder, run:
    npm install express
+   # Run this command in the root of your project directory (where server.js is located)
 3. Start the server:
    node server.js
 

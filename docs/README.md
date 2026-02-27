@@ -15,29 +15,31 @@ A weekend event challenge app with progressive reveals, Brian-mode challenges, a
 
 ### Local Development
 
+See [LOCAL_SERVER_SETUP.md](./LOCAL_SERVER_SETUP.md) for full instructions.
+
+**Quick Steps:**
+
 1. Clone the repo:
    ```bash
    git clone https://github.com/yourusername/birthday-app.git
    cd birthday-app
    ```
 
-2. Start local dev server:
+2. Install Node.js (https://nodejs.org/) if you haven't already.
+
+3. Install dependencies and start the server:
    ```bash
-   python3 serve.py 8000
+   npm install express
+   node server.js
    ```
    Then open `http://localhost:8000` in your browser.
-   
-   **Important**: Use the custom `serve.py` script (not `python3 -m http.server`) to properly resolve routes without `.html` extensions (e.g., `/dashboard`, `/leaderboard` instead of `/dashboard.html`). This ensures the local development environment matches production behavior.
-   
-   **Pro tip**: Add this alias to your `~/.zshrc`:
-   ```bash
-   alias serve="python3 serve.py 8000"
-   ```
-   Then just run `serve` from the project directory.
 
-3. Create a Supabase project at [supabase.com](https://supabase.com)
+   - The Node.js server supports extensionless URLs (e.g., `/dashboard` → `/dashboard.html`).
+   - For troubleshooting and advanced setup, see [LOCAL_SERVER_SETUP.md](./LOCAL_SERVER_SETUP.md).
 
-3. Run the SQL migration in Supabase SQL Editor:
+4. Create a Supabase project at [supabase.com](https://supabase.com)
+
+5. Run the SQL migration in Supabase SQL Editor:
    ```bash
    # Copy contents of supabase/sql/init.sql
    # Paste and run in Supabase dashboard → SQL Editor
