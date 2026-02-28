@@ -13,8 +13,15 @@ app.use(express.json());
 app.use(cookieParser(process.env.COOKIE_SECRET || "dev-secret"));
 
 // Middleware to serve .html files for extensionless URLs (keep for static fallback)
+// Only apply for top-level GET page requests (avoid rewriting API routes like /auth, /api, /users)
 app.use((req, res, next) => {
-  if (!req.path.includes(".") && req.path !== "/") {
+  const isGet = req.method === "GET";
+  const isRoot = req.path === "/";
+  const hasExtension = req.path.includes(".");
+  const isApiLike =
+    req.path.startsWith("/api") || req.path.startsWith("/auth") || req.path.startsWith("/users");
+
+  if (isGet && !hasExtension && !isRoot && !isApiLike) {
     req.url += ".html";
   }
   next();
