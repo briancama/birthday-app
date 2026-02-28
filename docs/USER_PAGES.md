@@ -127,6 +127,9 @@ The checklist below is the single source of truth for implementation steps. Work
 - [ ] Add DB migration for `user_profile` table (see `sql/create_user_profile.sql`)
 - [ ] Install server deps: `ejs` and `@supabase/supabase-js`
 - [ ] Add `templates/user.ejs` starter template and `templates/partials/` for shared fragments (guestbook, event-details card)
+- [x] Add DB migration for `user_profile` table (see `sql/create_user_profile.sql`)
+- [x] Install server deps: `ejs` and `@supabase/supabase-js`
+- [x] Add `templates/user.ejs` starter template and `templates/partials/` for shared fragments (guestbook, event-details card)
 - [ ] Add server route `GET /users/:id` that renders `user_profile_view` and injects `window.__USER_PROFILE` for client bootstrapping
 - [ ] Add secure POST `/api/users/:id/profile` that updates Supabase and validates/sanitizes input
 - [ ] Integrate Quill editor for edit mode and use `DOMPurify` before saving (client + server-side validation)

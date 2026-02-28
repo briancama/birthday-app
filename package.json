@@ -2,6 +2,9 @@
   "dependencies": {
     "express": "^5.2.1",
     "ejs": "^3.1.9",
-    "@supabase/supabase-js": "^2.94.1"
+    "@supabase/supabase-js": "^2.94.1",
+    "cookie-parser": "^1.4.6",
+    "jsdom": "^22.1.0",
+    "dompurify": "^2.4.0"
   }
 }

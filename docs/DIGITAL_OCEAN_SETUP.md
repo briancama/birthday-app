@@ -171,8 +171,10 @@ sudo systemctl restart nginx
 
 7. TLS via Certbot
 
+Brief overview: this section obtains and installs a free TLS/HTTPS certificate for your domain using Let's Encrypt via the `certbot` tool. Certbot will validate ownership of the domain, install the certificate into your nginx configuration, and configure automatic renewal so the certificate stays valid.
+
 ```bash
-sudo certbot --nginx -d yourdomain.example
+sudo certbot --nginx -d birthday.briancama.com
 ```
 
 8. Database migrations / SQL
@@ -193,7 +195,7 @@ psql "postgresql://user:pass@host:5432/dbname" -f sql/create_user_profile.sql
 Ensure nginx user can read static files:
 
 ```bash
-sudo chown -R www-data:www-data /var/www/birthday-app
+sudo chown -R birthday:birthday /var/www/birthday-app
 sudo find /var/www/birthday-app -type d -exec chmod 755 {} \;
 sudo find /var/www/birthday-app -type f -exec chmod 644 {} \;
 ```
