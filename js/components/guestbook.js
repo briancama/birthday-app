@@ -4,6 +4,7 @@
 import { SUPABASE_CONFIG } from "../config.js";
 import { appState } from "../app.js";
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.94.1/+esm";
+import { EventBus } from "../events/event-bus.js";
 
 const supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
 
@@ -132,7 +133,16 @@ export class Guestbook {
     button.disabled = true;
     button.textContent = "SIGNING...";
     try {
-      await addComment({ name, message });
+      const inserted = await addComment({ name, message, user_id: appState.getUserId() });
+      // Emit guestbook sign event for achievements
+      try {
+        EventBus.instance.emit("user:guestbook:sign", {
+          userId: appState.getUserId(),
+          commentId: inserted?.id,
+        });
+      } catch (emitErr) {
+        // noop
+      }
       localStorage.setItem("lastGuestbookSubmit", Date.now().toString());
       successDiv.textContent = "✓ SUCCESS!!! Your message has been signed!!!";
       successDiv.style.display = "block";
@@ -171,9 +181,16 @@ export function addComment(data) {
     message: data.message,
     user_id: data.user_id,
     created_at: data.created_at || new Date().toISOString(),
-    // ...add more fields as needed
   };
-  return supabase.from("guestbook").insert([entry]);
+  return (async () => {
+    const { data: inserted, error } = await supabase
+      .from("guestbook")
+      .insert([entry])
+      .select()
+      .maybeSingle();
+    if (error) throw error;
+    return inserted;
+  })();
 }
 
 // Legacy sign function for backward compatibility

@@ -2,6 +2,7 @@ import { BasePage } from "./base-page.js";
 import { FavoriteButton } from "../components/favorite-button.js";
 import { featureFlags } from "../utils/feature-flags.js";
 import { firebaseAuth } from "../services/firebase-auth.js";
+import { EventBus } from "../events/event-bus.js";
 
 class CocktailJudgingPage extends BasePage {
   constructor() {
@@ -629,6 +630,16 @@ class CocktailJudgingPage extends BasePage {
 
       // Re-render all entries to update other favorite buttons
       this.renderEntries();
+      // Emit favorite toggled event for achievements
+      try {
+        EventBus.instance.emit("cocktail:favorite:toggled", {
+          userId: this.userId,
+          entryId,
+          favorited: this.myFavorite === entryId,
+        });
+      } catch (emitErr) {
+        // noop
+      }
     } catch (err) {
       console.error("Error toggling favorite:", err);
       alert("Failed to update favorite. Please try again.");
@@ -664,6 +675,16 @@ class CocktailJudgingPage extends BasePage {
       ]);
 
       if (error) throw error;
+      // Emit favorite toggled event for achievements
+      try {
+        EventBus.instance.emit("cocktail:favorite:toggled", {
+          userId: this.userId,
+          entryId,
+          favorited: true,
+        });
+      } catch (emitErr) {
+        // noop
+      }
     } catch (err) {
       console.error("Error marking favorite:", err);
 
@@ -693,6 +714,16 @@ class CocktailJudgingPage extends BasePage {
         .eq("entry_id", entryId);
 
       if (error) throw error;
+      // Emit favorite toggled event for achievements (unfavorite)
+      try {
+        EventBus.instance.emit("cocktail:favorite:toggled", {
+          userId: this.userId,
+          entryId,
+          favorited: false,
+        });
+      } catch (emitErr) {
+        // noop
+      }
     } catch (err) {
       console.error("Error removing favorite:", err);
 

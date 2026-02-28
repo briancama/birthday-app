@@ -2,6 +2,7 @@ import { BasePage } from "./base-page.js";
 import { APP_CONFIG } from "../app.js";
 import { firebaseAuth } from "../services/firebase-auth.js";
 import { featureFlags } from "../utils/feature-flags.js";
+import { EventBus } from "../events/event-bus.js";
 
 class LeaderboardPage extends BasePage {
   constructor() {
@@ -22,6 +23,18 @@ class LeaderboardPage extends BasePage {
     // Only set up auto-refresh if event started
     if (this.eventStarted && APP_CONFIG.enableAutoRefresh) {
       this.refreshInterval = setInterval(() => this.loadLeaderboard(), APP_CONFIG.refreshInterval);
+    }
+
+    // Reload leaderboard when achievements are awarded so totals update immediately
+    try {
+      const achCleanup = EventBus.instance.listen("achievement:awarded", () => {
+        this.loadLeaderboard().catch((err) =>
+          console.warn("Failed to reload leaderboard after achievement", err)
+        );
+      });
+      this.eventCleanup.push(achCleanup);
+    } catch (err) {
+      console.warn("Leaderboard: failed to subscribe to achievement events", err);
     }
   }
 
@@ -126,13 +139,23 @@ class LeaderboardPage extends BasePage {
                     </div>
                     <div class="leaderboard-card__stats">
                         <div class="stat-item">
-                            <span class="leaderboard-card__stat-label">Challenges</span>
+                            <span class="leaderboard-card__stat-label">Challenge</span>
                             <span class="leaderboard-card__stat-value">${row.challenges_completed}</span>
                         </div>
                         <div class="stat-item">
                             <span class="leaderboard-card__stat-label">Contest</span>
                             <span class="leaderboard-card__stat-value">${row.competition_points}</span>
                         </div>
+                        ${
+                          row.achievements_completed > 0
+                            ? `
+                        <div class="stat-item">
+                          <span class="leaderboard-card__stat-label">???</span>
+                          <span class="leaderboard-card__stat-value">${row.achievement_points}</span>
+                        </div>
+                        `
+                            : ""
+                        }
                     </div>
                     <div class="leaderboard-card__total">
                         <span class="total-value">${row.total_points}</span>

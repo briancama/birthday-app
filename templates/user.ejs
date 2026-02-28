@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title><%= user.display_name || 'User' %> — Birthday App</title>
+    <link rel="stylesheet" href="/css/geocities.css">
+    <style>
+      body {
+        background-image: <% if (user.profile_bg_url) { %>url('<%= user.profile_bg_url %>')<% } else { %>none<% } %>;
+        background-repeat: <% if (user.profile_bg_mode === 'tile') { %>repeat<% } else { %>no-repeat<% } %>;
+        background-size: <% if (user.profile_bg_mode === 'cover') { %>cover<% } else { %>auto<% } %>;
+      }
+      .profile-headshot { width: 140px; height: 140px; border-radius: 6px; }
+      .profile-container { max-width: 900px; margin: 40px auto; background: rgba(255,255,255,0.85); padding: 20px; }
+    </style>
+  </head>
+  <body>
+    <div class="profile-container">
+      <h1 id="myspaceName"><%=
+        (typeof profile_title !== 'undefined' && profile_title) ? profile_title : (user && user.display_name ? (user.display_name + "'s BriSpace") : 'Guest')
+      %></h1>
+      <img src="<%= user.headshot || '/images/headshot.jpg' %>" alt="headshot" class="profile-headshot" />
+
+      <div class="favorite-audio">
+        <% if (user.favorite_track) { %>
+          <audio controls src="<%= user.favorite_track %>"></audio>
+        <% } %>
+      </div>
+
+      <div class="profile-content">
+        <!-- profile_html is expected to be sanitized before saving -->
+        <%- user.profile_html || '<p>This user has not added a profile yet.</p>' %>
+      </div>
+
+      <% if (editMode) { %>
+        <div id="editor-toolbar"></div>
+        <div id="editor"><%- user.profile_html || '' %></div>
+        <button id="saveProfile">Save</button>
+        <script src="/js/vendor/quill.min.js"></script>
+        <script src="/js/vendor/dompurify.min.js"></script>
+        <script>
+          // Minimal editor init for edit mode. Hook save to POST /api/users/:id/profile
+          const quill = new Quill('#editor', { theme: 'snow' });
+          document.getElementById('saveProfile').addEventListener('click', async () => {
+            const raw = quill.root.innerHTML;
+            const clean = DOMPurify.sanitize(raw);
+            await fetch('/api/users/<%= user.id %>/profile', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ profile_html: clean })
+            });
+            location.reload();
+          });
+        </script>
+      <% } %>
+    </div>
+  </body>
+</html>

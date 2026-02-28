@@ -79,9 +79,15 @@ class EventInfoPage extends BasePage {
     this.updateMarqueeUsername(appState.getCurrentUser()?.username || "Guest");
     const user = appState.getCurrentUser();
     const nameElem = document.getElementById("myspaceName");
-    if (user && user.display_name && nameElem) {
-      nameElem.textContent = user.display_name + "'s BriSpace";
-      nameElem.classList.add("fade-in");
+    // Only set the title on the client if the server didn't already render it.
+    if (nameElem) {
+      const existing = nameElem.textContent && nameElem.textContent.trim();
+      if (!existing) {
+        if (user && user.display_name) {
+          nameElem.textContent = user.display_name + "'s BriSpace";
+          nameElem.classList.add("fade-in");
+        }
+      }
     }
   }
 
@@ -339,7 +345,8 @@ class EventInfoPage extends BasePage {
           return;
         }
         try {
-          await import("../components/guestbook.js").then(({ addComment }) =>
+          // Add comment and capture inserted row so we can emit the achievement event
+          const inserted = await import("../components/guestbook.js").then(({ addComment }) =>
             addComment({
               name,
               message,
@@ -348,10 +355,55 @@ class EventInfoPage extends BasePage {
               created_at: new Date().toISOString(),
             })
           );
+
+          // Emit the same event Guestbook.sign would emit so AchievementService reacts
+          try {
+            EventBus.instance.emit("user:guestbook:sign", {
+              userId: user ? user.id : null,
+              commentId: inserted?.id,
+            });
+          } catch (emitErr) {
+            console.warn("Failed to emit guestbook sign event:", emitErr);
+          }
+
           successDiv.textContent = "Comment added!";
           successDiv.style.display = "block";
           messageInput.value = "";
-          this.guestbook.loadEntries("guestbookEntries");
+
+          // Append the newly inserted comment to the page's comments list (avoid full reload)
+          try {
+            const myspaceList = document.getElementById("myspaceCommentsList");
+            const headshot = user && user.headshot ? user.headshot : "images/headshot.jpg";
+            const newElem = this.createMyspaceCommentElement(
+              { ...inserted, user_id: user ? user.id : null },
+              null,
+              { [user ? user.id : "unknown"]: headshot }
+            );
+
+            // Prepend to myspace comments (newest first) and update counts
+            if (myspaceList) {
+              myspaceList.prepend(newElem);
+              const countElem = document.getElementById("commentsCount");
+              const totalElem = document.getElementById("commentsTotal");
+              if (countElem) {
+                const current = Number(countElem.textContent || "0");
+                countElem.textContent = String(current + 1);
+              }
+              if (totalElem) {
+                const currentT = Number(totalElem.textContent || "0");
+                totalElem.textContent = String(currentT + 1);
+              }
+
+              // Smoothly reveal the newly-added comment at the top
+              try {
+                newElem.scrollIntoView({ behavior: "smooth" });
+              } catch (e) {
+                // ignore scroll errors on old browsers
+              }
+            }
+          } catch (appendErr) {
+            console.warn("Failed to append comment to UI:", appendErr);
+          }
         } catch (err) {
           errorDiv.textContent = "Failed to add comment: " + err.message;
           errorDiv.style.display = "block";
@@ -405,7 +457,7 @@ class EventInfoPage extends BasePage {
       // Take oldest 12
       const legacyToShow = legacyComments.slice(0, 12);
       // Sort user_id comments newest first
-      userComments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      userComments.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
       // Combine with legacy comments
       const combined = [...legacyToShow, ...userComments];
       // Reverse so newest overall appears first
@@ -465,6 +517,66 @@ class EventInfoPage extends BasePage {
         </div>
       </div>
     `;
+  }
+
+  // Create and return a DOM node for a myspace comment (safer for single-item insertions)
+  createMyspaceCommentElement(entry, avatarIdx, userHeadshots) {
+    const nameText = entry.name || "Anonymous";
+    const dateText = new Date(entry.created_at).toLocaleString();
+    const messageText = entry.message || "";
+
+    // Determine avatar and data-headshot attribute
+    let avatarSrc = "images/headshot.jpg";
+    let dataHeadshot = "user-default";
+    if (entry.user_id && userHeadshots && userHeadshots[entry.user_id]) {
+      avatarSrc = userHeadshots[entry.user_id];
+      dataHeadshot = `user-${entry.user_id}`;
+    } else if (!entry.user_id && typeof avatarIdx === "number") {
+      avatarSrc = this.fallbackAvatars[avatarIdx] || avatarSrc;
+      dataHeadshot = `user-fallback-${avatarIdx}`;
+    }
+
+    const card = document.createElement("div");
+    card.className = "myspace-comment-card";
+
+    const sidebar = document.createElement("div");
+    sidebar.className = "myspace-comment-sidebar";
+
+    const nameDiv = document.createElement("div");
+    nameDiv.className = "myspace-comment-name";
+    nameDiv.textContent = nameText;
+
+    const img = document.createElement("img");
+    img.className = "myspace-comment-avatar";
+    img.alt = "avatar";
+    img.src = avatarSrc;
+    img.setAttribute("data-headshot", dataHeadshot);
+
+    sidebar.appendChild(nameDiv);
+    sidebar.appendChild(img);
+
+    const content = document.createElement("div");
+    content.className = "myspace-comment-content";
+
+    const header = document.createElement("div");
+    header.className = "myspace-comment-header";
+
+    const dateSpan = document.createElement("span");
+    dateSpan.className = "myspace-comment-date";
+    dateSpan.textContent = dateText;
+    header.appendChild(dateSpan);
+
+    const msg = document.createElement("div");
+    msg.className = "myspace-comment-message";
+    msg.textContent = messageText;
+
+    content.appendChild(header);
+    content.appendChild(msg);
+
+    card.appendChild(sidebar);
+    card.appendChild(content);
+
+    return card;
   }
 
   escapeHtml(text) {

@@ -1,5 +1,7 @@
 import { appState } from "../app.js";
 import { audioManager, addClickSound } from "../utils/audio.js";
+import { achievementService } from "../services/achievement-service.js";
+import { EventBus } from "../events/event-bus.js";
 
 class BasePage {
   constructor({ requiresAuth = true } = {}) {
@@ -19,6 +21,27 @@ class BasePage {
     }
     this.setupHeadshotEventUpdates();
     await this.initAudio();
+    // Initialize achievement service (idempotent) and UI listener
+    try {
+      await achievementService.init();
+      const achCleanup = EventBus.instance.listen("achievement:awarded", (e) => {
+        try {
+          const { name, points } = e.detail || {};
+          this.showSuccess(`Achievement unlocked: ${name} (+${points || 0} pts)`);
+          // play success sound if available
+          try {
+            this.audioManager.play && this.audioManager.play("success");
+          } catch (sErr) {
+            /* ignore */
+          }
+        } catch (err) {
+          console.warn("Error handling achievement event", err);
+        }
+      });
+      this.eventCleanup.push(achCleanup);
+    } catch (e) {
+      console.warn("Failed to init achievement service", e);
+    }
     await this.onReady();
   }
 
@@ -280,6 +303,8 @@ class BasePage {
     this.audioManager.preload("save", "/audio/save.mp3");
     this.audioManager.preload("favorite", "/audio/favorite.mp3");
     this.audioManager.preload("unfavorite", "/audio/unfavorite.mp3");
+    // Preload optional thank-you sound for site awards
+    this.audioManager.preload("thanks", "/audio/thanks.mp3", true);
 
     // Initialize audio on first interaction (required for mobile)
     const initAudio = () => {
@@ -367,19 +392,24 @@ class BasePage {
    * Display a random site-awards image at the bottom of the page
    */
   showRandomSiteAward() {
+    // Each entry can optionally provide a sound path; if null we default to the generic "thanks" sound
     const siteAwardsImages = [
-      "images/site-awards_blink182.gif",
-      "images/site-awards_hackers.gif",
-      "images/site-awards_pikachu.gif",
-      "images/site-awards_christian.gif",
-      "images/site-awards_hanson.gif",
-      "images/site-awards_aaroncarter.gif",
-      "images/site-awards_angel.gif",
-      "images/site-awards_pug.gif",
-      "images/site-awards_predator.gif",
-      "images/site-awards_southpark.gif",
+      { img: "images/site-awards_blink182.gif", sound: "/audio/thanks_blink182.mp3" },
+      { img: "images/site-awards_hackers.gif", sound: "/audio/thanks_hackers.mp3" },
+      { img: "images/site-awards_pikachu.gif", sound: "/audio/thanks_pikachu.mp3" },
+      { img: "images/site-awards_christian.gif", sound: "/audio/thanks_christian.mp3" },
+      { img: "images/site-awards_hanson.gif", sound: "/audio/thanks_mmmbop.mp3" },
+      { img: "images/site-awards_aaroncarter.gif", sound: null },
+      { img: "images/site-awards_angel.gif", sound: "/audio/thanks_fairy.mp3" },
+      { img: "images/site-awards_pug.gif", sound: "/audio/thanks_pug.mp3" },
+      { img: "images/site-awards_predator.gif", sound: "/audio/thanks_predator.mp3" },
+      { img: "images/site-awards_southpark.gif", sound: "/audio/thanks_south-park.mp3" },
+      { img: "images/site-awards_jackpot.gif", sound: "/audio/thanks_jackpot.mp3" },
+      { img: "images/site-awards_olsen.gif", sound: "/audio/thanks_olsen.mp3" },
+      { img: "images/site-awards-bomb.gif", sound: "/audio/thanks_bomb.mp3" },
     ];
-    const randomAward = siteAwardsImages[Math.floor(Math.random() * siteAwardsImages.length)];
+    const randomEntry = siteAwardsImages[Math.floor(Math.random() * siteAwardsImages.length)];
+    const randomAward = randomEntry.img;
     const awardImg = document.createElement("img");
     awardImg.src = randomAward;
     awardImg.alt = "Site Award";
@@ -387,6 +417,26 @@ class BasePage {
     awardImg.style.display = "block";
     awardImg.style.margin = "40px auto 0 auto";
     awardImg.style.position = "relative";
+    awardImg.style.cursor = "pointer";
+
+    // If the selected entry specifies a custom sound, preload it and attach its key to the image
+    if (randomEntry && randomEntry.sound) {
+      // derive a name for the sound from the filename, e.g. /audio/thanks_pug.mp3 -> thanks_pug
+      const soundPath = randomEntry.sound;
+      const soundName = soundPath.split("/").pop().split(".")[0];
+      this.audioManager.preload(soundName, soundPath, true);
+      awardImg.dataset.thanksSound = soundName;
+    }
+
+    // Play a short thank-you sound when the award image is clicked
+    awardImg.addEventListener("click", (e) => {
+      const soundToPlay = awardImg.dataset.thanksSound || "thanks";
+      try {
+        this.audioManager.play(soundToPlay);
+      } catch (err) {
+        console.debug("Play thanks failed:", err);
+      }
+    });
     document.body.appendChild(awardImg);
   }
 }

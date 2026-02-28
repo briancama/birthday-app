@@ -98,6 +98,53 @@ class DashboardPage extends BasePage {
     }
 
     await this.loadPageData();
+    // Load achievements UI after page data
+    await this.renderAchievements();
+  }
+
+  async renderAchievements() {
+    try {
+      if (!this.userId) return;
+      const supabase = this.supabase;
+
+      const counterEl = document.getElementById("achievementsCounter");
+      const listEl = document.getElementById("achievementsList");
+      const section = document.getElementById("achievementsSection");
+      if (!counterEl || !listEl || !section) return;
+
+      const [{ data: allAchievements }, { data: userAwards }] = await Promise.all([
+        supabase.from("achievements").select("id,key,name,description,points"),
+        supabase.from("user_achievements").select("achievement_id").eq("user_id", this.userId),
+      ]);
+
+      const total = Array.isArray(allAchievements) ? allAchievements.length : 0;
+      const awardedIds = Array.isArray(userAwards) ? userAwards.map((u) => u.achievement_id) : [];
+      const awarded = Array.isArray(allAchievements)
+        ? allAchievements.filter((a) => awardedIds.includes(a.id))
+        : [];
+
+      counterEl.textContent = `${awarded.length} / ${total} achievements`;
+      section.classList.toggle("visible", awarded.length > 0);
+
+      // Render badges using CSS classes (no inline styles)
+      listEl.innerHTML = awarded
+        .map((ach) => {
+          const name = ach.name || ach.key || "Achievement";
+          const desc = ach.description || "";
+          const points = ach.points || 0;
+          const initial = (name && name.charAt(0)) || "*";
+          return `
+            <div class="challenge-badge" title="${desc}">
+              <span class="brian-mode-badge" aria-hidden="true">${initial}</span>
+              <span class="badge-name">${name}</span>
+              <span class="badge-points">(${points} pts)</span>
+            </div>
+          `;
+        })
+        .join("");
+    } catch (err) {
+      console.warn("Dashboard: renderAchievements failed", err);
+    }
   }
 
   async loadPageData() {
@@ -178,6 +225,19 @@ class DashboardPage extends BasePage {
 
     // Store cleanup functions for later removal
     this.eventCleanup.push(revealCleanup, completeCleanup);
+
+    // Refresh achievements UI when an achievement is awarded for this user
+    const achCleanup = EventBus.instance.listen("achievement:awarded", (e) => {
+      try {
+        const userId = e.detail?.userId || e.detail?.user_id;
+        if (userId && this.userId && userId === this.userId) {
+          this.renderAchievements();
+        }
+      } catch (err) {
+        console.warn("Error handling achievement:awarded in dashboard", err);
+      }
+    });
+    this.eventCleanup.push(achCleanup);
   }
 
   async handleChallengeReveal(detail) {

@@ -185,12 +185,10 @@
 
   .secret-arnold {
     display: block;
-    width: 0;
+    width: auto;
     font-size: var(--text-lg);
     color: #d3d3d3;
     text-shadow: none;
-    width: 100%;
-    text-align: center;
   }
 
   .login-container .form-group {
@@ -1393,7 +1391,7 @@
   position: fixed;
   top: 20px;
   right: 20px;
-  z-index: 9999;
+  z-index: 11000; /* Ensure toasts appear above modals (modals use z-index ~9999) */
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -1424,6 +1422,18 @@
   font-size: 13px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   animation: slideIn 0.3s ease-out;
+}
+
+/* Toast container positioning to appear above modals */
+.success-messages,
+.error-messages {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 11000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 @keyframes slideIn {
