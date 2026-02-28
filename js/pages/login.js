@@ -25,6 +25,7 @@ class LoginPage extends BasePage {
     this._phoneInputHandler = (e) => {
       e.target.value = formatPhoneInput(e.target.value);
     };
+
     this._phoneKeyHandler = (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
@@ -153,8 +154,8 @@ class LoginPage extends BasePage {
         const firebaseUid = userCredential.user.uid;
         localStorage.setItem("firebase_uid", firebaseUid);
         localStorage.setItem("phone_number", this.phoneNumber);
-        // Wait for appState.init() to confirm auth and user profile
-        const authSuccess = await appState.init();
+        // Exchange token with server and initialize app state
+        const authSuccess = await this.serverLoginAndInit();
         if (authSuccess) {
           window.location.href = "dashboard";
         } else {
@@ -169,6 +170,43 @@ class LoginPage extends BasePage {
         this.verifyOTPBtn.textContent = ">>> VERIFY CODE <<<";
       }
     };
+  }
+
+  // Exchanges the Firebase ID token with the server to set a signed cookie,
+  // then initializes `appState`. Returns `true` on success, `false` on failure.
+  async serverLoginAndInit() {
+    const sdkUser = firebaseAuth.getCurrentUser();
+    if (!sdkUser) {
+      this.showError("No Firebase user found after verification.");
+      return false;
+    }
+    try {
+      const idToken = await sdkUser.getIdToken(false);
+      const resp = await fetch("/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ idToken }),
+      });
+      if (!resp.ok) {
+        const err = await resp.text().catch(() => resp.statusText);
+        this.showError("Server login failed: " + err);
+        return false;
+      }
+    } catch (loginErr) {
+      console.error("Server /auth/login error:", loginErr);
+      this.showError("Failed to establish session with server.");
+      return false;
+    }
+
+    try {
+      const authSuccess = await appState.init();
+      return Boolean(authSuccess);
+    } catch (e) {
+      console.error("appState.init() failed:", e);
+      this.showError("Failed to initialize app state.");
+      return false;
+    }
   }
 
   async onReady() {

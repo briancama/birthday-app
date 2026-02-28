@@ -1,6 +1,6 @@
 const express = require("express");
 const path = require("path");
-const cookieParser = require('cookie-parser');
+const cookieParser = require("cookie-parser");
 const app = express();
 const port = process.env.PORT || 8000;
 
@@ -10,7 +10,7 @@ app.set("view engine", "ejs");
 
 app.use(express.json());
 // signed cookies for simple session-style authentication
-app.use(cookieParser(process.env.COOKIE_SECRET || 'dev-secret'));
+app.use(cookieParser(process.env.COOKIE_SECRET || "dev-secret"));
 
 // Middleware to serve .html files for extensionless URLs (keep for static fallback)
 app.use((req, res, next) => {
@@ -26,8 +26,10 @@ app.use(express.static(path.join(__dirname)));
 // Mount users route
 const usersRouter = require("./routes/users");
 app.use("/users", usersRouter);
-const apiUsersRouter = require('./routes/api-users');
-app.use('/api', apiUsersRouter);
+const apiUsersRouter = require("./routes/api-users");
+app.use("/api", apiUsersRouter);
+const authRouter = require("./routes/auth");
+app.use("/auth", authRouter);
 
 app.listen(port, () => {
   console.log(`Birthday App server running at http://localhost:${port}`);

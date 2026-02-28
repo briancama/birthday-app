@@ -57,3 +57,4 @@ $RECYCLE.BIN/
 .env-dev
 .env-production
 .DS_Store
+firebase-service-account.json

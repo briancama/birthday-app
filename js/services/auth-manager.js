@@ -50,7 +50,14 @@ class AuthManager extends EventTarget {
 
   async logout() {
     try {
-      await firebaseAuth.init();
+      // Attempt to clear server-side session cookie first
+      try {
+        await fetch("/auth/logout", { method: "POST", credentials: "include" });
+      } catch (srvErr) {
+        console.warn("Server logout failed:", srvErr);
+      }
+
+      // Ensure Firebase SDK signs out the client; no need to re-init the SDK here.
       await firebaseAuth.signOut();
     } catch (err) {
       this.emitError("Logout failed. Please refresh the page or try again.");

@@ -124,9 +124,6 @@ For now, we will not implement proxy or disk caching. Pages will be server-rende
 
 The checklist below is the single source of truth for implementation steps. Work through items in order, mark each complete in the repo TODOs, and open PRs that reference the checklist item being implemented.
 
-- [ ] Add DB migration for `user_profile` table (see `sql/create_user_profile.sql`)
-- [ ] Install server deps: `ejs` and `@supabase/supabase-js`
-- [ ] Add `templates/user.ejs` starter template and `templates/partials/` for shared fragments (guestbook, event-details card)
 - [x] Add DB migration for `user_profile` table (see `sql/create_user_profile.sql`)
 - [x] Install server deps: `ejs` and `@supabase/supabase-js`
 - [x] Add `templates/user.ejs` starter template and `templates/partials/` for shared fragments (guestbook, event-details card)
