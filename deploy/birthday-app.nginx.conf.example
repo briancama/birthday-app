@@ -1,0 +1,59 @@
+# Example nginx configuration for Birthday App
+# Replace `birthday.briancama.com` with your domain and enable via
+# /etc/nginx/sites-available/birthday-app -> /etc/nginx/sites-enabled/
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl ipv6only=on;
+    server_name birthday.briancama.com;
+
+    ssl_certificate /etc/letsencrypt/live/birthday.briancama.com/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/birthday.briancama.com/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+    root /var/www/birthday-app;
+    index index.html;
+
+    # Serve large/static assets directly from disk
+    location /songs/ {
+        alias /var/www/birthday-app/songs/;
+        access_log off;
+        expires 1d;
+    }
+
+    # Proxy dynamic requests to the Node app
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_buffer_size 16k;
+        proxy_buffers 4 32k;
+        proxy_busy_buffers_size 64k;
+        client_max_body_size 20M;
+    }
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+
+    # gzip
+    gzip on;
+    gzip_vary on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml;
+}
+
+# HTTP -> HTTPS redirect block (Certbot typically writes this)
+server {
+    listen 80;
+    listen [::]:80;
+    server_name birthday.briancama.com;
+
+    # Redirect all HTTP requests to HTTPS
+    return 301 https://$host$request_uri;
+}
