@@ -1,33 +1,15 @@
 const express = require("express");
 const router = express.Router();
-const { createClient } = require("@supabase/supabase-js");
-const { JSDOM } = require("jsdom");
-const createDOMPurify = require("dompurify");
+const { getSupabase, createSanitizer, requireSignedUser } = require("../js/utils/server-utils");
 
-const SUPABASE_URL = process.env.SUPABASE_URL || "";
-const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE || "";
-
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE) {
-  console.warn(
-    "Warning: SUPABASE_URL or SUPABASE_SERVICE_ROLE not set — API routes will not function without them"
-  );
-}
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
-
-// helper: create DOMPurify instance per request (JSDOM window)
-function createSanitizer() {
-  const window = new JSDOM("").window;
-  return createDOMPurify(window);
-}
+const supabase = getSupabase();
 
 // POST /api/users/:id/profile
 // Body: { profile_html }
 router.post("/users/:id/profile", async (req, res) => {
   try {
     const targetId = req.params.id;
-    const signedUserId = req.signedCookies && req.signedCookies.user_id;
-
+    const signedUserId = requireSignedUser(req);
     if (!signedUserId) return res.status(401).json({ error: "Not authenticated" });
     if (signedUserId !== targetId) return res.status(403).json({ error: "Forbidden" });
 

@@ -1,18 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const { createClient } = require("@supabase/supabase-js");
+const { getSupabase } = require("../js/utils/server-utils");
 
-// Initialize server-side Supabase client using service role key
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE;
-
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE) {
-  console.warn(
-    "Warning: SUPABASE_URL or SUPABASE_SERVICE_ROLE not set — /users routes will not function without them"
-  );
-}
-
-const supabase = createClient(SUPABASE_URL || "", SUPABASE_SERVICE_ROLE || "");
+// Shared Supabase client
+const supabase = getSupabase();
 
 // GET /users/:id
 // Renders the user profile page using templates/user.ejs

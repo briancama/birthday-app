@@ -1,35 +1,11 @@
 // routes/auth.js
 const express = require("express");
 const router = express.Router();
-const admin = require("firebase-admin");
-const { createClient } = require("@supabase/supabase-js");
-const { verifyCredentialsAndGetUserId } = require("../utils/auth");
+const { ensureFirebaseAdmin, getSupabase } = require("../js/utils/server-utils");
 
-// Initialize Firebase Admin if service account is provided
-if (!admin.apps.length) {
-  try {
-    const raw = process.env.FIREBASE_SERVICE_ACCOUNT || "";
-    if (raw) {
-      const creds = raw.trim().startsWith("{") ? JSON.parse(raw) : undefined;
-      if (creds) {
-        admin.initializeApp({ credential: admin.credential.cert(creds) });
-      } else {
-        // Fallback to ADC (e.g. GOOGLE_APPLICATION_CREDENTIALS)
-        admin.initializeApp();
-      }
-    } else {
-      // No explicit firebase service account provided; rely on ADC if available
-      admin.initializeApp();
-    }
-  } catch (err) {
-    console.warn("Failed to initialize firebase-admin:", err && err.message ? err.message : err);
-  }
-}
-
-// Supabase server client
-const SUPABASE_URL = process.env.SUPABASE_URL || "";
-const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE || "";
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
+// Ensure firebase-admin is initialized and use shared Supabase client
+const admin = ensureFirebaseAdmin();
+const supabase = getSupabase();
 
 // POST /auth/login
 // Supports two flows:
@@ -105,23 +81,8 @@ router.post("/login", async (req, res) => {
       return res.json({ ok: true, userId });
     }
 
-    // Legacy username/password flow
-    const { username, password } = req.body || {};
-    if (username && password) {
-      const userId = await verifyCredentialsAndGetUserId(username, password);
-      if (!userId) return res.status(401).json({ error: "Invalid credentials" });
-
-      res.cookie("user_id", userId, {
-        signed: true,
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 1000 * 60 * 60 * 24 * 7,
-      });
-      return res.json({ ok: true, userId });
-    }
-
-    return res.status(400).json({ error: "Missing credentials or idToken" });
+    // Only Firebase ID token flow is supported.
+    return res.status(400).json({ error: "Missing idToken" });
   } catch (err) {
     console.error("/auth/login error:", err);
     return res.status(500).json({ error: "Internal server error" });
