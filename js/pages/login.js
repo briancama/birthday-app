@@ -181,7 +181,8 @@ class LoginPage extends BasePage {
       return false;
     }
     try {
-      const idToken = await sdkUser.getIdToken(false);
+      // Force-refresh token to ensure freshness and avoid expired tokens
+      const idToken = await sdkUser.getIdToken(true);
       const resp = await fetch("/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

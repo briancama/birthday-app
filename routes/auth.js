@@ -1,7 +1,7 @@
 // routes/auth.js
 const express = require("express");
 const router = express.Router();
-const { ensureFirebaseAdmin, getSupabase } = require("../js/utils/server-utils");
+const { ensureFirebaseAdmin, getSupabase, requireSignedUser } = require("../js/utils/server-utils");
 
 // Ensure firebase-admin is initialized and use shared Supabase client
 const admin = ensureFirebaseAdmin();
@@ -96,3 +96,28 @@ router.post("/logout", (req, res) => {
 });
 
 module.exports = router;
+
+// GET /auth/me - return server-side profile for signed-in user
+router.get("/me", async (req, res) => {
+  try {
+    const signedUserId = requireSignedUser(req);
+    if (!signedUserId) return res.status(401).json({ error: "Not authenticated" });
+
+    const { data, error } = await supabase
+      .from("user_profile_view")
+      .select("*")
+      .eq("user_id", signedUserId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Supabase lookup error (/auth/me):", error);
+      return res.status(500).json({ error: "Internal error" });
+    }
+    if (!data) return res.status(404).json({ error: "User profile not found" });
+
+    return res.json({ ok: true, user: data });
+  } catch (err) {
+    console.error("Error in GET /auth/me:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
