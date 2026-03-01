@@ -14,9 +14,13 @@ export class BottomMenu extends HTMLElement {
   connectedCallback() {
     this.render();
     this.setupEventListeners();
-    this.checkCocktailCompetition().then(() => {
-      // Show menu after checks complete
-      this.showMenu();
+    // Show the bottom menu immediately so page rendering isn't dependent
+    // on the cocktail competition availability check.
+    this.showMenu();
+    // Run the cocktail competition check asynchronously; if an active
+    // competition with `voting_open` exists, reveal the Judge link.
+    this.checkCocktailCompetition().then((active) => {
+      if (active) this.showCocktailMenu();
     });
     // Add bottom padding to body
     document.body.classList.add("has-bottom-menu");
@@ -51,6 +55,11 @@ export class BottomMenu extends HTMLElement {
         <a href="cocktail-judging.html" class="bottom-menu-item" data-page="cocktail-judging" title="Judge Cocktails" style="display: none;" id="bottomMenuCocktail">
           <span class="bottom-menu-icon"><img src="images/cocktail_coke.gif" alt="Cocktail Icon"></span>
           <span class="bottom-menu-label">Judge</span>
+        </a>
+
+        <a href="leaderboard.html" class="bottom-menu-item" data-page="leaderboard" title="Leaderboard">
+          <span class="bottom-menu-icon"><img src="images/leaderboard.gif" alt="Leaderboard Icon"></span>
+          <span class="bottom-menu-label">Leaderboard</span>
         </a>
       </nav>
     `;
@@ -97,6 +106,7 @@ export class BottomMenu extends HTMLElement {
       const { data: competitions, error } = await supabase
         .from("cocktail_competitions")
         .select("*")
+        .eq("voting_open", true)
         .order("created_at", { ascending: false })
         .limit(1);
 
@@ -105,9 +115,15 @@ export class BottomMenu extends HTMLElement {
       if (competitions && competitions.length > 0) {
         this.cocktailCompetitionActive = true;
         this.showCocktailMenu();
+        return true;
       }
+      // No competitions found
+      this.cocktailCompetitionActive = false;
+      return false;
     } catch (err) {
       console.error("Error checking cocktail competition:", err);
+      this.cocktailCompetitionActive = false;
+      return false;
     }
   }
 
