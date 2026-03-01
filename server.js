@@ -12,6 +12,42 @@ app.use(express.json());
 // signed cookies for simple session-style authentication
 app.use(cookieParser(process.env.COOKIE_SECRET || "dev-secret"));
 
+// Dev convenience: auto-set a signed `user_id` cookie when running locally
+// so developers don't need to call /auth/login to work on UI pages.
+// Activated only when NODE_ENV !== 'production'. Optionally override ID with
+// query `?devUserId=...` or env `DEV_LOCAL_USER_ID`.
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV !== "production") {
+    try {
+      const signed = req.signedCookies && req.signedCookies.user_id;
+      if (!signed) {
+        const devId = req.query && req.query.devUserId ? req.query.devUserId : (process.env.DEV_LOCAL_USER_ID || "local-dev-user");
+        if (devId) {
+          res.cookie("user_id", devId, {
+            signed: true,
+            httpOnly: true,
+            secure: false,
+            sameSite: "lax",
+            maxAge: 1000 * 60 * 60 * 24 * 7,
+          });
+          // Also set a readable cookie for UI debugging if desired
+          res.cookie("user_id_dev_readable", devId, {
+            signed: false,
+            httpOnly: false,
+            secure: false,
+            sameSite: "lax",
+            maxAge: 1000 * 60 * 60 * 24 * 7,
+          });
+        }
+      }
+    } catch (e) {
+      // ignore cookie errors in dev
+      console.warn("dev auto-login middleware error:", e && e.message);
+    }
+  }
+  next();
+});
+
 // Middleware to serve .html files for extensionless URLs (keep for static fallback)
 // Only apply for top-level GET page requests (avoid rewriting API routes like /auth, /api, /users)
 app.use((req, res, next) => {

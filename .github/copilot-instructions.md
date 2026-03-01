@@ -325,6 +325,28 @@ connectedCallback() -> render() -> addEventListeners() -> subscribe to appState
 - **Sibling Communication**: Through shared parent state updates
 - **Page Lifecycle**: Pages manage component state and coordinate updates
 
+## Server Process (operations summary)
+
+- Runtime: Node.js + Express serves static pages and API routes (routes live under `/routes`). The server uses EJS views for some pages and serves the client JS from `/js`.
+- Auth flow: clients use the Firebase client SDK (phone OTP) to obtain an ID token which they POST to `/auth/login`. The server verifies the token with `firebase-admin` (requires a service account/credentials) and then looks up or creates a Supabase `users` row. On success the server sets a signed, `httpOnly` cookie `user_id` used for server-side gating of edit routes.
+- Database: the server uses a Supabase client created with `SUPABASE_SERVICE_ROLE` (keep secret) to query tables and views (notably `user_profile_view` used by profile routes). All DB schema changes and view definitions must be stored in `/sql` and applied to the Supabase project.
+- Deployment: the Node app is run via `systemd` (service unit) behind nginx (TLS via Certbot). Environment variables are loaded from an EnvironmentFile referenced by the systemd unit; values must be plain `KEY=VALUE` lines (no surrounding quotes). After changing env or unit files run `sudo systemctl daemon-reload && sudo systemctl restart birthday-app` and tail logs with `sudo journalctl -u birthday-app -f`.
+
+Short checklist for operators
+
+- Ensure the Droplet has the Firebase service account available to the service process (set `FIREBASE_SERVICE_ACCOUNT` with JSON or set `GOOGLE_APPLICATION_CREDENTIALS` to a secured path).
+- Ensure `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE` are present in the EnvironmentFile used by systemd.
+- Run `npm ci --omit=dev` as the service user (not root) before starting the service to install production deps.
+- If `/auth/me` or profile routes return errors, inspect `journalctl -u birthday-app` for Supabase errors (missing views/tables) or Firebase token verification errors.
+
+Operational to-dos (quick reference)
+
+- Restart Node service after deploy: `sudo systemctl daemon-reload && sudo systemctl restart birthday-app`
+- Add Firebase service account / env vars to the Droplet's EnvironmentFile
+- Run `npm ci` as the `birthday` service user if adding packages
+
+Add any additional deployment notes here so future contributors can resume operations quickly.
+
 ## Suggested Improvements
 
 ### 1. Event System Enhancement

@@ -54,6 +54,7 @@ SELECT
   p.is_public                 AS is_public,
   p.created_at                AS profile_created_at,
   p.updated_at                AS profile_updated_at
+  , u.username                 AS username
 FROM user_profile p
 JOIN users u ON u.id = p.user_id;
 

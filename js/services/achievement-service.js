@@ -12,6 +12,8 @@ class AchievementService {
 
     // Listen to EventBus and window-level triggers
     EventBus.instance.listen("challenge:completed-success", (e) => this.onChallengeCompleted(e));
+    EventBus.instance.listen("challenge:submitted", (e) => this.onChallengeSubmitted(e));
+    EventBus.instance.listen("gif:completed", (e) => this.onGifCompleted(e));
     EventBus.instance.listen("cocktail:favorite:toggled", (e) => this.onFavoriteToggled(e));
     EventBus.instance.listen("user:guestbook:sign", (e) => this.onGuestbookSign(e));
     EventBus.instance.listen("event:rsvp", (e) => this.onEventRsvp(e));
@@ -20,6 +22,16 @@ class AchievementService {
     window.addEventListener("achievement:trigger", (e) => {
       const key = e.detail?.key;
       if (key) this.awardByKey(key, { details: e.detail });
+    });
+
+    // Fallback: listen for window-level gif completion events (in case EventBus isn't available)
+    window.addEventListener("gif:completed", (e) => {
+      try {
+        // Normalize to EventBus-style event object
+        this.onGifCompleted(e);
+      } catch (err) {
+        console.warn("AchievementService: gif:completed handler error", err);
+      }
     });
   }
 
@@ -125,6 +137,52 @@ class AchievementService {
 
   async onEventRsvp(e) {
     // Placeholder for RSVP-related achievements
+  }
+
+  async onChallengeSubmitted(e) {
+    try {
+      const userId = e.detail?.userId || appState.getUserId();
+      if (!userId) return;
+      // Award based on counts stored in DB: look for achievements with metadata.trigger = 'challenge:submitted'
+      const supabase = appState.getSupabase();
+      const metadataTrigger = "challenge:submitted";
+
+      // Find achievements configured for this trigger
+      const { data: achievements, error } = await supabase
+        .from("achievements")
+        .select("id,key,points,metadata")
+        .filter("metadata->>trigger", "eq", metadataTrigger);
+      if (error) throw error;
+      if (!achievements || achievements.length === 0) return;
+
+      // Count user's submitted challenges
+      const { data: challenges, error: cntErr } = await supabase
+        .from("challenges")
+        .select("id")
+        .eq("created_by", userId);
+      if (cntErr) throw cntErr;
+      const submittedCount = Array.isArray(challenges) ? challenges.length : 0;
+
+      for (const a of achievements) {
+        const threshold = a.metadata?.threshold || (a.metadata?.threshold === 0 ? 0 : null);
+        if (threshold && submittedCount >= threshold) {
+          await this.awardByKey(a.key, { details: { submittedCount } });
+        }
+      }
+    } catch (err) {
+      console.warn("AchievementService: onChallengeSubmitted error", err);
+    }
+  }
+
+  async onGifCompleted(e) {
+    try {
+      const userId = appState.getUserId();
+      if (!userId) return;
+      // Award a one-off achievement for completing the GIF stepper
+      await this.awardByKey("gif_master", { details: { src: e.detail?.src } });
+    } catch (err) {
+      console.warn("AchievementService: onGifCompleted error", err);
+    }
   }
 
   async checkAndAwardCountBased(userId, metadataTrigger, fallbackKey) {

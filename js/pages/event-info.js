@@ -6,6 +6,7 @@ import { Guestbook } from "../components/guestbook.js";
 import { EventCard } from "../components/event-card.js";
 import { EventBus } from "../events/event-bus.js";
 import { MUSIC_SONGS } from "../constants/music-songs.js";
+import { CocktailEntryModal } from "../components/cocktail-entry-modal.js";
 
 class EventInfoPage extends BasePage {
   // Fallback avatars for comments without user_id
@@ -28,6 +29,7 @@ class EventInfoPage extends BasePage {
     super();
     this.components = [];
     this.headshotUpload = null;
+    this.cocktailModal = null;
   }
 
   async init() {
@@ -43,6 +45,29 @@ class EventInfoPage extends BasePage {
     this.setupGuestbook();
     this.loadMyspaceComments();
     this.setupAddCommentLink();
+
+    // Initialize cocktail entry modal and wire the retro banner as trigger
+    (async () => {
+      try {
+        this.cocktailModal = new CocktailEntryModal();
+        await this.cocktailModal.init();
+        const banner = document.getElementById("retroBanner");
+        if (banner) {
+          banner.setAttribute("role", "button");
+          banner.setAttribute("tabindex", "0");
+          banner.setAttribute("aria-label", "Register cocktail");
+          banner.addEventListener("click", () => this.cocktailModal.open());
+          banner.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              this.cocktailModal.open();
+            }
+          });
+        }
+      } catch (err) {
+        console.warn("Cocktail modal init failed:", err);
+      }
+    })();
   }
 
   /**

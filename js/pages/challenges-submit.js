@@ -2,6 +2,7 @@ import { BasePage } from "./base-page.js";
 import { SubmissionTable } from "../components/submission.js";
 import { firebaseAuth } from "../services/firebase-auth.js";
 import { escapeHTML } from "../utils/text-format.js";
+import { EventBus } from "../events/event-bus.js";
 
 export class ChallengesSubmitPage extends BasePage {
   constructor() {
@@ -258,6 +259,16 @@ export class ChallengesSubmitPage extends BasePage {
 
       // Reload submissions
       await this.loadSubmissions();
+
+      // Emit event for achievements and other listeners
+      try {
+        EventBus.instance.emit("challenge:submitted", {
+          userId: this.userId,
+          challengeId: challengeId,
+        });
+      } catch (emitErr) {
+        console.warn("Failed to emit challenge:submitted", emitErr);
+      }
 
       // Close modal after 2 seconds
       setTimeout(() => {

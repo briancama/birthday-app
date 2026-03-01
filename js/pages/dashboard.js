@@ -135,8 +135,9 @@ class DashboardPage extends BasePage {
           const initial = (name && name.charAt(0)) || "*";
           return `
             <div class="challenge-badge" title="${desc}">
-              <span class="brian-mode-badge" aria-hidden="true">${initial}</span>
+              <span class="badge-icon" aria-hidden="true">${initial}</span>
               <span class="badge-name">${name}</span>
+              <span class="badge-description hide-mobile">${desc}</span>
               <span class="badge-points">(${points} pts)</span>
             </div>
           `;

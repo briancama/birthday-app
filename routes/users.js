@@ -48,6 +48,33 @@ router.get("/:identifier", async (req, res) => {
       }
     }
 
+    // Fallback: if still not found in the view, try the users table directly
+    if (!result) {
+      try {
+        const { data: u, error: ue } = await supabase
+          .from("users")
+          .select("id, username, display_name, headshot")
+          .eq("username", identifier)
+          .maybeSingle();
+        if (ue) {
+          console.warn("Supabase users lookup error:", ue.message || ue);
+        } else if (u) {
+          // Normalize to the same shape as the view so templates can render
+          result = {
+            user_id: u.id,
+            display_name: u.display_name,
+            headshot: u.headshot,
+            profile_intro: null,
+            profile_title: null,
+            profile_details: [],
+            is_public: true,
+          };
+        }
+      } catch (e) {
+        console.error("User table fallback error:", e && e.message ? e.message : e);
+      }
+    }
+
     if (!result) {
       return res.status(404).send("Profile not found");
     }

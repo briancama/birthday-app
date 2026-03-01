@@ -13,6 +13,56 @@ const supabase = getSupabase();
 // 2) Firebase ID token: { idToken }
 router.post("/login", async (req, res) => {
   try {
+    // Development shortcut: allow setting a local dev user id without Firebase
+    if (process.env.NODE_ENV !== "production") {
+      const devUserId = req.body && (req.body.devUserId || (req.body.dev === true && process.env.DEV_LOCAL_USER_ID));
+      // Allow a developer-requested simulation of production cookie behavior.
+      // simulateLive is enabled when any of:
+      // - env `DEV_SIMULATE_LIVE=1`
+      // - the POST body includes `simulateLive: true`
+      // - (convenience) when running in non-production and a `devUserId` is provided
+      //   so developers don't have to set an env variable before starting the server.
+      const simulateLive = Boolean(
+        process.env.DEV_SIMULATE_LIVE === "1" ||
+          (req.body && req.body.simulateLive) ||
+          (process.env.NODE_ENV !== "production" && req.body && req.body.devUserId)
+      );
+      if (devUserId) {
+        // Primary dev cookie (httpOnly) used for normal local dev flows
+        res.cookie("user_id", devUserId, {
+          signed: true,
+          httpOnly: true,
+          secure: false,
+          sameSite: "lax",
+          maxAge: 1000 * 60 * 60 * 24 * 7,
+        });
+
+        // If developer wants to simulate production, also set a production-like cookie.
+        // Note: browsers will only persist/send cookies with `Secure` when on HTTPS,
+        // but setting this option helps exercise server-side logic and mirrors headers.
+        if (simulateLive) {
+          res.cookie("user_id_prod_sim", devUserId, {
+            signed: true,
+            httpOnly: true,
+            secure: true,
+            sameSite: "lax",
+            maxAge: 1000 * 60 * 60 * 24 * 7,
+          });
+
+          // Also expose a readable dev cookie for client-side simulation/testing.
+          // This is NOT used for security checks server-side; it's only for local UI behavior simulation.
+          res.cookie("user_id_dev_readable", devUserId, {
+            signed: false,
+            httpOnly: false,
+            secure: false,
+            sameSite: "lax",
+            maxAge: 1000 * 60 * 60 * 24 * 7,
+          });
+        }
+
+        return res.json({ ok: true, userId: devUserId, dev: true, simulated: simulateLive });
+      }
+    }
     // Firebase token flow
     if (req.body && req.body.idToken) {
       if (!admin.apps.length)

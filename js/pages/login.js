@@ -157,7 +157,7 @@ class LoginPage extends BasePage {
         // Exchange token with server and initialize app state
         const authSuccess = await this.serverLoginAndInit();
         if (authSuccess) {
-          window.location.href = "dashboard";
+          window.location.href = "event-info";
         } else {
           this.showError("Authentication failed. Please try again.");
           this.verifyOTPBtn.disabled = false;
@@ -181,6 +181,12 @@ class LoginPage extends BasePage {
       return false;
     }
     try {
+      // Development shortcut: skip server /auth/login exchange and rely on client-side
+      // initialization when running locally. This bypasses Express auth routes.
+      if (window.APP_CONFIG && window.APP_CONFIG.isDevelopment) {
+        const authSuccess = await appState.init();
+        return Boolean(authSuccess);
+      }
       // Force-refresh token to ensure freshness and avoid expired tokens
       const idToken = await sdkUser.getIdToken(true);
       const resp = await fetch("/auth/login", {

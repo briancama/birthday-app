@@ -1087,11 +1087,6 @@
     text-shadow: none !important;
   }
 
-  /* Responsive Visibility Utilities */
-  .hide-mobile {
-    display: none !important;
-  }
-
   .hide-xs {
     display: none !important;
   }
@@ -1107,6 +1102,17 @@
     .full-width-content {
       margin-left: calc(-1 * var(--spacing-xs));
       margin-right: calc(-1 * var(--spacing-xs));
+    }
+
+    /* Responsive Visibility Utilities */
+    .hide-mobile {
+      display: none !important;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .hide-desktop {
+      display: none !important;
     }
   }
 }
@@ -1169,10 +1175,6 @@
 
   .stats-grid {
     grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  }
-
-  .hide-desktop {
-    display: none !important;
   }
 
   .site-awards-img {

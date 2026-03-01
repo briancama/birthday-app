@@ -1,6 +1,9 @@
 /* Achievements styles moved from inline markup */
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
+
 #achievementsSection {
   display: none;
+  font-family: "Press Start 2P", monospace;
   margin-top: 16px;
 }
 #achievementsSection.visible {
@@ -23,8 +26,10 @@
   padding: 6px 8px;
   border-radius: 6px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  gap: 18px;
 }
 .badge-name {
+  font-size: 12px;
   margin-left: 8px;
   font-weight: bold;
 }
@@ -32,14 +37,45 @@
   margin-left: 8px;
   color: #666;
   font-size: 0.85rem;
+  margin-right: auto;
 }
-.brian-mode-badge {
+.badge-description {
+  font-size: 9px;
+  margin-right: 8px;
+  color: #666666;
+}
+
+.badge-icon {
   display: inline-block;
-  width: 28px;
-  height: 28px;
-  line-height: 28px;
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
   text-align: center;
+  font-size: 12px;
   border-radius: 4px;
   background: linear-gradient(135deg, #ffd27a, #ff9a9e);
   font-weight: bold;
+}
+
+/* Assign distinct bright backgrounds to badges in a repeating 5-color pattern
+   Uses the bright accent variables defined in `css/geocities.css` */
+.achievements-grid .challenge-badge:nth-child(5n + 1) .badge-icon {
+  background: var(--accent-magenta);
+  color: var(--text-light);
+}
+.achievements-grid .challenge-badge:nth-child(5n + 2) .badge-icon {
+  background: var(--accent-cyan);
+  color: var(--text-dark);
+}
+.achievements-grid .challenge-badge:nth-child(5n + 3) .badge-icon {
+  background: var(--accent-yellow);
+  color: var(--text-dark);
+}
+.achievements-grid .challenge-badge:nth-child(5n + 4) .badge-icon {
+  background: var(--accent-red);
+  color: var(--text-light);
+}
+.achievements-grid .challenge-badge:nth-child(5n + 5) .badge-icon {
+  background: var(--accent-green);
+  color: var(--text-dark);
 }

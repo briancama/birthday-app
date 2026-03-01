@@ -356,22 +356,69 @@ class BasePage {
       successContainer = document.createElement("div");
       successContainer.id = "successMessages";
       successContainer.className = "success-messages";
-      document.body.insertBefore(successContainer, document.body.firstChild);
+      // Position the container near the top-right of the viewport
+      Object.assign(successContainer.style, {
+        position: "fixed",
+        top: "1rem",
+        right: "1rem",
+        zIndex: 11000,
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.5rem",
+        maxWidth: "360px",
+        pointerEvents: "none",
+      });
+      document.body.appendChild(successContainer);
     }
 
-    // Add success message
+    // Add success message element with close button
     const successEl = document.createElement("div");
     successEl.className = "success-message";
-    successEl.textContent = message;
+    Object.assign(successEl.style, {
+      background: "#0b6623",
+      color: "#fff",
+      padding: "0.6rem 0.9rem",
+      borderRadius: "6px",
+      boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+      pointerEvents: "auto",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: "0.5rem",
+    });
+
+    const textSpan = document.createElement("span");
+    textSpan.textContent = message;
+    textSpan.style.flex = "1 1 auto";
+
+    const closeBtn = document.createElement("button");
+    closeBtn.setAttribute("aria-label", "Close");
+    closeBtn.textContent = "✖";
+    Object.assign(closeBtn.style, {
+      background: "transparent",
+      border: "none",
+      color: "#fff",
+      fontSize: "0.9rem",
+      cursor: "pointer",
+      padding: "0 0.25rem",
+    });
+
+    successEl.appendChild(textSpan);
+    successEl.appendChild(closeBtn);
     successContainer.appendChild(successEl);
 
-    // Auto-remove after 3 seconds
-    setTimeout(() => {
+    // Auto-remove after 10 seconds, but allow manual close
+    const timeoutId = setTimeout(() => {
       successEl.remove();
-      if (successContainer.children.length === 0) {
-        successContainer.remove();
-      }
-    }, 3000);
+      if (successContainer.children.length === 0) successContainer.remove();
+    }, 10000);
+
+    closeBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      clearTimeout(timeoutId);
+      successEl.remove();
+      if (successContainer.children.length === 0) successContainer.remove();
+    });
   }
 
   setLoadingState(elementId, isLoading = true) {
@@ -442,3 +489,20 @@ class BasePage {
 }
 
 export { BasePage };
+
+// Dev helper: call from the browser console to trigger the success toast
+// Example: triggerDevToast('This is a test toast')
+if (typeof window !== "undefined") {
+  window.triggerDevToast = (message = "Dev toast") => {
+    try {
+      const page = new BasePage({ requiresAuth: false });
+      page.showSuccess(message);
+      return true;
+    } catch (err) {
+      // Log but don't throw so console testing is pleasant
+      // eslint-disable-next-line no-console
+      console.error("triggerDevToast error:", err);
+      return false;
+    }
+  };
+}

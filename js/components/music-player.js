@@ -158,7 +158,18 @@ class MusicPlayer extends HTMLElement {
   }
 
   _onEnded() {
-    this.nextSong();
+    // Stop at the end of the track — do not auto-advance to the next song
+    this.isPlaying = false;
+    if (this.audio) {
+      try {
+        this.audio.pause();
+        // Ensure the UI shows the track at its end
+        this.audio.currentTime = this.audio.duration || this.audio.currentTime;
+      } catch (e) {
+        /* ignore */
+      }
+    }
+    this.render();
   }
 
   getFavoriteSongIdx() {
