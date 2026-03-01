@@ -44,7 +44,6 @@ class GifStepper {
     // Replace the <img> with a wrapper containing a <canvas> + progress bar
     const wrapper = document.createElement("div");
     Object.assign(wrapper.style, {
-      display: "inline-block",
       position: "relative",
       cursor: "pointer",
       userSelect: "none",
@@ -55,7 +54,13 @@ class GifStepper {
     if (this.img.style.cssText) wrapper.style.cssText += this.img.style.cssText;
 
     this.canvas = document.createElement("canvas");
-    Object.assign(this.canvas.style, { display: "block", imageRendering: "pixelated" });
+    Object.assign(this.canvas.style, {
+      display: "block",
+      imageRendering: "pixelated",
+      width: "100%",
+      height: "auto",
+      objectFit: "contain",
+    });
     this.ctx = this.canvas.getContext("2d");
 
     this.progressWrap = document.createElement("div");
@@ -131,10 +136,6 @@ class GifStepper {
       this.canvas.width = bmp.width;
       this.canvas.height = bmp.height;
 
-      // Preserve original img width/height attributes if set
-      if (this.img.width) this.canvas.style.width = this.img.width + "px";
-      if (this.img.height) this.canvas.style.height = this.img.height + "px";
-
       this.ctx.drawImage(bmp, 0, 0);
     } catch (err) {
       console.error("GifStepper failed to load:", this.src, err);
@@ -191,6 +192,7 @@ class GifStepper {
     this.started = true;
     this.done = false;
     this.canvas.style.cursor = "pointer";
+    this.canvas.style.width = "100%";
     this.resetBtn.style.display = "none";
     this.progressFill.style.width = (1 / this.frames.length) * 100 + "%";
     const bmp = this.frames[0];

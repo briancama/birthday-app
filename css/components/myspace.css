@@ -181,6 +181,12 @@ body {
   .myspace-sidebar {
     width: 100%;
   }
+
+  .myspace-section-gif {
+    display: flex;
+    justify-content: center;
+    max-height: 140px;
+  }
 }
 
 /* Retro banner styles (moved from inline into stylesheet) */
@@ -267,4 +273,10 @@ body {
 }
 .retro-banner__line.hidden {
   opacity: 0;
+}
+
+@media screen and (max-width: 768px) {
+  .retro-banner__line {
+    font-size: 20px;
+  }
 }

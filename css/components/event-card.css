@@ -91,6 +91,14 @@
   margin-bottom: 0.35em;
 }
 
+.event-card-link,
+.event-card-location {
+  font-size: 14px;
+}
+.event-card-location {
+  margin-bottom: 8px;
+}
+
 /* MySpace-style RSVP buttons for EventCard */
 .event-card--myspace .event-card-title {
   color: var(--myspace-dark-blue, #3366cc);
