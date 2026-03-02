@@ -18,22 +18,18 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
   </head>
-  <body>
-    <!-- Navigation Component -->
-    <nav class="site-navigation mobile-menu-default">
-      <!-- Mobile Menu Toggle (always visible) -->
-      <button class="mobile-menu-toggle" data-sound="menu" aria-label="Toggle navigation menu">
+  <body class="myspace">
+
+    <!-- Welcome Marquee -->
+    <!-- MySpace Profile Header -->
+    <div class="myspace-header full-width-content">
+      <div class="myspace-header__logo">
+        <img src="images/brispace_logo.jpg" alt="brispace logo" />
+              <button class="mobile-menu-toggle" data-sound="menu" aria-label="Toggle navigation menu">
         <span class="hamburger-icon">☰</span>
       </button>
-      <!-- Page Title / User Info -->
-      <div class="nav-user-info">
-        <div class="user-welcome">
-          <span data-nav="page-title">Event Info</span>
-          <img src="images/star_icon.gif" alt="star" class="icon-gif" />
-        </div>
       </div>
-      <!-- Navigation Menu (closed by default) -->
-      <div class="nav-menu">
+            <div class="nav-menu">
         <div class="nav-tabs">
           <a href="dashboard" class="nav-tab" data-sound="menu" data-page="dashboard">
             <img
@@ -88,14 +84,6 @@
             <span>LOGOUT</span>
           </button>
         </div>
-      </div>
-    </nav>
-
-    <!-- Welcome Marquee -->
-    <!-- MySpace Profile Header -->
-    <div class="myspace-header full-width-content">
-      <div class="myspace-header__logo">
-        <img src="images/brispace_logo.jpg" alt="brispace logo" />
       </div>
     </div>
     <div class="myspace-container full-width-content">

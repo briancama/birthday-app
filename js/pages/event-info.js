@@ -7,6 +7,7 @@ import { EventCard } from "../components/event-card.js";
 import { EventBus } from "../events/event-bus.js";
 import { MUSIC_SONGS } from "../constants/music-songs.js";
 import { CocktailEntryModal } from "../components/cocktail-entry-modal.js";
+import { audioManager } from "../utils/audio.js";
 
 class EventInfoPage extends BasePage {
   // Fallback avatars for comments without user_id
@@ -68,6 +69,39 @@ class EventInfoPage extends BasePage {
         console.warn("Cocktail modal init failed:", err);
       }
     })();
+
+    // Initialize audio and optionally start the music player on first user gesture
+    // (useful for mobile where autoplay is blocked until a gesture)
+    (() => {
+      const initHandler = (e) => {
+        // Prefer to start playback first inside the user gesture
+        try {
+          const player = document.querySelector("music-player");
+          if (player && typeof player.playSong === "function") {
+            player.playSong(0);
+          }
+        } catch (err) {
+          console.warn("Failed to auto-play music-player on gesture:", err);
+        }
+
+        // Then initialize audioManager (safe to do after attempting play)
+        try {
+          this.audioManager && this.audioManager.initialize && this.audioManager.initialize();
+        } catch (err) {
+          console.warn("Audio init failed on gesture:", err);
+        }
+
+        // Clean up listeners (defensive removal)
+        document.removeEventListener("click", initHandler);
+        document.removeEventListener("touchend", initHandler);
+        document.removeEventListener("keydown", initHandler);
+      };
+
+      document.addEventListener("click", initHandler, { once: true });
+      // Use touchend (not passive) so the gesture is treated as an explicit user action
+      document.addEventListener("touchend", initHandler, { once: true });
+      document.addEventListener("keydown", initHandler, { once: true });
+    })();
   }
 
   /**
@@ -94,6 +128,81 @@ class EventInfoPage extends BasePage {
       player.setSongs(MUSIC_SONGS);
       container.innerHTML = "";
       container.appendChild(player);
+      // Create a floating mute button that's visible only while music is playing
+      let muteBtn = document.getElementById("musicMuteButton");
+      if (!muteBtn) {
+        muteBtn = document.createElement("button");
+        muteBtn.id = "musicMuteButton";
+        muteBtn.className = "mute-button";
+        muteBtn.setAttribute("aria-pressed", (!audioManager.enabled).toString());
+        muteBtn.title = audioManager.enabled ? "Mute" : "Unmute";
+        muteBtn.innerHTML = audioManager.enabled ? "🔊" : "🔇";
+        document.body.appendChild(muteBtn);
+      }
+
+      const updateMuteUI = () => {
+        // Prefer showing music mute state if available
+        let isMuted = false;
+        try {
+          const player = document.querySelector("music-player");
+          if (player && typeof player.isMuted === "boolean") {
+            isMuted = player.isMuted;
+          } else if (player && player.audio) {
+            isMuted = !!player.audio.muted;
+          }
+        } catch (e) {
+          // ignore
+        }
+        // Show speaker icon based on music mute state; fall back to click-sound enabled
+        if (isMuted) {
+          muteBtn.innerHTML = "🔇";
+          muteBtn.title = "Unmute";
+          muteBtn.setAttribute("aria-pressed", "true");
+        } else {
+          muteBtn.innerHTML = "🔊";
+          muteBtn.title = "Mute";
+          muteBtn.setAttribute("aria-pressed", "false");
+        }
+      };
+
+      // Toggle audio on click: toggle click sounds and music playback mute
+      muteBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        // Toggle click sounds
+        const newState = audioManager.toggle();
+        // Toggle music mute persisted state
+        try {
+          const player = document.querySelector("music-player");
+          const prev = localStorage.getItem("music-muted") === "true";
+          const next = !prev;
+          localStorage.setItem("music-muted", next ? "true" : "false");
+          if (player && typeof player.setMuted === "function") {
+            player.setMuted(next);
+          } else if (player && player.audio) {
+            player.audio.muted = next;
+          }
+        } catch (err) {
+          console.warn("Failed to toggle music mute:", err);
+        }
+        updateMuteUI();
+      });
+
+      // Show/hide the button based on player events
+      const onPlay = () => (muteBtn.style.display = "flex");
+      const onPause = () => (muteBtn.style.display = "none");
+      muteBtn.style.display = "none"; // hidden by default
+
+      player.addEventListener("music:play", onPlay);
+      player.addEventListener("music:pause", onPause);
+
+      // Cleanup if needed when leaving page: store cleanup functions
+      this.eventCleanup.push(() => {
+        try {
+          player.removeEventListener("music:play", onPlay);
+          player.removeEventListener("music:pause", onPause);
+          muteBtn.removeEventListener("click", () => {});
+        } catch (e) {}
+      });
       // Optionally: handle song select event
       // player.setOnSongSelect((song) => { ... });
     });

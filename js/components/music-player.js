@@ -11,6 +11,8 @@ class MusicPlayer extends HTMLElement {
     this.currentIndex = 0;
     this.audio = null;
     this.isPlaying = false;
+    // Respect persisted music-muted setting
+    this.isMuted = localStorage.getItem("music-muted") === "true";
     this.onSongSelect = null;
   }
 
@@ -89,16 +91,46 @@ class MusicPlayer extends HTMLElement {
     this.currentIndex = idx;
     const song = this.songs[this.currentIndex];
     this.audio = new Audio(song.url);
-    this.audio.volume = 0.8;
+    // Apply persisted mute state
+    try {
+      this.audio.muted = !!this.isMuted;
+    } catch (e) {
+      /* ignore */
+    }
+    // Start low volume to avoid loud surprises, can be adjusted by user
+    this.audio.volume = 0.4;
     // Bind event handlers
     this._boundOnEnded = this._onEnded.bind(this);
     this._boundOnTimeUpdate = this._onTimeUpdate.bind(this);
     this.audio.addEventListener("ended", this._boundOnEnded);
     this.audio.addEventListener("timeupdate", this._boundOnTimeUpdate);
+    // Start playback (no promise handling)
     this.audio.play();
     this.isPlaying = true;
     this.render();
+    // Emit a play event from the component for external listeners
+    try {
+      this.dispatchEvent(new CustomEvent("music:play", { detail: { song } }));
+    } catch (e) {
+      /* ignore */
+    }
     if (this.onSongSelect) this.onSongSelect(song);
+  }
+
+  /**
+   * Set muted state for the player and persist it.
+   * @param {boolean} muted
+   */
+  setMuted(muted) {
+    this.isMuted = !!muted;
+    try {
+      localStorage.setItem("music-muted", this.isMuted ? "true" : "false");
+    } catch (e) {}
+    if (this.audio) {
+      try {
+        this.audio.muted = this.isMuted;
+      } catch (e) {}
+    }
   }
   _onTimeUpdate() {
     this.updateUI();
@@ -124,6 +156,11 @@ class MusicPlayer extends HTMLElement {
       this.audio.pause();
       this.isPlaying = false;
       this.render();
+      try {
+        this.dispatchEvent(new CustomEvent("music:pause"));
+      } catch (e) {
+        /* ignore */
+      }
     }
   }
 
@@ -133,9 +170,17 @@ class MusicPlayer extends HTMLElement {
     } else if (this.isPlaying) {
       this.pauseSong();
     } else {
+      // Start playback (no promise handling)
       this.audio.play();
       this.isPlaying = true;
       this.render();
+      try {
+        this.dispatchEvent(
+          new CustomEvent("music:play", { detail: { song: this.songs[this.currentIndex] } })
+        );
+      } catch (e) {
+        /* ignore */
+      }
     }
   }
 
@@ -170,6 +215,11 @@ class MusicPlayer extends HTMLElement {
       }
     }
     this.render();
+    try {
+      this.dispatchEvent(new CustomEvent("music:pause"));
+    } catch (e) {
+      /* ignore */
+    }
   }
 
   getFavoriteSongIdx() {
@@ -329,7 +379,7 @@ class MusicPlayer extends HTMLElement {
         <button class="music-prev-btn" title="Previous">⏮️</button>
         <button class="music-play-btn${this.isPlaying ? " active" : ""}" title="Play/Pause">${this.isPlaying ? "⏸️" : "▶️"}</button>
         <button class="music-next-btn" title="Next">⏭️</button>
-        <input type="range" min="0" max="1" step="0.01" value="${this.audio ? this.audio.volume : 0.8}" class="music-volume-slider" title="Volume" />
+        <input type="range" min="0" max="1" step="0.01" value="${this.audio ? this.audio.volume : 0.56}" class="music-volume-slider" title="Volume" />
       </div>
       <div style="display: flex; align-items: center; gap: 6px;">
         <span class="music-time" id="music-current-time"></span>

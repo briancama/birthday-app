@@ -65,7 +65,8 @@ class GifStepper {
 
     this.progressWrap = document.createElement("div");
     Object.assign(this.progressWrap.style, {
-      display: "none",
+      display: "block",
+      visibility: "hidden",
       width: "100%",
       height: "4px",
       background: "#ddd",
@@ -147,7 +148,7 @@ class GifStepper {
 
     if (!this.started) {
       this.started = true;
-      this.progressWrap.style.display = "block";
+      this.progressWrap.style.visibility = "visible";
       this.current = 0; // start at 0; first click shows frame stepsPerClick
     }
 

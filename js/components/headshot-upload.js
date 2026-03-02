@@ -16,16 +16,28 @@ export class HeadshotUpload extends EventTarget {
     this.element = document.createElement("div");
     this.element.className = "headshot-upload";
     this.element.innerHTML = `
-      <a href="#" id="headshotUploadBtn" class="headshot-upload-link">Add/Update Headshot</a>
+      <a href="#" data-sound="myspace" id="headshotUploadBtn" class="headshot-upload-link">Add/Update Headshot</a>
       <input type="file" id="headshotFileInput" accept="image/*" style="display:none" />
       <div id="headshotUploadStatus" class="upload-status"></div>
     `;
     // Style: .headshot-upload-link { color: #0077cc; text-decoration: underline; cursor: pointer; font-size: 1rem; }
-    this.element.querySelector("#headshotUploadBtn").addEventListener("click", () => {
-      event.preventDefault();
-      this.element.querySelector("#headshotFileInput").click();
-    });
-    this.element.querySelector("#headshotFileInput").addEventListener("change", (e) => {
+    const uploadBtn = this.element.querySelector("#headshotUploadBtn");
+    const fileInput = this.element.querySelector("#headshotFileInput");
+
+    const onUploadClick = (e) => {
+      // Prevent default anchor navigation and stop propagation so delegated
+      // listeners aren't interrupted. Use the passed event rather than
+      // relying on a global `event` variable (deprecated/unsafe).
+      e.preventDefault();
+      e.stopPropagation();
+      fileInput.click();
+    };
+
+    uploadBtn.addEventListener("click", onUploadClick);
+    // Keep a reference for potential cleanup by callers
+    this._uploadBtnCleanup = () => uploadBtn.removeEventListener("click", onUploadClick);
+
+    fileInput.addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (file) this.uploadHeadshot(file);
     });

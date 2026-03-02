@@ -39,7 +39,7 @@ export class EventCard extends EventTarget {
         if (u.status === "going") {
           const img = document.createElement("img");
           img.className = "event-card-avatar";
-          img.src = u.headshot_url ? `images/${u.headshot_url}` : "images/headshot.jpg";
+          img.src = u.headshot_url ? `${u.headshot_url}` : "images/headshot.jpg";
           img.alt = u.display_name;
           img.title = u.display_name;
           if (u.user_id) {
@@ -205,18 +205,50 @@ export class EventCard extends EventTarget {
   renderRSVPButtons() {
     const rsvpSection = document.createElement("div");
     rsvpSection.className = "event-card-rsvp";
-    ["going", "interested", "not_going"].forEach((status) => {
+
+    const options = [
+      {
+        status: "going",
+        sound: "homer-woohoo",
+        icon: "images/yes_face.gif",
+        label: "I'm in",
+        alt: "✅",
+      },
+      {
+        status: "interested",
+        sound: "hm",
+        icon: "images/maybe_face.gif",
+        label: "Hmmm",
+        alt: "✨",
+      },
+      {
+        status: "not_going",
+        sound: "womp-womp-tuba",
+        icon: "images/nope_face.gif",
+        label: "Nope",
+        alt: "❌",
+      },
+    ];
+
+    options.forEach(({ status, sound, icon, label, alt }) => {
       const btn = document.createElement("button");
       btn.className = `rsvp-btn rsvp-btn--${status}`;
       btn.dataset.status = status;
-      let label = "";
-      if (status === "going")
-        label = '<img class="icon-gif" src="images/yes_face.gif" alt="✅" /> I\'m in';
-      else if (status === "interested")
-        label = '<img class="icon-gif" src="images/maybe_face.gif" alt="✨" /> Hmmm';
-      else if (status === "not_going")
-        label = '<img class="icon-gif" src="images/nope_face.gif" alt="❌" /> Nope';
-      btn.innerHTML = label;
+      btn.setAttribute("data-sound", sound);
+
+      // Icon element
+      const img = document.createElement("img");
+      img.className = "icon-gif";
+      img.src = icon;
+      img.alt = alt;
+      btn.appendChild(img);
+
+      // Text label (separate element for easier styling/localization)
+      const txt = document.createElement("span");
+      txt.className = "rsvp-label";
+      txt.textContent = label;
+      btn.appendChild(txt);
+
       if (this.rsvpStatus === status) btn.classList.add("active");
       btn.addEventListener("click", () => {
         EventBus.instance.emit(EventBus.EVENTS.EVENT.RSVP, {
@@ -226,6 +258,7 @@ export class EventCard extends EventTarget {
       });
       rsvpSection.appendChild(btn);
     });
+
     return rsvpSection;
   }
 }

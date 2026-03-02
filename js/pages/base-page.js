@@ -305,6 +305,13 @@ class BasePage {
     this.audioManager.preload("unfavorite", "/audio/unfavorite.mp3");
     // Preload optional thank-you sound for site awards
     this.audioManager.preload("thanks", "/audio/thanks.mp3", true);
+    // Preload context-specific sounds used via `data-sound` attributes
+    // so dynamic elements like the headshot upload link can play immediately.
+    this.audioManager.preload("myspace", "/audio/myspace.mp3", true);
+    // RSVP button sounds
+    this.audioManager.preload("homer-woohoo", "/audio/homer-woohoo.mp3", true);
+    this.audioManager.preload("hm", "/audio/hm.mp3", true);
+    this.audioManager.preload("womp-womp-tuba", "/audio/womp-womp-tuba.mp3", true);
 
     // Initialize audio on first interaction (required for mobile)
     const initAudio = () => {
