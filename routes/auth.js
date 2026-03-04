@@ -15,7 +15,9 @@ router.post("/login", async (req, res) => {
   try {
     // Development shortcut: allow setting a local dev user id without Firebase
     if (process.env.NODE_ENV !== "production") {
-      const devUserId = req.body && (req.body.devUserId || (req.body.dev === true && process.env.DEV_LOCAL_USER_ID));
+      const devUserId =
+        req.body &&
+        (req.body.devUserId || (req.body.dev === true && process.env.DEV_LOCAL_USER_ID));
       // Allow a developer-requested simulation of production cookie behavior.
       // simulateLive is enabled when any of:
       // - env `DEV_SIMULATE_LIVE=1`
@@ -24,8 +26,8 @@ router.post("/login", async (req, res) => {
       //   so developers don't have to set an env variable before starting the server.
       const simulateLive = Boolean(
         process.env.DEV_SIMULATE_LIVE === "1" ||
-          (req.body && req.body.simulateLive) ||
-          (process.env.NODE_ENV !== "production" && req.body && req.body.devUserId)
+        (req.body && req.body.simulateLive) ||
+        (process.env.NODE_ENV !== "production" && req.body && req.body.devUserId)
       );
       if (devUserId) {
         // Primary dev cookie (httpOnly) used for normal local dev flows
@@ -97,11 +99,40 @@ router.post("/login", async (req, res) => {
 
       let userId = existing && existing.id;
 
-      // If no user exists, create one (minimal profile)
+      // First login for a pre-authorized user: firebase_uid not set yet, but phone_number exists.
+      // Find by phone_number and stamp their row with the firebase_uid.
+      if (!userId && phone) {
+        const { data: byPhone, error: phoneErr } = await supabase
+          .from("users")
+          .select("id")
+          .eq("phone_number", phone)
+          .maybeSingle();
+
+        if (phoneErr) {
+          console.error("Supabase phone lookup error (auth login):", phoneErr);
+          return res.status(500).json({ error: "Internal error" });
+        }
+
+        if (byPhone && byPhone.id) {
+          // Link firebase_uid to the existing pre-authorized row
+          const { error: updateErr } = await supabase
+            .from("users")
+            .update({ firebase_uid: firebaseUid })
+            .eq("id", byPhone.id);
+
+          if (updateErr) {
+            console.error("Supabase update error (link firebase_uid):", updateErr);
+            return res.status(500).json({ error: "Failed to link account" });
+          }
+          userId = byPhone.id;
+        }
+      }
+
+      // Truly new user (no pre-authorized row) — create a minimal profile
       if (!userId) {
         const payload = {
           firebase_uid: firebaseUid,
-          phone: phone,
+          phone_number: phone,
           email: email,
           display_name: name,
         };

@@ -97,7 +97,11 @@ class LoginPage extends BasePage {
         this.otpInput.focus();
       } catch (err) {
         console.error("Send OTP error:", err);
-        this.showErrorToast(err.message || "Failed to send code. Try again.");
+        let sendMsg = err.message || "Failed to send code. Try again.";
+        if (err.code === "auth/network-request-failed") {
+          sendMsg = "Network error — check your connection and try again.";
+        }
+        this.showErrorToast(sendMsg);
         this.sendOTPBtn.disabled = false;
         this.sendOTPBtn.textContent = ">>> SEND CODE <<<";
       }
@@ -140,6 +144,8 @@ class LoginPage extends BasePage {
             message = "This code has expired. Please request a new one.";
           } else if (otpErr.code === "auth/too-many-requests") {
             message = "Too many attempts. Please wait and try again later.";
+          } else if (otpErr.code === "auth/network-request-failed") {
+            message = "Network error — check your connection and try again.";
           } else if (otpErr.code) {
             message = `Verification error: ${otpErr.message}`;
           }
