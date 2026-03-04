@@ -500,10 +500,8 @@ class BasePage {
     awardImg.src = randomAward;
     awardImg.alt = "Site Award";
     awardImg.className = "site-awards-img";
-    awardImg.style.display = "block";
-    awardImg.style.margin = "40px auto 0 auto";
-    awardImg.style.position = "relative";
     awardImg.style.cursor = "pointer";
+    awardImg.style.display = "block";
 
     // If the selected entry specifies a custom sound, preload it and attach its key to the image
     if (randomEntry && randomEntry.sound) {
@@ -514,16 +512,73 @@ class BasePage {
       awardImg.dataset.thanksSound = soundName;
     }
 
+    // "Vote for Me!" label underneath the award
+    const voteLabel = document.createElement("div");
+    voteLabel.textContent = "Vote for Me!";
+    voteLabel.style.cssText =
+      "text-align:center;font-size:0.75rem;font-family:'Comic Sans MS',cursive;color:#ff69b4;margin-top:4px;cursor:pointer;user-select:none;";
+
+    // Wrap image + label in a container
+    const awardContainer = document.createElement("div");
+    awardContainer.style.cssText =
+      "display:block;margin:40px auto 0 auto;width:fit-content;text-align:center;";
+    awardContainer.appendChild(awardImg);
+    awardContainer.appendChild(voteLabel);
+
+    // Track unique award clicks in localStorage (no repeat counting)
+    const STORAGE_KEY = "site-awards-clicked";
+    const THRESHOLD = 10;
+
+    const getClicked = () => {
+      try {
+        return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"));
+      } catch {
+        return new Set();
+      }
+    };
+
+    const saveClicked = (set) => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([...set]));
+      } catch {
+        /* ignore */
+      }
+    };
+
     // Play a short thank-you sound when the award image is clicked
-    awardImg.addEventListener("click", (e) => {
+    // and track unique awards for the achievement
+    const handleAwardClick = () => {
       const soundToPlay = awardImg.dataset.thanksSound || "thanks";
       try {
         this.audioManager.play(soundToPlay);
       } catch (err) {
         console.debug("Play thanks failed:", err);
       }
-    });
-    document.body.appendChild(awardImg);
+
+      // Track unique award image clicks
+      const clicked = getClicked();
+      const imgKey = randomAward; // use the image path as unique key
+      if (!clicked.has(imgKey)) {
+        clicked.add(imgKey);
+        saveClicked(clicked);
+        if (clicked.size >= THRESHOLD) {
+          try {
+            window.dispatchEvent(
+              new CustomEvent("achievement:trigger", {
+                detail: { key: "site_popularity", clicked: clicked.size },
+              })
+            );
+          } catch (err) {
+            console.debug("achievement:trigger dispatch failed:", err);
+          }
+        }
+      }
+    };
+
+    awardImg.addEventListener("click", handleAwardClick);
+    voteLabel.addEventListener("click", handleAwardClick);
+
+    document.body.appendChild(awardContainer);
   }
 }
 

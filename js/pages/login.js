@@ -7,6 +7,9 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 import { SUPABASE_CONFIG } from "../config.js";
 
 class LoginPage extends BasePage {
+  // Don't show site awards on the login page — achievement triggering before auth would break things
+  initUI() {}
+
   constructor() {
     super({ requiresAuth: false });
     this.phoneNumber = null;
