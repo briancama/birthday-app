@@ -525,7 +525,8 @@
 .description-content strong {
   display: block;
   margin-bottom: 0.5rem;
-  font-family: "Comic Sans MS", cursive;
+  font-family:
+    "Comic Sans", "Comic Sans MS", "Chalkboard", "ChalkboardSE-Regular", cursive, sans-serif;
 }
 
 .description-content p {

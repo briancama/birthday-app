@@ -42,7 +42,6 @@ body.has-bottom-menu {
   text-align: center;
   padding: var(--spacing-md);
   border-bottom: 2px solid var(--accent-magenta);
-  background: rgba(255, 0, 255, 0.05);
 }
 
 .user-welcome {
