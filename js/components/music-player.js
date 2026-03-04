@@ -17,7 +17,7 @@ class MusicPlayer extends HTMLElement {
   }
 
   connectedCallback() {
-    // Don't render here — setSongs owns the first render once the favorite is resolved
+    this.render();
     // Attach event listeners only once
     this.shadowRoot.addEventListener("click", (e) => {
       console.log(e.target); // Debug: log clicked element
