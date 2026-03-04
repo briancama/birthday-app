@@ -155,3 +155,17 @@
   border-color: #7dafff;
   color: #1a3a6b;
 }
+
+.event-card-rsvp-counts {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 0.82em;
+}
+
+.event-card-rsvp-counts .rsvp-count + .rsvp-count::before {
+  content: "|";
+  margin-right: 6px;
+  opacity: 0.4;
+}
