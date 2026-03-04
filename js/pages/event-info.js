@@ -74,16 +74,6 @@ class EventInfoPage extends BasePage {
     // (useful for mobile where autoplay is blocked until a gesture)
     (() => {
       const initHandler = (e) => {
-        // Prefer to start playback first inside the user gesture
-        try {
-          const player = document.querySelector("music-player");
-          if (player && typeof player.playSong === "function") {
-            player.playSong(0);
-          }
-        } catch (err) {
-          console.warn("Failed to auto-play music-player on gesture:", err);
-        }
-
         // Then initialize audioManager (safe to do after attempting play)
         try {
           this.audioManager && this.audioManager.initialize && this.audioManager.initialize();

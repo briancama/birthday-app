@@ -210,7 +210,9 @@ class MusicPlayer extends HTMLElement {
 
   async togglePlayPause() {
     // Wait for setSongs (favorite resolution) to finish before starting playback
+    console.debug("[MusicPlayer] togglePlayPause — currentIndex BEFORE await:", this.currentIndex);
     if (this._ready) await this._ready;
+    console.debug("[MusicPlayer] togglePlayPause — currentIndex AFTER await:", this.currentIndex);
     if (!this.audio) {
       this.playSong();
     } else if (this.isPlaying) {
