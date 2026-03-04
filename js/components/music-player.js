@@ -73,6 +73,10 @@ class MusicPlayer extends HTMLElement {
   async setSongs(songs) {
     this.songs = songs;
     this.currentIndex = 0;
+    // Expose a promise so callers (e.g. togglePlayPause) can wait for
+    // the favorite to be resolved before starting playback.
+    let resolveReady;
+    this._ready = new Promise((res) => (resolveReady = res));
     // Resolve the user's saved favorite before the first render
     try {
       const supabase = appState.getSupabase();
@@ -84,17 +88,35 @@ class MusicPlayer extends HTMLElement {
           .select("song_id")
           .eq("user_id", userId)
           .maybeSingle();
+        console.debug("[MusicPlayer] Supabase favorite row:", data);
         if (data?.song_id) favUrl = data.song_id;
+      } else {
+        console.debug("[MusicPlayer] Skipping Supabase — supabase:", !!supabase, "userId:", userId);
       }
       // Fall back to localStorage if Supabase had nothing
       if (!favUrl) favUrl = localStorage.getItem("musicPlayerFavoriteSongUrl");
       if (favUrl) localStorage.setItem("musicPlayerFavoriteSongUrl", favUrl);
       const favIdx = favUrl ? songs.findIndex((s) => s.url === favUrl) : -1;
+      console.debug(
+        "[MusicPlayer] favUrl:",
+        favUrl,
+        "favIdx:",
+        favIdx,
+        "setting currentIndex →",
+        favIdx >= 0 ? favIdx : 0
+      );
       if (favIdx >= 0) this.currentIndex = favIdx;
     } catch (err) {
       console.warn("[MusicPlayer] Could not load favorite song:", err);
     }
+    console.debug(
+      "[MusicPlayer] setSongs done — currentIndex:",
+      this.currentIndex,
+      "song:",
+      this.songs[this.currentIndex]?.title
+    );
     this.render();
+    resolveReady();
   }
 
   setOnSongSelect(callback) {
@@ -102,6 +124,7 @@ class MusicPlayer extends HTMLElement {
   }
 
   playSong(idx = this.currentIndex) {
+    console.debug("[MusicPlayer] playSong called — idx:", idx, "song:", this.songs[idx]?.title);
     if (!this.songs.length) return;
     if (this.audio) {
       this.audio.pause();
@@ -185,7 +208,9 @@ class MusicPlayer extends HTMLElement {
     }
   }
 
-  togglePlayPause() {
+  async togglePlayPause() {
+    // Wait for setSongs (favorite resolution) to finish before starting playback
+    if (this._ready) await this._ready;
     if (!this.audio) {
       this.playSong();
     } else if (this.isPlaying) {
