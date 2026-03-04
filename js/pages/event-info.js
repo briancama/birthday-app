@@ -128,6 +128,8 @@ class EventInfoPage extends BasePage {
       player.setSongs(MUSIC_SONGS);
       container.innerHTML = "";
       container.appendChild(player);
+      // Seek to the user's saved favorite (async; loads from Supabase, falls back to localStorage)
+      player.initFavoriteSong();
       // Create a floating mute button that's visible only while music is playing
       let muteBtn = document.getElementById("musicMuteButton");
       if (!muteBtn) {
@@ -243,7 +245,8 @@ class EventInfoPage extends BasePage {
       if (!aboutDiv) return;
       this.headshotUpload = new HeadshotUpload();
       this.headshotUpload.init().then((uploadEl) => {
-        aboutDiv.appendChild(uploadEl);
+        // Insert before the hint copy so the action appears above the descriptive text
+        aboutDiv.insertBefore(uploadEl, aboutDiv.firstChild);
       });
     });
   }

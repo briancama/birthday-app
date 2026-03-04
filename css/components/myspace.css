@@ -159,6 +159,14 @@ body {
   margin-bottom: 1.2rem;
 }
 
+.myspace-about__hint {
+  font-size: 0.8em;
+  color: #666;
+  font-style: italic;
+  line-height: 1.4;
+  margin: 0;
+}
+
 .myspace-interests {
   font-size: 0.95em;
   color: #555;

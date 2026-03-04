@@ -225,7 +225,47 @@ class MusicPlayer extends HTMLElement {
   getFavoriteSongIdx() {
     const favUrl = localStorage.getItem("musicPlayerFavoriteSongUrl");
     if (!favUrl || !this.songs.length) return null;
-    return this.songs.findIndex((s) => s.url === favUrl);
+    const idx = this.songs.findIndex((s) => s.url === favUrl);
+    return idx >= 0 ? idx : null;
+  }
+
+  /**
+   * Load the user's saved favorite song from Supabase, seed localStorage,
+   * and update currentIndex — without autoplaying (requires user gesture).
+   */
+  async initFavoriteSong() {
+    try {
+      const supabase = appState.getSupabase();
+      const userId = appState.getUserId();
+      if (!supabase || !userId) {
+        // Fall back to whatever is in localStorage
+        const localIdx = this.getFavoriteSongIdx();
+        if (localIdx !== null && localIdx >= 0) {
+          this.currentIndex = localIdx;
+          this.render();
+        }
+        return;
+      }
+      const { data, error } = await supabase
+        .from("user_favorite_songs")
+        .select("song_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (error) throw error;
+      if (data?.song_id) {
+        // Sync to localStorage so getFavoriteSongIdx() finds it
+        localStorage.setItem("musicPlayerFavoriteSongUrl", data.song_id);
+      }
+      // Now resolve to an index
+      const favIdx = this.getFavoriteSongIdx();
+      if (favIdx !== null && favIdx >= 0) {
+        this.currentIndex = favIdx;
+        this.render();
+        console.debug("[MusicPlayer] Loaded favorite song idx:", favIdx, this.songs[favIdx]?.title);
+      }
+    } catch (err) {
+      console.warn("[MusicPlayer] initFavoriteSong error:", err);
+    }
   }
 
   async setFavoriteSongIdx(idx) {
