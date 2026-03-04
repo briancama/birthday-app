@@ -17,7 +17,11 @@
   <body>
     <nav class="site-navigation mobile-menu-default">
       <!-- Mobile Menu Toggle (always visible) -->
-      <button class="mobile-menu-toggle active" data-sound="menu" aria-label="Toggle navigation menu">
+      <button
+        class="mobile-menu-toggle active"
+        data-sound="menu"
+        aria-label="Toggle navigation menu"
+      >
         <span class="hamburger-icon">☰</span>
       </button>
       <!-- Page Title / User Info -->
@@ -32,14 +36,23 @@
       <div class="nav-menu">
         <div class="nav-tabs">
           <a href="dashboard" class="nav-tab" data-sound="menu" data-page="dashboard">
-            <img src="images/home.gif" alt="home" class="icon-gif icon-gif--lg icon-gif--with-text" />
+            <img
+              src="images/home.gif"
+              alt="home"
+              class="icon-gif icon-gif--lg icon-gif--with-text"
+            />
             <span>DASHBOARD</span>
           </a>
           <a href="event-info" class="nav-tab" data-sound="menu" data-page="event-info">
             <img src="images/question.gif" alt="info" class="icon-gif icon-gif--with-text" />
             <span>EVENT INFO</span>
           </a>
-          <a href="challenges-submit" class="nav-tab" data-sound="menu" data-page="challenges-submit">
+          <a
+            href="challenges-submit"
+            class="nav-tab"
+            data-sound="menu"
+            data-page="challenges-submit"
+          >
             <img src="images/star_icon.gif" alt="star" class="icon-gif icon-gif--with-text" />
             <span>SUBMIT CHALLENGE</span>
           </a>
@@ -48,21 +61,45 @@
             <span>LEADERBOARD</span>
           </a>
           <a href="cocktail-judging" class="nav-tab" data-sound="menu" data-page="cocktail-judging">
-            <img src="images/cocktail_stirrer.gif" alt="cocktail" class="icon-gif icon-gif--with-text" />
+            <img
+              src="images/cocktail_stirrer.gif"
+              alt="cocktail"
+              class="icon-gif icon-gif--with-text"
+            />
             <span>JUDGE COCKTAILS</span>
           </a>
-          <a href="admin-approvals" class="nav-tab" data-sound="menu" data-page="admin-approvals" data-admin-only style="display: none">
+          <a
+            href="admin-approvals"
+            class="nav-tab"
+            data-sound="menu"
+            data-page="admin-approvals"
+            data-admin-only
+            style="display: none"
+          >
             <img src="images/star_icon.gif" alt="admin" class="icon-gif icon-gif--with-text" />
             <span>🔐 ADMIN</span>
           </a>
           <button class="nav-tab logout-btn">
-            <img src="images/logout.gif" alt="logout" class="icon-gif icon-gif--lg icon-gif--with-text" />
+            <img
+              src="images/logout.gif"
+              alt="logout"
+              class="icon-gif icon-gif--lg icon-gif--with-text"
+            />
             <span>LOGOUT</span>
           </button>
         </div>
       </div>
     </nav>
-
+    <div class="container">
+      <div class="flame-divider scam-hidden" id="scamGifContainer">
+        <img
+          id="scamGif"
+          class="clickable"
+          src="images/scam.gif"
+          alt="definitely a scam add"
+          class="divider-gif"
+        />
+      </div>
       <div class="section">
         <button id="addChallengeBtn" class="add-challenge-btn">✨ ADD CHALLENGE ✨</button>
         <!-- Retro collapsible details for challenge info -->
@@ -97,7 +134,8 @@
               <b>VS Brian</b>, Brian will be assigned the challenge as your rival—if you succeed, he
               must fail (and vice versa). If you select <b>WITH Brian</b>, Brian will be assigned a
               cooperative challenge and you’ll both try to complete it together. Look, I love a
-              little competition and might just be looking for a few extra points to pad my stats.<img
+              little competition and might just be looking for a few extra points to pad my
+              stats.<img
                 src="images/silly.gif"
                 alt="wink"
                 class="icon-gif"
@@ -117,7 +155,7 @@
     </div>
 
     <!-- Challenge Submission Modal -->
-    <div id="challengeModal" class="challenge-modal" style="display: none;">
+    <div id="challengeModal" class="challenge-modal" style="display: none">
       <div class="challenge-modal-overlay"></div>
       <div class="challenge-modal-content">
         <button id="closeChallengeModal" class="close-btn">✖️</button>

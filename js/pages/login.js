@@ -45,7 +45,7 @@ class LoginPage extends BasePage {
           this.sendOTPBtn.disabled = false;
           this.sendOTPBtn.textContent = ">>> SEND CODE <<<";
         } catch (err) {
-          this.showError("Setup failed: " + err.message);
+          this.showErrorToast("Setup failed: " + err.message);
           this.sendOTPBtn.disabled = false;
           this.sendOTPBtn.textContent = ">>> SEND CODE <<<";
           return;
@@ -53,13 +53,13 @@ class LoginPage extends BasePage {
       }
       this.phoneNumber = this.phoneInput.value.trim();
       if (!this.phoneNumber) {
-        this.showError("Please enter a phone number");
+        this.showErrorToast("Please enter a phone number");
         return;
       }
       try {
         this.phoneNumber = toE164Format(this.phoneNumber);
       } catch (err) {
-        this.showError(err.message);
+        this.showErrorToast(err.message);
         return;
       }
       // Pre-check: ensure phone number exists in our users table before sending OTP
@@ -75,7 +75,7 @@ class LoginPage extends BasePage {
           // If lookup fails for unexpected reasons, allow OTP flow to continue
         }
         if (!userMatch) {
-          this.showError(
+          this.showErrorToast(
             "Sorry — that phone number is not authorized. Contact Brian if you'd like access."
           );
           return;
@@ -94,7 +94,7 @@ class LoginPage extends BasePage {
         this.otpInput.focus();
       } catch (err) {
         console.error("Send OTP error:", err);
-        this.showError(err.message || "Failed to send code. Try again.");
+        this.showErrorToast(err.message || "Failed to send code. Try again.");
         this.sendOTPBtn.disabled = false;
         this.sendOTPBtn.textContent = ">>> SEND CODE <<<";
       }
@@ -120,7 +120,7 @@ class LoginPage extends BasePage {
       this.errorDiv.textContent = "";
       const code = this.otpInput.value.trim();
       if (!code || code.length !== 6) {
-        this.showError("Please enter a valid 6-digit code");
+        this.showErrorToast("Please enter a valid 6-digit code");
         return;
       }
       this.verifyOTPBtn.disabled = true;
@@ -140,13 +140,13 @@ class LoginPage extends BasePage {
           } else if (otpErr.code) {
             message = `Verification error: ${otpErr.message}`;
           }
-          this.showError(message);
+          this.showErrorToast(message);
           this.verifyOTPBtn.disabled = false;
           this.verifyOTPBtn.textContent = ">>> VERIFY CODE <<<";
           return;
         }
         if (!userCredential?.user?.uid) {
-          this.showError("Firebase verification failed. Please try again.");
+          this.showErrorToast("Firebase verification failed. Please try again.");
           this.verifyOTPBtn.disabled = false;
           this.verifyOTPBtn.textContent = ">>> VERIFY CODE <<<";
           return;
@@ -159,13 +159,13 @@ class LoginPage extends BasePage {
         if (authSuccess) {
           window.location.href = "event-info";
         } else {
-          this.showError("Authentication failed. Please try again.");
+          this.showErrorToast("Authentication failed. Please try again.");
           this.verifyOTPBtn.disabled = false;
           this.verifyOTPBtn.textContent = ">>> VERIFY CODE <<<";
         }
       } catch (err) {
         console.error("Verify OTP error:", err);
-        this.showError(err.message || "Verification failed. Try again.");
+        this.showErrorToast(err.message || "Verification failed. Try again.");
         this.verifyOTPBtn.disabled = false;
         this.verifyOTPBtn.textContent = ">>> VERIFY CODE <<<";
       }
@@ -177,7 +177,7 @@ class LoginPage extends BasePage {
   async serverLoginAndInit() {
     const sdkUser = firebaseAuth.getCurrentUser();
     if (!sdkUser) {
-      this.showError("No Firebase user found after verification.");
+      this.showErrorToast("No Firebase user found after verification.");
       return false;
     }
     try {
@@ -197,12 +197,12 @@ class LoginPage extends BasePage {
       });
       if (!resp.ok) {
         const err = await resp.text().catch(() => resp.statusText);
-        this.showError("Server login failed: " + err);
+        this.showErrorToast("Server login failed: " + err);
         return false;
       }
     } catch (loginErr) {
       console.error("Server /auth/login error:", loginErr);
-      this.showError("Failed to establish session with server.");
+      this.showErrorToast("Failed to establish session with server.");
       return false;
     }
 
@@ -211,7 +211,7 @@ class LoginPage extends BasePage {
       return Boolean(authSuccess);
     } catch (e) {
       console.error("appState.init() failed:", e);
-      this.showError("Failed to initialize app state.");
+      this.showErrorToast("Failed to initialize app state.");
       return false;
     }
   }

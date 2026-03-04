@@ -23,7 +23,7 @@ class DashboardPage extends BasePage {
     await firebaseAuth.init();
     const sdkUser = firebaseAuth.getCurrentUser();
     if (!sdkUser || !sdkUser.uid) {
-      this.showError("Authentication required. Please log in.");
+      this.showErrorToast("Authentication required. Please log in.");
       window.location.href = "/";
       return;
     }
@@ -56,7 +56,7 @@ class DashboardPage extends BasePage {
       this.userEventsSection.render();
     }
     this.userErrorCleanup = appState.on("user:error", (e) => {
-      this.showError(e.detail.error || "Authentication error");
+      this.showErrorToast(e.detail.error || "Authentication error");
     });
     console.log("DashboardPage ready, checking feature flags...");
 
@@ -123,7 +123,7 @@ class DashboardPage extends BasePage {
         ? allAchievements.filter((a) => awardedIds.includes(a.id))
         : [];
 
-      counterEl.textContent = `${awarded.length} / ${total} achievements`;
+      counterEl.innerHTML = `${awarded.length} / ${total} <span>complete</span>`;
       section.classList.toggle("visible", awarded.length > 0);
 
       // Render badges using CSS classes (no inline styles)
@@ -134,7 +134,7 @@ class DashboardPage extends BasePage {
           const points = ach.points || 0;
           const initial = (name && name.charAt(0)) || "*";
           return `
-            <div class="challenge-badge" title="${desc}">
+            <div class="challenge-badge" title="${desc}" data-title="${desc}">
               <span class="badge-icon" aria-hidden="true">${initial}</span>
               <span class="badge-name">${name}</span>
               <span class="badge-description hide-mobile">${desc}</span>
@@ -190,7 +190,7 @@ class DashboardPage extends BasePage {
         assignmentStats,
       });
     } catch (err) {
-      this.showError("Failed to load stats: " + err.message);
+      this.showErrorToast("Failed to load stats: " + err.message);
     }
   }
 
@@ -339,7 +339,7 @@ class DashboardPage extends BasePage {
         originalError: err,
       });
 
-      this.showError("Failed to mark complete: " + err.message);
+      this.showErrorToast("Failed to mark complete: " + err.message);
     }
   }
 
@@ -657,7 +657,7 @@ class DashboardPage extends BasePage {
 
     statsSection.style.visibility = "hidden";
     previewContainer.style.visibility = "visible";
-    this.showError("Failed to load stats: " + message);
+    this.showErrorToast("Failed to load stats: " + message);
   }
 
   triggerStatAnimation(element) {

@@ -5,7 +5,7 @@
 
 /* Denied Challenges Expandable Section */
 .denied-challenges-details {
-  border: 2px solid #FF0000;
+  border: 2px solid #ff0000;
   padding: 1rem;
   margin-top: 1rem;
   background: rgba(255, 0, 0, 0.05);
@@ -37,12 +37,12 @@
 .submissions-table td {
   padding: 0.75rem;
   text-align: left;
-  border: 2px solid #FFFFFF;
+  border: 2px solid #ffffff;
 }
 
 .submissions-table th {
-  background: linear-gradient(to bottom, #9400D3, #4B0082);
-  color: #FFFF00;
+  background: linear-gradient(to bottom, #9400d3, #4b0082);
+  color: #ffff00;
   font-weight: bold;
   text-transform: uppercase;
 }
@@ -80,17 +80,17 @@
 }
 
 .status-pending {
-  color: #FFA500;
+  color: #ffa500;
   background: rgba(255, 165, 0, 0.1);
 }
 
 .status-approved {
-  color: #00FF00;
+  color: #00bfff;
   background: rgba(0, 255, 0, 0.1);
 }
 
 .status-denied {
-  color: #FF0000;
+  color: #ff0000;
   background: rgba(255, 0, 0, 0.1);
 }
 
@@ -98,12 +98,12 @@
 .empty-state {
   text-align: center;
   padding: 2rem;
-  color: #CCCCCC;
+  color: #cccccc;
   font-style: italic;
 }
 
 .empty-state.error {
-  color: #FF0000;
+  color: #ff0000;
 }
 
 /* Action Buttons in Table */
@@ -120,8 +120,8 @@
   padding: 0.2rem 0.4rem;
   font-size: 0.8rem;
   cursor: pointer;
-  border: 2px outset #FFFFFF;
-  background: linear-gradient(180deg, #FFFFFF 0%, #C0C0C0 100%);
+  border: 2px outset #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #c0c0c0 100%);
   font-weight: bold;
 }
 
@@ -135,18 +135,18 @@
 }
 
 .btn-approve {
-  background: linear-gradient(180deg, #00FF00 0%, #00CC00 100%) !important;
+  background: linear-gradient(180deg, #00ff00 0%, #00cc00 100%) !important;
   color: #000000;
 }
 
 .btn-deny {
-  background: linear-gradient(180deg, #FF0000 0%, #CC0000 100%) !important;
-  color: #FFFF00;
+  background: linear-gradient(180deg, #ff0000 0%, #cc0000 100%) !important;
+  color: #ffff00;
 }
 
 .btn-view {
-  background: linear-gradient(180deg, #00BFFF 0%, #0099CC 100%) !important;
-  color: #FFFFFF;
+  background: linear-gradient(180deg, #00bfff 0%, #0099cc 100%) !important;
+  color: #ffffff;
 }
 
 /* Challenge Modal */
@@ -175,8 +175,8 @@
   max-width: 700px;
   max-height: 90vh;
   margin: 5vh auto;
-  background: #C0C0C0;
-  border: 6px outset #FFFFFF;
+  background: #c0c0c0;
+  border: 6px outset #ffffff;
   padding: 2rem;
   overflow-y: auto;
   box-shadow: 10px 10px 0px rgba(0, 0, 0, 0.5);
@@ -218,20 +218,20 @@
    ============================================ */
 
 .entry-card {
-  background: #FFFFFF;
-  border: 3px solid #FF1493;
+  background: #ffffff;
+  border: 3px solid #ff1493;
   padding: 1.5rem;
   margin-bottom: 2rem;
   box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.3);
 }
 
 .entry-card.judged {
-  border-color: #00FF00;
-  background: #F0FFF0;
+  border-color: #00ff00;
+  background: #f0fff0;
 }
 
 .entry-header {
-  border-bottom: 2px dotted #FF1493;
+  border-bottom: 2px dotted #ff1493;
   padding-bottom: 1rem;
   margin-bottom: 1rem;
   position: relative;
@@ -239,7 +239,7 @@
 
 .entry-header h3 {
   margin: 0 0 0.5rem 0;
-  color: #9400D3;
+  color: #9400d3;
 }
 
 .entry-author {
@@ -252,20 +252,20 @@
   position: absolute;
   top: 0;
   right: 0;
-  background: #FFD700;
+  background: #ffd700;
   color: #000;
   padding: 0.25rem 0.75rem;
   font-weight: bold;
-  border: 2px solid #FFA500;
+  border: 2px solid #ffa500;
   transform: rotate(5deg);
 }
 
 .entry-description pre {
   white-space: pre-wrap;
-  font-family: 'Courier New', monospace;
-  background: #F5F5F5;
+  font-family: "Courier New", monospace;
+  background: #f5f5f5;
   padding: 1rem;
-  border: 2px inset #CCC;
+  border: 2px inset #ccc;
   margin: 0;
 }
 
@@ -284,13 +284,13 @@
   display: block;
   font-weight: bold;
   margin-bottom: 0.25rem;
-  color: #4B0082;
+  color: #4b0082;
 }
 
 .score-input select {
   width: 100%;
   padding: 0.5rem;
-  border: 2px solid #FF1493;
+  border: 2px solid #ff1493;
   font-size: 1rem;
 }
 
@@ -302,13 +302,13 @@
   display: block;
   font-weight: bold;
   margin-bottom: 0.25rem;
-  color: #4B0082;
+  color: #4b0082;
 }
 
 .notes-input textarea {
   width: 100%;
   padding: 0.5rem;
-  border: 2px solid #FF1493;
+  border: 2px solid #ff1493;
   font-size: 1rem;
   font-family: inherit;
   resize: vertical;
@@ -324,7 +324,7 @@
   margin-top: 1.5rem;
   padding: 1rem;
   background: rgba(0, 255, 0, 0.1);
-  border: 2px solid #00FF00;
+  border: 2px solid #00ff00;
 }
 
 .scores-grid {
@@ -336,24 +336,24 @@
 
 .score-item {
   padding: 0.5rem;
-  background: #FFFFFF;
-  border: 1px solid #00FF00;
+  background: #ffffff;
+  border: 1px solid #00ff00;
 }
 
 .total-score {
   font-size: 1.25rem;
   font-weight: bold;
-  color: #9400D3;
+  color: #9400d3;
   padding: 1rem;
-  background: #FFFF00;
-  border: 2px solid #FF1493;
+  background: #ffff00;
+  border: 2px solid #ff1493;
   text-align: center;
   margin-bottom: 1rem;
 }
 
 .judgment-notes {
   padding: 1rem;
-  background: #FFFFFF;
+  background: #ffffff;
   border: 2px dashed #666;
   margin-bottom: 1rem;
 }
@@ -378,8 +378,8 @@
 }
 
 .entry-card-compact {
-  background: #FFFFFF;
-  border: 3px solid #CCC;
+  background: #ffffff;
+  border: 3px solid #ccc;
   padding: 1rem;
   margin-bottom: 1rem;
   transition: all 0.2s ease;
@@ -398,15 +398,15 @@
 }
 
 .entry-card-compact.status-not-started {
-  border-color: #FFA500;
+  border-color: #ffa500;
 }
 
 .entry-card-compact.status-in-progress {
-  border-color: #FFD700;
+  border-color: #ffd700;
 }
 
 .entry-card-compact.status-completed {
-  border-color: #00FF00;
+  border-color: #00ff00;
 }
 
 .entry-compact-header {
@@ -423,7 +423,7 @@
 
 .entry-compact-title {
   margin: 0 0 0.25rem 0;
-  color: #9400D3;
+  color: #9400d3;
   font-size: 1.1rem;
 }
 
@@ -483,7 +483,9 @@
   font-size: 1rem;
   cursor: pointer;
   opacity: 0.7;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
   vertical-align: middle;
 }
 
@@ -495,8 +497,8 @@
 .entry-description-collapse {
   margin-top: 0.75rem;
   padding: 1rem;
-  background: #F5F5F5;
-  border: 2px solid #CCC;
+  background: #f5f5f5;
+  border: 2px solid #ccc;
   border-radius: 4px;
   animation: slideDown 0.3s ease;
 }
@@ -517,20 +519,19 @@
 }
 
 .description-content {
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
 }
 
 .description-content strong {
   display: block;
   margin-bottom: 0.5rem;
-  font-family: 'Comic Sans MS', cursive;
+  font-family: "Comic Sans MS", cursive;
 }
 
 .description-content p {
   margin: 0;
   line-height: 1.5;
 }
-
 
 .entry-compact-scores {
   display: flex;
@@ -558,18 +559,18 @@
 
 .score-compact .score-value {
   font-size: 0.95rem;
-  color: #4B0082;
+  color: #4b0082;
   font-weight: bold;
 }
 
 .score-compact.score-total {
   padding-left: 0.75rem;
-  border-left: 2px solid #FF1493;
+  border-left: 2px solid #ff1493;
 }
 
 .score-compact.score-total .score-value {
   font-size: 1.1rem;
-  color: #9400D3;
+  color: #9400d3;
 }
 
 @media (max-width: 768px) {
@@ -577,18 +578,121 @@
     gap: 0.5rem;
     flex-wrap: wrap;
   }
-  
+
   .entry-compact-title {
     font-size: 1rem;
   }
-  
+
   .btn-favorite-icon {
     font-size: 1.25rem;
   }
-  
+
   .judge-entry-btn {
     width: 100%;
     margin-top: 0.5rem;
   }
 }
 
+/* Scam GIF container visibility helpers
+   `scam-hidden` keeps the container non-interactive and invisible.
+   `scam-visible` shows it with an opacity transition and enables pointer events. */
+.scam-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+  will-change: opacity;
+}
+
+.scam-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 300ms ease;
+}
+
+/* Reveal overlay for new-car animation */
+/* Overlay wrapper used by JS: prefer class-based styling so CSS can be loaded independently */
+.scam-reveal,
+#scamRevealOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  flex-direction: column;
+  color: #fff;
+}
+
+.scam-reveal__loading,
+.scam-reveal-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Hidden state for loader (fades out, overlay remains) */
+.scam-reveal__loading--hidden {
+  opacity: 0;
+  transition: opacity 250ms ease;
+  pointer-events: none;
+}
+
+.scam-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: scam-spin 1s linear infinite;
+}
+
+@keyframes scam-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.scam-reveal__car,
+.scam-car {
+  max-width: 90vw;
+  max-height: 80vh;
+  position: fixed;
+  transform: translateY(100vh);
+  /* animation will be applied by adding the modifier class */
+  z-index: 10001;
+}
+
+/* Enter animation: scroll up then overshoot and settle (bounce) */
+.scam-reveal__car.scam-car-enter,
+.scam-car.scam-car-enter {
+  animation: scam-car-enter 6000ms linear both;
+}
+
+@keyframes scam-car-enter {
+  0% {
+    transform: translateY(100vh);
+  }
+  95% {
+    transform: translateY(-20vh);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* Close button inside overlay */
+.scam-reveal__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10002;
+  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid #888;
+  cursor: pointer;
+  font-weight: bold;
+}

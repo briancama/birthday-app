@@ -975,6 +975,10 @@
     text-align: center;
   }
 
+  .clickable {
+    cursor: pointer;
+  }
+
   /* Icon GIFs */
 
   .icon-gif {

@@ -232,27 +232,37 @@
         </h2>
         <div id="challengesList" class="challenge-list"></div>
       </div>
-    </div>
-    <!-- Achievements Section (hidden until user has awards) -->
-    <div class="section" id="achievementsSection">
-      <h2 class="text-shadow-light">YOUR ACHIEVEMENTS</h2>
-      <div
-        style="
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 8px;
-        "
-      >
+      <!-- Achievements Section (hidden until user has awards) -->
+      <div class="section" id="achievementsSection">
         <div
-          id="achievementsCounter"
-          style="font-size: 12px; font-weight: bold; color: var(--accent-color)"
-        ></div>
-        <div id="achievementsLegend" class="hide-desktop" style="font-size: 10px; color: #666">
-          Hover icons for details
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+          "
+        >
+          <h2 class="text-shadow-light" style="margin-bottom: 0">ACHIEVEMENTS</h2>
+          <div
+            class="achievements-counter"
+            id="achievementsCounter"
+            style="font-size: 12px; font-weight: bold; color: var(--accent-color)"
+          ></div>
         </div>
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+          "
+        >
+          <div id="achievementsLegend" class="hide-desktop" style="font-size: 10px; color: #666">
+            Click for details
+          </div>
+        </div>
+        <div id="achievementsList" class="achievements-grid" style="padding-top: 8px"></div>
       </div>
-      <div id="achievementsList" class="achievements-grid" style="padding-top: 8px"></div>
     </div>
 
     <script type="module">

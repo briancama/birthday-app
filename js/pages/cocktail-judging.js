@@ -63,7 +63,7 @@ class CocktailJudgingPage extends BasePage {
       this.renderEntries();
     } catch (err) {
       console.error("Error loading competition data:", err);
-      this.showError("Failed to load competition data. Please refresh the page.");
+      this.showFormError("Failed to load competition data. Please refresh the page.");
     }
   }
 
@@ -211,15 +211,15 @@ class CocktailJudgingPage extends BasePage {
                             <span class="score-value">${judgment.taste_score || "—"}</span>
                         </div>
                         <div class="score-compact">
-                            <span class="score-label">Present.</span>
+                            <span class="score-label">Presentation</span>
                             <span class="score-value">${judgment.presentation_score || "—"}</span>
                         </div>
                         <div class="score-compact">
-                            <span class="score-label">Work.</span>
+                            <span class="score-label">Craft</span>
                             <span class="score-value">${judgment.workmanship_score || "—"}</span>
                         </div>
                         <div class="score-compact">
-                            <span class="score-label">Creative</span>
+                            <span class="score-label">Creativity</span>
                             <span class="score-value">${judgment.creativity_score || "—"}</span>
                         </div>
                         ${
@@ -271,7 +271,7 @@ class CocktailJudgingPage extends BasePage {
                         <strong>Presentation:</strong> ${judgment.presentation_score}/5 (${judgment.presentation_score * 4} pts)
                     </div>
                     <div class="score-item">
-                        <strong>Workmanship:</strong> ${judgment.workmanship_score}/5 (${judgment.workmanship_score * 3} pts)
+                        <strong>Craftsmanship:</strong> ${judgment.workmanship_score}/5 (${judgment.workmanship_score * 3} pts)
                     </div>
                     <div class="score-item">
                         <strong>Creativity:</strong> ${judgment.creativity_score}/5 (${judgment.creativity_score * 3} pts)
@@ -320,7 +320,7 @@ class CocktailJudgingPage extends BasePage {
                     </div>
 
                     <div class="score-input">
-                        <label>Workmanship (x3)</label>
+                        <label>Craftsmanship (x3)</label>
                         <select name="workmanship_score">
                             <option value="">Select...</option>
                             <option value="1" ${existingJudgment?.workmanship_score === 1 ? "selected" : ""}>1 - Poor</option>
@@ -736,7 +736,7 @@ class CocktailJudgingPage extends BasePage {
     }
   }
 
-  showError(message) {
+  showFormError(message) {
     document.getElementById("judgingStatus").innerHTML = `
             <div class="error-message">
                 <p>${message}</p>

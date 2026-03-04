@@ -24,10 +24,25 @@ class BasePage {
     // Initialize achievement service (idempotent) and UI listener
     try {
       await achievementService.init();
-      const achCleanup = EventBus.instance.listen("achievement:awarded", (e) => {
+      // Centralized achievement handler used for both EventBus and window events
+      const handleAchievementAward = (e) => {
         try {
-          const { name, points } = e.detail || {};
-          this.showSuccess(`Achievement unlocked: ${name} (+${points || 0} pts)`);
+          const detail = e.detail || {};
+          console.debug("BasePage: achievement:awarded received", detail);
+          // Support both EventBus shape { name, points } and window shape { achievement: { name, points } }
+          const name =
+            detail.name || detail.achievement?.name || detail.achievementKey || "Achievement";
+          const points = detail.points || detail.achievement?.points || 0;
+
+          // Ensure the success container is attached to document.body so it's in the topmost DOM order
+          const existing = document.getElementById("successMessages");
+          if (existing && existing.parentNode !== document.body) {
+            document.body.appendChild(existing);
+          }
+
+          const successMessage = `Achievement unlocked: ${name} (+${points || 0} pts)`;
+          console.log("BasePage: calling showSuccessToast", successMessage, { detail });
+          this.showSuccessToast(successMessage);
           // play success sound if available
           try {
             this.audioManager.play && this.audioManager.play("success");
@@ -37,7 +52,9 @@ class BasePage {
         } catch (err) {
           console.warn("Error handling achievement event", err);
         }
-      });
+      };
+
+      const achCleanup = EventBus.instance.listen("achievement:awarded", handleAchievementAward);
       this.eventCleanup.push(achCleanup);
     } catch (e) {
       console.warn("Failed to init achievement service", e);
@@ -327,7 +344,7 @@ class BasePage {
   }
 
   // Utility methods
-  showError(message) {
+  showErrorToast(message) {
     console.error("❌", message);
 
     // Create error container if it doesn't exist
@@ -354,10 +371,10 @@ class BasePage {
     }, 5000);
   }
 
-  showSuccess(message) {
-    console.log("✅", message);
-
-    // Create success container if it doesn't exist
+  showSuccessToast(message) {
+    console.log("✅ showSuccessToast called", message);
+    console.trace();
+    // Create or move success container so it's the last child of <body>
     let successContainer = document.getElementById("successMessages");
     if (!successContainer) {
       successContainer = document.createElement("div");
@@ -376,8 +393,23 @@ class BasePage {
         pointerEvents: "none",
       });
       document.body.appendChild(successContainer);
+    } else {
+      // Ensure it's appended last so it renders above overlays
+      try {
+        document.body.appendChild(successContainer);
+      } catch (err) {
+        /* ignore */
+      }
     }
 
+    // Force highest z-index and priority to overcome stacking contexts
+    try {
+      successContainer.style.setProperty("z-index", "2147483647", "important");
+      successContainer.style.position = "fixed";
+      successContainer.style.pointerEvents = "none";
+    } catch (err) {
+      /* ignore */
+    }
     // Add success message element with close button
     const successEl = document.createElement("div");
     successEl.className = "success-message";
@@ -503,7 +535,7 @@ if (typeof window !== "undefined") {
   window.triggerDevToast = (message = "Dev toast") => {
     try {
       const page = new BasePage({ requiresAuth: false });
-      page.showSuccess(message);
+      page.showSuccessToast(message);
       return true;
     } catch (err) {
       // Log but don't throw so console testing is pleasant

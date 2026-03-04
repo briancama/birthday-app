@@ -1,0 +1,227 @@
+/* Compact Windows-98-like window styles for small dialog/window component
+   Use classes: .win98-window, .win98-titlebar, .win98-title, .win98-close,
+   .win98-content, .win98-buttons, .win98-btn
+*/
+
+.win98-window {
+  --bg: #c0c0c0; /* dialog background */
+  --title-bg: linear-gradient(#000080, #000060);
+  --title-color: #ffffff;
+  --bevel-light: #ffffff;
+  --bevel-dark: #404040;
+  --btn-face: #e0e0e0;
+  font-family: "MS Sans Serif", Tahoma, Arial, sans-serif;
+  color: #000;
+  background: var(--bg);
+  display: inline-block;
+  min-width: 340px;
+  max-width: 500px;
+  border: 2px solid var(--bevel-dark);
+  box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 0.25);
+}
+
+.win98-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  background: var(--title-bg);
+  color: var(--title-color);
+  height: 22px;
+  box-sizing: border-box;
+  border-bottom: 2px solid var(--bevel-dark);
+}
+
+.win98-title {
+  font-weight: bold;
+  font-size: 12px;
+  line-height: 14px;
+  text-shadow: 0 1px rgba(0, 0, 0, 0.4);
+  user-select: none;
+}
+
+.win98-close {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  background: linear-gradient(#f0f0f0, #c8c8c8);
+  border-top: 1px solid var(--bevel-light);
+  border-left: 1px solid var(--bevel-light);
+  border-bottom: 1px solid var(--bevel-dark);
+  border-right: 1px solid var(--bevel-dark);
+  cursor: pointer;
+  font-size: 12px;
+  color: #000;
+}
+
+.win98-close:active {
+  transform: translateY(1px);
+}
+
+.win98-content {
+  padding: 12px;
+  background: var(--bg);
+  color: #000;
+  font-size: 13px;
+}
+
+.win98-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 10px 12px 12px 12px;
+  background: transparent;
+}
+
+.win98-btn {
+  --pad-y: 6px;
+  --pad-x: 12px;
+  padding: var(--pad-y) var(--pad-x);
+  background: var(--btn-face);
+  border-top: 2px solid var(--bevel-light);
+  border-left: 2px solid var(--bevel-light);
+  border-bottom: 2px solid var(--bevel-dark);
+  border-right: 2px solid var(--bevel-dark);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 14px;
+  text-shadow: none;
+  color: #4a4a4a;
+  font-weight: normal;
+  min-width: 100px;
+}
+
+.win98-btn:active {
+  border-top: 2px solid var(--bevel-dark);
+  border-left: 2px solid var(--bevel-dark);
+  border-bottom: 2px solid var(--bevel-light);
+  border-right: 2px solid var(--bevel-light);
+  transform: translateY(1px);
+}
+
+.win98-muted {
+  color: #202020;
+  font-size: 12px;
+}
+
+/* Focus styles to emulate classic Windows 95/98 dotted focus rectangle */
+.win98-btn:focus,
+.win98-btn:focus-visible,
+.win98-close:focus,
+.win98-close:focus-visible {
+  outline: none;
+}
+
+/* Use a pseudo-element to render the dotted focus ring outside the element's inset border */
+.win98-btn,
+.win98-close {
+  position: relative;
+  font-family: "MS Sans Serif", Tahoma, Arial, sans-serif;
+}
+
+.win98-btn:focus::after,
+.win98-btn:focus-visible::after,
+.win98-close:focus::after,
+.win98-close:focus-visible::after {
+  content: "";
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  right: 1px;
+  bottom: 1px;
+  border: 2px dotted #000;
+  pointer-events: none;
+  border-radius: 2px;
+}
+
+/* small utility: centered modal wrapper */
+.win98-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive tweaks for tiny screens */
+@media (max-width: 420px) {
+  .win98-window {
+    min-width: 220px;
+    width: calc(100% - 24px);
+  }
+  .win98-title {
+    font-size: 11px;
+  }
+  .win98-btn {
+    font-size: 14px;
+  }
+}
+
+/* Win98-style form controls (text inputs, tel, email, textarea, select) */
+.win98-content input[type="text"],
+.win98-content input[type="tel"],
+.win98-content input[type="email"],
+.win98-content input[type="password"],
+.win98-content input[type="number"],
+.win98-content textarea,
+.win98-content select {
+  font-family: "MS Sans Serif", Tahoma, Arial, sans-serif;
+  font-size: 13px;
+  color: #000;
+  background: #ffffff;
+  padding: 6px 8px;
+  margin-top: 16px;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  border-top: 2px solid var(--bevel-light);
+  border-left: 2px solid var(--bevel-light);
+  border-bottom: 2px solid var(--bevel-dark);
+  border-right: 2px solid var(--bevel-dark);
+  outline: none;
+}
+
+.win98-content textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* Focus ring: dotted rectangle drawn as pseudo-element outside the inset border */
+.win98-content input:focus,
+.win98-content textarea:focus,
+.win98-content select:focus {
+  box-shadow: none;
+  outline: none;
+}
+
+.win98-content input:focus::after,
+.win98-content textarea:focus::after,
+.win98-content select:focus::after {
+  content: "";
+  position: absolute;
+}
+
+/* Wrap inputs in a relative context so pseudo focus ring can be positioned */
+.win98-content .win98-field {
+  position: relative;
+}
+
+/* Dotted focus rectangle using an inner element approach for simplicity */
+.win98-content .win98-field:focus-within::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  right: 2px;
+  bottom: 2px;
+  border: 1px dotted #000;
+  pointer-events: none;
+}
+
+/* Small inputs (buttons or inline) */
+.win98-content .win98-input-inline {
+  display: inline-block;
+  width: auto;
+}

@@ -394,7 +394,7 @@ class EventInfoPage extends BasePage {
               btn.disabled = false;
             });
           }
-          this.showError("Failed to update RSVP: " + err.message);
+          this.showErrorToast("Failed to update RSVP: " + err.message);
         }
       });
     } catch (err) {

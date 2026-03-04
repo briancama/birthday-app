@@ -274,7 +274,7 @@ class AchievementService {
         .maybeSingle();
       if (insertErr) throw insertErr;
 
-      // Emit UI event
+      // Emit UI event via EventBus (single canonical channel; BasePage listens here)
       EventBus.instance.emit("achievement:awarded", {
         userId,
         achievementKey: ach.key,
@@ -282,11 +282,6 @@ class AchievementService {
         points: ach.points,
         details,
       });
-
-      // Also call window event for compatibility
-      window.dispatchEvent(
-        new CustomEvent("achievement:awarded", { detail: { achievement: ach } })
-      );
 
       return inserted;
     } catch (err) {

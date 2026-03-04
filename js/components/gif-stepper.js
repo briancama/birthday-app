@@ -36,6 +36,24 @@ class GifStepper {
     this.done = false;
     // Prevent emitting completion more than once per instance
     this._gifCompletedEmitted = false;
+    this._gifSoundTriggered = false;
+    this._gifSoundPercent = null; // 0-100 or null
+    // optional sound to play when gif completes (data-gif-sound)
+    const rawGifSound = img.dataset.gifSound || img.getAttribute("data-gif-sound") || null;
+    this.gifSoundVolume = img.dataset.gifSoundVolume ? parseFloat(img.dataset.gifSoundVolume) : 1.0;
+    this._soundAudio = null;
+    this.gifSound = null;
+    if (rawGifSound) {
+      this._initGifSound(rawGifSound);
+    }
+    // optional percent (0-100) at which to trigger the sound during the click-through
+    const rawPercent = img.dataset.gifSoundPercent || img.getAttribute("data-gif-sound-percent");
+    if (rawPercent != null) {
+      const p = parseFloat(rawPercent);
+      if (!Number.isNaN(p)) {
+        this._gifSoundPercent = Math.max(0, Math.min(100, p));
+      }
+    }
 
     this._init();
   }
@@ -183,6 +201,94 @@ class GifStepper {
         } catch (e) {
           /* ignore */
         }
+        // If a sound is configured on the original <img>, play it once using preloaded audio when available
+        if (this.gifSound && (this._gifSoundPercent == null || this._gifSoundPercent >= 100)) {
+          try {
+            if (this._soundAudio) {
+              try {
+                try {
+                  this._soundAudio.currentTime = 0;
+                } catch (e) {}
+                const playPromise = this._soundAudio.play();
+                if (playPromise && typeof playPromise.catch === "function") {
+                  playPromise.catch((err) => {
+                    console.warn(
+                      "GifStepper: failed to play preloaded gif sound",
+                      this.gifSound,
+                      err
+                    );
+                  });
+                }
+              } catch (err) {
+                console.warn(
+                  "GifStepper: error while attempting to play preloaded sound",
+                  this.gifSound,
+                  err
+                );
+              }
+            } else {
+              // Fallback: create and play a one-off Audio, but only attempt if browser can probably play it
+              try {
+                const aTest = new Audio();
+                const canPlay = aTest.canPlayType("audio/mpeg") || aTest.canPlayType("audio/mp3");
+                if (!canPlay) {
+                  console.warn(
+                    "GifStepper: browser cannot play mp3 audio; skipping fallback play",
+                    this.gifSound
+                  );
+                } else {
+                  const a = new Audio(this.gifSound);
+                  a.volume = Number.isFinite(this.gifSoundVolume) ? this.gifSoundVolume : 1.0;
+                  const p = a.play();
+                  if (p && typeof p.catch === "function")
+                    p.catch((err) => {
+                      console.warn(
+                        "GifStepper: failed to play gif sound fallback",
+                        this.gifSound,
+                        err
+                      );
+                    });
+                }
+              } catch (err) {
+                console.warn(
+                  "GifStepper: error creating fallback audio element",
+                  this.gifSound,
+                  err
+                );
+              }
+            }
+          } catch (err) {
+            console.error("GifStepper: error playing gif sound", err);
+          }
+        }
+      }
+    }
+    // If a trigger percent is set, check and fire when crossing the trigger frame
+    if (
+      this.gifSound &&
+      this._gifSoundPercent != null &&
+      !this._gifSoundTriggered &&
+      this.frames.length
+    ) {
+      const triggerFrame = Math.floor((this._gifSoundPercent / 100) * (this.frames.length - 1));
+      if (this.current >= triggerFrame) {
+        this._gifSoundTriggered = true;
+        try {
+          if (this._soundAudio) {
+            try {
+              this._soundAudio.currentTime = 0;
+            } catch (e) {}
+            const playPromise = this._soundAudio.play();
+            if (playPromise && typeof playPromise.catch === "function") playPromise.catch(() => {});
+          } else {
+            const a = new Audio(this.gifSound);
+            a.volume = Number.isFinite(this.gifSoundVolume) ? this.gifSoundVolume : 1.0;
+            const p = a.play();
+            if (p && typeof p.catch === "function") p.catch(() => {});
+          }
+        } catch (err) {
+          // swallow playback errors here; handled elsewhere
+        }
       }
     }
   }
@@ -199,14 +305,96 @@ class GifStepper {
     const bmp = this.frames[0];
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.drawImage(bmp, 0, 0);
+    // Stop any playing gif sound when resetting
+    if (this._soundAudio) {
+      try {
+        this._soundAudio.pause();
+        try {
+          this._soundAudio.currentTime = 0;
+        } catch (e) {}
+      } catch (e) {
+        // ignore
+      }
+      // keep preloaded instance around for reuse; do not null it so future plays are quick
+    }
+    // reset trigger flag so sound can fire again on replay
+    this._gifSoundTriggered = false;
   }
 
   setStepsPerClick(n) {
     this.stepsPerClick = n;
   }
 
+  _initGifSound(rawGifSound) {
+    try {
+      let s = rawGifSound.trim();
+      // Normalize to base audio folder. User will supply bare filenames.
+      if (!s.startsWith("audio/")) s = `audio/${s}`;
+      // assume .mp3 when no extension provided
+      if (!/\.[a-z0-9]{2,5}$/i.test(s)) s = s + ".mp3";
+      this.gifSound = s;
+
+      // Preload audio
+      try {
+        const candidate = new Audio(this.gifSound);
+        // Quick check whether browser claims to support the likely mime (mp3)
+        const canPlay = candidate.canPlayType("audio/mpeg") || candidate.canPlayType("audio/mp3");
+        if (!canPlay) {
+          console.warn(
+            "GifStepper: browser cannot play mp3 audio; skipping preload",
+            this.gifSound
+          );
+        } else {
+          this._soundAudio = candidate;
+          this._soundAudio.preload = "auto";
+          this._soundAudio.volume = Number.isFinite(this.gifSoundVolume)
+            ? this.gifSoundVolume
+            : 1.0;
+          // attach error handler to surface errors instead of letting unhandled rejections bubble
+          this._soundAudio.addEventListener("error", (ev) => {
+            try {
+              console.warn("GifStepper: audio element error for", this.gifSound, ev);
+            } catch (e) {}
+          });
+          // trigger load; browsers may ignore but it's safe to call
+          try {
+            this._soundAudio.load();
+          } catch (e) {
+            // some browsers may throw synchronously
+          }
+        }
+      } catch (err) {
+        console.warn("GifStepper: failed to create preloaded audio", this.gifSound, err);
+        this._soundAudio = null;
+      }
+    } catch (err) {
+      console.warn("GifStepper: invalid data-gif-sound value", rawGifSound, err);
+    }
+  }
+
   // Auto-init all [data-gif-stepper] images in the document
   static initAll(root = document) {
+    // Install a lightweight unhandledrejection filter once to suppress noisy
+    // NotSupportedError rejections coming from media playback attempts for
+    // gif-stepper audio. We keep this narrowly targeted.
+    if (!GifStepper._unhandledRejectionHandlerInstalled) {
+      GifStepper._unhandledRejectionHandlerInstalled = true;
+      window.addEventListener("unhandledrejection", (ev) => {
+        try {
+          const r = ev.reason;
+          if (
+            r &&
+            r.name === "NotSupportedError" &&
+            String(r.message || "").includes("no supported source")
+          ) {
+            console.warn("GifStepper suppressed NotSupportedError:", r.message || r);
+            ev.preventDefault();
+          }
+        } catch (e) {
+          // ignore
+        }
+      });
+    }
     const instances = [];
     root.querySelectorAll("img[data-gif-stepper]").forEach((img) => {
       instances.push(new GifStepper(img));

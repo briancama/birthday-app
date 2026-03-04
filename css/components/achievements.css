@@ -20,6 +20,7 @@
   flex-wrap: wrap;
 }
 .challenge-badge {
+  position: relative;
   display: flex;
   align-items: center;
   background: var(--card-bg, #fff);
@@ -28,15 +29,44 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   gap: 18px;
 }
+
+.challenge-badge::after {
+  content: attr(data-title);
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: var(--accent-cyan);
+  color: #ffffff;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  padding: 8px 16px;
+  max-width: 100%;
+  min-width: 320px;
+  white-space: normal;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+.challenge-badge:active::after {
+  opacity: 1; /* visible on tap */
+}
 .badge-name {
   font-size: 12px;
   margin-left: 8px;
   font-weight: bold;
 }
 .badge-points {
+  font-family: math, monospace;
   margin-left: 8px;
   color: #666;
-  font-size: 0.85rem;
+  font-size: 16px;
   margin-right: auto;
 }
 .badge-description {
@@ -78,4 +108,25 @@
 .achievements-grid .challenge-badge:nth-child(5n + 5) .badge-icon {
   background: var(--accent-green);
   color: var(--text-dark);
+}
+
+@media (max-width: 726px) {
+  .challenge-badge {
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .badge-points {
+    font-size: 14px;
+    margin-right: 0;
+    margin-left: 0;
+  }
+
+  .achievements-counter span {
+    display: none;
+  }
+
+  .badge-name {
+    margin-left: 0;
+  }
 }
