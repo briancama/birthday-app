@@ -17,7 +17,7 @@ class MusicPlayer extends HTMLElement {
   }
 
   connectedCallback() {
-    this.render();
+    // Don't render here — setSongs owns the first render once the favorite is resolved
     // Attach event listeners only once
     this.shadowRoot.addEventListener("click", (e) => {
       console.log(e.target); // Debug: log clicked element
@@ -70,9 +70,30 @@ class MusicPlayer extends HTMLElement {
     this.cleanup();
   }
 
-  setSongs(songs) {
+  async setSongs(songs) {
     this.songs = songs;
-    if (this.currentIndex >= songs.length) this.currentIndex = 0;
+    this.currentIndex = 0;
+    // Resolve the user's saved favorite before the first render
+    try {
+      const supabase = appState.getSupabase();
+      const userId = appState.getUserId();
+      let favUrl = null;
+      if (supabase && userId) {
+        const { data } = await supabase
+          .from("user_favorite_songs")
+          .select("song_id")
+          .eq("user_id", userId)
+          .maybeSingle();
+        if (data?.song_id) favUrl = data.song_id;
+      }
+      // Fall back to localStorage if Supabase had nothing
+      if (!favUrl) favUrl = localStorage.getItem("musicPlayerFavoriteSongUrl");
+      if (favUrl) localStorage.setItem("musicPlayerFavoriteSongUrl", favUrl);
+      const favIdx = favUrl ? songs.findIndex((s) => s.url === favUrl) : -1;
+      if (favIdx >= 0) this.currentIndex = favIdx;
+    } catch (err) {
+      console.warn("[MusicPlayer] Could not load favorite song:", err);
+    }
     this.render();
   }
 
@@ -227,45 +248,6 @@ class MusicPlayer extends HTMLElement {
     if (!favUrl || !this.songs.length) return null;
     const idx = this.songs.findIndex((s) => s.url === favUrl);
     return idx >= 0 ? idx : null;
-  }
-
-  /**
-   * Load the user's saved favorite song from Supabase, seed localStorage,
-   * and update currentIndex — without autoplaying (requires user gesture).
-   */
-  async initFavoriteSong() {
-    try {
-      const supabase = appState.getSupabase();
-      const userId = appState.getUserId();
-      if (!supabase || !userId) {
-        // Fall back to whatever is in localStorage
-        const localIdx = this.getFavoriteSongIdx();
-        if (localIdx !== null && localIdx >= 0) {
-          this.currentIndex = localIdx;
-          this.render();
-        }
-        return;
-      }
-      const { data, error } = await supabase
-        .from("user_favorite_songs")
-        .select("song_id")
-        .eq("user_id", userId)
-        .maybeSingle();
-      if (error) throw error;
-      if (data?.song_id) {
-        // Sync to localStorage so getFavoriteSongIdx() finds it
-        localStorage.setItem("musicPlayerFavoriteSongUrl", data.song_id);
-      }
-      // Now resolve to an index
-      const favIdx = this.getFavoriteSongIdx();
-      if (favIdx !== null && favIdx >= 0) {
-        this.currentIndex = favIdx;
-        this.render();
-        console.debug("[MusicPlayer] Loaded favorite song idx:", favIdx, this.songs[favIdx]?.title);
-      }
-    } catch (err) {
-      console.warn("[MusicPlayer] initFavoriteSong error:", err);
-    }
   }
 
   async setFavoriteSongIdx(idx) {

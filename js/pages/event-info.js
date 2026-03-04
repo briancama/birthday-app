@@ -128,8 +128,6 @@ class EventInfoPage extends BasePage {
       player.setSongs(MUSIC_SONGS);
       container.innerHTML = "";
       container.appendChild(player);
-      // Seek to the user's saved favorite (async; loads from Supabase, falls back to localStorage)
-      player.initFavoriteSong();
       // Create a floating mute button that's visible only while music is playing
       let muteBtn = document.getElementById("musicMuteButton");
       if (!muteBtn) {
