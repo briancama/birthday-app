@@ -516,7 +516,7 @@ class BasePage {
     const voteLabel = document.createElement("div");
     voteLabel.textContent = "Vote for Me!";
     voteLabel.style.cssText =
-      "text-align:center;font-size:0.75rem;font-family:'Comic Sans MS',cursive;color:#ff69b4;margin-top:4px;cursor:pointer;user-select:none;";
+      'text-align:center;font-size:0.75rem;font-family: "Comic Sans", "Comic Sans MS", "Chalkboard", "ChalkboardSE-Regular", cursive, sans-serif;color:#ff69b4;margin-top:4px;cursor:pointer;user-select:none;';
 
     // Wrap image + label in a container
     const awardContainer = document.createElement("div");

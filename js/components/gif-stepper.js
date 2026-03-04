@@ -23,7 +23,9 @@ class GifStepper {
   constructor(img, options = {}) {
     if (!(img instanceof HTMLImageElement)) throw new Error("GifStepper requires an <img> element");
     if (!("ImageDecoder" in window)) {
-      console.warn("GifStepper: ImageDecoder not supported. Use Chrome or Edge 94+.");
+      // ImageDecoder is Chromium-only — not available on iOS/Safari.
+      // The gif-stepper mechanic only works on desktop; hide the GIF on mobile.
+      img.remove();
       return;
     }
 

@@ -286,7 +286,7 @@ class MusicPlayer extends HTMLElement {
           border: 2px solid #ff69b4;
           padding: 16px;
           border-radius: 12px;
-          font-family: 'Tahoma', Geneva, cursive, sans-serif;
+          font-family: 'Tahoma', Geneva, sans-serif;
           width: 100%;
           max-width: 100%;
           box-sizing:border-box;
@@ -374,12 +374,19 @@ class MusicPlayer extends HTMLElement {
     let duration = this.audio && this.audio.duration ? this.audio.duration : 0;
     let currentTime = this.audio && this.audio.currentTime ? this.audio.currentTime : 0;
     const favIdx = this.getFavoriteSongIdx();
+    // iOS ignores audio.volume changes from JS — show a label instead of a non-functional slider
+    const isIOS =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const volumeControl = isIOS
+      ? `<span style="font-size:0.72em;color:#aaa;font-family:Tahoma,Geneva,Arial,sans-serif;white-space:nowrap;">🔊 use device vol.</span>`
+      : `<input type="range" min="0" max="1" step="0.01" value="${this.audio ? this.audio.volume : 0.4}" class="music-volume-slider" title="Volume" />`;
     const controls = `
       <div class="music-controls">
         <button class="music-prev-btn" title="Previous">⏮️</button>
         <button class="music-play-btn${this.isPlaying ? " active" : ""}" title="Play/Pause">${this.isPlaying ? "⏸️" : "▶️"}</button>
         <button class="music-next-btn" title="Next">⏭️</button>
-        <input type="range" min="0" max="1" step="0.01" value="${this.audio ? this.audio.volume : 0.56}" class="music-volume-slider" title="Volume" />
+        ${volumeControl}
       </div>
       <div style="display: flex; align-items: center; gap: 6px;">
         <span class="music-time" id="music-current-time"></span>
