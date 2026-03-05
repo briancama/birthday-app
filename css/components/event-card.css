@@ -169,3 +169,11 @@
   margin-right: 6px;
   opacity: 0.4;
 }
+
+/* Read-only RSVP badge (dashboard view) — looks like the active state but non-interactive */
+.rsvp-btn--readonly {
+  cursor: default;
+  pointer-events: none;
+  user-select: none;
+  opacity: 1;
+}

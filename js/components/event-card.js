@@ -10,6 +10,7 @@ export class EventCard extends EventTarget {
     rsvpUsers,
     variant = "myspace",
     showRSVPButtons = true,
+    readOnlyRSVP = false,
   }) {
     super();
     this.event = event;
@@ -18,6 +19,7 @@ export class EventCard extends EventTarget {
     this.rsvpUsers = rsvpUsers || [];
     this.variant = variant;
     this.showRSVPButtons = showRSVPButtons;
+    this.readOnlyRSVP = readOnlyRSVP;
   }
 
   updateRSVPState({ rsvpStatus, rsvpCounts, rsvpUsers }) {
@@ -229,6 +231,26 @@ export class EventCard extends EventTarget {
         alt: "❌",
       },
     ];
+
+    // Read-only mode: show only the active status as a non-interactive badge
+    if (this.readOnlyRSVP) {
+      const active = options.find((o) => o.status === this.rsvpStatus);
+      if (active) {
+        const badge = document.createElement("span");
+        badge.className = `rsvp-btn rsvp-btn--${active.status} active rsvp-btn--readonly`;
+        const img = document.createElement("img");
+        img.className = "icon-gif";
+        img.src = active.icon;
+        img.alt = active.alt;
+        badge.appendChild(img);
+        const txt = document.createElement("span");
+        txt.className = "rsvp-label";
+        txt.textContent = active.label;
+        badge.appendChild(txt);
+        rsvpSection.appendChild(badge);
+      }
+      return rsvpSection;
+    }
 
     options.forEach(({ status, sound, icon, label, alt }) => {
       const btn = document.createElement("button");

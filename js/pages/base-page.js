@@ -15,6 +15,14 @@ class BasePage {
 
   async init() {
     console.log("🔧 BasePage.init() called");
+    // One-time reset: clear stale audio-muted / music-muted flags so users
+    // aren't silently stuck with muted audio after this deploy.
+    const AUDIO_RESET_KEY = "audio-reset-v1";
+    if (!localStorage.getItem(AUDIO_RESET_KEY)) {
+      localStorage.removeItem("audio-muted");
+      localStorage.removeItem("music-muted");
+      localStorage.setItem(AUDIO_RESET_KEY, "1");
+    }
     this.initUI();
     if (this.requiresAuth) {
       await this.initAuth();
@@ -330,12 +338,22 @@ class BasePage {
     this.audioManager.preload("hm", "/audio/hm.mp3", true);
     this.audioManager.preload("womp-womp-tuba", "/audio/womp-womp-tuba.mp3", true);
 
-    // Initialize audio on first interaction (required for mobile)
+    // Initialize audio on first interaction (required for mobile).
+    // Listen for touchend in addition to click — on iOS, preventDefault() on a
+    // touch handler suppresses the synthetic click, so we'd never unlock audio.
     const initAudio = () => {
-      this.audioManager.initialize();
+      try {
+        this.audioManager.initialize();
+      } catch (err) {
+        console.warn("Audio init failed on gesture:", err);
+      }
       document.removeEventListener("click", initAudio);
+      document.removeEventListener("touchend", initAudio);
+      document.removeEventListener("keydown", initAudio);
     };
     document.addEventListener("click", initAudio, { once: true });
+    document.addEventListener("touchend", initAudio, { once: true });
+    document.addEventListener("keydown", initAudio, { once: true });
 
     // Add click sounds to common button selectors
     addClickSound("button:not([data-no-sound])");

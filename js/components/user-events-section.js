@@ -4,32 +4,6 @@ import { EventCard } from "./event-card.js";
 import { appState } from "../app.js";
 
 export class UserEventsSection {
-  // Listen for RSVP events and update DB
-  setupRSVPListener() {
-    if (this.rsvpListenerCleanup) return;
-    const handler = async (e) => {
-      const { eventId, status } = e.detail;
-      try {
-        await this.supabase.from("event_rsvps").upsert(
-          {
-            event_id: eventId,
-            user_id: this.userId,
-            status,
-          },
-          { onConflict: ["event_id", "user_id"] }
-        );
-        // Refresh events after update
-        await this.render();
-      } catch (err) {
-        console.error("Failed to update RSVP:", err);
-      }
-    };
-    // Listen for RSVP events
-    this.rsvpListenerCleanup = window.EventBus?.instance?.listen?.(
-      window.EventBus?.EVENTS?.EVENT?.RSVP || "event:rsvp",
-      handler
-    );
-  }
   constructor(containerId = "userEventsSection") {
     this.containerId = containerId;
     this.supabase = appState.getSupabase();
@@ -37,7 +11,6 @@ export class UserEventsSection {
   }
 
   async render() {
-    this.setupRSVPListener();
     const container = document.getElementById(this.containerId);
     if (!container) return;
     container.innerHTML = '<div class="text-center">Loading your events...</div>';
@@ -85,6 +58,7 @@ export class UserEventsSection {
           rsvpCounts,
           rsvpUsers,
           variant: "dashboard",
+          readOnlyRSVP: true,
         });
         const li = document.createElement("li");
         li.className = "event-list-item";

@@ -1462,3 +1462,27 @@
     top: 10px;
   }
 }
+
+/* ── Global floating mute button ──────────────────────────────────────────── */
+/* Sits above the bottom nav; used via js/components/mute-button.js           */
+.mute-button {
+  position: fixed;
+  right: 1rem;
+  bottom: 5.5rem; /* above typical bottom menu */
+  z-index: 12000;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.9;
+  backdrop-filter: blur(4px);
+}
+.mute-button:hover {
+  opacity: 1;
+}
