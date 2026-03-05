@@ -1,27 +1,22 @@
 import { BasePage } from "./base-page.js";
 import { APP_CONFIG } from "../app.js";
 import { firebaseAuth } from "../services/firebase-auth.js";
-import { featureFlags } from "../utils/feature-flags.js";
 import { EventBus } from "../events/event-bus.js";
 
 class LeaderboardPage extends BasePage {
   constructor() {
     super();
     this.refreshInterval = null;
-    this.eventStarted = false;
   }
 
   async onReady() {
     this.setPageTitle("Leaderboard");
 
-    // Check if event has started
-    this.eventStarted = await featureFlags.isEventStarted(this.supabase);
-
     this.addRefreshButton();
     await this.loadLeaderboard();
 
-    // Only set up auto-refresh if event started
-    if (this.eventStarted && APP_CONFIG.enableAutoRefresh) {
+    // Auto-refresh
+    if (APP_CONFIG.enableAutoRefresh) {
       this.refreshInterval = setInterval(() => this.loadLeaderboard(), APP_CONFIG.refreshInterval);
     }
 
@@ -77,16 +72,16 @@ class LeaderboardPage extends BasePage {
         return;
       }
 
-      // Enrich with completion counts only if event started
-      let enrichedData = data;
-      if (this.eventStarted) {
-        enrichedData = await this.enrichScoreboardWithCompletions(data);
-      }
+      // Map assigned_completed (already in the view) to challenges_completed —
+      // avoids a second round-trip to the assignments table.
+      let enrichedData = data.map((row) => ({
+        ...row,
+        challenges_completed: row.assigned_completed || 0,
+      }));
 
       this.renderLeaderboard(container, enrichedData);
 
-      // Update last refreshed timestamp only if event started
-      if (lastUpdatedElement && this.eventStarted) {
+      if (lastUpdatedElement) {
         lastUpdatedElement.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
       }
     } catch (err) {
@@ -111,24 +106,7 @@ class LeaderboardPage extends BasePage {
                     const rank = idx + 1;
                     const isCurrentUser = row.user_id === this.userId;
 
-                    // If event hasn't started, show simplified card
-                    if (!this.eventStarted) {
-                      return `
-                    <div class="leaderboard-card ${isCurrentUser ? "current-user" : ""}">
-                        <div class="leaderboard-card__rank">
-                            <span class="rank-number">#${rank}</span>
-                        </div>
-                        <div class="leaderboard-card__name">
-                            ${row.display_name || row.username}${isCurrentUser ? ' <span class="you-badge">(YOU!)</span>' : ""}
-                        </div>
-                        <div class="leaderboard-card__total">
-                            <span class="total-value">-</span>
-                        </div>
-                    </div>
-                `;
-                    }
-
-                    // Event started - show full card with stats
+                    // Show full card with stats
                     return `
                 <div class="leaderboard-card ${isCurrentUser ? "current-user" : ""}">
                     <div class="leaderboard-card__rank">

@@ -27,6 +27,15 @@ CREATE POLICY "Allow authenticated users to read app_settings"
   TO authenticated
   USING (true);
 
+-- Allow anon (unauthenticated / anon-key clients) to read app_settings too.
+-- The frontend Supabase client uses the anon key and has no Supabase JWT,
+-- so without this policy isEventStarted() silently fails and defaults to false.
+CREATE POLICY "Allow anon to read app_settings"
+  ON app_settings
+  FOR SELECT
+  TO anon
+  USING (true);
+
 -- Prevent authenticated users from updating/deleting (admin only via direct SQL)
 CREATE POLICY "Prevent updates to app_settings"
   ON app_settings

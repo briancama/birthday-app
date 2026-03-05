@@ -102,6 +102,33 @@ rsync -avz --delete ./songs/ root@192.241.231.56:/var/www/birthday-app/songs/
 - `README.md` - Project overview and setup
 - `.gitignore` - Files to exclude from version control
 
+## 🚩 FEATURE FLAGS (`app_settings` table)
+
+Feature flags are stored in the Supabase `app_settings` table as JSONB values.
+Toggle them via the Supabase SQL editor — never from the client.
+
+### `event_started`
+
+Controls whether the **weekend event is live**. Flipping this to `true` unlocks several features simultaneously:
+
+| Page | Behavior when `false` | Behavior when `true` |
+|---|---|---|
+| **Dashboard** | Shows "What are Challenges?" preview with construction gif | Shows actual challenge cards + personal stats bar + auto-refresh |
+| **Cocktail Judging** | Shows "voting not started" message | Shows active cocktail competition and voting UI |
+| **Leaderboard** | *(no longer gated — always shows full stats)* | *(same)* |
+
+**To enable the event on production:**
+```sql
+UPDATE app_settings SET setting_value = '{"enabled": true}'::jsonb WHERE setting_key = 'event_started';
+```
+
+**To disable:**
+```sql
+UPDATE app_settings SET setting_value = '{"enabled": false}'::jsonb WHERE setting_key = 'event_started';
+```
+
+> **Note:** The leaderboard was intentionally decoupled from this flag — it always shows full stats regardless. Only dashboard challenges and cocktail judging are gated.
+
 ## 🔄 MAINTENANCE
 
 - Review guidelines monthly
