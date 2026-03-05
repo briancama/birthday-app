@@ -330,6 +330,8 @@ class BasePage {
     this.audioManager.preload("unfavorite", "/audio/unfavorite.mp3");
     // Preload optional thank-you sound for site awards
     this.audioManager.preload("thanks", "/audio/thanks.mp3", true);
+    // YTMND Easter egg audio
+    this.audioManager.preload("ytmnd", "/audio/ytmnd.mp3", true);
     // Preload context-specific sounds used via `data-sound` attributes
     // so dynamic elements like the headshot upload link can play immediately.
     this.audioManager.preload("myspace", "/audio/myspace.mp3", true);

@@ -7,6 +7,7 @@ import { EventCard } from "../components/event-card.js";
 import { EventBus } from "../events/event-bus.js";
 import { MUSIC_SONGS } from "../constants/music-songs.js";
 import { CocktailEntryModal } from "../components/cocktail-entry-modal.js";
+import { YTMNDEasterEgg } from "../components/ytmnd-easter-egg.js";
 
 class EventInfoPage extends BasePage {
   // Fallback avatars for comments without user_id
@@ -45,6 +46,10 @@ class EventInfoPage extends BasePage {
     this.setupGuestbook();
     this.loadMyspaceComments();
     this.setupAddCommentLink();
+
+    // YTMND Easter egg — Y T M N D sequence hidden in the Schedule header
+    this.ytmndEgg = new YTMNDEasterEgg();
+    this.ytmndEgg.init();
 
     // Initialize cocktail entry modal and wire the retro banner as trigger
     (async () => {
@@ -629,6 +634,7 @@ class EventInfoPage extends BasePage {
 
   cleanup() {
     this.components.forEach((c) => c.cleanup?.());
+    this.ytmndEgg?.destroy();
     // Remove any additional listeners if needed
   }
 }
