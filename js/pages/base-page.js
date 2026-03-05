@@ -4,8 +4,15 @@ import { achievementService } from "../services/achievement-service.js";
 import { EventBus } from "../events/event-bus.js";
 
 class BasePage {
-  constructor({ requiresAuth = true } = {}) {
+  constructor({
+    requiresAuth = true,
+    suppressAchievementSound = false,
+    siteAward = undefined,
+  } = {}) {
     this.requiresAuth = requiresAuth;
+    this.suppressAchievementSound = suppressAchievementSound;
+    // siteAward: false/null = disable; { img, sound } or img string = force specific award
+    this.siteAward = siteAward;
     this.supabase = appState.getSupabase();
     this.userId = appState.getUserId();
     this.currentUser = appState.getCurrentUser();
@@ -26,6 +33,12 @@ class BasePage {
     this.initUI();
     if (this.requiresAuth) {
       await this.initAuth();
+    } else {
+      // Non-auth pages still try to silently load the user so features like
+      // achievement awarding have a userId to work with.
+      await appState.softInit().catch(() => {});
+      this.userId = appState.getUserId();
+      this.currentUser = appState.getCurrentUser();
     }
     this.setupHeadshotEventUpdates();
     await this.initAudio();
@@ -51,11 +64,13 @@ class BasePage {
           const successMessage = `Achievement unlocked: ${name} (+${points || 0} pts)`;
           console.log("BasePage: calling showSuccessToast", successMessage, { detail });
           this.showSuccessToast(successMessage);
-          // play success sound if available
-          try {
-            this.audioManager.play && this.audioManager.play("success");
-          } catch (sErr) {
-            /* ignore */
+          // play success sound if available and not suppressed
+          if (!this.suppressAchievementSound) {
+            try {
+              this.audioManager.play && this.audioManager.play("success");
+            } catch (sErr) {
+              /* ignore */
+            }
           }
         } catch (err) {
           console.warn("Error handling achievement event", err);
@@ -331,7 +346,7 @@ class BasePage {
     // Preload optional thank-you sound for site awards
     this.audioManager.preload("thanks", "/audio/thanks.mp3", true);
     // YTMND Easter egg audio
-    this.audioManager.preload("ytmnd", "/audio/ytmnd.mp3", true);
+    this.audioManager.preload("ytmnd", "/audio/ytmnd.wav", true);
     // Preload context-specific sounds used via `data-sound` attributes
     // so dynamic elements like the headshot upload link can play immediately.
     this.audioManager.preload("myspace", "/audio/myspace.mp3", true);
@@ -498,6 +513,9 @@ class BasePage {
    * Display a random site-awards image at the bottom of the page
    */
   showRandomSiteAward() {
+    // siteAward: false/null disables the award entirely; an override forces a specific entry
+    if (this.siteAward === false || this.siteAward === null) return;
+
     // Each entry can optionally provide a sound path; if null we default to the generic "thanks" sound
     const siteAwardsImages = [
       { img: "images/site-awards_blink182.gif", sound: "/audio/thanks_blink182.mp3" },
@@ -514,7 +532,14 @@ class BasePage {
       { img: "images/site-awards_olsen.gif", sound: "/audio/thanks_olsen.mp3" },
       { img: "images/site-awards-bomb.gif", sound: "/audio/thanks_bomb.mp3" },
     ];
-    const randomEntry = siteAwardsImages[Math.floor(Math.random() * siteAwardsImages.length)];
+    // Allow a forced override entry (string img path or { img, sound } object)
+    let randomEntry;
+    if (this.siteAward) {
+      randomEntry =
+        typeof this.siteAward === "string" ? { img: this.siteAward, sound: null } : this.siteAward;
+    } else {
+      randomEntry = siteAwardsImages[Math.floor(Math.random() * siteAwardsImages.length)];
+    }
     const randomAward = randomEntry.img;
     const awardImg = document.createElement("img");
     awardImg.src = randomAward;

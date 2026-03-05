@@ -58,6 +58,10 @@ class AppState extends EventTarget {
     return this.authManager.getSupabase();
   }
 
+  async softInit() {
+    return await this.authManager.softInit();
+  }
+
   on(eventType, handler, options = {}) {
     this.authManager.addEventListener(eventType, handler, options);
     return () => this.authManager.removeEventListener(eventType, handler, options);

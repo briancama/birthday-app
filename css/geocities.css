@@ -1491,43 +1491,42 @@
    YTMND EASTER EGG
    ============================================================ */
 
-.ytmnd-letters {
-  display: inline-flex;
-  gap: 2px;
-  margin-left: 8px;
-  vertical-align: middle;
-}
-.ytmnd-letters [data-ytmnd] {
-  opacity: 0.15;
+/* Individual letters scattered in prose — slightly bolder than surrounding text.
+   The cursor change on hover is the only hint they're interactive. */
+[data-ytmnd] {
+  font-size: calc(1em + 3px);
   cursor: pointer;
-  font-size: 0.65em;
-  font-weight: bold;
-  letter-spacing: 1px;
-  color: var(--neon-cyan, #0ff);
-  transition: opacity 0.15s, color 0.15s;
+  color: inherit;
+  transition: color 0.15s;
   user-select: none;
   -webkit-user-select: none;
 }
-.ytmnd-letters [data-ytmnd]:hover {
-  opacity: 0.45;
+[data-ytmnd]:hover {
+  color: var(--neon-cyan, #0ff);
 }
-.ytmnd-letters [data-ytmnd].ytmnd-letter--hit {
-  opacity: 1;
+[data-ytmnd].ytmnd-letter--hit {
   color: #0f0;
   text-shadow: 0 0 6px #0f0;
 }
-.ytmnd-letters [data-ytmnd].ytmnd-letter--miss {
-  opacity: 1;
+[data-ytmnd].ytmnd-letter--miss {
   color: #f00;
   text-shadow: 0 0 6px #f00;
   animation: ytmnd-shake 0.25s linear;
 }
 
 @keyframes ytmnd-shake {
-  0%   { transform: translateX(0); }
-  25%  { transform: translateX(-3px); }
-  75%  { transform: translateX(3px); }
-  100% { transform: translateX(0); }
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  75% {
+    transform: translateX(3px);
+  }
+  100% {
+    transform: translateX(0);
+  }
 }
 
 .ytmnd-modal-overlay {
@@ -1541,14 +1540,20 @@
   animation: ytmnd-fade-in 0.2s ease;
 }
 @keyframes ytmnd-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .ytmnd-modal {
   background: #0a0a1a;
   border: 3px solid var(--hot-pink, #ff00ff);
-  box-shadow: 0 0 24px var(--hot-pink, #ff00ff), 0 0 4px #0ff inset;
+  box-shadow:
+    0 0 24px var(--hot-pink, #ff00ff),
+    0 0 4px #0ff inset;
   max-width: 420px;
   width: 92%;
   padding: 0;
@@ -1556,8 +1561,14 @@
   animation: ytmnd-slide-in 0.25s cubic-bezier(0.22, 1, 0.36, 1);
 }
 @keyframes ytmnd-slide-in {
-  from { transform: scale(0.82) translateY(-24px); opacity: 0; }
-  to   { transform: scale(1)    translateY(0);     opacity: 1; }
+  from {
+    transform: scale(0.82) translateY(-24px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
 }
 
 .ytmnd-modal__header {
@@ -1581,7 +1592,9 @@
   padding: 0 4px;
   line-height: 1;
 }
-.ytmnd-modal__close:hover { opacity: 0.7; }
+.ytmnd-modal__close:hover {
+  opacity: 0.7;
+}
 
 .ytmnd-modal__body {
   padding: 20px;
@@ -1619,7 +1632,9 @@
   color: var(--hot-pink, #ff00ff);
   background: transparent;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 .ytmnd-modal__btn:hover {
   background: var(--hot-pink, #ff00ff);

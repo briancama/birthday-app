@@ -9,8 +9,12 @@ VALUES (
   'You''re The Man Now Dog!',
   'You found the secret. Sean Connery is proud of you.',
   10,
-  '{"trigger":"ytmnd:sequence:complete","hidden":true}'
+  '{"trigger":"ytmnd"}'
 )
-ON CONFLICT (key) DO NOTHING;
+ON CONFLICT (key) DO UPDATE SET
+  name = EXCLUDED.name,
+  description = EXCLUDED.description,
+  points = EXCLUDED.points,
+  metadata = EXCLUDED.metadata;
 
 COMMIT;

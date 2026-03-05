@@ -19,7 +19,7 @@ import { audioManager } from "../utils/audio.js";
 
 const SEQUENCE = ["Y", "T", "M", "N", "D"];
 const AUDIO_KEY = "ytmnd";
-const AUDIO_SRC = "/audio/ytmnd.mp3";
+const AUDIO_SRC = "/audio/ytmnd.wav";
 const ACHIEVEMENT_KEY = "ytmnd";
 const STORAGE_KEY = "ytmnd-found";
 
@@ -39,13 +39,7 @@ export class YTMNDEasterEgg {
 
     this._clickHandler = (e) => {
       const letter = e.target.closest("[data-ytmnd]");
-      if (!letter) {
-        // Any click outside the sequence letters resets progress
-        if (!e.target.closest("[data-ytmnd-modal]")) {
-          this._reset();
-        }
-        return;
-      }
+      if (!letter) return; // ignore clicks on anything that isn't a YTMND letter
 
       const expected = SEQUENCE[this._progress];
       const actual = letter.dataset.ytmnd.toUpperCase();
@@ -54,6 +48,10 @@ export class YTMNDEasterEgg {
         this._progress++;
         letter.classList.add("ytmnd-letter--hit");
         setTimeout(() => letter.classList.remove("ytmnd-letter--hit"), 400);
+        // Auditory confirmation on each correct step
+        try {
+          audioManager.play("click");
+        } catch (_) {}
 
         if (this._progress >= SEQUENCE.length) {
           this._complete();
@@ -91,18 +89,7 @@ export class YTMNDEasterEgg {
       audioManager.initialize();
       audioManager.play(AUDIO_KEY);
     } catch (err) {
-      console.debug("[YTMND] audio play failed:", err);
-    }
-
-    // Award achievement (idempotent — service ignores duplicates)
-    try {
-      window.dispatchEvent(
-        new CustomEvent("achievement:trigger", {
-          detail: { key: ACHIEVEMENT_KEY },
-        })
-      );
-    } catch (err) {
-      console.debug("[YTMND] achievement dispatch failed:", err);
+      /* ignore */
     }
 
     // Mark as found in localStorage so we know they've seen it
