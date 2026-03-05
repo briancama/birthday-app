@@ -60,15 +60,19 @@ export class HeadshotUpload extends EventTarget {
         console.error("Storage upload error:", error, { filePath, file, userId });
         throw error;
       }
-      // Set fullPath from upload response
-      const { data: headshotData, error: headshotError } = this.supabase.storage
+      // Get public URL and bust the CDN/browser cache with a timestamp param.
+      // The file is upserted under the same path each time (storage efficiency),
+      // but the CDN won't invalidate automatically — appending ?t= forces a fresh
+      // fetch on every upload without changing the underlying storage path.
+      const { data: headshotData } = this.supabase.storage
         .from("Headshots")
         .getPublicUrl(data.path || filePath);
+      const cacheBustedUrl = `${headshotData.publicUrl}?t=${Date.now()}`;
 
       // Update user headshot in DB using Supabase client
       const { error: updateError } = await this.supabase
         .from("users")
-        .update({ headshot: headshotData.publicUrl })
+        .update({ headshot: cacheBustedUrl })
         .eq("id", userId);
       if (updateError) {
         statusDiv.textContent = `Headshot DB update failed: ${updateError.message}`;
@@ -81,7 +85,7 @@ export class HeadshotUpload extends EventTarget {
         new CustomEvent("user:headshot-updated", {
           detail: {
             userId,
-            headshotUrl: headshotData.publicUrl,
+            headshotUrl: cacheBustedUrl,
           },
         })
       );
