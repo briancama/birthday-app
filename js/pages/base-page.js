@@ -548,6 +548,10 @@ class BasePage {
     // Play a short thank-you sound when the award image is clicked
     // and track unique awards for the achievement
     const handleAwardClick = () => {
+      // Ensure audio is initialized before playing — this click IS the user gesture,
+      // so initialize() here guarantees load() is called before play() even if this
+      // is the very first click on the page (before the document-level initAudio fires).
+      this.audioManager.initialize();
       const soundToPlay = awardImg.dataset.thanksSound || "thanks";
       try {
         this.audioManager.play(soundToPlay);
