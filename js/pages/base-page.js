@@ -14,7 +14,6 @@ class BasePage {
   }
 
   async init() {
-    console.log("🔧 BasePage.init() called");
     // One-time reset: clear stale audio-muted / music-muted flags so users
     // aren't silently stuck with muted audio after this deploy.
     const AUDIO_RESET_KEY = "audio-reset-v1";
@@ -36,7 +35,6 @@ class BasePage {
       const handleAchievementAward = (e) => {
         try {
           const detail = e.detail || {};
-          console.debug("BasePage: achievement:awarded received", detail);
           // Support both EventBus shape { name, points } and window shape { achievement: { name, points } }
           const name =
             detail.name || detail.achievement?.name || detail.achievementKey || "Achievement";
@@ -49,7 +47,6 @@ class BasePage {
           }
 
           const successMessage = `Achievement unlocked: ${name} (+${points || 0} pts)`;
-          console.log("BasePage: calling showSuccessToast", successMessage, { detail });
           this.showSuccessToast(successMessage);
           // play success sound if available
           try {
@@ -72,26 +69,21 @@ class BasePage {
 
   async initAuth() {
     // Authentication and user event setup
-    console.log("📍 Initializing appState...");
     const isAuthenticated = await appState.init();
     if (!isAuthenticated) {
-      console.info("User not authenticated");
       return;
     }
     // Modern event-based subscription to app state changes
     const userLoadedCleanup = appState.on("user:loaded", (e) => {
-      console.log("📡 user:loaded event received:", e.detail);
       this.handleStateChange("user-loaded", e.detail);
       this.supabase = appState.getSupabase();
       this.userId = appState.getUserId();
       this.currentUser = appState.getCurrentUser();
     });
     const userErrorCleanup = appState.on("user:error", (e) => {
-      console.log("❌ user:error event received:", e.detail);
       this.handleStateChange("user-error", e.detail);
     });
     const userLogoutCleanup = appState.on("user:logout", (e) => {
-      console.log("👋 user:logout event received:", e.detail);
       this.handleStateChange("user-logout", e.detail);
       this.supabase = appState.getSupabase();
       this.userId = appState.getUserId();
@@ -101,7 +93,6 @@ class BasePage {
     this.supabase = appState.getSupabase();
     this.userId = appState.getUserId();
     this.currentUser = appState.getCurrentUser();
-    console.log("✅ User already loaded from appState:", this.currentUser?.username);
   }
 
   async initAudio() {
@@ -136,7 +127,6 @@ class BasePage {
 
   async onReady() {
     // Override in child classes
-    console.log("Page ready");
   }
 
   setPageTitle(title) {
@@ -300,19 +290,12 @@ class BasePage {
   setupHeadshotEventUpdates() {
     const handler = (e) => {
       const { headshotUrl, userId } = e.detail;
-      console.log("[HeadshotEvent] Received user:headshot-updated", { userId, headshotUrl });
-      if (!userId) {
-        console.warn("[HeadshotEvent] No userId in event detail", e.detail);
-        return;
-      }
+      if (!userId) return;
       const imgs = document.querySelectorAll(`[data-headshot="user-${userId}"]`);
-      console.log(`[HeadshotEvent] Found ${imgs.length} images for user-${userId}`);
       imgs.forEach((img) => {
-        console.log("[HeadshotEvent] Updating headshot src", { img, headshotUrl });
         img.src = headshotUrl;
       });
     };
-    console.log("[BasePage] Setting up headshot update listener");
     window.addEventListener("user:headshot-updated", handler);
     this.headshotUpdateCleanup = () => {
       window.removeEventListener("user:headshot-updated", handler);
@@ -390,8 +373,6 @@ class BasePage {
   }
 
   showSuccessToast(message) {
-    console.log("✅ showSuccessToast called", message);
-    console.trace();
     // Create or move success container so it's the last child of <body>
     let successContainer = document.getElementById("successMessages");
     if (!successContainer) {
@@ -574,7 +555,7 @@ class BasePage {
       try {
         this.audioManager.play(soundToPlay);
       } catch (err) {
-        console.debug("Play thanks failed:", err);
+        /* ignore */
       }
 
       // Track unique award image clicks
@@ -591,7 +572,7 @@ class BasePage {
               })
             );
           } catch (err) {
-            console.debug("achievement:trigger dispatch failed:", err);
+            /* ignore */
           }
         }
       }

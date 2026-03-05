@@ -58,7 +58,6 @@ class DashboardPage extends BasePage {
     this.userErrorCleanup = appState.on("user:error", (e) => {
       this.showErrorToast(e.detail.error || "Authentication error");
     });
-    console.log("DashboardPage ready, checking feature flags...");
 
     // Initialize cocktail entry modal
     try {
@@ -152,7 +151,6 @@ class DashboardPage extends BasePage {
     if (this.eventStarted) {
       await this.loadChallenges();
     } else {
-      console.log("Event has not started yet, showing preview message");
       const preview = document.getElementById("challengesList");
       if (preview) {
         preview.innerHTML = `

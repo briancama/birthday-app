@@ -100,8 +100,6 @@ export class AdminApprovalsPage extends BasePage {
 
       const data = challengesResult.data;
 
-      console.log("Raw assignments from DB:", assignmentsResult.data);
-
       // Build map of challenge_id -> array of assigned users
       const assignmentsByChallenge = {};
       assignmentsResult.data.forEach((assignment) => {
@@ -116,34 +114,39 @@ export class AdminApprovalsPage extends BasePage {
 
       // Fetch usernames for created_by and suggested_for fields
       if (data && data.length > 0) {
+        // Filter out nulls — .in() with null values causes a Supabase error
         const userIds = [
           ...new Set([
             ...data.map((c) => c.created_by),
             ...data.filter((c) => c.suggested_for).map((c) => c.suggested_for),
           ]),
-        ];
+        ].filter(Boolean);
 
-        const { data: users, error: userError } = await this.supabase
-          .from("users")
-          .select("id, username, display_name")
-          .in("id", userIds);
+        // Always attach assignments regardless of whether user lookup succeeds
+        data.forEach((challenge) => {
+          challenge.actual_assignments = assignmentsByChallenge[challenge.id] || [];
+        });
 
-        if (!userError && users) {
-          const usernameMap = Object.fromEntries(users.map((u) => [u.id, u.username]));
-          const displayNameMap = Object.fromEntries(
-            users.map((u) => [u.id, u.display_name || u.username])
-          );
+        if (userIds.length > 0) {
+          const { data: users, error: userError } = await this.supabase
+            .from("users")
+            .select("id, username, display_name")
+            .in("id", userIds);
 
-          // Attach usernames to challenges
-          data.forEach((challenge) => {
-            challenge.created_by_username = usernameMap[challenge.created_by];
-            challenge.created_by_display = displayNameMap[challenge.created_by];
-            if (challenge.suggested_for) {
-              challenge.suggested_for_username = usernameMap[challenge.suggested_for];
-            }
-            // Attach actual assignments for all challenges
-            challenge.actual_assignments = assignmentsByChallenge[challenge.id] || [];
-          });
+          if (!userError && users) {
+            const usernameMap = Object.fromEntries(users.map((u) => [u.id, u.username]));
+            const displayNameMap = Object.fromEntries(
+              users.map((u) => [u.id, u.display_name || u.username])
+            );
+
+            data.forEach((challenge) => {
+              challenge.created_by_username = usernameMap[challenge.created_by];
+              challenge.created_by_display = displayNameMap[challenge.created_by];
+              if (challenge.suggested_for) {
+                challenge.suggested_for_username = usernameMap[challenge.suggested_for];
+              }
+            });
+          }
         }
       }
 
@@ -460,9 +463,6 @@ export class AdminApprovalsPage extends BasePage {
     const selectedUserIds = Array.from(allCheckboxes)
       .filter((checkbox) => checkbox.checked)
       .map((checkbox) => String(checkbox.value));
-
-    console.log("Selected user IDs:", selectedUserIds);
-    console.log("Current challenge ID:", this.currentChallenge.id);
 
     // Check if there are any changes
     const currentSet = new Set(this.currentAssignmentIds);
