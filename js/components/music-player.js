@@ -20,21 +20,10 @@ class MusicPlayer extends HTMLElement {
     this.render();
     // Attach event listeners only once
     this.shadowRoot.addEventListener("click", (e) => {
-      console.log(e.target); // Debug: log clicked element
       if (e.target.closest(".music-fav-btn")) {
         const idx = parseInt(e.target.dataset.songIdx, 10);
-        console.log("[music-fav-btn] Clicked. idx:", idx);
         if (!isNaN(idx)) {
           this.setFavoriteSongIdx(idx);
-          // Debug: log after setting favorite
-          setTimeout(() => {
-            console.debug(
-              "[music-fav-btn] After setFavoriteSongIdx, favIdx:",
-              this.getFavoriteSongIdx(),
-              "currentIndex:",
-              this.currentIndex
-            );
-          }, 0);
           this.render();
         }
       }
@@ -88,33 +77,16 @@ class MusicPlayer extends HTMLElement {
           .select("song_id")
           .eq("user_id", userId)
           .maybeSingle();
-        console.debug("[MusicPlayer] Supabase favorite row:", data);
         if (data?.song_id) favUrl = data.song_id;
-      } else {
-        console.debug("[MusicPlayer] Skipping Supabase — supabase:", !!supabase, "userId:", userId);
       }
       // Fall back to localStorage if Supabase had nothing
       if (!favUrl) favUrl = localStorage.getItem("musicPlayerFavoriteSongUrl");
       if (favUrl) localStorage.setItem("musicPlayerFavoriteSongUrl", favUrl);
       const favIdx = favUrl ? songs.findIndex((s) => s.url === favUrl) : -1;
-      console.debug(
-        "[MusicPlayer] favUrl:",
-        favUrl,
-        "favIdx:",
-        favIdx,
-        "setting currentIndex →",
-        favIdx >= 0 ? favIdx : 0
-      );
       if (favIdx >= 0) this.currentIndex = favIdx;
     } catch (err) {
       console.warn("[MusicPlayer] Could not load favorite song:", err);
     }
-    console.debug(
-      "[MusicPlayer] setSongs done — currentIndex:",
-      this.currentIndex,
-      "song:",
-      this.songs[this.currentIndex]?.title
-    );
     this.render();
     resolveReady();
   }
@@ -124,7 +96,6 @@ class MusicPlayer extends HTMLElement {
   }
 
   playSong(idx = this.currentIndex) {
-    console.debug("[MusicPlayer] playSong called — idx:", idx, "song:", this.songs[idx]?.title);
     if (!this.songs.length) return;
     if (this.audio) {
       this.audio.pause();
@@ -210,9 +181,7 @@ class MusicPlayer extends HTMLElement {
 
   async togglePlayPause() {
     // Wait for setSongs (favorite resolution) to finish before starting playback
-    console.debug("[MusicPlayer] togglePlayPause — currentIndex BEFORE await:", this.currentIndex);
     if (this._ready) await this._ready;
-    console.debug("[MusicPlayer] togglePlayPause — currentIndex AFTER await:", this.currentIndex);
     if (!this.audio) {
       this.playSong();
     } else if (this.isPlaying) {
@@ -283,16 +252,12 @@ class MusicPlayer extends HTMLElement {
       console.warn("[setFavoriteSongIdx] No song at idx:", idx);
       return;
     }
-    console.log("[setFavoriteSongIdx] Setting favorite idx:", idx, "url:", song.url);
     localStorage.setItem("musicPlayerFavoriteSongUrl", song.url);
     // Supabase update
     try {
       const supabase = appState.getSupabase();
       const userId = appState.getUserId();
-      if (!userId) {
-        console.warn("[setFavoriteSongIdx] No userId, skipping Supabase update.");
-        return;
-      }
+      if (!userId) return;
       const songId = song.url;
       // Upsert favorite
       const { error } = await supabase.from("user_favorite_songs").upsert(
@@ -304,13 +269,6 @@ class MusicPlayer extends HTMLElement {
       );
       if (error) {
         console.error("[setFavoriteSongIdx] Supabase error:", error);
-      } else {
-        console.debug(
-          "[setFavoriteSongIdx] Supabase upsert success for user:",
-          userId,
-          "song:",
-          songId
-        );
       }
     } catch (err) {
       console.error("[setFavoriteSongIdx] Exception during Supabase update:", err);
