@@ -31,25 +31,18 @@ class FirebaseAuthService {
       try {
         if (this.auth.setPersistence) {
           await this.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-          console.log("✅ Firebase auth persistence set to LOCAL");
         }
-      } catch (pErr) {
-        console.warn("⚠️ Could not set Firebase persistence:", pErr);
-      }
+      } catch (pErr) {}
 
       // Wait for Firebase Auth initial state to be determined
       await new Promise((resolve) => {
         const unsub = this.auth.onAuthStateChanged((user) => {
-          console.log("[firebaseAuth] initial auth state:", !!user);
           unsub();
           resolve();
         });
       });
-
-      console.log("✅ Firebase initialized", { currentUser: this.auth.currentUser });
       return this;
     } catch (err) {
-      console.error("✖️ Firebase init failed:", err);
       throw err;
     }
   }
@@ -66,7 +59,6 @@ class FirebaseAuthService {
       const container = document.getElementById(containerId);
       if (!container) {
         const errorMsg = `Container with ID "${containerId}" not found`;
-        console.error("✖️ reCAPTCHA setup failed:", errorMsg);
         throw new Error(errorMsg);
       }
       // Create RecaptchaVerifier once
@@ -74,11 +66,8 @@ class FirebaseAuthService {
         try {
           this.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(containerId, {
             size: "invisible",
-            callback: (token) => {
-              console.log("✅ reCAPTCHA verified");
-            },
+            callback: (token) => {},
             "expired-callback": () => {
-              console.warn("⚠️ reCAPTCHA expired");
               if (this.recaptchaVerifier) {
                 this.recaptchaVerifier.clear();
                 this.recaptchaVerifier = null;
@@ -86,13 +75,11 @@ class FirebaseAuthService {
             },
           });
         } catch (verifierErr) {
-          console.error("✖️ reCAPTCHA verifier creation failed:", verifierErr);
           throw verifierErr;
         }
       }
       return this;
     } catch (err) {
-      console.error("✖️ reCAPTCHA setup failed:", err);
       throw err;
     }
   }
@@ -118,29 +105,24 @@ class FirebaseAuthService {
           formattedNumber = "+" + digits;
         } else {
           const errorMsg = "Invalid phone number format. Please enter a valid 10-digit US number.";
-          console.error("✖️ Phone number validation failed:", errorMsg);
           throw new Error(errorMsg);
         }
       } catch (formatErr) {
-        console.error("✖️ Phone number validation failed:", formatErr);
         throw formatErr;
       }
 
       // Use existing RecaptchaVerifier
       if (!this.recaptchaVerifier) {
         const errorMsg = "reCAPTCHA not initialized. Call setupRecaptcha() first.";
-        console.error("✖️ sendOTP error:", errorMsg);
         throw new Error(errorMsg);
       }
 
-      // Log formatted phone number for debugging
-      console.log("📞 Formatted phone number:", formattedNumber);
+      // formatted phone number prepared
 
       // Ensure reCAPTCHA is rendered and ready
       try {
         await this.recaptchaVerifier.render();
       } catch (renderErr) {
-        console.error("✖️ reCAPTCHA render failed:", renderErr);
         throw new Error("reCAPTCHA render failed. Please refresh and try again.");
       }
 
@@ -150,11 +132,9 @@ class FirebaseAuthService {
         recaptchaToken = await this.recaptchaVerifier.verify();
         if (!recaptchaToken) {
           const errorMsg = "reCAPTCHA verification failed. Please try again.";
-          console.error("✖️ reCAPTCHA verify failed:", errorMsg);
           throw new Error(errorMsg);
         }
       } catch (verifyErr) {
-        console.error("✖️ reCAPTCHA verify failed:", verifyErr);
         throw new Error("reCAPTCHA verify failed. Please refresh and try again.");
       }
 
@@ -165,7 +145,6 @@ class FirebaseAuthService {
           this.recaptchaVerifier
         );
       } catch (otpErr) {
-        console.error("✖️ Failed to send OTP:", otpErr);
         // Clear reCAPTCHA on error so it can be tried again
         if (this.recaptchaVerifier) {
           this.recaptchaVerifier.clear();
@@ -174,12 +153,9 @@ class FirebaseAuthService {
         throw new Error("Failed to send OTP. Please check your phone number and try again.");
       }
 
-      console.log("✅ OTP sent to", formattedNumber);
-
       return this.confirmationResult;
     } catch (err) {
       // Top-level catch for any error
-      console.error("✖️ sendOTP error:", err);
       throw new Error(
         "An unexpected error occurred during phone authentication. Please try again or contact support."
       );
@@ -199,11 +175,8 @@ class FirebaseAuthService {
 
       const userCredential = await this.confirmationResult.confirm(code);
 
-      console.log("✅ OTP verified successfully");
-
       return userCredential;
     } catch (err) {
-      console.error("✖️ Failed to verify OTP:", err);
       throw err;
     }
   }
@@ -223,9 +196,7 @@ class FirebaseAuthService {
     try {
       await this.auth.signOut();
       this.confirmationResult = null;
-      console.log("✅ Signed out from Firebase");
     } catch (err) {
-      console.error("✖️ Sign out failed:", err);
       throw err;
     }
   }
