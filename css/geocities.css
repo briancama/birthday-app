@@ -1494,7 +1494,7 @@
 /* Individual letters scattered in prose — slightly bolder than surrounding text.
    The cursor change on hover is the only hint they're interactive. */
 [data-ytmnd] {
-  font-size: calc(1em + 3px);
+  font-size: calc(1em + 2px);
   cursor: pointer;
   color: inherit;
   transition: color 0.15s;
@@ -1613,6 +1613,14 @@
   font-size: 0.85rem;
   line-height: 1.6;
   margin: 0 0 20px;
+}
+
+.ytmnd-modal__fineprint {
+  font-size: 0.7rem;
+  color: #c0c0ff80;
+  font-style: italic;
+  margin-top: 12px;
+  margin-bottom: 20px;
 }
 .ytmnd-modal__actions {
   display: flex;

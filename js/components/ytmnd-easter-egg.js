@@ -46,8 +46,8 @@ export class YTMNDEasterEgg {
 
       if (actual === expected) {
         this._progress++;
+        // Persist the hit highlight until the sequence completes or is reset
         letter.classList.add("ytmnd-letter--hit");
-        setTimeout(() => letter.classList.remove("ytmnd-letter--hit"), 400);
         // Auditory confirmation on each correct step
         try {
           audioManager.play("click");
@@ -57,10 +57,12 @@ export class YTMNDEasterEgg {
           this._complete();
         }
       } else {
-        // Wrong order — flash red, reset
+        // Wrong order — flash red briefly, then reset the whole sequence
         letter.classList.add("ytmnd-letter--miss");
-        setTimeout(() => letter.classList.remove("ytmnd-letter--miss"), 400);
-        this._reset();
+        setTimeout(() => {
+          letter.classList.remove("ytmnd-letter--miss");
+          this._reset();
+        }, 400);
       }
     };
 
@@ -79,6 +81,14 @@ export class YTMNDEasterEgg {
 
   _reset() {
     this._progress = 0;
+    // Remove persisted hit highlights from all letters
+    try {
+      document
+        .querySelectorAll("[data-ytmnd].ytmnd-letter--hit")
+        .forEach((el) => el.classList.remove("ytmnd-letter--hit"));
+    } catch (e) {
+      /* ignore */
+    }
   }
 
   _complete() {
@@ -98,6 +108,14 @@ export class YTMNDEasterEgg {
     } catch (_) {}
 
     this._showModal();
+    // Clear any highlights after showing the modal so the UI doesn't keep them
+    try {
+      document
+        .querySelectorAll("[data-ytmnd].ytmnd-letter--hit")
+        .forEach((el) => el.classList.remove("ytmnd-letter--hit"));
+    } catch (e) {
+      /* ignore */
+    }
   }
 
   _showModal() {
@@ -114,17 +132,16 @@ export class YTMNDEasterEgg {
     box.innerHTML = `
       <div class="ytmnd-modal__inner">
         <div class="ytmnd-modal__header">
-          <marquee class="ytmnd-modal__marquee" behavior="scroll" direction="left">YOU'RE THE MAN NOW DOG &nbsp;&nbsp;&bull;&nbsp;&nbsp; HELLO MY FUTURE GIRLFRIEND &nbsp;&nbsp;&bull;&nbsp;&nbsp; YOU'RE THE MAN NOW DOG &nbsp;&nbsp;&bull;&nbsp;&nbsp;</marquee>
+          <marquee class="ytmnd-modal__marquee" behavior="scroll" direction="left">YOU'RE THE MAN NOW DOG &nbsp;&nbsp;&bull;&nbsp;&nbsp; YOU'RE THE MAN NOW DOG &nbsp;&nbsp;&bull;&nbsp;&nbsp;</marquee>
         </div>
         <div class="ytmnd-modal__body">
-          <h2 class="ytmnd-modal__title">Hello, My Future Girlfriend.</h2>
+          <h2 class="ytmnd-modal__title">You just found Forrester</h2>
           <p class="ytmnd-modal__copy">
-            It's 2006. You've found the secret. Sean Connery just told you you're the man now, dog —
-            and somewhere on a GeoCities page, a teenage boy is looping this clip over a photo of a
-            celebrity trying to make it funny. <em>He succeeded.</em>
+            It's 2001. You just watched the movie <em>Finding Forrester</em>. It's time to build an entire web empire based on tiled images of Sean Connery with the line "You're the man now, dog!" playing on repeat. This is what the internet was made for.
           </p>
+          <p class="ytmnd-modal__fineprint">(until the site gets coopted by racists and nazis turning it into a cesspool, but let's not think about that right now)</p>
           <p class="ytmnd-modal__copy">
-            Welcome to YTMND. It never gets old. It only gets more.
+            Now enter my own personal YTMND handcrafted just for you.
           </p>
           <div class="ytmnd-modal__actions">
             <a href="/ytmnd.html" class="ytmnd-modal__btn" target="_blank" rel="noopener">
