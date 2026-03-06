@@ -112,33 +112,15 @@ class DashboardPage extends BasePage {
       if (!counterEl || !listEl || !section) return;
 
       const [{ data: allAchievements }, { data: userAwards }] = await Promise.all([
-        // Fetch `details` JSON so callers can embed flags like { "hidden": true }
-        supabase.from("achievements").select("id,key,name,description,points,details"),
+        supabase.from("achievements").select("id,key,name,description,points"),
         supabase.from("user_achievements").select("achievement_id").eq("user_id", this.userId),
       ]);
 
-      // Helper to normalize details which may be an object or JSON string
-      const parseDetails = (d) => {
-        if (!d) return null;
-        if (typeof d === "object") return d;
-        try {
-          return JSON.parse(d);
-        } catch (err) {
-          return null;
-        }
-      };
-
-      // Only count achievements that are not marked hidden inside `details`
-      const visibleAchievements = Array.isArray(allAchievements)
-        ? allAchievements.filter((a) => {
-            const details = parseDetails(a.details);
-            return !(details && (details.hidden === true || details.hidden === "true"));
-          })
-        : [];
-
-      const total = visibleAchievements.length;
+      const total = Array.isArray(allAchievements) ? allAchievements.length : 0;
       const awardedIds = Array.isArray(userAwards) ? userAwards.map((u) => u.achievement_id) : [];
-      const awarded = visibleAchievements.filter((a) => awardedIds.includes(a.id));
+      const awarded = Array.isArray(allAchievements)
+        ? allAchievements.filter((a) => awardedIds.includes(a.id))
+        : [];
 
       counterEl.innerHTML = `${awarded.length} / ${total} <span>complete</span>`;
       section.classList.toggle("visible", awarded.length > 0);
