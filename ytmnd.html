@@ -167,7 +167,7 @@
               if (!achieved && this.userId) {
                 achieved = true;
                 window.dispatchEvent(
-                  new CustomEvent("achievement:trigger", { detail: { key: "ytmnd" } })
+                  new CustomEvent("achievement:trigger", { detail: { key: "ytmnd", hidden: true } })
                 );
               }
             } else if (!audio.paused) {
