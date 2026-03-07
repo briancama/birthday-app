@@ -1,4 +1,12 @@
 const express = require("express");
+// Load local .env for development only (do not attempt in production)
+if (process.env.NODE_ENV !== "production") {
+  try {
+    require("dotenv").config();
+  } catch (err) {
+    // dotenv may not be installed in some environments; fall back to system env
+  }
+}
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const app = express();
@@ -21,7 +29,10 @@ app.use((req, res, next) => {
     try {
       const signed = req.signedCookies && req.signedCookies.user_id;
       if (!signed) {
-        const devId = req.query && req.query.devUserId ? req.query.devUserId : (process.env.DEV_LOCAL_USER_ID || "local-dev-user");
+        const devId =
+          req.query && req.query.devUserId
+            ? req.query.devUserId
+            : process.env.DEV_LOCAL_USER_ID || "local-dev-user";
         if (devId) {
           res.cookie("user_id", devId, {
             signed: true,

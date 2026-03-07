@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YTMND</title>
+    <link rel="icon" type="image/png" href="images/brispace_favicon.png" />
+    <link rel="stylesheet" href="css/geocities.css" />
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html {
+        height: 100%;
+      }
+
+      body {
+        position: relative;
+        height: 100%;
+        background-image: url("images/hello-my-future-girlfriend.jpg");
+        background-repeat: repeat;
+        background-size: min(30%, 280px), min(30%, 280px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+
+      #playBtn {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        border: 4px solid #fff;
+        background: rgba(0, 0, 0, 0.55);
+        color: #fff;
+        font-size: 2.4rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+          background 0.15s,
+          transform 0.1s;
+        box-shadow: 0 0 24px rgba(0, 0, 0, 0.7);
+        /* nudge the triangle visually centred */
+        padding-left: 6px;
+      }
+      #playBtn:hover {
+        background: rgba(0, 0, 0, 0.8);
+        transform: scale(1.07);
+      }
+      #playBtn:active {
+        transform: scale(0.96);
+      }
+      #playBtn.playing {
+        /* Pause icon via content swap handled in JS */
+        padding-left: 0;
+        opacity: 0.5;
+      }
+
+      #container {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        padding: 20px;
+        z-index: 2;
+      }
+
+      /* Reveal overlay sits above the content but below the play button */
+      #revealOverlay {
+        position: absolute;
+        height: 100vh;
+        width: 100vw;
+        inset: 0;
+        background: #000;
+        z-index: 2;
+        transition:
+          opacity 320ms ease,
+          visibility 320ms ease;
+      }
+      #revealOverlay.hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      /* Ensure play button is above the overlay */
+      #playBtn {
+        z-index: 3;
+      }
+
+      #container p {
+        position: absolute;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+    <div id="revealOverlay" aria-hidden="false">
+      <img src="images/ytmnd.webp" alt="YTMND Logo" style="width: 120px; height: auto" />
+    </div>
+    <button id="playBtn" aria-label="Play">&#9654;</button>
+
+    <script type="module">
+      import { BasePage } from "./js/pages/base-page.js";
+
+      const total = 60;
+      const text = "Hello my future girlfriend";
+      const container = document.getElementById("container");
+
+      for (let i = 0; i < total; i++) {
+        const p = document.createElement("p");
+        p.textContent = text;
+        p.style.fontSize = 80 * Math.pow(0.93, i) + "px";
+        p.style.bottom = 10 + i * 0.1 + "px";
+        p.style.zIndex = total - i;
+        p.style.color = i === 0 ? "#fff" : "#ababab";
+        container.appendChild(p);
+      }
+
+      class YTMNDPage extends BasePage {
+        constructor() {
+          super({ requiresAuth: false, suppressAchievementSound: true, siteAward: false });
+        }
+
+        async onReady() {
+          const btn = document.getElementById("playBtn");
+          const audio = new Audio("/audio/hello-future-girlfriend.mp3");
+          audio.loop = true;
+
+          // Overlay reveal logic: overlay sits below the play button and hides the page
+          const overlay = document.getElementById("revealOverlay");
+          const revealOverlay = () => {
+            if (!overlay) return;
+            overlay.classList.add("hidden");
+            overlay.setAttribute("aria-hidden", "true");
+            // small reveal animation for the title stack
+            try {
+              container.querySelectorAll("p").forEach((p, i) => {
+                p.style.transform = "translateY(6px)";
+                p.style.transition = `opacity 420ms ease ${i * 8}ms, transform 420ms ease ${i * 8}ms`;
+                p.style.opacity = i === 0 ? "1" : "0.9";
+                p.style.transform = "translateY(0)";
+              });
+            } catch (e) {}
+          };
+
+          let started = false;
+          let achieved = false;
+
+          btn.addEventListener("click", async () => {
+            revealOverlay();
+            if (!started) {
+              started = true;
+              btn.innerHTML = "&#9646;&#9646;";
+              btn.classList.add("playing");
+              audio.play().catch(() => {});
+
+              if (!achieved && this.userId) {
+                achieved = true;
+                window.dispatchEvent(
+                  new CustomEvent("achievement:trigger", { detail: { key: "ytmnd", hidden: true } })
+                );
+              }
+            } else if (!audio.paused) {
+              audio.pause();
+              btn.innerHTML = "&#9654;";
+              btn.classList.remove("playing");
+            } else {
+              audio.play().catch(() => {});
+              btn.innerHTML = "&#9646;&#9646;";
+              btn.classList.add("playing");
+            }
+          });
+
+          audio.addEventListener("ended", () => {
+            btn.innerHTML = "&#9654;";
+            btn.classList.remove("playing");
+            started = false;
+          });
+        }
+      }
+
+      const page = new YTMNDPage();
+      window.addEventListener("DOMContentLoaded", () => page.init());
+    </script>
+  </body>
+</html>

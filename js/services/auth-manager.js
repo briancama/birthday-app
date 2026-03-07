@@ -48,6 +48,38 @@ class AuthManager extends EventTarget {
     }
   }
 
+  /**
+   * Like init() but never redirects to login — used by pages that don't require auth
+   * but still want to know who the user is (e.g. to award achievements).
+   */
+  async softInit() {
+    try {
+      await firebaseAuth.init();
+      await new Promise((resolve) => {
+        const unsub = firebaseAuth.onAuthStateChanged((user) => {
+          unsub();
+          resolve();
+        });
+      });
+      const firebaseUid =
+        localStorage.getItem("firebase_uid") || firebaseAuth.getCurrentUser()?.uid || null;
+      if (!firebaseUid) return false;
+      const { data } = await this.supabase
+        .from("users")
+        .select("*")
+        .eq("firebase_uid", firebaseUid)
+        .single();
+      if (data) {
+        this.currentUser = data;
+        this.userId = data.id;
+        this.emit("user:loaded", this.currentUser);
+      }
+      return !!this.userId;
+    } catch {
+      return false;
+    }
+  }
+
   async logout() {
     try {
       // Attempt to clear server-side session cookie first

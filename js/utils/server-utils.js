@@ -8,10 +8,13 @@ function getSupabase() {
   if (supabaseInstance) return supabaseInstance;
   const url = process.env.SUPABASE_URL || "";
   const key = process.env.SUPABASE_SERVICE_ROLE || "";
-  if (!url || !key)
+  if (!url || !key) {
     console.warn(
-      "Warning: SUPABASE_URL or SUPABASE_SERVICE_ROLE not set — Supabase client may not function"
+      "Warning: SUPABASE_URL or SUPABASE_SERVICE_ROLE not set — Supabase client will not be initialized"
     );
+    return null;
+  }
+
   supabaseInstance = createClient(url, key);
   return supabaseInstance;
 }

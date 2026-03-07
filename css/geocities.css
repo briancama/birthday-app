@@ -1486,3 +1486,174 @@
 .mute-button:hover {
   opacity: 1;
 }
+
+/* ============================================================
+   YTMND EASTER EGG
+   ============================================================ */
+
+/* Individual letters scattered in prose — slightly bolder than surrounding text.
+   The cursor change on hover is the only hint they're interactive. */
+[data-ytmnd] {
+  font-size: calc(1em + 2px);
+  cursor: pointer;
+  color: inherit;
+  transition: color 0.15s;
+  user-select: none;
+  -webkit-user-select: none;
+}
+[data-ytmnd]:hover {
+  color: var(--neon-cyan, #0ff);
+}
+[data-ytmnd].ytmnd-letter--hit {
+  color: #0f0;
+  text-shadow: 0 0 6px #0f0;
+}
+[data-ytmnd].ytmnd-letter--miss {
+  color: #f00;
+  text-shadow: 0 0 6px #f00;
+  animation: ytmnd-shake 0.25s linear;
+}
+
+@keyframes ytmnd-shake {
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  75% {
+    transform: translateX(3px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.ytmnd-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: ytmnd-fade-in 0.2s ease;
+}
+@keyframes ytmnd-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.ytmnd-modal {
+  background: #0a0a1a;
+  border: 3px solid var(--hot-pink, #ff00ff);
+  box-shadow:
+    0 0 24px var(--hot-pink, #ff00ff),
+    0 0 4px #0ff inset;
+  max-width: 420px;
+  width: 92%;
+  padding: 0;
+  font-family: "Courier New", Courier, monospace;
+  animation: ytmnd-slide-in 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes ytmnd-slide-in {
+  from {
+    transform: scale(0.82) translateY(-24px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.ytmnd-modal__header {
+  background: var(--hot-pink, #ff00ff);
+  color: #000;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+.ytmnd-modal__close {
+  background: none;
+  border: none;
+  color: #000;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+.ytmnd-modal__close:hover {
+  opacity: 0.7;
+}
+
+.ytmnd-modal__body {
+  padding: 20px;
+  text-align: center;
+}
+.ytmnd-modal__title {
+  font-size: 1.3rem;
+  color: var(--neon-cyan, #0ff);
+  text-shadow: 0 0 10px #0ff;
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+}
+.ytmnd-modal__copy {
+  color: #c0c0ff;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  margin: 0 0 20px;
+}
+
+.ytmnd-modal__fineprint {
+  font-size: 0.7rem;
+  color: #c0c0ff80;
+  font-style: italic;
+  margin-top: 12px;
+  margin-bottom: 20px;
+}
+.ytmnd-modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ytmnd-modal__btn {
+  display: inline-block;
+  padding: 10px 20px;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border: 2px solid var(--hot-pink, #ff00ff);
+  color: var(--hot-pink, #ff00ff);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.ytmnd-modal__btn:hover {
+  background: var(--hot-pink, #ff00ff);
+  color: #000;
+}
+.ytmnd-modal__btn--secondary {
+  border-color: #555;
+  color: #888;
+  font-size: 0.75rem;
+}
+.ytmnd-modal__btn--secondary:hover {
+  background: #555;
+  color: #fff;
+}
