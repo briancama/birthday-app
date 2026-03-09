@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Welcome - Brian's Birthday Zone</title>
+    <link rel="icon" type="image/png" href="images/favicon.jpg" />
+    <link rel="stylesheet" href="css/geocities.css" />
+    <link rel="stylesheet" href="css/components/forms.css" />
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
+    <style>
+      .register-page {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+      }
+      .register-card {
+        background: var(--panel-bg, #000080);
+        border: 3px solid var(--neon-cyan, #0ff);
+        border-radius: 8px;
+        padding: 2.5rem 2rem;
+        max-width: 440px;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 0 32px rgba(0, 255, 255, 0.25);
+      }
+      .register-card h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        color: var(--neon-yellow, #ff0);
+      }
+      .register-card .subtitle {
+        font-size: 0.9rem;
+        color: var(--text-secondary, #ccc);
+        margin-bottom: 2rem;
+      }
+      .register-card label {
+        display: block;
+        text-align: left;
+        margin-bottom: 0.4rem;
+        font-size: 0.85rem;
+        color: var(--neon-cyan, #0ff);
+      }
+      .register-card input[type="text"] {
+        width: 100%;
+        padding: 0.65rem 0.9rem;
+        border: 2px solid var(--neon-cyan, #0ff);
+        border-radius: 4px;
+        background: #000;
+        color: #fff;
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+        box-sizing: border-box;
+      }
+      .register-card input[type="text"]:focus {
+        outline: none;
+        border-color: var(--neon-yellow, #ff0);
+        box-shadow: 0 0 8px rgba(255, 255, 0, 0.4);
+      }
+      .register-submit-btn {
+        width: 100%;
+        padding: 0.75rem;
+        background: var(--neon-cyan, #0ff);
+        color: #000;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        letter-spacing: 0.05em;
+        transition:
+          background 0.15s,
+          transform 0.1s;
+      }
+      .register-submit-btn:hover:not(:disabled) {
+        background: var(--neon-yellow, #ff0);
+        transform: scale(1.02);
+      }
+      .register-submit-btn:disabled {
+        opacity: 0.55;
+        cursor: default;
+      }
+      .register-hint {
+        font-size: 0.78rem;
+        color: #aaa;
+        margin-top: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="register-page">
+      <div class="register-card">
+        <img src="images/star_icon.gif" alt="star" style="width: 48px; margin-bottom: 0.75rem" />
+        <h1>WELCOME TO THE ZONE</h1>
+        <p class="subtitle">You're verified! Now pick a name so we know who you are.</p>
+
+        <form id="registerForm" autocomplete="off">
+          <label for="displayNameInput">What should we call you?</label>
+          <input
+            type="text"
+            id="displayNameInput"
+            name="display_name"
+            placeholder="e.g. Cool Person 3000"
+            maxlength="60"
+            required
+            autofocus
+          />
+          <button type="submit" id="registerBtn" class="register-submit-btn">
+            &gt;&gt;&gt; LET'S GO &lt;&lt;&lt;
+          </button>
+        </form>
+        <p id="registerError" class="register-hint" style="color: #ff6b6b; display: none"></p>
+        <p class="register-hint">
+          Your username will be auto-generated from your name.<br />You can customise your profile
+          afterwards.
+        </p>
+      </div>
+    </div>
+
+    <script type="module" src="js/pages/register.js"></script>
+  </body>
+</html>

@@ -3,8 +3,6 @@ import { appState } from "../app.js";
 import { BasePage } from "./base-page.js";
 import { firebaseAuth } from "../services/firebase-auth.js";
 import { formatPhoneInput, toE164Format, isValidUSPhone } from "../utils/phone-format.js";
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.94.1/+esm";
-import { SUPABASE_CONFIG } from "../config.js";
 
 class LoginPage extends BasePage {
   // Don't show site awards on the login page — achievement triggering before auth would break things
@@ -67,7 +65,7 @@ class LoginPage extends BasePage {
       }
       // Pre-check: ensure phone number exists in our users table before sending OTP
       try {
-        const supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+        const supabase = appState.getSupabase();
         const { data: userMatch, error: userErr } = await supabase
           .from("users")
           .select("id")
@@ -77,12 +75,7 @@ class LoginPage extends BasePage {
           console.warn("Supabase lookup error:", userErr);
           // If lookup fails for unexpected reasons, allow OTP flow to continue
         }
-        if (!userMatch) {
-          this.showErrorToast(
-            "Sorry — that phone number is not authorized. Contact Brian if you'd like access."
-          );
-          return;
-        }
+        // Note: unknown phones are allowed through — they become visitor accounts
       } catch (lookupErr) {
         console.error("Phone lookup failed:", lookupErr);
         // Don't block OTP on lookup infrastructure errors; continue
@@ -163,10 +156,11 @@ class LoginPage extends BasePage {
         const firebaseUid = userCredential.user.uid;
         localStorage.setItem("firebase_uid", firebaseUid);
         localStorage.setItem("phone_number", this.phoneNumber);
-        // Exchange token with server and initialize app state
-        const authSuccess = await this.serverLoginAndInit();
-        if (authSuccess) {
-          window.location.href = "event-info";
+        // Exchange token with server — server sets cookie and returns redirect URL.
+        // appState.init() is intentionally skipped here; the destination page runs it.
+        const redirectUrl = await this.serverLoginAndGetRedirect();
+        if (redirectUrl) {
+          window.location.href = redirectUrl;
         } else {
           this.showErrorToast("Authentication failed. Please try again.");
           this.verifyOTPBtn.disabled = false;
@@ -181,21 +175,15 @@ class LoginPage extends BasePage {
     };
   }
 
-  // Exchanges the Firebase ID token with the server to set a signed cookie,
-  // then initializes `appState`. Returns `true` on success, `false` on failure.
-  async serverLoginAndInit() {
+  // Exchanges the Firebase ID token with the server, sets the signed cookie,
+  // and returns the redirect URL from the server response (or null on failure).
+  async serverLoginAndGetRedirect() {
     const sdkUser = firebaseAuth.getCurrentUser();
     if (!sdkUser) {
       this.showErrorToast("No Firebase user found after verification.");
-      return false;
+      return null;
     }
     try {
-      // Development shortcut: skip server /auth/login exchange and rely on client-side
-      // initialization when running locally. This bypasses Express auth routes.
-      if (window.APP_CONFIG && window.APP_CONFIG.isDevelopment) {
-        const authSuccess = await appState.init();
-        return Boolean(authSuccess);
-      }
       // Force-refresh token to ensure freshness and avoid expired tokens
       const idToken = await sdkUser.getIdToken(true);
       const resp = await fetch("/auth/login", {
@@ -205,27 +193,34 @@ class LoginPage extends BasePage {
         body: JSON.stringify({ idToken }),
       });
       if (!resp.ok) {
-        const err = await resp.text().catch(() => resp.statusText);
-        this.showErrorToast("Server login failed: " + err);
-        return false;
+        const err = await resp.json().catch(() => ({ error: resp.statusText }));
+        this.showErrorToast("Server login failed: " + (err.error || resp.statusText));
+        return null;
       }
+      const data = await resp.json().catch(() => null);
+      this._loginData = data;
+      return data?.redirect || null;
     } catch (loginErr) {
       console.error("Server /auth/login error:", loginErr);
       this.showErrorToast("Failed to establish session with server.");
-      return false;
-    }
-
-    try {
-      const authSuccess = await appState.init();
-      return Boolean(authSuccess);
-    } catch (e) {
-      console.error("appState.init() failed:", e);
-      this.showErrorToast("Failed to initialize app state.");
-      return false;
+      return null;
     }
   }
 
   async onReady() {
+    // Dev/test shortcut: visiting ?logout clears all local state and the server cookie.
+    // Works for any user type. e.g. localhost:8000/?logout or index.html?logout
+    if (new URLSearchParams(window.location.search).has("logout")) {
+      localStorage.removeItem("firebase_uid");
+      localStorage.removeItem("phone_number");
+      sessionStorage.clear();
+      await fetch("/auth/logout", { method: "POST", credentials: "include" }).catch(() => {});
+      try {
+        await firebaseAuth.signOut?.();
+      } catch (_) {}
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+
     await firebaseAuth.init();
 
     // Surface any previous auth redirect reason (helpful for debugging)
@@ -275,12 +270,20 @@ class LoginPage extends BasePage {
     this.backBtn.addEventListener("click", this._backBtnHandler);
     this.form.addEventListener("submit", this._formSubmitHandler);
 
-    // If already signed in, validate session before redirecting
+    // If already signed in, validate session and redirect to the right destination
     const sdkUser = firebaseAuth.getCurrentUser();
     if (sdkUser && sdkUser.uid) {
       const profile = appState.getCurrentUser();
       if (profile && profile.id) {
-        window.location.href = "dashboard";
+        const userType = profile.user_type || "visitor";
+        const username = profile.username || null;
+        if (!profile.display_name) {
+          window.location.href = "register.html";
+        } else if (userType === "participant") {
+          window.location.href = "dashboard.html";
+        } else {
+          window.location.href = username ? `/users/${username}` : "leaderboard.html";
+        }
         return;
       }
     }

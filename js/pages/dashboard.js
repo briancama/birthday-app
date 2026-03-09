@@ -33,6 +33,13 @@ class DashboardPage extends BasePage {
     this.currentUser = appState.getCurrentUser();
     this.userId = appState.getUserId();
 
+    // Visitors don't have challenge access — send them to their profile
+    if (appState.getUserType() === "visitor") {
+      const username = this.currentUser?.username;
+      window.location.href = username ? `/users/${username}` : "leaderboard.html";
+      return;
+    }
+
     this.setupEventListeners();
     initNavigation();
     this.setPageTitle("Dashboard");

@@ -9,6 +9,7 @@ if (process.env.NODE_ENV !== "production") {
 }
 const path = require("path");
 const cookieParser = require("cookie-parser");
+const { getSupabase } = require("./js/utils/server-utils");
 const app = express();
 const port = process.env.PORT || 8000;
 
@@ -72,6 +73,52 @@ app.use((req, res, next) => {
     req.url += ".html";
   }
   next();
+});
+
+// GET / — smart root handler:
+//   ?logout  → clear cookie and serve login page
+//   cookie present + valid user → server-side redirect to correct destination
+//   otherwise → fall through to express.static (serves index.html)
+app.get("/", async (req, res, next) => {
+  // Handle ?logout — clear server cookie and serve login page directly
+  if ("logout" in req.query) {
+    res.clearCookie("user_id");
+    return next(); // express.static serves index.html
+  }
+
+  const userId = req.signedCookies && req.signedCookies.user_id;
+  if (!userId) return next();
+
+  try {
+    const supabase = getSupabase();
+    if (!supabase) return next();
+
+    const { data } = await supabase
+      .from("users")
+      .select("username, display_name, user_type")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (!data) return next(); // unknown user, serve login
+
+    const needsOnboarding = !data.display_name;
+    const userType = data.user_type || "visitor";
+    const username = data.username || null;
+
+    let destination;
+    if (needsOnboarding) {
+      destination = "/register.html";
+    } else if (userType === "participant") {
+      destination = "/dashboard.html";
+    } else {
+      destination = username ? `/users/${username}` : "/leaderboard.html";
+    }
+
+    return res.redirect(302, destination);
+  } catch (e) {
+    // On any error just serve the login page
+    return next();
+  }
 });
 
 // Serve static files from workspace root

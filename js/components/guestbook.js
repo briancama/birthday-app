@@ -1,12 +1,10 @@
 // js/components/guestbook.js
 // Shared Guestbook logic for modal, form, and Supabase integration
 
-import { SUPABASE_CONFIG } from "../config.js";
 import { appState } from "../app.js";
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.94.1/+esm";
 import { EventBus } from "../events/event-bus.js";
 
-const supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+const supabase = appState.getSupabase();
 
 export class Guestbook {
   constructor(pageName = "guestbook") {

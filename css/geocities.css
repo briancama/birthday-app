@@ -215,6 +215,7 @@
 
   .input-help {
     margin-bottom: var(--spacing-md);
+    margin-top: var(--spacing-xs);
     font-size: var(--text-sm);
   }
 

@@ -54,6 +54,10 @@ class AppState extends EventTarget {
     return this.authManager.getUserId();
   }
 
+  getUserType() {
+    return this.authManager.getUserType();
+  }
+
   getSupabase() {
     return this.authManager.getSupabase();
   }

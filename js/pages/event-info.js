@@ -167,10 +167,7 @@ class EventInfoPage extends BasePage {
     eventList.innerHTML = "<li>Loading events...</li>";
     this.eventCardMap = {};
     try {
-      const { createClient } =
-        await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.94.1/+esm");
-      const { SUPABASE_CONFIG } = await import("../config.js");
-      const supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+      const supabase = this.supabase;
       // Fetch events
       const { data: events, error } = await supabase
         .from("events")
@@ -467,10 +464,7 @@ class EventInfoPage extends BasePage {
     if (!commentsList) return;
     commentsList.innerHTML = '<p class="text-center">Loading comments...</p>';
     try {
-      const { createClient } =
-        await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.94.1/+esm");
-      const { SUPABASE_CONFIG } = await import("../config.js");
-      const supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+      const supabase = this.supabase;
       const { data, error, count } = await supabase
         .from("guestbook")
         .select("*", { count: "exact" })

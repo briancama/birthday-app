@@ -40,7 +40,15 @@ function ensureFirebaseAdmin() {
           admin.initializeApp();
         }
       } else {
-        admin.initializeApp();
+        // No service account — initialize with just the project ID so that
+        // verifyIdToken() can still work (token verification uses Firebase's
+        // public keys and only needs the projectId to validate the aud claim).
+        const projectId = process.env.FIREBASE_PROJECT_ID || "";
+        if (projectId) {
+          admin.initializeApp({ projectId });
+        } else {
+          admin.initializeApp();
+        }
       }
     } catch (err) {
       console.warn("Failed to initialize firebase-admin:", err && err.message ? err.message : err);

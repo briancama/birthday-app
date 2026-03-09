@@ -10,6 +10,7 @@ class AuthManager extends EventTarget {
     this.supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
     this.currentUser = null;
     this.userId = null;
+    this.userType = null;
   }
 
   async init() {
@@ -28,7 +29,8 @@ class AuthManager extends EventTarget {
       return false;
     }
     await this.loadUserProfile(firebaseUid);
-    return true;
+    // Return false if loadUserProfile failed (user not found, redirectToLogin already called)
+    return !!this.userId;
   }
 
   async loadUserProfile(firebaseUid) {
@@ -41,6 +43,7 @@ class AuthManager extends EventTarget {
       if (error || !data) throw new Error(error?.message || "User not found");
       this.currentUser = data;
       this.userId = data.id;
+      this.userType = data.user_type || "visitor";
       this.emit("user:loaded", this.currentUser);
     } catch (error) {
       this.emitError(error.message);
@@ -68,10 +71,11 @@ class AuthManager extends EventTarget {
         .from("users")
         .select("*")
         .eq("firebase_uid", firebaseUid)
-        .single();
+        .maybeSingle();
       if (data) {
         this.currentUser = data;
         this.userId = data.id;
+        this.userType = data.user_type || "visitor";
         this.emit("user:loaded", this.currentUser);
       }
       return !!this.userId;
@@ -121,6 +125,10 @@ class AuthManager extends EventTarget {
 
   getUserId() {
     return this.userId;
+  }
+
+  getUserType() {
+    return this.userType;
   }
 
   getSupabase() {

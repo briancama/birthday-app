@@ -128,13 +128,22 @@ router.post("/login", async (req, res) => {
         }
       }
 
-      // Truly new user (no pre-authorized row) — create a minimal profile
+      // Truly new user (no pre-authorized row) — create a minimal visitor profile
       if (!userId) {
+        // Generate a unique temp username to satisfy any NOT NULL constraint until
+        // the allow_null_username.sql migration is applied.
+        const tempUsername =
+          "visitor_" +
+          firebaseUid
+            .replace(/[^a-z0-9]/gi, "")
+            .slice(-10)
+            .toLowerCase();
         const payload = {
           firebase_uid: firebaseUid,
           phone_number: phone,
-          email: email,
           display_name: name,
+          username: tempUsername,
+          user_type: "visitor",
         };
         const { data: inserted, error: insertErr } = await supabase
           .from("users")
@@ -159,7 +168,32 @@ router.post("/login", async (req, res) => {
         maxAge: 1000 * 60 * 60 * 24 * 7,
       });
 
-      return res.json({ ok: true, userId });
+      // Fetch user details to determine onboarding state and user type
+      const { data: resolvedUser } = await supabase
+        .from("users")
+        .select("username, user_type, display_name")
+        .eq("id", userId)
+        .maybeSingle();
+
+      // needsOnboarding = user hasn't completed registration (no display_name set yet).
+      // We use display_name rather than username because new visitors get a temp username
+      // on creation but haven't picked a real one until they complete the register page.
+      const needsOnboarding = !resolvedUser?.display_name;
+      const userType = resolvedUser?.user_type || "visitor";
+      const username = resolvedUser?.username || null;
+
+      // Compute the redirect destination server-side so the client can navigate
+      // immediately without an extra appState.init() round-trip before redirecting.
+      let redirect;
+      if (needsOnboarding) {
+        redirect = "/register.html";
+      } else if (userType === "participant") {
+        redirect = "/dashboard.html";
+      } else {
+        redirect = username ? `/users/${username}` : "/leaderboard.html";
+      }
+
+      return res.json({ ok: true, userId, needsOnboarding, userType, username, redirect });
     }
 
     // Only Firebase ID token flow is supported.
@@ -175,8 +209,6 @@ router.post("/logout", (req, res) => {
   res.clearCookie("user_id");
   return res.json({ ok: true });
 });
-
-module.exports = router;
 
 // GET /auth/me - return server-side profile for signed-in user
 router.get("/me", async (req, res) => {
@@ -202,3 +234,4 @@ router.get("/me", async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
+module.exports = router;
