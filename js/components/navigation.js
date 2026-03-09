@@ -1,6 +1,7 @@
 import { appState } from "../app.js";
 import { EventBus } from "../events/event-bus.js";
 import { audioManager } from "../utils/audio.js";
+import * as notificationService from "../services/notification-service.js";
 
 class NavigationController {
   constructor() {
@@ -139,6 +140,118 @@ class NavigationController {
     this.updatePageTitle();
     this.updateAdminVisibility();
     this.updateMenuOptions();
+    this.ensureNotificationToggle();
+  }
+
+  ensureNotificationToggle() {
+    try {
+      const container = document.querySelector(".nav-tabs");
+      if (!container) return;
+      // Avoid duplicate toggle
+      if (container.querySelector(".notif-toggle-btn")) return;
+
+      const btn = document.createElement("button");
+      btn.className = "notif-toggle-btn";
+      // Initial label will be updated based on actual PushSubscription state
+      btn.textContent = "Checking notifications...";
+
+      async function updateButtonState() {
+        try {
+          if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+            btn.textContent = "Notifications: Unsupported";
+            btn.disabled = true;
+            return;
+          }
+          const reg = await navigator.serviceWorker.ready;
+          const subs = await reg.pushManager.getSubscription();
+          if (subs) {
+            btn.textContent = "Notifications: ON";
+            btn.dataset.subscribed = "1";
+          } else {
+            btn.textContent = "Enable Notifications";
+            btn.dataset.subscribed = "0";
+          }
+        } catch (e) {
+          console.warn("updateButtonState error", e);
+          btn.textContent = "Enable Notifications";
+          btn.dataset.subscribed = "0";
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      btn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        btn.disabled = true;
+        try {
+          // Determine current subscription state from PushManager
+          const reg = await navigator.serviceWorker.ready;
+          const subs = await reg.pushManager.getSubscription();
+          if (subs) {
+            // Currently subscribed -> unsubscribe both client and server
+            try {
+              await subs.unsubscribe();
+            } catch (ignore) {
+              // continue to call server even if local unsubscribe fails
+            }
+            const res = await notificationService.unsubscribe(subs.endpoint);
+            if (res && res.ok) {
+              btn.textContent = "Enable Notifications";
+              btn.dataset.subscribed = "0";
+              EventBus.instance.emit("ui:toast", {
+                type: "success",
+                message: "Notifications disabled",
+              });
+            } else {
+              const errMsg =
+                (res && (res.error || (res.data && (res.data.error || res.data.message)))) ||
+                "Failed to disable notifications. Check console for details.";
+              EventBus.instance.emit("ui:toast", { type: "error", message: errMsg });
+              console.warn("Unsubscribe failed response:", res);
+            }
+          } else {
+            // Not subscribed -> try to subscribe (may prompt permission)
+            const res = await notificationService.subscribe();
+            if (res && res.ok) {
+              btn.textContent = "Notifications: ON";
+              btn.dataset.subscribed = "1";
+              EventBus.instance.emit("ui:toast", {
+                type: "success",
+                message: "Notifications enabled",
+              });
+            } else if (res && res.error === "permission-denied") {
+              EventBus.instance.emit("ui:toast", {
+                type: "error",
+                message: "Permission denied. Enable notifications in browser settings.",
+              });
+            } else {
+              const errMsg =
+                (res && (res.error || (res.data && (res.data.error || res.data.message)))) ||
+                "Failed to enable notifications";
+              EventBus.instance.emit("ui:toast", { type: "error", message: errMsg });
+              console.warn("Subscribe failed response:", res);
+            }
+          }
+        } catch (err) {
+          console.warn("Notification toggle error", err);
+          EventBus.instance.emit("ui:toast", {
+            type: "error",
+            message: err && err.message ? err.message : "Notification action failed",
+          });
+        } finally {
+          btn.disabled = false;
+          // refresh state from push manager
+          updateButtonState().catch(() => {});
+        }
+      });
+
+      // Run initial state check
+      updateButtonState().catch(() => {});
+
+      container.appendChild(btn);
+    } catch (e) {
+      console.warn("Failed to add notification toggle", e);
+    }
   }
   updateMenuOptions() {
     // Show/hide nav menu options based on auth status (except admin link)

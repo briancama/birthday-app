@@ -1,5 +1,6 @@
 import { authManager } from "./services/auth-manager.js";
 import { EventBus } from "./events/event-bus.js";
+import { VAPID_PUBLIC_KEY } from "./config.js";
 
 // Environment detection
 const isProduction =
@@ -32,6 +33,13 @@ const APP_CONFIG = {
 
 // Make APP_CONFIG available globally
 window.APP_CONFIG = APP_CONFIG;
+
+// Expose VAPID public key for notification subscription flows
+try {
+  window.APP_VAPID_PUBLIC_KEY = VAPID_PUBLIC_KEY;
+} catch (e) {
+  /* ignore in non-browser environments */
+}
 
 class AppState extends EventTarget {
   async logout() {

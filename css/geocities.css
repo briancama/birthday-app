@@ -1392,6 +1392,14 @@
   }
 }
 
+/* Enable Notifications */
+.notif-toggle-btn {
+  max-width: 300px;
+  margin: 0 auto 12px;
+  background: linear-gradient(to bottom, var(--accent-green), #00b589);
+  color: #ffff00;
+}
+
 /* Toast Notifications */
 #errorMessages,
 #successMessages {

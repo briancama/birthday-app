@@ -154,12 +154,18 @@ class LoginPage extends BasePage {
           return;
         }
         const firebaseUid = userCredential.user.uid;
-        localStorage.setItem("firebase_uid", firebaseUid);
-        localStorage.setItem("phone_number", this.phoneNumber);
         // Exchange token with server — server sets cookie and returns redirect URL.
+        // Don't persist `firebase_uid` to localStorage until the server confirms
+        // the session to avoid showing a logged-in UI when the server rejects
+        // the token (e.g. transient verification issues).
         // appState.init() is intentionally skipped here; the destination page runs it.
         const redirectUrl = await this.serverLoginAndGetRedirect();
         if (redirectUrl) {
+          // Persist client-side session markers only after server accepted the token
+          try {
+            localStorage.setItem("firebase_uid", firebaseUid);
+            localStorage.setItem("phone_number", this.phoneNumber);
+          } catch (_) {}
           window.location.href = redirectUrl;
         } else {
           this.showErrorToast("Authentication failed. Please try again.");
@@ -184,22 +190,49 @@ class LoginPage extends BasePage {
       return null;
     }
     try {
-      // Force-refresh token to ensure freshness and avoid expired tokens
-      const idToken = await sdkUser.getIdToken(true);
-      const resp = await fetch("/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ idToken }),
-      });
-      if (!resp.ok) {
+      // Try up to two times: initial token refresh, then one retry on 401 by
+      // forcing a fresh token again. This handles transient verification
+      // failures where Firebase's public key rotation or network hiccups
+      // cause `verifyIdToken` to fail briefly.
+      let attempts = 0;
+      let lastErr = null;
+      while (attempts < 2) {
+        const idToken = await sdkUser.getIdToken(true);
+        const resp = await fetch("/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ idToken }),
+        });
+
+        if (resp.ok) {
+          const data = await resp.json().catch(() => null);
+          this._loginData = data;
+          return data?.redirect || null;
+        }
+
+        // If the server rejected the token (401), try once more after
+        // forcing a fresh token. Otherwise bail out and show the error.
+        if (resp.status === 401) {
+          lastErr = await resp.json().catch(() => ({ error: resp.statusText }));
+          attempts += 1;
+          if (attempts < 2) {
+            // small pause to avoid tight loop and give Firebase SDK a chance
+            // to refresh internal state if needed
+            await new Promise((r) => setTimeout(r, 250));
+            continue;
+          }
+          this.showErrorToast("Server login failed: " + (lastErr.error || resp.statusText));
+          return null;
+        }
+
         const err = await resp.json().catch(() => ({ error: resp.statusText }));
         this.showErrorToast("Server login failed: " + (err.error || resp.statusText));
         return null;
       }
-      const data = await resp.json().catch(() => null);
-      this._loginData = data;
-      return data?.redirect || null;
+      // If we exit loop without returning, show a generic error.
+      this.showErrorToast("Failed to establish session with server.");
+      return null;
     } catch (loginErr) {
       console.error("Server /auth/login error:", loginErr);
       this.showErrorToast("Failed to establish session with server.");

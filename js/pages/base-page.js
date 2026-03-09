@@ -2,6 +2,7 @@ import { appState } from "../app.js";
 import { audioManager, addClickSound } from "../utils/audio.js";
 import { achievementService } from "../services/achievement-service.js";
 import { EventBus } from "../events/event-bus.js";
+import * as notificationService from "../services/notification-service.js";
 
 class BasePage {
   constructor({
@@ -76,9 +77,41 @@ class BasePage {
 
       const achCleanup = EventBus.instance.listen("achievement:awarded", handleAchievementAward);
       this.eventCleanup.push(achCleanup);
+      // Listen for generic UI toast events from other modules
+      const toastCleanup = EventBus.instance.listen("ui:toast", (e) => {
+        try {
+          const d = e.detail || {};
+          const type = d.type || "info";
+          const msg = d.message || d.text || "";
+          if (type === "error") this.showErrorToast(msg);
+          else this.showSuccessToast(msg);
+        } catch (err) {
+          console.warn("ui:toast handler error", err);
+        }
+      });
+      this.eventCleanup.push(toastCleanup);
     } catch (e) {
       console.warn("Failed to init achievement service", e);
     }
+    // Register service worker for notifications (register-only; do not prompt permissions here)
+    try {
+      const swReg = await notificationService.registerServiceWorker("/sw-notifications.js");
+      if (swReg) {
+        // Forward messages from the service worker to the notification service handler
+        if (navigator.serviceWorker && navigator.serviceWorker.addEventListener) {
+          navigator.serviceWorker.addEventListener("message", (e) => {
+            try {
+              notificationService._handleIncomingNotification(e.data);
+            } catch (err) {
+              console.warn("Failed to handle incoming notification message", err);
+            }
+          });
+        }
+      }
+    } catch (swErr) {
+      console.warn("Service worker registration skipped or failed:", swErr);
+    }
+
     await this.onReady();
   }
 
