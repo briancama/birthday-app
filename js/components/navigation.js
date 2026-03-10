@@ -127,10 +127,10 @@ class NavigationController {
       dashboard: "Dashboard",
       leaderboard: "Leaderboard",
       "event-info": "Event Info",
-      "cocktail-judging": "Cocktail Judging",
-      rubric: "Cocktail Rubric",
-      "challenges-submit": "Challenge Workshop",
-      "admin-approvals": "Admin Approvals",
+      "cocktail-judging": "40 Proof",
+      rubric: "Rubric",
+      "challenges-submit": "Workshop",
+      "admin-approvals": "Admin",
     };
     return pageTitles[this.currentPage] || "Dashboard";
   }

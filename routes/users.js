@@ -81,20 +81,38 @@ router.get("/:identifier", async (req, res) => {
 
     const data = result;
 
-    // Map/normalize fields expected by templates/user.ejs
+    // Map/normalize all fields expected by templates/user.ejs
     const user = {
       id: data.user_id || data.id,
       display_name: data.display_name || data.user_display_name,
       headshot: data.headshot_url || data.user_headshot_url || data.headshot,
-      profile_html: data.profile_html || data.prompt_html || data.prompt_html_safe,
-      profile_bg_url: data.profile_bg_url,
+      about_html: data.about_html || data.prompt_html || null,
+      profile_bg_url: data.profile_bg_url || null,
       profile_bg_mode: data.profile_bg_mode || "cover",
-      favorite_track: data.favorite_track_url || data.favorite_track || null,
+      // Sidebar detail fields
+      status: data.status || null,
+      hometown: data.hometown || null,
+      looking_for: data.looking_for || null,
+      fav_movie: data.fav_movie || null,
+      fav_song: data.fav_song || null,
+      fav_food: data.fav_food || null,
+      // Top N — ensure it's always an array
+      top_n: Array.isArray(data.top_n) ? data.top_n : [],
     };
 
-    const editMode = req.cookies && req.cookies.edit_profile === "1";
+    // userCount = number of registered users (display_name set) — drives the Top N feature
+    let userCount = 1;
+    try {
+      const { count } = await supabase
+        .from("users")
+        .select("id", { count: "exact", head: true })
+        .not("display_name", "is", null);
+      if (count && count > 0) userCount = count;
+    } catch (e) {
+      console.warn("userCount query failed:", e.message);
+    }
 
-    res.render("user", { user, profile_title: data.profile_title, editMode });
+    res.render("user", { user, profile_title: data.profile_title, userCount });
   } catch (err) {
     console.error("Error in /users/:identifier route", err);
     res.status(500).send("Internal server error");
