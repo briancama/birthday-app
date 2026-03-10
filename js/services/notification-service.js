@@ -141,10 +141,10 @@ export async function unsubscribe(endpoint) {
     } catch (e) {
       /* ignore */
     }
-    const resp = await fetch('/notifications/unsubscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
+    const resp = await fetch("/notifications/unsubscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ endpoint }),
     });
 

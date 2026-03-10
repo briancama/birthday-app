@@ -5,7 +5,10 @@ const { getSupabase, requireSignedUser } = require("../js/utils/server-utils");
 const supabase = getSupabase();
 
 function looksLikeUuid(id) {
-  return typeof id === "string" && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id);
+  return (
+    typeof id === "string" &&
+    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id)
+  );
 }
 
 async function resolveUserUuid(possibleIdOrUsername) {
@@ -15,7 +18,11 @@ async function resolveUserUuid(possibleIdOrUsername) {
   // Otherwise try common lookup fields: firebase_uid, username
   try {
     // Try firebase_uid
-    let q = await supabase.from("users").select("id").eq("firebase_uid", possibleIdOrUsername).limit(1);
+    let q = await supabase
+      .from("users")
+      .select("id")
+      .eq("firebase_uid", possibleIdOrUsername)
+      .limit(1);
     if (!q.error && Array.isArray(q.data) && q.data.length) return q.data[0].id;
 
     // Try username
@@ -60,7 +67,9 @@ router.post("/subscribe", async (req, res) => {
     // Resolve signed cookie to UUID if necessary
     const resolvedUserId = await resolveUserUuid(userId);
     if (!resolvedUserId)
-      return res.status(400).json({ error: "unable to resolve user id; please sign in via server" });
+      return res
+        .status(400)
+        .json({ error: "unable to resolve user id; please sign in via server" });
     const payload = {
       user_id: resolvedUserId,
       endpoint: subscription.endpoint,
@@ -95,10 +104,15 @@ router.post("/unsubscribe", async (req, res) => {
     // Resolve the stored signed cookie value to a real UUID if necessary
     const resolvedUserId = await resolveUserUuid(userId);
     if (!resolvedUserId)
-      return res.status(400).json({ error: "unable to resolve user id; please sign in via server" });
+      return res
+        .status(400)
+        .json({ error: "unable to resolve user id; please sign in via server" });
 
     if (!endpoint) {
-      const { error } = await supabase.from("push_subscriptions").delete().eq("user_id", resolvedUserId);
+      const { error } = await supabase
+        .from("push_subscriptions")
+        .delete()
+        .eq("user_id", resolvedUserId);
       if (error) throw error;
       return res.json({ success: true, removed: "all" });
     }
@@ -155,7 +169,9 @@ router.get("/list", async (req, res) => {
   try {
     const resolvedUserId = await resolveUserUuid(userId);
     if (!resolvedUserId)
-      return res.status(400).json({ error: "unable to resolve user id; please sign in via server" });
+      return res
+        .status(400)
+        .json({ error: "unable to resolve user id; please sign in via server" });
 
     let q = supabase
       .from("notifications")
@@ -187,7 +203,9 @@ router.post("/mark-read", async (req, res) => {
   try {
     const resolvedUserId = await resolveUserUuid(userId);
     if (!resolvedUserId)
-      return res.status(400).json({ error: "unable to resolve user id; please sign in via server" });
+      return res
+        .status(400)
+        .json({ error: "unable to resolve user id; please sign in via server" });
     const { data, error } = await supabase
       .from("notifications")
       .update({ read: true })
