@@ -132,6 +132,10 @@ app.use("/api", apiUsersRouter);
 const authRouter = require("./routes/auth");
 app.use("/auth", authRouter);
 
+// Notifications route (push subscriptions, send/list/mark-read)
+const notificationsRouter = require("./routes/notifications");
+app.use("/notifications", notificationsRouter);
+
 app.listen(port, () => {
   console.log(`Birthday App server running at http://localhost:${port}`);
 });
