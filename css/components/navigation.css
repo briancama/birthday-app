@@ -12,6 +12,13 @@ body.has-bottom-menu {
   position: relative;
 }
 
+.user-profile-button {
+  margin-left: auto;
+  margin-right: 50px;
+  max-height: 30px;
+  cursor: pointer;
+}
+
 /* Mobile Menu Toggle - always visible */
 .mobile-menu-toggle {
   display: block;
@@ -21,7 +28,7 @@ body.has-bottom-menu {
   padding: var(--spacing-xs) var(--spacing-sm);
   font-size: 1.2rem;
   position: absolute;
-  top: var(--spacing-xs);
+  top: 11px;
   right: var(--spacing-xs);
   z-index: 1000;
   cursor: pointer;

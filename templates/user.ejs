@@ -3,57 +3,225 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title><%= user.display_name || 'User' %> — Brispace</title>
-    <link rel="stylesheet" href="/css/geocities.css">
+    <meta name="robots" content="noindex, nofollow" />
+    <title><%= user.display_name || 'BriSpace' %> — BriSpace</title>
+    <link rel="icon" type="image/png" href="/images/brispace_favicon.png" />
+    <link rel="stylesheet" href="/css/geocities.css" />
+    <link rel="stylesheet" href="/css/components/navigation.css" />
+    <link rel="stylesheet" href="/css/components/myspace.css" />
+    <link rel="stylesheet" href="/css/components/myspace-comments.css" />
+    <link rel="stylesheet" href="/css/components/user-profile.css" />
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
+    <% if (user.profile_bg_url) { %>
     <style>
-      body {
-        background-image: <% if (user.profile_bg_url) { %>url('<%= user.profile_bg_url %>')<% } else { %>none<% } %>;
-        background-repeat: <% if (user.profile_bg_mode === 'tile') { %>repeat<% } else { %>no-repeat<% } %>;
-        background-size: <% if (user.profile_bg_mode === 'cover') { %>cover<% } else { %>auto<% } %>;
+      body.myspace {
+        background-image: url('<%= user.profile_bg_url %>');
+        background-repeat: <%= user.profile_bg_mode === 'tile' ? 'repeat' : 'no-repeat' %>;
+        background-size: <%= user.profile_bg_mode === 'cover' ? 'cover' : 'auto' %>;
       }
-      .profile-headshot { width: 140px; height: 140px; border-radius: 6px; }
-      .profile-container { max-width: 900px; margin: 40px auto; background: rgba(255,255,255,0.85); padding: 20px; }
     </style>
+    <% } %>
   </head>
-  <body>
-    <div class="profile-container">
-      <h1 id="myspaceName"><%=
-        (typeof profile_title !== 'undefined' && profile_title) ? profile_title : (user && user.display_name ? (user.display_name + "'s BriSpace") : 'Guest')
-      %></h1>
-      <img src="<%= user.headshot || '/images/headshot.jpg' %>" alt="headshot" class="profile-headshot" />
 
-      <div class="favorite-audio">
-        <% if (user.favorite_track) { %>
-          <audio controls src="<%= user.favorite_track %>"></audio>
-        <% } %>
+  <body class="myspace" data-profile-user-id="<%= user.id %>">
+
+    <!-- ── Navigation header ─────────────────────────────────── -->
+    <div class="myspace-header full-width-content">
+      <div class="myspace-header__logo">
+        <img src="/images/brispace_logo.jpg" alt="BriSpace" />
+        <img src="/images/profile.gif" alt="profile" class="icon-gif user-profile-button" />
+        <button class="mobile-menu-toggle" data-sound="menu" aria-label="Toggle navigation menu">
+          <span class="hamburger-icon">☰</span>
+        </button>
       </div>
-
-      <div class="profile-content">
-        <!-- profile_html is expected to be sanitized before saving -->
-        <%- user.profile_html || '<p>This user has not added a profile yet.</p>' %>
+      <div class="nav-menu">
+        <div class="nav-tabs">
+          <a href="/dashboard" class="nav-tab" data-sound="menu" data-page="dashboard">
+            <img src="/images/home.gif" alt="home" class="icon-gif icon-gif--lg icon-gif--with-text" />
+            <span>DASHBOARD</span>
+          </a>
+          <a href="/event-info" class="nav-tab" data-sound="menu" data-page="event-info">
+            <img src="/images/question.gif" alt="info" class="icon-gif icon-gif--with-text" />
+            <span>EVENT INFO</span>
+          </a>
+          <a href="/leaderboard" class="nav-tab" data-sound="menu" data-page="leaderboard">
+            <img src="/images/trophy.gif" alt="trophy" class="icon-gif icon-gif--with-text" />
+            <span>LEADERBOARD</span>
+          </a>
+          <button class="nav-tab logout-btn">
+            <img src="/images/logout.gif" alt="logout" class="icon-gif icon-gif--lg icon-gif--with-text" />
+            <span>LOGOUT</span>
+          </button>
+        </div>
       </div>
-
-      <% if (editMode) { %>
-        <div id="editor-toolbar"></div>
-        <div id="editor"><%- user.profile_html || '' %></div>
-        <button id="saveProfile">Save</button>
-        <script src="/js/vendor/quill.min.js"></script>
-        <script src="/js/vendor/dompurify.min.js"></script>
-        <script>
-          // Minimal editor init for edit mode. Hook save to POST /api/users/:id/profile
-          const quill = new Quill('#editor', { theme: 'snow' });
-          document.getElementById('saveProfile').addEventListener('click', async () => {
-            const raw = quill.root.innerHTML;
-            const clean = DOMPurify.sanitize(raw);
-            await fetch('/api/users/<%= user.id %>/profile', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ profile_html: clean })
-            });
-            location.reload();
-          });
-        </script>
-      <% } %>
     </div>
+
+    <!-- ── Main layout ─────────────────────────────────────────── -->
+    <div class="myspace-container full-width-content">
+      <div class="container myspace-layout">
+
+        <!-- ── Sidebar ──────────────────────────────────────────── -->
+        <aside class="myspace-sidebar">
+
+          <!-- Name + headshot -->
+          <div class="myspace-section">
+            <h2 class="myspace-name">
+              <%= profile_title || (user.display_name ? user.display_name + "'s BriSpace" : "BriSpace") %>
+            </h2>
+            <div class="myspace-profile-row">
+              <img
+                src="<%= user.headshot || '/images/headshot.jpg' %>"
+                alt="Profile headshot"
+                class="myspace-headshot"
+                data-headshot="user-profile"
+              />
+              <p class="profile-status-text" data-display="status"><%= user.status ? '"' + user.status + '"' : '—' %></p>
+            </div>
+          </div>
+
+          <!-- Profile details table -->
+          <div class="myspace-section profile-section">
+            <button class="profile-edit-btn" id="edit-details-btn">✏ edit</button>
+            <div id="details-display">
+              <table class="profile-details-table">
+                <tbody>
+                  <tr><td>Status:</td>      <td data-display="status"><%= user.status || '—' %></td></tr>
+                  <tr><td>Hometown:</td>    <td data-display="hometown"><%= user.hometown || '—' %></td></tr>
+                  <tr><td>Looking for:</td> <td data-display="looking_for"><%= user.looking_for || '—' %></td></tr>
+                  <tr><td>Fav Movie:</td>   <td data-display="fav_movie"><%= user.fav_movie || '—' %></td></tr>
+                  <tr><td>Fav Song:</td>    <td data-display="fav_song"><%= user.fav_song || '—' %></td></tr>
+                  <tr><td>Fav Food:</td>    <td data-display="fav_food"><%= user.fav_food || '—' %></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="profile-edit-form" id="edit-details-form">
+              <input data-field="status"      placeholder="Status / tagline"   value="<%= user.status || '' %>" />
+              <input data-field="hometown"    placeholder="Hometown"            value="<%= user.hometown || '' %>" />
+              <input data-field="looking_for" placeholder="Looking for"         value="<%= user.looking_for || '' %>" />
+              <input data-field="fav_movie"   placeholder="Favorite movie"      value="<%= user.fav_movie || '' %>" />
+              <input data-field="fav_song"    placeholder="Favorite song"       value="<%= user.fav_song || '' %>" />
+              <input data-field="fav_food"    placeholder="Favorite food"       value="<%= user.fav_food || '' %>" />
+              <div class="profile-edit-actions">
+                <button class="profile-edit-save">Save</button>
+                <button class="profile-edit-cancel">Cancel</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Music player placeholder -->
+          <div class="myspace-section" id="musicPlayerContainer"></div>
+
+          <!-- Gif stepper -->
+          <div class="myspace-section">
+            <img
+              class="myspace-section-gif"
+              src="/images/iron-man.gif"
+              data-gif-stepper
+              data-gif-sound="proton-cannon.mp3"
+              data-gif-sound-percent="70"
+              data-steps-per-click="3"
+            />
+          </div>
+
+        </aside>
+
+        <!-- ── Main column ───────────────────────────────────────── -->
+        <main class="myspace-main">
+
+          <!-- About Me -->
+          <div class="myspace-section profile-section">
+            <h3>About Me</h3>
+            <button class="profile-edit-btn" id="edit-bio-btn">✏ edit</button>
+            <div class="profile-about-content" id="bio-display">
+              <%- user.about_html || '<p class="profile-status-text">Nothing here yet.</p>' %>
+            </div>
+            <div class="profile-edit-form" id="edit-bio-form">
+              <textarea data-field="about_html" placeholder="Tell people about yourself..." rows="6"><%= user.about_html || '' %></textarea>
+              <div class="profile-edit-actions">
+                <button class="profile-edit-save">Save</button>
+                <button class="profile-edit-cancel">Cancel</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top N -->
+          <div class="myspace-section profile-section">
+            <div class="top-n-header">
+              Top <%= userCount %>
+              <span style="font-weight:normal;font-size:0.8rem">(there are <%= userCount %> people on BriSpace)</span>
+            </div>
+            <button class="profile-edit-btn" id="edit-topn-btn">✏ edit</button>
+
+            <div class="top-n-grid" id="topn-display">
+              <% if (user.top_n && user.top_n.length > 0) { %>
+                <% user.top_n.slice(0, userCount).forEach(function(item) { %>
+                  <div class="top-n-item">
+                    <span class="top-n-item__rank">#<%= item.rank %></span>
+                    <span class="top-n-item__label"><%- item.label %></span>
+                  </div>
+                <% }); %>
+              <% } else { %>
+                <p class="top-n-empty">Nothing added yet.</p>
+              <% } %>
+            </div>
+
+            <div class="profile-edit-form" id="edit-topn-form">
+              <p style="font-size:0.8rem;margin:0 0 0.4rem">Fill in your top <%= userCount %>:</p>
+              <div class="top-n-edit-list">
+                <% for (var i = 1; i <= userCount; i++) { %>
+                  <% var existingItem = (user.top_n || []).find(function(x){ return x.rank === i; }); %>
+                  <div class="top-n-edit-row">
+                    <label>#<%= i %></label>
+                    <input type="text" placeholder="..." value="<%= existingItem ? existingItem.label : '' %>" />
+                  </div>
+                <% } %>
+              </div>
+              <div class="profile-edit-actions" style="margin-top:0.5rem">
+                <button class="profile-edit-save">Save</button>
+                <button class="profile-edit-cancel">Cancel</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Achievements -->
+          <div class="myspace-section">
+            <h3>Achievements</h3>
+            <div class="achievements-strip" id="achievements-container">
+              <p class="achievements-empty">Loading...</p>
+            </div>
+          </div>
+
+          <!-- Profile Wall -->
+          <div class="myspace-section myspace-guestbook">
+            <h3>Wall</h3>
+            <div class="profile-wall-entries" id="wall-entries">
+              <p>Loading...</p>
+            </div>
+            <div id="wall-post-form" class="wall-post-form">
+              <textarea placeholder="Leave a comment..." maxlength="500"></textarea>
+              <button class="wall-post-btn">Post</button>
+            </div>
+          </div>
+
+        </main>
+      </div>
+    </div>
+
+    <script src="/js/components/gif-stepper.js"></script>
+    <script type="module">
+      import { navigationController } from "/js/components/navigation.js";
+      import { UserProfilePage } from "/js/pages/user-profile.js";
+
+      navigationController.init();
+
+      const page = new UserProfilePage();
+      window.addEventListener("DOMContentLoaded", () => page.init());
+    </script>
+
+    <bottom-menu></bottom-menu>
+    <script type="module" src="/js/components/bottom-menu.js"></script>
   </body>
 </html>
+

@@ -82,6 +82,8 @@ body {
 }
 
 .myspace-header__logo {
+  display: flex;
+  align-items: center;
   position: relative;
   border: 3px solid #000;
   background: white;
@@ -92,6 +94,10 @@ body {
   padding-top: var(--spacing-sm);
   padding-left: var(--spacing-xs);
   padding-right: var(--spacing-xs);
+}
+
+.myspace-header__logo .user-profile-button {
+  margin-right: 55px;
 }
 
 .myspace-header__logo img {
