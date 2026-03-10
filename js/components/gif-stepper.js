@@ -331,7 +331,11 @@ class GifStepper {
     try {
       let s = rawGifSound.trim();
       // Normalize to base audio folder. User will supply bare filenames.
-      if (!s.startsWith("audio/")) s = `audio/${s}`;
+      if (!s.startsWith("/audio/")) {
+        // Remove any leading './' or 'audio/'
+        s = s.replace(/^\.\/?|^audio\//, "");
+        s = `/audio/${s}`;
+      }
       // assume .mp3 when no extension provided
       if (!/\.[a-z0-9]{2,5}$/i.test(s)) s = s + ".mp3";
       this.gifSound = s;

@@ -10,7 +10,7 @@
 
 .profile-edit-btn {
   position: absolute;
-  top: 0.4rem;
+  bottom: 0;
   right: 0.4rem;
   background: rgba(0, 0, 200, 0.08);
   border: 1px solid #00c;
@@ -122,23 +122,29 @@ body.is-owner .profile-edit-btn {
   line-height: 1.6;
 }
 
-.profile-about-content p { margin: 0 0 0.5rem; }
+.profile-about-content p {
+  margin: 0 0 0.5rem;
+}
 
 /* ── Top N ──────────────────────────────────────────────────── */
 .top-n-header {
   font-weight: bold;
-  font-size: 0.95rem;
-  margin-bottom: 0.5rem;
-  color: #003;
-  border-bottom: 1px dotted #99c;
+  font-size: 14px;
+  margin-bottom: 1.5rem;
+  color: #000000;
   padding-bottom: 4px;
+}
+
+.top-n-count {
+  color: #ff6503;
 }
 
 .top-n-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 1rem;
   margin-top: 0.4rem;
+  padding-bottom: 3rem;
 }
 
 .top-n-item {
@@ -147,21 +153,22 @@ body.is-owner .profile-edit-btn {
   align-items: center;
   text-align: center;
   background: rgba(255, 255, 255, 0.7);
-  border: 1px solid #aac;
-  padding: 0.4rem 0.25rem;
   font-size: 0.75rem;
   gap: 4px;
 }
 
-.top-n-item__rank {
-  font-weight: bold;
-  font-size: 1rem;
-  color: #00c;
-}
-
+/* Remove underline from label, even inside a link */
 .top-n-item__label {
   word-break: break-word;
   line-height: 1.3;
+  font-weight: bold;
+  text-decoration: none !important;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.top-n-item__link {
+  text-decoration: none !important;
 }
 
 .top-n-empty {
@@ -170,33 +177,9 @@ body.is-owner .profile-edit-btn {
   font-size: 0.85rem;
 }
 
-/* Top N edit form */
-.top-n-edit-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: 0.5rem;
-}
-
-.top-n-edit-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.top-n-edit-row label {
-  font-weight: bold;
-  font-size: 0.75rem;
-  width: 24px;
-  flex-shrink: 0;
-}
-
-.top-n-edit-row input {
-  font-family: var(--font-mono, monospace);
-  font-size: 0.8rem;
-  padding: 2px 5px;
-  border: 1px solid #999;
-  flex: 1;
+.top-n-item__image {
+  width: 100%;
+  object-fit: contain;
 }
 
 /* ── Achievements strip ──────────────────────────────────────── */

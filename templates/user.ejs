@@ -146,50 +146,11 @@
             </div>
           </div>
 
-          <!-- Top N -->
-          <div class="myspace-section profile-section">
-            <div class="top-n-header">
-              Top <%= userCount %>
-              <span style="font-weight:normal;font-size:0.8rem">(there are <%= userCount %> people on BriSpace)</span>
-            </div>
-            <button class="profile-edit-btn" id="edit-topn-btn">✏ edit</button>
-
-            <div class="top-n-grid" id="topn-display">
-              <% if (user.top_n && user.top_n.length > 0) { %>
-                <% user.top_n.slice(0, userCount).forEach(function(item) { %>
-                  <div class="top-n-item">
-                    <span class="top-n-item__rank">#<%= item.rank %></span>
-                    <span class="top-n-item__label"><%- item.label %></span>
-                  </div>
-                <% }); %>
-              <% } else { %>
-                <p class="top-n-empty">Nothing added yet.</p>
-              <% } %>
-            </div>
-
-            <div class="profile-edit-form" id="edit-topn-form">
-              <p style="font-size:0.8rem;margin:0 0 0.4rem">Fill in your top <%= userCount %>:</p>
-              <div class="top-n-edit-list">
-                <% for (var i = 1; i <= userCount; i++) { %>
-                  <% var existingItem = (user.top_n || []).find(function(x){ return x.rank === i; }); %>
-                  <div class="top-n-edit-row">
-                    <label>#<%= i %></label>
-                    <input type="text" placeholder="..." value="<%= existingItem ? existingItem.label : '' %>" />
-                  </div>
-                <% } %>
-              </div>
-              <div class="profile-edit-actions" style="margin-top:0.5rem">
-                <button class="profile-edit-save">Save</button>
-                <button class="profile-edit-cancel">Cancel</button>
-              </div>
-            </div>
-          </div>
-
           <!-- Achievements -->
           <div class="myspace-section">
             <h3>Achievements</h3>
             <div class="achievements-strip" id="achievements-container">
-              <p class="achievements-empty">Loading...</p>
+              <p class="achievements-empty">No achievements yet. Check back soon!</p>
             </div>
           </div>
 
@@ -205,6 +166,27 @@
             </div>
           </div>
 
+          <!-- Top N -->
+          <div class="myspace-section profile-section">
+            <h3>Brian's Friends</h3>
+            <div class="top-n-header">
+              Brian has <span class="top-n-count"><%= userCount %></span> friend<%= userCount === 1 ? '' : 's' %></span>.
+            </div>
+            <div class="top-n-grid" id="topn-display">
+              <% if (allUsers && allUsers.length > 0) { %>
+                <% allUsers.forEach(function(user, i) { %>
+                  <div class="top-n-item">
+                    <a href="/users/<%= user.id %>" class="top-n-item__link">
+                      <span class="top-n-item__label"><%- user.display_name %></span>
+                      <img class="top-n-item__image" src="<%= user.headshot || '/images/headshot.jpg' %>" alt="<%- user.display_name %> headshot" class="top-n-item__headshot" />
+                    </a>
+                  </div>
+                <% }); %>
+              <% } else { %>
+                <p class="top-n-empty">No users found.</p>
+              <% } %>
+            </div>
+          </div>
         </main>
       </div>
     </div>

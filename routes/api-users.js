@@ -119,7 +119,13 @@ router.post("/users/:id/register", async (req, res) => {
 // PATCH /api/users/:id/profile-fields
 // Body: any subset of { status, hometown, fav_movie, fav_song, fav_food, looking_for, about_html }
 const ALLOWED_PROFILE_FIELDS = [
-  "status", "hometown", "fav_movie", "fav_song", "fav_food", "looking_for", "about_html",
+  "status",
+  "hometown",
+  "fav_movie",
+  "fav_song",
+  "fav_food",
+  "looking_for",
+  "about_html",
 ];
 
 router.patch("/users/:id/profile-fields", async (req, res) => {

@@ -98,8 +98,19 @@ class AuthManager extends EventTarget {
     } catch (err) {
       this.emitError("Logout failed. Please refresh the page or try again.");
     }
-    localStorage.removeItem("firebase_uid");
-    localStorage.removeItem("phone_number");
+    // Clear all localStorage except site-awards-clicked
+    const siteAwardsClicked = localStorage.getItem("site-awards-clicked");
+    localStorage.clear();
+    if (siteAwardsClicked !== null) {
+      localStorage.setItem("site-awards-clicked", siteAwardsClicked);
+    }
+    // Clear cookies (client-side, only those accessible via JS)
+    document.cookie.split(";").forEach((cookie) => {
+      const eqPos = cookie.indexOf("=");
+      const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+      // Set expiration in past for each cookie
+      document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+    });
     this.currentUser = null;
     this.userId = null;
     this.emit("user:logout", {});

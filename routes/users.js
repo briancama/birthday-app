@@ -102,17 +102,25 @@ router.get("/:identifier", async (req, res) => {
 
     // userCount = number of registered users (display_name set) — drives the Top N feature
     let userCount = 1;
+    let allUsers = [];
     try {
-      const { count } = await supabase
+      const { data: users, count } = await supabase
         .from("users")
-        .select("id", { count: "exact", head: true })
-        .not("display_name", "is", null);
+        .select("id, display_name, headshot", { count: "exact" })
+        .not("display_name", "is", null)
+        .order("display_name", { ascending: true });
       if (count && count > 0) userCount = count;
+      if (Array.isArray(users)) allUsers = users;
     } catch (e) {
-      console.warn("userCount query failed:", e.message);
+      console.warn("userCount/allUsers query failed:", e.message);
     }
 
-    res.render("user", { user, profile_title: data.profile_title, userCount });
+    res.render("user", {
+      user,
+      profile_title: data.profile_title,
+      userCount,
+      allUsers: allUsers || [],
+    });
   } catch (err) {
     console.error("Error in /users/:identifier route", err);
     res.status(500).send("Internal server error");

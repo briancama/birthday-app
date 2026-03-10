@@ -134,9 +134,9 @@ class UserProfilePage extends BasePage {
       if (display) display.style.display = "";
     });
 
-    form.querySelector(".profile-edit-save")?.addEventListener("click", () =>
-      this._saveTopN(form, display, btn)
-    );
+    form
+      .querySelector(".profile-edit-save")
+      ?.addEventListener("click", () => this._saveTopN(form, display, btn));
   }
 
   async _saveTopN(form, display, btn) {
@@ -192,7 +192,7 @@ class UserProfilePage extends BasePage {
     try {
       const { data, error } = await this.supabase
         .from("user_achievements")
-        .select("achievement_key, awarded_at, achievements(name, image_url)")
+        .select("achievement_id, awarded_at, achievements(name, image_url)")
         .eq("user_id", this.profileUserId)
         .order("awarded_at", { ascending: false });
 
@@ -299,10 +299,10 @@ class UserProfilePage extends BasePage {
 
   async _deleteWallEntry(entryId) {
     try {
-      const resp = await fetch(
-        `/api/users/${this.profileUserId}/wall/${entryId}`,
-        { method: "DELETE", credentials: "include" }
-      );
+      const resp = await fetch(`/api/users/${this.profileUserId}/wall/${entryId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
       if (!resp.ok) throw new Error((await resp.json()).error || resp.statusText);
       await this.loadWall();
     } catch (err) {
@@ -312,8 +312,9 @@ class UserProfilePage extends BasePage {
 
   _escapeHtml(str) {
     if (!str) return "";
-    return String(str).replace(/[&<>"']/g, (c) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
+    return String(str).replace(
+      /[&<>"']/g,
+      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]
     );
   }
 }

@@ -37,28 +37,28 @@ export class BottomMenu extends HTMLElement {
   render() {
     this.innerHTML = `
       <nav class="bottom-menu" role="navigation" aria-label="Bottom navigation">
-        <a href="dashboard.html" class="bottom-menu-item" data-page="dashboard" title="Home">
-          <span class="bottom-menu-icon"><img src="images/home.gif" alt="Home Icon"></span>
+        <a href="/dashboard.html" class="bottom-menu-item" data-page="dashboard" title="Home">
+          <span class="bottom-menu-icon"><img src="/images/home.gif" alt="Home Icon"></span>
           <span class="bottom-menu-label">Home</span>
         </a>
 
-        <a href="event-info.html" class="bottom-menu-item" data-page="event-info" title="Event Info">
-          <span class="bottom-menu-icon"><img src="images/info.gif" alt="Info Icon"></span>
+        <a href="/event-info.html" class="bottom-menu-item" data-page="event-info" title="Event Info">
+          <span class="bottom-menu-icon"><img src="/images/info.gif" alt="Info Icon"></span>
           <span class="bottom-menu-label">Info</span>
         </a>
 
-        <a href="challenges-submit.html" class="bottom-menu-item" data-page="challenges-submit" title="Submit Challenge">
-          <span class="bottom-menu-icon"><img src="images/plus.gif" alt="Challenge Icon"></span>
+        <a href="/challenges-submit.html" class="bottom-menu-item" data-page="challenges-submit" title="Submit Challenge">
+          <span class="bottom-menu-icon"><img src="/images/plus.gif" alt="Challenge Icon"></span>
           <span class="bottom-menu-label">Submit</span>
         </a>
 
-        <a href="cocktail-judging.html" class="bottom-menu-item" data-page="cocktail-judging" title="Judge Cocktails" style="display: none;" id="bottomMenuCocktail">
-          <span class="bottom-menu-icon"><img src="images/cocktail_coke.gif" alt="Cocktail Icon"></span>
+        <a href="/cocktail-judging.html" class="bottom-menu-item" data-page="cocktail-judging" title="Judge Cocktails" style="display: none;" id="bottomMenuCocktail">
+          <span class="bottom-menu-icon"><img src="/images/cocktail_coke.gif" alt="Cocktail Icon"></span>
           <span class="bottom-menu-label">Judge</span>
         </a>
 
-        <a href="leaderboard.html" class="bottom-menu-item" data-page="leaderboard" title="Leaderboard">
-          <span class="bottom-menu-icon"><img src="images/leaderboard.gif" alt="Leaderboard Icon"></span>
+        <a href="/leaderboard.html" class="bottom-menu-item" data-page="leaderboard" title="Leaderboard">
+          <span class="bottom-menu-icon"><img src="/images/leaderboard.gif" alt="Leaderboard Icon"></span>
           <span class="bottom-menu-label">Leaderboard</span>
         </a>
       </nav>
