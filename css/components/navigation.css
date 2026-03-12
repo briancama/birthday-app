@@ -58,7 +58,7 @@ body.has-bottom-menu {
   font-size: 1.2rem;
   position: absolute;
   top: 11px;
-  right: var(--spacing-xs);
+  right: var(--spacing-sm);
   z-index: 1000;
   cursor: pointer;
   font-family: "Arial", sans-serif;
@@ -76,7 +76,7 @@ body.has-bottom-menu {
 /* User Info / Page Title Section */
 .nav-user-info {
   text-align: center;
-  padding: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-sm);
   border-bottom: 2px solid var(--accent-magenta);
 }
 
@@ -97,6 +97,7 @@ body.has-bottom-menu {
   justify-content: center;
   gap: var(--spacing-md);
   flex-wrap: wrap;
+  padding: 12px 6px;
 }
 
 .nav-tab {
@@ -114,6 +115,7 @@ body.has-bottom-menu {
   gap: var(--spacing-xs);
   transition: all 0.3s ease;
   min-width: 120px;
+  max-height: 55px;
   justify-content: center;
 }
 

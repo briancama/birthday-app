@@ -48,6 +48,11 @@
   padding-top: 0;
 }
 
+.myspace .nav-tabs {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
 .myspace-profile-row {
   display: flex;
   align-items: stretch;
@@ -94,7 +99,7 @@ body {
   margin: 0 auto;
   padding-bottom: var(--spacing-sm);
   padding-top: var(--spacing-sm);
-  padding-left: var(--spacing-xs);
+  padding-left: var(--spacing-sm);
   padding-right: var(--spacing-xs);
 }
 
@@ -152,6 +157,10 @@ body {
   margin-bottom: 3.4rem;
 }
 
+.myspace-section:has(.myspace-section-gif) {
+  margin-top: -1.5rem;
+}
+
 .myspace-section:last-child {
   margin-bottom: 0;
 }
@@ -205,9 +214,13 @@ body {
   .myspace-layout {
     flex-direction: column;
     gap: 0;
+    padding-top: 0.75rem;
   }
   .myspace-sidebar {
     width: 100%;
+  }
+  .myspace-profile-row {
+    gap: 1rem;
   }
 
   .myspace-section-gif {
