@@ -2,6 +2,7 @@
 import { BasePage } from "./base-page.js";
 import { appState } from "../app.js";
 import { Guestbook } from "../components/guestbook.js";
+import { createCommentCard } from "../components/myspace-comment-card.js";
 
 import { EventCard } from "../components/event-card.js";
 import { EventBus } from "../events/event-bus.js";
@@ -417,12 +418,14 @@ class EventInfoPage extends BasePage {
           // Append the newly inserted comment to the page's comments list (avoid full reload)
           try {
             const myspaceList = document.getElementById("myspaceCommentsList");
-            const headshot = user && user.headshot ? user.headshot : "images/headshot.jpg";
-            const newElem = this.createMyspaceCommentElement(
-              { ...inserted, user_id: user ? user.id : null },
-              null,
-              { [user ? user.id : "unknown"]: headshot }
-            );
+            const headshot = user && user.headshot ? user.headshot : "/images/headshot.jpg";
+            const newElem = createCommentCard({
+              name: (inserted && inserted.name) || name,
+              message: (inserted && inserted.message) || message,
+              date: (inserted && inserted.created_at) || new Date().toISOString(),
+              avatarSrc: headshot,
+              dataHeadshot: user ? `user-${user.id}` : "user-default",
+            });
 
             // Prepend to myspace comments (newest first) and update counts
             if (myspaceList) {
@@ -502,17 +505,30 @@ class EventInfoPage extends BasePage {
       // Combine with legacy comments
       const combined = [...legacyToShow, ...userComments];
       // Reverse so newest overall appears first
-      commentsList.innerHTML = combined
-        .reverse()
-        .map((entry) => {
-          let avatarIdx = null;
-          if (!entry.user_id && fallbackIdx < this.fallbackAvatars.length) {
-            avatarIdx = fallbackIdx;
-            fallbackIdx++;
-          }
-          return this.renderMyspaceComment(entry, avatarIdx, userHeadshots);
-        })
-        .join("");
+      commentsList.innerHTML = "";
+      const frag = document.createDocumentFragment();
+      combined.reverse().forEach((entry) => {
+        let avatarSrc = "/images/headshot.jpg";
+        let dataHeadshot = "user-default";
+        if (entry.user_id && userHeadshots[entry.user_id]) {
+          avatarSrc = userHeadshots[entry.user_id];
+          dataHeadshot = `user-${entry.user_id}`;
+        } else if (!entry.user_id && fallbackIdx < this.fallbackAvatars.length) {
+          avatarSrc = this.fallbackAvatars[fallbackIdx];
+          dataHeadshot = `user-fallback-${fallbackIdx}`;
+          fallbackIdx++;
+        }
+        frag.appendChild(
+          createCommentCard({
+            name: entry.name,
+            message: entry.message,
+            date: entry.created_at,
+            avatarSrc,
+            dataHeadshot,
+          })
+        );
+      });
+      commentsList.appendChild(frag);
     } catch (err) {
       commentsList.innerHTML = `<p class="text-center" style="color: #FF0000;">Error loading comments: ${err.message}</p>`;
       countElem.textContent = "0";
@@ -520,105 +536,7 @@ class EventInfoPage extends BasePage {
     }
   }
 
-  renderMyspaceComment(entry) {
-    const name = this.escapeHtml(entry.name);
-    const date = new Date(entry.created_at).toLocaleString();
-    const message = this.escapeHtml(entry.message);
-    const currentUser = appState.getCurrentUser();
-    const canEdit =
-      currentUser && currentUser.display_name && currentUser.display_name === entry.name;
-
-    // Avatar logic: fallback only if no user_id, otherwise use headshot
-    let avatar = "";
-    const avatarIdx = arguments[1];
-    const userHeadshots = arguments[2] || {};
-    let dataAttr = "";
-    if (entry.user_id && userHeadshots[entry.user_id]) {
-      avatar = `${userHeadshots[entry.user_id]}`;
-      dataAttr = `data-headshot='user-${entry.user_id}'`;
-    } else if (!entry.user_id && avatarIdx !== null && avatarIdx !== undefined) {
-      avatar = this.fallbackAvatars[avatarIdx];
-      dataAttr = `data-headshot='user-fallback-${avatarIdx}'`;
-    } else {
-      avatar = "images/headshot.jpg";
-      dataAttr = `data-headshot='user-default'`;
-    }
-
-    return `
-      <div class="myspace-comment-card">
-        <div class="myspace-comment-sidebar">
-          <div class="myspace-comment-name">${name}</div>
-          <img src="${avatar}" alt="avatar" class="myspace-comment-avatar" ${dataAttr} />
-        </div>
-        <div class="myspace-comment-content">
-          <div class="myspace-comment-header">
-            <span class="myspace-comment-date">${date}</span>
-          </div>
-          <div class="myspace-comment-message">${message}</div>
-        </div>
-      </div>
-    `;
-  }
-
-  // Create and return a DOM node for a myspace comment (safer for single-item insertions)
-  createMyspaceCommentElement(entry, avatarIdx, userHeadshots) {
-    const nameText = entry.name || "Anonymous";
-    const dateText = new Date(entry.created_at).toLocaleString();
-    const messageText = entry.message || "";
-
-    // Determine avatar and data-headshot attribute
-    let avatarSrc = "images/headshot.jpg";
-    let dataHeadshot = "user-default";
-    if (entry.user_id && userHeadshots && userHeadshots[entry.user_id]) {
-      avatarSrc = userHeadshots[entry.user_id];
-      dataHeadshot = `user-${entry.user_id}`;
-    } else if (!entry.user_id && typeof avatarIdx === "number") {
-      avatarSrc = this.fallbackAvatars[avatarIdx] || avatarSrc;
-      dataHeadshot = `user-fallback-${avatarIdx}`;
-    }
-
-    const card = document.createElement("div");
-    card.className = "myspace-comment-card";
-
-    const sidebar = document.createElement("div");
-    sidebar.className = "myspace-comment-sidebar";
-
-    const nameDiv = document.createElement("div");
-    nameDiv.className = "myspace-comment-name";
-    nameDiv.textContent = nameText;
-
-    const img = document.createElement("img");
-    img.className = "myspace-comment-avatar";
-    img.alt = "avatar";
-    img.src = avatarSrc;
-    img.setAttribute("data-headshot", dataHeadshot);
-
-    sidebar.appendChild(nameDiv);
-    sidebar.appendChild(img);
-
-    const content = document.createElement("div");
-    content.className = "myspace-comment-content";
-
-    const header = document.createElement("div");
-    header.className = "myspace-comment-header";
-
-    const dateSpan = document.createElement("span");
-    dateSpan.className = "myspace-comment-date";
-    dateSpan.textContent = dateText;
-    header.appendChild(dateSpan);
-
-    const msg = document.createElement("div");
-    msg.className = "myspace-comment-message";
-    msg.textContent = messageText;
-
-    content.appendChild(header);
-    content.appendChild(msg);
-
-    card.appendChild(sidebar);
-    card.appendChild(content);
-
-    return card;
-  }
+  // renderMyspaceComment and createMyspaceCommentElement replaced by shared createCommentCard component
 
   escapeHtml(text) {
     const div = document.createElement("div");

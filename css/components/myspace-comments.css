@@ -211,3 +211,17 @@
 .myspace-comment-actions a.edit-btn {
   color: #666;
 }
+
+.myspace-comment-delete {
+  background: none;
+  border: none;
+  color: #c00;
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0 4px;
+  margin-left: auto;
+  line-height: 1;
+}
+.myspace-comment-delete:hover {
+  color: #f00;
+}

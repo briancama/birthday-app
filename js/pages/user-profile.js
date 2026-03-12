@@ -2,6 +2,7 @@
 // BriSpace user profile page — public view with owner-only inline editing.
 import { BasePage } from "./base-page.js";
 import { appState } from "../app.js";
+import { createCommentCard } from "../components/myspace-comment-card.js";
 
 class UserProfilePage extends BasePage {
   constructor() {
@@ -295,37 +296,58 @@ class UserProfilePage extends BasePage {
     try {
       const resp = await fetch(`/api/users/${this.profileUserId}/wall`, { credentials: "include" });
       const { entries } = await resp.json();
-      this._renderWall(entries || []);
+
+      // Fetch headshots for all known authors in one query
+      const userHeadshots = {};
+      const authorIds = [...new Set((entries || []).map((e) => e.author_user_id).filter(Boolean))];
+      if (authorIds.length && this.supabase) {
+        const { data: users } = await this.supabase
+          .from("users")
+          .select("id, headshot")
+          .in("id", authorIds);
+        if (users)
+          users.forEach((u) => {
+            if (u.headshot) userHeadshots[u.id] = u.headshot;
+          });
+      }
+
+      this._renderWall(entries || [], userHeadshots);
     } catch {
-      container.innerHTML = `<p class="wall-entry">Could not load wall.</p>`;
+      container.innerHTML = `<p class="text-center">Could not load wall.</p>`;
     }
   }
 
-  _renderWall(entries) {
+  _renderWall(entries, userHeadshots = {}) {
     const container = document.getElementById("wall-entries");
     if (!container) return;
     if (entries.length === 0) {
-      container.innerHTML = `<p class="wall-entry">No comments yet — be the first!</p>`;
+      const msg = this.isOwner
+        ? "Nobody has written on your wall yet. Share your profile!"
+        : "No comments yet. Be the first!";
+      container.innerHTML = `<p class="text-center">${msg}</p>`;
       return;
     }
-    container.innerHTML = entries
-      .map((e) => {
-        const isMine = e.author_user_id && e.author_user_id === this.userId;
-        return `
-        <div class="wall-entry${isMine ? " is-mine" : ""}" data-entry-id="${e.id}">
-          <div class="wall-entry__header">
-            <span class="wall-entry__author">${this._escapeHtml(e.author_name)}</span>
-            <span>${new Date(e.created_at).toLocaleDateString()}</span>
-            <button class="wall-entry__delete" data-id="${e.id}" aria-label="Delete">✕</button>
-          </div>
-          <div class="wall-entry__message">${this._escapeHtml(e.message)}</div>
-        </div>`;
-      })
-      .join("");
-
-    container.querySelectorAll(".wall-entry__delete").forEach((btn) => {
-      btn.addEventListener("click", () => this._deleteWallEntry(btn.dataset.id));
+    container.innerHTML = "";
+    const frag = document.createDocumentFragment();
+    entries.forEach((e) => {
+      const canDelete = this.isOwner || (e.author_user_id && e.author_user_id === this.userId);
+      const avatarSrc =
+        (e.author_user_id && userHeadshots[e.author_user_id]) || "/images/headshot.jpg";
+      const dataHeadshot = e.author_user_id ? `user-${e.author_user_id}` : "user-default";
+      frag.appendChild(
+        createCommentCard({
+          name: e.author_name,
+          message: e.message,
+          date: e.created_at,
+          avatarSrc,
+          dataHeadshot,
+          entryId: e.id,
+          canDelete,
+          onDelete: (id) => this._deleteWallEntry(id),
+        })
+      );
     });
+    container.appendChild(frag);
   }
 
   setupWallPost() {
@@ -334,11 +356,6 @@ class UserProfilePage extends BasePage {
 
     if (!this.userId) {
       form.innerHTML = `<p class="wall-login-prompt"><a href="/">Sign in</a> to leave a comment.</p>`;
-      return;
-    }
-    // Owner shouldn't post on their own wall
-    if (this.isOwner) {
-      form.style.display = "none";
       return;
     }
 

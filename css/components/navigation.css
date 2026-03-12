@@ -12,11 +12,36 @@ body.has-bottom-menu {
   position: relative;
 }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .user-profile-button {
-  margin-left: auto;
-  margin-right: 50px;
   max-height: 30px;
   cursor: pointer;
+  /* Hidden until the profile link is wired up */
+  opacity: 0;
+  pointer-events: none;
+}
+
+.profile-nav-link {
+  margin-left: auto;
+  margin-right: 12px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.profile-nav-link .user-profile-button {
+  opacity: 1;
+  pointer-events: auto;
+  animation: fadeInUp 0.35s ease both;
 }
 
 /* Mobile Menu Toggle - always visible */

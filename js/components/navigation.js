@@ -141,6 +141,22 @@ class NavigationController {
     this.updateAdminVisibility();
     this.updateMenuOptions();
     this.ensureNotificationToggle();
+    this.updateProfileButton(user);
+  }
+
+  updateProfileButton(user) {
+    if (!user || (!user.username && !user.id)) return;
+    const btn = document.querySelector(".user-profile-button");
+    if (!btn) return;
+    // Avoid double-wrapping
+    if (btn.parentElement && btn.parentElement.classList.contains("profile-nav-link")) return;
+    const identifier = user.username || user.id;
+    const link = document.createElement("a");
+    link.href = `/users/${identifier}`;
+    link.className = "profile-nav-link";
+    link.title = "View my profile";
+    btn.parentNode.insertBefore(link, btn);
+    link.appendChild(btn);
   }
 
   ensureNotificationToggle() {

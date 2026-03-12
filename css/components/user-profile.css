@@ -180,7 +180,7 @@ body.is-owner #headshotUploadContainer {
 /* ── About Me (main column) ─────────────────────────────────── */
 .profile-about-content {
   min-height: 60px;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   line-height: 1.6;
   word-break: break-word;
 }
