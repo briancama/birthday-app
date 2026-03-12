@@ -9,6 +9,8 @@
 }
 
 .profile-edit-btn {
+  text-shadow: none;
+  text-transform: uppercase;
   position: absolute;
   bottom: 0;
   right: 0.4rem;
@@ -23,6 +25,11 @@
   z-index: 2;
 }
 
+.profile-edit-btn--below {
+  bottom: -24px;
+  right: 0;
+}
+
 .profile-edit-btn:hover {
   background: #00c;
   color: #fff;
@@ -30,6 +37,14 @@
 
 body.is-owner .profile-edit-btn {
   display: inline-block;
+}
+
+#headshotUploadContainer {
+  display: none;
+}
+
+body.is-owner #headshotUploadContainer {
+  display: block;
 }
 
 .profile-edit-form {
@@ -43,9 +58,32 @@ body.is-owner .profile-edit-btn {
   display: flex;
 }
 
+/* ── Modal variant ─────────────────────────────────────────── */
+.profile-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 999;
+}
+
+.profile-edit-form--modal.active {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  background: #fff;
+  box-shadow: 4px 4px 0 rgb(200, 200, 200);
+  padding: 1rem 1.2rem 1rem;
+  width: 100%;
+  min-width: 320px;
+  max-width: min(520px, 92vw);
+  margin: 0;
+}
+
 .profile-edit-form input,
 .profile-edit-form textarea {
-  font-family: var(--font-mono, monospace);
+  font-family: Arial, Helvetica, sans-serif;
   font-size: 0.85rem;
   padding: 4px 6px;
   border: 1px solid #999;
@@ -56,6 +94,24 @@ body.is-owner .profile-edit-btn {
 .profile-edit-form textarea {
   min-height: 80px;
   resize: vertical;
+}
+
+/* ── Quill editor overrides ─────────────────────────────────── */
+#bio-quill-editor {
+  min-height: 120px;
+  background: #fff;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 0.9rem;
+}
+
+.ql-toolbar.ql-snow {
+  border-color: #999;
+  background: #eef;
+  font-family: var(--font-mono, monospace);
+}
+
+.ql-container.ql-snow {
+  border-color: #999;
 }
 
 .profile-edit-actions {
@@ -115,15 +171,26 @@ body.is-owner .profile-edit-btn {
   margin: 0.25rem 0;
 }
 
+.myspace-about {
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+}
+
 /* ── About Me (main column) ─────────────────────────────────── */
 .profile-about-content {
   min-height: 60px;
   font-size: 0.9rem;
   line-height: 1.6;
+  word-break: break-word;
 }
 
 .profile-about-content p {
   margin: 0 0 0.5rem;
+}
+
+.profile-about-content ul {
+  list-style: disc inside;
 }
 
 /* ── Top N ──────────────────────────────────────────────────── */

@@ -50,7 +50,7 @@
 
 .myspace-profile-row {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 1.5rem;
   margin-top: 0.5rem;
 }
@@ -59,9 +59,11 @@
   height: auto;
   flex-shrink: 0;
 }
+
 .myspace-profile-row .myspace-about {
   flex: 1;
 }
+
 body {
   font-family: "Verdana", sans-serif;
   color: #222;
@@ -150,6 +152,10 @@ body {
   margin-bottom: 2rem;
 }
 
+.myspace-section:has(.profile-edit-btn--below) {
+  margin-bottom: 3.4rem;
+}
+
 .myspace-section:last-child {
   margin-bottom: 0;
 }
@@ -162,7 +168,7 @@ body {
 
 .myspace-about {
   font-size: 1em;
-  margin-bottom: 1.2rem;
+  margin-bottom: 0;
 }
 
 .myspace-about__hint {
@@ -199,7 +205,7 @@ body {
   margin-top: 2rem;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   .myspace-layout {
     flex-direction: column;
     gap: 0;

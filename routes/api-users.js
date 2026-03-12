@@ -117,15 +117,18 @@ router.post("/users/:id/register", async (req, res) => {
 
 // ── Profile fields ─────────────────────────────────────────────────────────
 // PATCH /api/users/:id/profile-fields
-// Body: any subset of { status, hometown, fav_movie, fav_song, fav_food, looking_for, about_html }
+// Body: any subset of allowed profile fields. We've removed `fav_food` and added
+// `general_interest` and `television` to support the new Interests UI.
 const ALLOWED_PROFILE_FIELDS = [
   "status",
   "hometown",
+  "age",
   "fav_movie",
   "fav_song",
-  "fav_food",
   "looking_for",
   "about_html",
+  "general_interest",
+  "television",
 ];
 
 router.patch("/users/:id/profile-fields", async (req, res) => {
@@ -142,6 +145,12 @@ router.patch("/users/:id/profile-fields", async (req, res) => {
         updates[field] = typeof val === "string" ? val.trim().slice(0, 300) : null;
       }
     }
+    // Coerce age to integer (stored as integer column)
+    if ("age" in updates) {
+      const parsed = parseInt(updates.age, 10);
+      updates.age = !isNaN(parsed) && parsed > 0 && parsed < 150 ? parsed : null;
+    }
+
     if (Object.keys(updates).length === 0)
       return res.status(400).json({ error: "No valid fields provided" });
 

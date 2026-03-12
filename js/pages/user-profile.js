@@ -27,22 +27,23 @@ class UserProfilePage extends BasePage {
   // ── Headshot upload (owner only) ───────────────────────────────────────────
   setupHeadshotUpload() {
     if (!this.isOwner) return;
-    const img = document.querySelector("[data-headshot='user-profile']");
-    if (!img) return;
-    img.style.cursor = "pointer";
-    img.title = "Click to upload headshot";
-    img.addEventListener("click", async () => {
-      const { HeadshotUpload } = await import("../components/headshot-upload.js");
-      const uploader = new HeadshotUpload(this.userId, this.supabase);
-      uploader.trigger();
+    import("../components/headshot-upload.js").then(({ HeadshotUpload }) => {
+      const aboutDiv = document.querySelector("#headshotUploadContainer");
+      if (!aboutDiv) return;
+      const uploader = new HeadshotUpload();
+      uploader.init().then((uploadEl) => {
+        aboutDiv.appendChild(uploadEl);
+      });
     });
   }
 
   // ── Inline edit buttons ────────────────────────────────────────────────────
   setupInlineEdits() {
     if (!this.isOwner) return;
+    this._wireEdit("profile");
     this._wireEdit("bio");
     this._wireEdit("details");
+    this._wireEdit("interests");
     this._wireTopNEdit();
   }
 
@@ -53,22 +54,72 @@ class UserProfilePage extends BasePage {
     const display = document.getElementById(`${section}-display`);
     if (!btn || !form) return;
 
-    btn.addEventListener("click", () => {
-      const open = form.classList.toggle("active");
-      btn.textContent = open ? "✕ cancel" : "✏ edit";
-      if (display) display.style.display = open ? "none" : "";
-    });
+    const isModal = form.classList.contains("profile-edit-form--modal");
+    const isQuillForm = form.hasAttribute("data-quill-form");
+    let backdrop = null;
+    let quill = null;
 
-    const saveBtn = form.querySelector(".profile-edit-save");
-    const cancelBtn = form.querySelector(".profile-edit-cancel");
+    const initQuill = () => {
+      if (quill) return;
+      const editorEl = form.querySelector("[id$='-quill-editor']");
+      if (!editorEl) return;
+      const hiddenTextarea = form.querySelector("[data-field='about_html']");
+      quill = new Quill(editorEl, {
+        theme: "snow",
+        placeholder: "Tell people about yourself...",
+        modules: {
+          toolbar: [
+            ["bold", "italic", "underline", "strike"],
+            [{ list: "ordered" }, { list: "bullet" }],
+            ["link", "blockquote"],
+            ["clean"],
+          ],
+        },
+      });
+      // Seed with existing content
+      if (hiddenTextarea?.value) {
+        quill.clipboard.dangerouslyPasteHTML(hiddenTextarea.value);
+      }
+      // Keep hidden textarea in sync so _saveSection can read it normally
+      quill.on("text-change", () => {
+        if (hiddenTextarea) hiddenTextarea.value = quill.getSemanticHTML();
+      });
+    };
 
-    cancelBtn?.addEventListener("click", () => {
+    const openForm = () => {
+      form.classList.add("active");
+      btn.style.display = "none";
+      if (display) display.style.display = "none";
+      if (isQuillForm) initQuill();
+      if (isModal) {
+        backdrop = document.createElement("div");
+        backdrop.className = "profile-modal-backdrop";
+        backdrop.addEventListener("click", closeForm);
+        document.body.appendChild(backdrop);
+      }
+    };
+
+    const closeForm = () => {
       form.classList.remove("active");
-      btn.textContent = "✏ edit";
+      btn.style.display = "";
       if (display) display.style.display = "";
+      if (backdrop) {
+        backdrop.remove();
+        backdrop = null;
+      }
+    };
+
+    // Expose for _saveSection to call after a successful save
+    form._closeForm = closeForm;
+
+    btn.addEventListener("click", () => {
+      form.classList.contains("active") ? closeForm() : openForm();
     });
 
-    saveBtn?.addEventListener("click", () => this._saveSection(section, form, display, btn));
+    form.querySelector(".profile-edit-cancel")?.addEventListener("click", closeForm);
+    form
+      .querySelector(".profile-edit-save")
+      ?.addEventListener("click", () => this._saveSection(section, form, display, btn));
   }
 
   async _saveSection(section, form, display, btn) {
@@ -90,22 +141,44 @@ class UserProfilePage extends BasePage {
       });
       if (!resp.ok) throw new Error((await resp.json()).error || resp.statusText);
 
-      // Update display values in-place
+      // Update display values in-place (skip fields with custom formatting)
+      const SKIP_FIELDS = new Set(["about_html", "status", "age"]);
       form.querySelectorAll("[data-field]").forEach((el) => {
+        if (SKIP_FIELDS.has(el.dataset.field)) return;
         const displayEl = document.querySelector(`[data-display="${el.dataset.field}"]`);
         if (displayEl) displayEl.textContent = el.value || "—";
       });
 
-      // Special case: about_html display
-      if (section === "bio") {
-        const aboutEl = document.getElementById("about-display");
-        const aboutInput = form.querySelector("[data-field='about_html']");
-        if (aboutEl && aboutInput) aboutEl.innerHTML = this._escapeHtml(aboutInput.value);
+      // Special case: status — display with quotes
+      if (section === "profile") {
+        const statusInput = form.querySelector("[data-field='status']");
+        const statusEl = document.querySelector("[data-display='status']");
+        if (statusEl && statusInput)
+          statusEl.textContent = statusInput.value ? `"${statusInput.value}"` : "—";
+
+        const ageInput = form.querySelector("[data-field='age']");
+        const ageEl = document.querySelector("[data-display='age']");
+        if (ageEl && ageInput)
+          ageEl.textContent = ageInput.value ? `${ageInput.value} yrs old` : "—";
       }
 
-      form.classList.remove("active");
-      btn.textContent = "✏ edit";
-      if (display) display.style.display = "";
+      // Special case: about_html display (rendered as HTML, not escaped text)
+      if (section === "bio") {
+        const aboutEl = document.getElementById("bio-display");
+        const aboutInput = form.querySelector("[data-field='about_html']");
+        if (aboutEl && aboutInput)
+          aboutEl.innerHTML =
+            this._sanitizeHtml(aboutInput.value) ||
+            '<p class="profile-status-text">Nothing here yet.</p>';
+      }
+
+      if (typeof form._closeForm === "function") {
+        form._closeForm();
+      } else {
+        form.classList.remove("active");
+        btn.textContent = "✏ edit";
+        if (display) display.style.display = "";
+      }
       this.showSuccessToast("Saved!");
     } catch (err) {
       this.showErrorToast("Save failed: " + err.message);
@@ -316,6 +389,36 @@ class UserProfilePage extends BasePage {
       /[&<>"']/g,
       (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]
     );
+  }
+
+  // Sanitizes HTML using DOMPurify with a restricted tag allowlist.
+  _sanitizeHtml(
+    html,
+    {
+      allowedTags = [
+        "p",
+        "b",
+        "i",
+        "em",
+        "strong",
+        "u",
+        "s",
+        "br",
+        "a",
+        "ul",
+        "ol",
+        "li",
+        "blockquote",
+        "span",
+      ],
+    } = {}
+  ) {
+    if (!html) return "";
+    return DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: allowedTags,
+      ALLOWED_ATTR: ["href", "target", "rel"],
+      FORCE_BODY: true,
+    });
   }
 }
 

@@ -95,7 +95,8 @@ router.get("/:identifier", async (req, res) => {
       looking_for: data.looking_for || null,
       fav_movie: data.fav_movie || null,
       fav_song: data.fav_song || null,
-      fav_food: data.fav_food || null,
+      general_interest: data.general_interest || null,
+      television: data.television || null,
       // Top N — ensure it's always an array
       top_n: Array.isArray(data.top_n) ? data.top_n : [],
     };

@@ -1,41 +1,19 @@
--- Add new user-facing profile fields to user_profile table
+-- Add all flat profile fields to user_profile table.
+-- Run this migration once. Each column uses IF NOT EXISTS so it is safe to re-run.
+-- View is defined separately in sql/user_profile_view.sql.
+--
+-- NOTE: If your database still has the original profile_details JSONB column,
+-- run sql/2026_03_10_migrate_profile_to_flat_columns.sql instead — it adds
+-- these same columns AND drops profile_details in one operation.
 ALTER TABLE public.user_profile
-  ADD COLUMN IF NOT EXISTS status         text,
-  ADD COLUMN IF NOT EXISTS hometown       text,
-  ADD COLUMN IF NOT EXISTS fav_movie      text,
-  ADD COLUMN IF NOT EXISTS fav_song       text,
-  ADD COLUMN IF NOT EXISTS fav_food       text,
-  ADD COLUMN IF NOT EXISTS looking_for    text,
-  ADD COLUMN IF NOT EXISTS top_n          jsonb NOT NULL DEFAULT '[]'::jsonb,
-  ADD COLUMN IF NOT EXISTS about_html     text;
+  ADD COLUMN IF NOT EXISTS status           text,
+  ADD COLUMN IF NOT EXISTS hometown         text,
+  ADD COLUMN IF NOT EXISTS fav_movie        text,
+  ADD COLUMN IF NOT EXISTS fav_song         text,
+  ADD COLUMN IF NOT EXISTS about_html       text,
+  ADD COLUMN IF NOT EXISTS general_interest text,
+  ADD COLUMN IF NOT EXISTS television       text,
+  ADD COLUMN IF NOT EXISTS top_n            jsonb NOT NULL DEFAULT '[]'::jsonb;
 
--- Recreate user_profile_view to expose all profile columns
-CREATE OR REPLACE VIEW public.user_profile_view AS
-SELECT
-  u.id                          AS user_id,
-  u.display_name,
-  u.username,
-  u.headshot,
-  u.user_type,
-  p.profile_intro,
-  p.about_html,
-  p.prompt_html,
-  p.profile_title,
-  p.prompt_title,
-  p.age,
-  p.profile_bg_url,
-  p.profile_bg_mode,
-  p.favorite_song_id,
-  p.profile_details,
-  p.status,
-  p.hometown,
-  p.fav_movie,
-  p.fav_song,
-  p.fav_food,
-  p.looking_for,
-  p.top_n,
-  p.is_public,
-  p.created_at,
-  p.updated_at
-FROM public.users u
-LEFT JOIN public.user_profile p ON p.user_id = u.id;
+-- fav_food column is kept in the DB to preserve existing data but is no longer
+-- exposed via the view or the API.

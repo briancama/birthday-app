@@ -14,6 +14,11 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
+    <!-- DOMPurify for client-side HTML sanitization -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js"></script>
+    <!-- Quill WYSIWYG editor -->
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
     <% if (user.profile_bg_url) { %>
     <style>
       body.myspace {
@@ -66,49 +71,73 @@
         <aside class="myspace-sidebar">
 
           <!-- Name + headshot -->
-          <div class="myspace-section">
+          <div class="myspace-section profile-section">
             <h2 class="myspace-name">
               <%= profile_title || (user.display_name ? user.display_name + "'s BriSpace" : "BriSpace") %>
             </h2>
             <div class="myspace-profile-row">
-              <img
-                src="<%= user.headshot || '/images/headshot.jpg' %>"
-                alt="Profile headshot"
-                class="myspace-headshot"
-                data-headshot="user-profile"
-              />
-              <p class="profile-status-text" data-display="status"><%= user.status ? '"' + user.status + '"' : '—' %></p>
-            </div>
-          </div>
-
-          <!-- Profile details table -->
-          <div class="myspace-section profile-section">
-            <button class="profile-edit-btn" id="edit-details-btn">✏ edit</button>
-            <div id="details-display">
-              <table class="profile-details-table">
-                <tbody>
-                  <tr><td>Status:</td>      <td data-display="status"><%= user.status || '—' %></td></tr>
-                  <tr><td>Hometown:</td>    <td data-display="hometown"><%= user.hometown || '—' %></td></tr>
-                  <tr><td>Looking for:</td> <td data-display="looking_for"><%= user.looking_for || '—' %></td></tr>
-                  <tr><td>Fav Movie:</td>   <td data-display="fav_movie"><%= user.fav_movie || '—' %></td></tr>
-                  <tr><td>Fav Song:</td>    <td data-display="fav_song"><%= user.fav_song || '—' %></td></tr>
-                  <tr><td>Fav Food:</td>    <td data-display="fav_food"><%= user.fav_food || '—' %></td></tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="profile-edit-form" id="edit-details-form">
-              <input data-field="status"      placeholder="Status / tagline"   value="<%= user.status || '' %>" />
-              <input data-field="hometown"    placeholder="Hometown"            value="<%= user.hometown || '' %>" />
-              <input data-field="looking_for" placeholder="Looking for"         value="<%= user.looking_for || '' %>" />
-              <input data-field="fav_movie"   placeholder="Favorite movie"      value="<%= user.fav_movie || '' %>" />
-              <input data-field="fav_song"    placeholder="Favorite song"       value="<%= user.fav_song || '' %>" />
-              <input data-field="fav_food"    placeholder="Favorite food"       value="<%= user.fav_food || '' %>" />
+                <img
+                  src="<%= user.headshot || '/images/headshot.jpg' %>"
+                  alt="Profile headshot"
+                  class="myspace-headshot"
+                  data-headshot="user-profile"
+                />
+                <div class="myspace-about">
+                  <p class="profile-status-text" data-display="status"><%= user.status ? '"' + user.status + '"' : '—' %></p>
+                  <p class="profile-location" data-display="hometown"><%= user.hometown || 'Somewhere, Somewhere' %></p>
+                  <p class="profile-age" data-display="age"><%= user.age ? user.age + ' yrs old' : '—' %></p>
+                  <div id="headshotUploadContainer">
+                    <p class="myspace-about__hint">Upload a <strong>vintage 2000s photo</strong> of yourself.</p>
+                  </div>
+                </div>
+              </div>
+            <button id="edit-profile-btn" class="profile-edit-btn profile-edit-btn--below">✏ edit</button>
+            <form id="edit-profile-form" class="profile-edit-form profile-edit-form--modal">
+              <label>Status<input type="text" data-field="status" placeholder="What's on your mind?" value="<%= user.status || '' %>" maxlength="200" /></label>
+              <label>Hometown<input type="text" data-field="hometown" placeholder="City, State" value="<%= user.hometown || '' %>" maxlength="100" /></label>
+              <label>Age<input type="number" data-field="age" placeholder="e.g. 30" value="<%= user.age || '' %>" min="1" max="149" /></label>
               <div class="profile-edit-actions">
-                <button class="profile-edit-save">Save</button>
-                <button class="profile-edit-cancel">Cancel</button>
+                <button type="button" class="profile-edit-save">Save</button>
+                <button type="button" class="profile-edit-cancel">Cancel</button>
+              </div>
+            </form>
+          </div>
+          <section class="event-details-card myspace-section profile-section">
+            <div class="event-details-header">
+              <%= profile_title || (user.display_name ? user.display_name + "'s Interests" : "Interests") %>
+            </div>
+            <button id="edit-interests-btn" class="profile-edit-btn profile-edit-btn--below">✏ edit</button>
+            <div class="event-details-list">
+              <div class="event-details-row">
+                <div class="event-details-label">General</div>
+                <div class="event-details-value" data-display="general_interest"><%= user.general_interest || '—' %></div>
+              </div>
+              <div class="event-details-row">
+                <div class="event-details-label">Music</div>
+                <div class="event-details-value" data-display="fav_song"><%= user.fav_song || '—' %></div>
+              </div>
+              <div class="event-details-row">
+                <div class="event-details-label">Movies</div>
+                <div class="event-details-value" data-display="fav_movie"><%= user.fav_movie || '—' %></div>
+              </div>
+              <div class="event-details-row">
+                <div class="event-details-label">Television</div>
+                <div class="event-details-value" data-display="television"><%= user.television || '—' %></div>
               </div>
             </div>
-          </div>
+
+            <!-- Interests edit form (owner only, toggled) -->
+            <form id="edit-interests-form" class="profile-edit-form profile-edit-form--modal">
+              <textarea data-field="general_interest" placeholder="Life, Family, Career"><%= user.general_interest || '' %></textarea>
+              <textarea data-field="fav_movie" placeholder="My Movies"><%= user.fav_movie || '' %></textarea>
+              <textarea data-field="fav_song" placeholder="My Music"><%= user.fav_song || '' %></textarea>
+              <textarea data-field="television" placeholder="My TV Shows"><%= user.television || '' %></textarea>
+              <div class="profile-edit-actions">
+                <button type="button" class="profile-edit-save">Save</button>
+                <button type="button" class="profile-edit-cancel">Cancel</button>
+              </div>
+            </form>
+          </section>
 
           <!-- Music player placeholder -->
           <div class="myspace-section" id="musicPlayerContainer"></div>
@@ -133,12 +162,14 @@
           <!-- About Me -->
           <div class="myspace-section profile-section">
             <h3>About Me</h3>
-            <button class="profile-edit-btn" id="edit-bio-btn">✏ edit</button>
+            <button class="profile-edit-btn profile-edit-btn--below" id="edit-bio-btn">✏ edit</button>
             <div class="profile-about-content" id="bio-display">
               <%- user.about_html || '<p class="profile-status-text">Nothing here yet.</p>' %>
             </div>
-            <div class="profile-edit-form" id="edit-bio-form">
-              <textarea data-field="about_html" placeholder="Tell people about yourself..." rows="6"><%= user.about_html || '' %></textarea>
+            <div class="profile-edit-form" id="edit-bio-form" data-quill-form>
+              <div id="bio-quill-editor"></div>
+              <!-- Hidden field read by _saveSection -->
+              <textarea data-field="about_html" style="display:none"><%= user.about_html || '' %></textarea>
               <div class="profile-edit-actions">
                 <button class="profile-edit-save">Save</button>
                 <button class="profile-edit-cancel">Cancel</button>
@@ -172,8 +203,9 @@
             <div class="top-n-header">
               Brian has <span class="top-n-count"><%= userCount %></span> friend<%= userCount === 1 ? '' : 's' %></span>.
             </div>
-            <div class="top-n-grid" id="topn-display">
-              <% if (allUsers && allUsers.length > 0) { %>
+              <div class="top-n-grid" id="topn-display">
+                <% allUsers = (typeof allUsers !== 'undefined' ? allUsers : []); %>
+                <% if (allUsers.length > 0) { %>
                 <% allUsers.forEach(function(user, i) { %>
                   <div class="top-n-item">
                     <a href="/users/<%= user.id %>" class="top-n-item__link">

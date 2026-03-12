@@ -77,10 +77,28 @@ class AuthManager extends EventTarget {
         this.userId = data.id;
         this.userType = data.user_type || "visitor";
         this.emit("user:loaded", this.currentUser);
+        // Silently refresh the server-side session cookie so that authenticated
+        // API routes (e.g. PATCH profile-fields) work without a full login page visit.
+        this._syncServerCookie().catch(() => {});
       }
       return !!this.userId;
     } catch {
       return false;
+    }
+  }
+
+  async _syncServerCookie() {
+    try {
+      const idToken = await firebaseAuth.getIdToken();
+      if (!idToken) return;
+      await fetch("/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ idToken }),
+      });
+    } catch {
+      // Non-fatal — cookie sync is best-effort
     }
   }
 
