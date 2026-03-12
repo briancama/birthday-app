@@ -92,6 +92,9 @@
                 </div>
               </div>
             <button id="edit-profile-btn" class="profile-edit-btn profile-edit-btn--below">✏ edit</button>
+            <div id="challenge-user-container" style="margin-top:12px;">
+              <button id="challenge-user-btn" class="btn btn-primary" style="display:none">Challenge this user</button>
+            </div>
             <form id="edit-profile-form" class="profile-edit-form profile-edit-form--modal">
               <label>Status<input type="text" data-field="status" placeholder="What's on your mind?" value="<%= user.status || '' %>" maxlength="200" /></label>
               <label>Hometown<input type="text" data-field="hometown" placeholder="City, State" value="<%= user.hometown || '' %>" maxlength="100" /></label>
