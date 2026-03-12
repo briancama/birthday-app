@@ -3,6 +3,11 @@
    Builds on top of myspace.css — only adds profile-specific UI
    ============================================================ */
 
+/* Override the JS-driven opacity:0 default — name is server-rendered, always visible */
+.myspace-name {
+  opacity: 1;
+}
+
 /* ── Editable sections ─────────────────────────────────────── */
 .profile-section {
   position: relative;
