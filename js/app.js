@@ -10,8 +10,8 @@ const isProduction =
 
 // Application Configuration (moved from config.js since that's gitignored)
 const APP_CONFIG = {
-  // Auto-refresh settings - more conservative in development
-  enableAutoRefresh: true, // Enable auto-refresh for both dev and production
+  // Auto-refresh disabled — use the manual refresh button on the leaderboard instead
+  enableAutoRefresh: false,
   refreshInterval: isProduction ? 30000 : 10000, // 30s production, 10s development for faster dev feedback
 
   // Performance settings

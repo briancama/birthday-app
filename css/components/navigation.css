@@ -33,9 +33,13 @@ body.has-bottom-menu {
 
 .profile-nav-link {
   margin-left: auto;
-  margin-right: 12px;
+  margin-right: 16px;
   display: inline-flex;
   align-items: center;
+}
+
+.user-profile-button {
+  margin-right: 40px;
 }
 
 .profile-nav-link .user-profile-button {
