@@ -15,13 +15,28 @@ class NavigationController {
     this.setupEventListeners();
     this.addDOMEventListeners();
 
-    // Set user if already loaded
-    if (appState.getCurrentUser()) {
-      this.setCurrentUser(appState.getCurrentUser());
-    } else {
-      // Set initial page title
-      this.updatePageTitle();
+    // If server provided a hydrated nav state, use it immediately to avoid UI flicker.
+    try {
+      const navState = window && window.__NAV_STATE__ ? window.__NAV_STATE__ : null;
+      if (navState && navState.user) {
+        this.setCurrentUser(navState.user);
+      } else if (appState.getCurrentUser()) {
+        // Fall back to appState if already loaded
+        this.setCurrentUser(appState.getCurrentUser());
+      } else {
+        // Set initial page title
+        this.updatePageTitle();
+      }
+    } catch (e) {
+      // In non-browser contexts or errors, fall back to appState behavior
+      if (appState.getCurrentUser()) {
+        this.setCurrentUser(appState.getCurrentUser());
+      } else {
+        this.updatePageTitle();
+      }
     }
+    // Ensure Arnold trigger wiring is initialized (will no-op if modal not present)
+    this.setupArnoldHandlers();
   }
 
   setupEventListeners() {
@@ -119,6 +134,7 @@ class NavigationController {
     if (path.includes("cocktail-rubric")) return "rubric";
     if (path.includes("challenges-submit")) return "challenges-submit";
     if (path.includes("admin-approvals")) return "admin-approvals";
+
     return "dashboard"; // default
   }
 
@@ -131,6 +147,7 @@ class NavigationController {
       rubric: "Rubric",
       "challenges-submit": "Workshop",
       "admin-approvals": "Admin",
+      challenges: "My Challenges",
     };
     return pageTitles[this.currentPage] || "Dashboard";
   }
@@ -145,18 +162,8 @@ class NavigationController {
   }
 
   updateProfileButton(user) {
-    if (!user || (!user.username && !user.id)) return;
-    const btn = document.querySelector(".user-profile-button");
-    if (!btn) return;
-    // Avoid double-wrapping
-    if (btn.parentElement && btn.parentElement.classList.contains("profile-nav-link")) return;
-    const identifier = user.username || user.id;
-    const link = document.createElement("a");
-    link.href = `/users/${identifier}`;
-    link.className = "profile-nav-link";
-    link.title = "View my profile";
-    btn.parentNode.insertBefore(link, btn);
-    link.appendChild(btn);
+    // No-op: profile link is server-rendered now. Kept for backward compatibility.
+    return;
   }
 
   ensureNotificationToggle() {
@@ -273,32 +280,36 @@ class NavigationController {
     // Show/hide nav menu options based on auth status (except admin link)
     const navTabs = document.querySelectorAll(".nav-tab[data-page]");
     const logoutBtn = document.querySelector(".logout-btn");
-
-    // If not logged in, only show dashboard/home and hide others
+    // If not logged in, only show dashboard/home and hide others; always hide participant-only
     if (!this.currentUser) {
       navTabs.forEach((tab) => {
         const page = tab.dataset.page;
         if (page === "dashboard" || page === "home" || page === "index") {
           tab.style.display = "";
+        } else if (tab.hasAttribute("data-participant-only")) {
+          tab.style.display = "none";
         } else if (!tab.hasAttribute("data-admin-only")) {
           tab.style.display = "none";
         }
-        // Do not touch admin link here
       });
-      if (logoutBtn) {
-        logoutBtn.style.display = "none";
-      }
+      if (logoutBtn) logoutBtn.style.display = "none";
     } else {
       navTabs.forEach((tab) => {
-        if (!tab.hasAttribute("data-admin-only")) {
-          tab.style.display = "";
+        // Admin-only handled elsewhere
+        if (tab.hasAttribute("data-admin-only")) return;
+
+        // Participant-only tabs should only show for participants
+        if (
+          tab.hasAttribute("data-participant-only") &&
+          this.currentUser.user_type !== "participant"
+        ) {
+          tab.style.display = "none";
+          return;
         }
-        // Do not touch admin link here
+
+        tab.style.display = "";
       });
-      if (logoutBtn) {
-        logoutBtn.style.display = "";
-      }
-      // Admin link handled by updateAdminVisibility
+      if (logoutBtn) logoutBtn.style.display = "";
     }
   }
 
@@ -338,6 +349,81 @@ class NavigationController {
         tab.classList.remove("active");
       }
     });
+  }
+
+  // Attach handlers for the Arnold easter-egg modal if present on the page.
+  setupArnoldHandlers() {
+    // Attach when DOM is ready
+    const attach = () => {
+      try {
+        const trigger = document.getElementById("secretArnold");
+        const modal = document.getElementById("arnoldModal");
+        const audio = document.getElementById("arnoldAudio");
+        const closeBtn = document.getElementById("close-arnold");
+        const rick = document.getElementById("rickRoll");
+        const gif = document.getElementById("arnoldGif");
+
+        if (!trigger) return; // nothing to wire
+
+        // Prevent attaching multiple times
+        if (trigger.dataset.arnoldAttached) return;
+        trigger.dataset.arnoldAttached = "1";
+
+        trigger.addEventListener("click", () => {
+          if (modal) {
+            modal.style.display = "flex";
+          }
+        });
+
+        if (rick) {
+          rick.addEventListener("click", (e) => {
+            e.preventDefault();
+            if (gif) gif.style.display = "block";
+            // Hide the rickRoll button after it's clicked so it can't be reused.
+            try {
+              rick.style.display = "none";
+              rick.disabled = true;
+            } catch (hideErr) {
+              console.warn("Failed to hide rickRoll button:", hideErr);
+            }
+            if (audio && audio.play) {
+              audio.currentTime = 0;
+              audio.play().catch((err) => console.warn("Audio play prevented:", err));
+            }
+            try {
+              window.dispatchEvent(
+                new CustomEvent("achievement:trigger", { detail: { key: "rickroll" } })
+              );
+            } catch (err) {
+              console.warn("Failed to dispatch achievement trigger", err);
+            }
+          });
+        }
+
+        const hideModal = () => {
+          if (audio && audio.pause) {
+            audio.pause();
+            audio.currentTime = 0;
+          }
+          if (gif) gif.style.display = "none";
+          if (modal) modal.style.display = "none";
+        };
+
+        if (closeBtn) closeBtn.addEventListener("click", hideModal);
+        if (modal)
+          modal.addEventListener("click", (e) => {
+            if (e.target === modal) hideModal();
+          });
+      } catch (e) {
+        console.warn("setupArnoldHandlers failed:", e);
+      }
+    };
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", attach);
+    } else {
+      attach();
+    }
   }
 }
 

@@ -4,6 +4,43 @@ const { getSupabase, createSanitizer, requireSignedUser } = require("../js/utils
 
 const supabase = getSupabase();
 
+// POST /api/users/:id/challenge
+// Triggers assignment of the next available challenge to the target user and
+// creates a notification for them. Requires the caller to be authenticated.
+router.post("/users/:id/challenge", async (req, res) => {
+  try {
+    const targetId = req.params.id;
+    const signedUserId = requireSignedUser(req);
+    if (!signedUserId) return res.status(401).json({ error: "Not authenticated" });
+    if (signedUserId === targetId)
+      return res.status(400).json({ error: "Cannot challenge yourself" });
+
+    // Create a simple notification so the target user is reminded to perform
+    // their next challenge. This route intentionally does NOT assign a new
+    // challenge row — it only notifies the target to take action.
+    try {
+      const { data: notif, error: notifErr } = await supabase
+        .from("notifications")
+        .insert({
+          user_id: targetId,
+          payload: { type: "challenge_reminder", from_user: signedUserId },
+          read: false,
+        })
+        .select()
+        .single();
+
+      if (notifErr) throw notifErr;
+      return res.json({ ok: true, notification: notif });
+    } catch (notifyErr) {
+      console.error("Failed to create challenge notification:", notifyErr.message || notifyErr);
+      return res.status(500).json({ error: "Failed to create notification" });
+    }
+  } catch (err) {
+    console.error("Error in POST /api/users/:id/challenge", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // POST /api/users/:id/profile
 // Body: { profile_html }
 router.post("/users/:id/profile", async (req, res) => {

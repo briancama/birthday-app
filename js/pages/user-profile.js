@@ -2,6 +2,7 @@
 // BriSpace user profile page — public view with owner-only inline editing.
 import { BasePage } from "./base-page.js";
 import { appState } from "../app.js";
+import { featureFlags } from "../utils/feature-flags.js";
 import { createCommentCard } from "../components/myspace-comment-card.js";
 
 class UserProfilePage extends BasePage {
@@ -23,6 +24,67 @@ class UserProfilePage extends BasePage {
     this.loadAchievements();
     this.loadWall();
     this.setupWallPost();
+    this.setupChallengeButton();
+  }
+
+  // Show and wire the "Challenge this user" button when appropriate.
+  async setupChallengeButton() {
+    const btn = document.getElementById("challenge-user-btn");
+    if (!btn || !this.profileUserId) return;
+
+    // Hide by default; we'll show if both users are participants and target != current
+    btn.style.display = "none";
+
+    // Don't allow challenge UI until the event has started
+    try {
+      const eventStarted = await featureFlags.isEventStarted(this.supabase);
+      if (!eventStarted) return;
+    } catch (err) {
+      // If the feature flag check fails, be conservative and hide the button
+      return;
+    }
+
+    try {
+      // Ensure caller is signed in and not viewing their own profile
+      if (!this.userId || this.userId === this.profileUserId) return;
+
+      // Check both users are participants. Use the users table for a lightweight check.
+      const [{ data: me }, { data: target }] = await Promise.all([
+        this.supabase.from("users").select("user_type").eq("id", this.userId).maybeSingle(),
+        this.supabase.from("users").select("user_type").eq("id", this.profileUserId).maybeSingle(),
+      ]);
+
+      const myType = me && me.user_type ? me.user_type : null;
+      const targetType = target && target.user_type ? target.user_type : null;
+      if (myType !== "participant" || targetType !== "participant") return;
+
+      // Show button and wire click handler
+      btn.style.display = "inline-block";
+      btn.addEventListener("click", async () => {
+        if (!confirm("Send a challenge notification to this user?")) return;
+        btn.disabled = true;
+        const original = btn.textContent;
+        btn.textContent = "Sending...";
+        try {
+          const resp = await fetch(`/api/users/${this.profileUserId}/challenge`, {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+          });
+          const body = await resp.json();
+          if (!resp.ok) throw new Error(body.error || resp.statusText);
+          this.showSuccessToast("Challenge sent!");
+        } catch (err) {
+          this.showErrorToast("Failed to send challenge: " + err.message);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = original;
+        }
+      });
+    } catch (err) {
+      // Silence errors — feature is optional
+      console.warn("setupChallengeButton error", err);
+    }
   }
 
   // ── Headshot upload (owner only) ───────────────────────────────────────────

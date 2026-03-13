@@ -67,7 +67,7 @@ See `js/components/` for source files. Primary components include:
 - headshot-upload.js — avatar upload and headshot event integration
 - bottom-menu.js / music-player.js / mute-button.js — mobile UI + audio controls
 - gif-stepper.js / submission.js — submission helpers and UIs
-- contest-placement-*.js — admin placement UI
+- contest-placement-\*.js — admin placement UI
 
 (Full list available in docs/site-inventory.json)
 

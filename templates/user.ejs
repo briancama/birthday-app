@@ -32,36 +32,8 @@
 
   <body class="myspace" data-profile-user-id="<%= user.id %>">
 
-    <!-- ── Navigation header ─────────────────────────────────── -->
-    <div class="myspace-header full-width-content">
-      <div class="myspace-header__logo">
-        <img src="/images/brispace_logo.jpg" alt="BriSpace" />
-        <img src="/images/profile.gif" alt="profile" class="icon-gif user-profile-button" />
-        <button class="mobile-menu-toggle" data-sound="menu" aria-label="Toggle navigation menu">
-          <span class="hamburger-icon">☰</span>
-        </button>
-      </div>
-      <div class="nav-menu">
-        <div class="nav-tabs">
-          <a href="/dashboard" class="nav-tab" data-sound="menu" data-page="dashboard">
-            <img src="/images/home.gif" alt="home" class="icon-gif icon-gif--lg icon-gif--with-text" />
-            <span>DASHBOARD</span>
-          </a>
-          <a href="/event-info" class="nav-tab" data-sound="menu" data-page="event-info">
-            <img src="/images/question.gif" alt="info" class="icon-gif icon-gif--with-text" />
-            <span>EVENT INFO</span>
-          </a>
-          <a href="/leaderboard" class="nav-tab" data-sound="menu" data-page="leaderboard">
-            <img src="/images/trophy.gif" alt="trophy" class="icon-gif icon-gif--with-text" />
-            <span>LEADERBOARD</span>
-          </a>
-          <button class="nav-tab logout-btn">
-            <img src="/images/logout.gif" alt="logout" class="icon-gif icon-gif--lg icon-gif--with-text" />
-            <span>LOGOUT</span>
-          </button>
-        </div>
-      </div>
-    </div>
+    <!-- Server-rendered navigation header -->
+    <%- include('partials/navigation', { navData: navData }) %>
 
     <!-- ── Main layout ─────────────────────────────────────────── -->
     <div class="myspace-container full-width-content">
@@ -76,25 +48,27 @@
               <%= profile_title || (user.display_name ? user.display_name + "'s BriSpace" : "BriSpace") %>
             </h2>
             <div class="myspace-profile-row">
+              <div class="myspace-headshot-container">
                 <img
                   src="<%= user.headshot || '/images/headshot.jpg' %>"
                   alt="Profile headshot"
                   class="myspace-headshot"
                   data-headshot="user-profile"
                 />
-                <div class="myspace-about">
-                  <p class="profile-status-text" data-display="status"><%= user.status ? '"' + user.status + '"' : '—' %></p>
-                  <p class="profile-location" data-display="hometown"><%= user.hometown || 'Somewhere, Somewhere' %></p>
-                  <p class="profile-age" data-display="age"><%= user.age ? user.age + ' yrs old' : '—' %></p>
-                  <div id="headshotUploadContainer">
-                    <p class="myspace-about__hint">Upload a <strong>vintage 2000s photo</strong> of yourself.</p>
-                  </div>
+                <div id="challenge-user-container" style="margin-top:12px;">
+                  <button id="challenge-user-btn" class="btn btn-primary" style="display:none">Challenge</button>
                 </div>
               </div>
-            <button id="edit-profile-btn" class="profile-edit-btn profile-edit-btn--below">✏ edit</button>
-            <div id="challenge-user-container" style="margin-top:12px;">
-              <button id="challenge-user-btn" class="btn btn-primary" style="display:none">Challenge this user</button>
+              <div class="myspace-about">
+                <p class="profile-status-text" data-display="status"><%= user.status ? '"' + user.status + '"' : '—' %></p>
+                <p class="profile-location" data-display="hometown"><%= user.hometown || 'Somewhere, Somewhere' %></p>
+                <p class="profile-age" data-display="age"><%= user.age ? user.age + ' yrs old' : '—' %></p>
+                <div id="headshotUploadContainer">
+                  <p class="myspace-about__hint">Upload a <strong>vintage 2000s photo</strong> of yourself.</p>
+                </div>
+              </div>
             </div>
+            <button id="edit-profile-btn" class="profile-edit-btn profile-edit-btn--below">✏ edit</button>
             <form id="edit-profile-form" class="profile-edit-form profile-edit-form--modal">
               <label>Status<input type="text" data-field="status" placeholder="What's on your mind?" value="<%= user.status || '' %>" maxlength="200" /></label>
               <label>Hometown<input type="text" data-field="hometown" placeholder="City, State" value="<%= user.hometown || '' %>" maxlength="100" /></label>

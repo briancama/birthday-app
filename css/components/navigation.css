@@ -57,7 +57,7 @@ body.has-bottom-menu {
   padding: var(--spacing-xs) var(--spacing-sm);
   font-size: 1.2rem;
   position: absolute;
-  top: 11px;
+  top: 17px;
   right: var(--spacing-sm);
   z-index: 1000;
   cursor: pointer;
@@ -176,6 +176,44 @@ body.has-bottom-menu {
   justify-content: flex-start;
 }
 
+/* MySpace header / page-level navigation styles (moved from myspace.css)
+   These make the header match the retro MySpace layout and are kept
+   here so the navigation partial can be reused across pages. */
+.myspace .nav-tabs {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.myspace-header {
+  background: var(--myspace-dark-blue);
+  color: #fff;
+  padding-top: var(--spacing-lg);
+  padding-bottom: var(--spacing-lg);
+}
+
+.myspace-header__logo {
+  display: flex;
+  align-items: center;
+  position: relative;
+  border: 3px solid #000;
+  background: white;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding-bottom: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+  padding-left: var(--spacing-sm);
+  padding-right: var(--spacing-xs);
+}
+
+.myspace-header__logo img {
+  height: 50px;
+}
+
+.myspace-container {
+  background: white;
+}
+
 /* No media query needed for toggle visibility */
 /* Extra small screens */
 @media (max-width: 480px) {
@@ -188,5 +226,18 @@ body.has-bottom-menu {
   .mobile-user-info {
     font-size: 0.9rem;
     padding: var(--spacing-xs) var(--spacing-sm);
+  }
+
+  .myspace-header {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+
+  .myspace-header__logo img {
+    height: 40px;
+  }
+
+  .mobile-menu-toggle {
+    top: 10px;
   }
 }

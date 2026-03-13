@@ -48,11 +48,6 @@
   padding-top: 0;
 }
 
-.myspace .nav-tabs {
-  padding-left: 12px;
-  padding-right: 12px;
-}
-
 .myspace-profile-row {
   display: flex;
   align-items: stretch;
@@ -75,41 +70,7 @@ body {
   font-size: 12px;
 }
 
-.myspace-header {
-  background: var(--myspace-dark-blue);
-  color: #fff;
-  border-bottom: 2px solid #fff;
-  padding-top: var(--spacing-lg);
-  padding-bottom: var(--spacing-lg);
-}
-
-/*Override for menu toggle button*/
-.myspace-header .mobile-menu-toggle {
-  top: 17px;
-}
-
-.myspace-header__logo {
-  display: flex;
-  align-items: center;
-  position: relative;
-  border: 3px solid #000;
-  background: white;
-  width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
-  padding-bottom: var(--spacing-sm);
-  padding-top: var(--spacing-sm);
-  padding-left: var(--spacing-sm);
-  padding-right: var(--spacing-xs);
-}
-
-.myspace-header__logo img {
-  height: 50px;
-}
-
-.myspace-container {
-  background: white;
-}
+/* Header/layout styles moved to navigation.css for global reuse */
 
 .myspace-title {
   font-size: 2.2em;

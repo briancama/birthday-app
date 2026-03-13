@@ -60,6 +60,87 @@ app.use((req, res, next) => {
   next();
 });
 
+// Server middleware: populate nav data for server-rendered navigation partials
+app.use(async (req, res, next) => {
+  try {
+    const supabase = getSupabase();
+    res.locals.navData = { isAuthenticated: false };
+
+    if (!supabase) return next();
+
+    const signed = req.signedCookies && req.signedCookies.user_id;
+    if (!signed) return next();
+
+    // Try to resolve the signed cookie value to a users row. The cookie may
+    // already be a UUID or a development shortcut like 'local-dev-user'. Try
+    // id first, then username.
+    let { data: user, error: userErr } = await supabase
+      .from("users")
+      .select("id, username, display_name, user_type, headshot")
+      .eq("id", signed)
+      .maybeSingle();
+
+    if ((!user || userErr) && signed) {
+      const { data: byName } = await supabase
+        .from("users")
+        .select("id, username, display_name, user_type, headshot")
+        .eq("username", signed)
+        .maybeSingle();
+      if (byName) user = byName;
+    }
+
+    if (!user) return next();
+
+    // Does this user have a push subscription saved?
+    let hasPush = false;
+    try {
+      const { data: subs, error: subErr } = await supabase
+        .from("push_subscriptions")
+        .select("id")
+        .eq("user_id", user.id)
+        .limit(1);
+      if (!subErr && subs && subs.length) hasPush = true;
+    } catch (e) {
+      /* ignore */
+    }
+
+    // Read feature flag for event_started
+    let eventStarted = false;
+    try {
+      const { data: flag, error: flagErr } = await supabase
+        .from("app_settings")
+        .select("setting_value")
+        .eq("setting_key", "event_started")
+        .maybeSingle();
+      if (!flagErr && flag && flag.setting_value && flag.setting_value.enabled === true)
+        eventStarted = true;
+    } catch (e) {
+      /* ignore */
+    }
+
+    // Simple admin check: username matches known admins (keep existing client-side conventions)
+    const isAdmin = !!(user && (user.username === "brianc" || user.username === "admin"));
+
+    res.locals.navData = {
+      user: {
+        id: user.id,
+        username: user.username,
+        display_name: user.display_name,
+        headshot: user.headshot,
+        user_type: user.user_type,
+        isAdmin,
+      },
+      isAuthenticated: true,
+      hasPushSubscription: hasPush,
+      eventStarted,
+    };
+  } catch (err) {
+    // fallback: leave navData minimal
+    res.locals.navData = { isAuthenticated: false };
+  }
+  return next();
+});
+
 // Middleware to serve .html files for extensionless URLs (keep for static fallback)
 // Only apply for top-level GET page requests (avoid rewriting API routes like /auth, /api, /users)
 app.use((req, res, next) => {
@@ -122,6 +203,11 @@ app.get("/", async (req, res, next) => {
 });
 
 // Serve static files from workspace root
+// Rendered routes (prefer explicit server-rendered pages where desired)
+app.get(["/dashboard", "/dashboard.html"], (req, res) => {
+  return res.render("dashboard");
+});
+
 app.use(express.static(path.join(__dirname)));
 
 // Mount users route

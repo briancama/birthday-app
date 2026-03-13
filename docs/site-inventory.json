@@ -8,40 +8,101 @@
     },
     "dashboard.html": {
       "path": "dashboard.html",
-      "css": ["css/geocities.css", "css/components/navigation.css", "css/components/submissions.css", "css/components/event-card.css", "css/components/achievements.css"],
-      "scripts": ["firebase SDK (auth)"] ,
+      "css": [
+        "css/geocities.css",
+        "css/components/navigation.css",
+        "css/components/submissions.css",
+        "css/components/event-card.css",
+        "css/components/achievements.css"
+      ],
+      "scripts": ["firebase SDK (auth)"],
       "page_js": "js/pages/dashboard.js",
-      "components_used": ["js/components/navigation.js", "js/components/challenge-card.js", "js/components/cocktail-entry-modal.js", "js/components/user-events-section.js"]
+      "components_used": [
+        "js/components/navigation.js",
+        "js/components/challenge-card.js",
+        "js/components/cocktail-entry-modal.js",
+        "js/components/user-events-section.js"
+      ]
     },
     "event-info.html": {
       "path": "event-info.html",
-      "css": ["css/geocities.css", "css/components/navigation.css", "css/components/leaderboard.css", "css/components/forms.css", "css/components/myspace.css", "css/components/myspace-comments.css", "css/components/event-card.css", "css/components/submissions.css"],
+      "css": [
+        "css/geocities.css",
+        "css/components/navigation.css",
+        "css/components/leaderboard.css",
+        "css/components/forms.css",
+        "css/components/myspace.css",
+        "css/components/myspace-comments.css",
+        "css/components/event-card.css",
+        "css/components/submissions.css"
+      ],
       "scripts": ["firebase SDK (auth)"],
       "page_js": "js/pages/event-info.js",
-      "components_used": ["js/components/guestbook.js", "js/components/myspace-comment-card.js", "js/components/event-card.js", "js/components/cocktail-entry-modal.js", "js/components/ytmnd-easter-egg.js"]
+      "components_used": [
+        "js/components/guestbook.js",
+        "js/components/myspace-comment-card.js",
+        "js/components/event-card.js",
+        "js/components/cocktail-entry-modal.js",
+        "js/components/ytmnd-easter-egg.js"
+      ]
     },
     "challenges-submit.html": {
       "path": "challenges-submit.html",
-      "css": ["css/geocities.css", "css/components/navigation.css", "css/components/leaderboard.css", "css/components/submissions.css", "css/components/forms.css"],
+      "css": [
+        "css/geocities.css",
+        "css/components/navigation.css",
+        "css/components/leaderboard.css",
+        "css/components/submissions.css",
+        "css/components/forms.css"
+      ],
       "scripts": ["firebase SDK (auth)"],
-      "components_used": ["js/components/submission.js", "js/components/gif-stepper.js", "js/components/navigation.js"]
+      "components_used": [
+        "js/components/submission.js",
+        "js/components/gif-stepper.js",
+        "js/components/navigation.js"
+      ]
     },
     "leaderboard.html": {
       "path": "leaderboard.html",
-      "css": ["css/geocities.css", "css/components/navigation.css", "css/components/leaderboard.css", "css/components/forms.css"],
-      "scripts": ["firebase SDK (auth)", "inline module that imports js/app.js, js/components/navigation.js, js/pages/leaderboard.js"],
+      "css": [
+        "css/geocities.css",
+        "css/components/navigation.css",
+        "css/components/leaderboard.css",
+        "css/components/forms.css"
+      ],
+      "scripts": [
+        "firebase SDK (auth)",
+        "inline module that imports js/app.js, js/components/navigation.js, js/pages/leaderboard.js"
+      ],
       "page_js": "js/pages/leaderboard.js",
       "components_used": ["js/components/navigation.js"]
     },
     "admin-approvals.html": {
       "path": "admin-approvals.html",
-      "css": ["css/geocities.css", "css/components/navigation.css", "css/components/forms.css", "css/components/submissions.css", "css/components/contest-placements.css"],
-      "scripts": ["firebase SDK (auth)", "inline module imports initNavigation from js/components/navigation.js"],
-      "components_used": ["js/components/navigation.js", "js/components/contest-placement-table.js", "js/components/contest-placement-form.js"]
+      "css": [
+        "css/geocities.css",
+        "css/components/navigation.css",
+        "css/components/forms.css",
+        "css/components/submissions.css",
+        "css/components/contest-placements.css"
+      ],
+      "scripts": [
+        "firebase SDK (auth)",
+        "inline module imports initNavigation from js/components/navigation.js"
+      ],
+      "components_used": [
+        "js/components/navigation.js",
+        "js/components/contest-placement-table.js",
+        "js/components/contest-placement-form.js"
+      ]
     },
     "cocktail-judging.html": {
       "path": "cocktail-judging.html",
-      "css": ["css/geocities.css", "css/components/navigation.css", "css/components/submissions.css"],
+      "css": [
+        "css/geocities.css",
+        "css/components/navigation.css",
+        "css/components/submissions.css"
+      ],
       "scripts": ["firebase SDK (auth)"],
       "components_used": ["js/components/navigation.js", "js/components/cocktail-entry-modal.js"]
     },
