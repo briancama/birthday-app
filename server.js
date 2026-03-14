@@ -226,7 +226,7 @@ app.get(["/dashboard", "/dashboard.html"], async (req, res) => {
       const { data, error } = await supabase
         .from("assignments")
         .select(
-          `id, completed_at, outcome, challenges (id, title, description, brian_mode, success_metric)`
+          `id, completed_at, outcome, challenges (id, title, description, brian_mode, success_metric, vs_user, vs_user_profile:users!vs_user(display_name, username))`
         )
         .eq("user_id", user.id)
         .eq("active", true)

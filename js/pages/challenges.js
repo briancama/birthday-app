@@ -196,7 +196,7 @@ class ChallengesPage extends BasePage {
       const { data, error } = await this.supabase
         .from("assignments")
         .select(
-          `id, completed_at, outcome, assigned_at, challenges (id, title, description, brian_mode, success_metric)`
+          `id, completed_at, outcome, assigned_at, challenges (id, title, description, brian_mode, success_metric, vs_user, vs_user_profile:users!vs_user(display_name, username))`
         )
         .eq("user_id", this.userId)
         .eq("active", true)
@@ -240,13 +240,14 @@ class ChallengesPage extends BasePage {
         if (actionsContainer) {
           const challengeId = element.dataset.challengeId;
           const brianMode = element.dataset.brianMode || "";
+          const vsUser = element.dataset.vsUser || null;
 
           actionsContainer.outerHTML = `
             <div class="challenge-actions">
-              <button class="success-btn" data-id="${assignmentId}" data-challenge-id="${challengeId}" data-brian-mode="${brianMode}" data-sound="success" data-outcome="success">
+              <button class="success-btn" data-id="${assignmentId}" data-challenge-id="${challengeId}" data-brian-mode="${brianMode}" data-vs-user="${vsUser || ''}" data-sound="success" data-outcome="success">
                 <img src="/images/green-checkmark.gif" class="icon-gif icon-gif--with-text hide-mobile" alt="checkmark">SUCCESS
               </button>
-              <button class="failure-btn" data-id="${assignmentId}" data-challenge-id="${challengeId}" data-brian-mode="${brianMode}" data-sound="failure" data-outcome="failure">
+              <button class="failure-btn" data-id="${assignmentId}" data-challenge-id="${challengeId}" data-brian-mode="${brianMode}" data-vs-user="${vsUser || ''}" data-sound="failure" data-outcome="failure">
                 <img src="/images/failure.gif" class="icon-gif icon-gif--with-text hide-mobile" alt="cross">FAILURE
               </button>
             </div>
@@ -261,12 +262,14 @@ class ChallengesPage extends BasePage {
               const assignmentId = btn.dataset.id;
               const challengeId = btn.dataset.challengeId;
               const brianMode = btn.dataset.brianMode;
+              const vsUser = btn.dataset.vsUser || null;
 
               const detail = {
                 assignmentId,
                 challengeId,
                 outcome,
                 brianMode,
+                vsUser,
                 button: btn,
                 element,
               };
@@ -307,7 +310,13 @@ class ChallengesPage extends BasePage {
         button.disabled = true;
         button.textContent = "Processing...";
       }
-      await this.markChallengeComplete(assignmentId, challengeId, outcome, detail.brianMode);
+      await this.markChallengeComplete(
+        assignmentId,
+        challengeId,
+        outcome,
+        detail.brianMode,
+        detail.vsUser
+      );
       await this.loadChallenges();
       this.showSuccessToast("Challenge recorded");
     } catch (err) {

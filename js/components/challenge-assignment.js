@@ -14,18 +14,18 @@ export class ChallengeAssignmentRow {
   getAssignedUsers() {
     if (this.challenge.actual_assignments && this.challenge.actual_assignments.length > 0) {
       const names = this.challenge.actual_assignments
-        .map(a => this.escapeHtml(a.display_name || a.username))
-        .join(', ');
+        .map((a) => this.escapeHtml(a.display_name || a.username))
+        .join(", ");
       return names;
     }
-    return '<em>None</em>';
+    return "<em>None</em>";
   }
 
   /**
    * Escape HTML to prevent XSS
    */
   escapeHtml(text) {
-    const div = document.createElement('div');
+    const div = document.createElement("div");
     div.textContent = text;
     return div.innerHTML;
   }
@@ -34,7 +34,7 @@ export class ChallengeAssignmentRow {
    * Render the challenge row
    */
   render() {
-    const row = document.createElement('tr');
+    const row = document.createElement("tr");
     row.dataset.challengeId = this.challenge.id;
 
     row.innerHTML = `
@@ -43,22 +43,30 @@ export class ChallengeAssignmentRow {
       <td class="action-buttons">
         <button class="btn-assign" data-id="${this.challenge.id}" aria-label="Manage assignments">✏️</button>
         <button class="btn-view" data-id="${this.challenge.id}" aria-label="View challenge details">👁️</button>
+        <button class="btn-duplicate" data-id="${this.challenge.id}" aria-label="Duplicate challenge">📋</button>
       </td>
     `;
 
     // Attach event listeners
-    const assignBtn = row.querySelector('.btn-assign');
-    const viewBtn = row.querySelector('.btn-view');
+    const assignBtn = row.querySelector(".btn-assign");
+    const viewBtn = row.querySelector(".btn-view");
+    const dupBtn = row.querySelector(".btn-duplicate");
 
     if (assignBtn && this.callbacks.onAssign) {
-      assignBtn.addEventListener('click', () => {
+      assignBtn.addEventListener("click", () => {
         this.callbacks.onAssign(this.challenge);
       });
     }
 
     if (viewBtn && this.callbacks.onViewDetails) {
-      viewBtn.addEventListener('click', () => {
+      viewBtn.addEventListener("click", () => {
         this.callbacks.onViewDetails(this.challenge);
+      });
+    }
+
+    if (dupBtn && this.callbacks.onDuplicate) {
+      dupBtn.addEventListener("click", () => {
+        this.callbacks.onDuplicate(this.challenge);
       });
     }
 
@@ -80,7 +88,7 @@ export class ChallengeAssignmentTable {
    * Get table headers
    */
   getHeaders() {
-    return ['Challenge Name', 'Assigned To', 'Actions'];
+    return ["Challenge Name", "Assigned To", "Actions"];
   }
 
   /**
@@ -95,14 +103,14 @@ export class ChallengeAssignmentTable {
     }
 
     const headers = this.getHeaders();
-    const table = document.createElement('table');
-    table.className = 'submissions-table';
+    const table = document.createElement("table");
+    table.className = "submissions-table";
 
     // Create table header
-    const thead = document.createElement('thead');
-    const headerRow = document.createElement('tr');
-    headers.forEach(header => {
-      const th = document.createElement('th');
+    const thead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+    headers.forEach((header) => {
+      const th = document.createElement("th");
       th.textContent = header;
       headerRow.appendChild(th);
     });
@@ -110,15 +118,15 @@ export class ChallengeAssignmentTable {
     table.appendChild(thead);
 
     // Create table body
-    const tbody = document.createElement('tbody');
-    challenges.forEach(challenge => {
+    const tbody = document.createElement("tbody");
+    challenges.forEach((challenge) => {
       const row = new ChallengeAssignmentRow(challenge, callbacks);
       tbody.appendChild(row.render());
     });
     table.appendChild(tbody);
 
     // Clear container and append table
-    this.container.innerHTML = '';
+    this.container.innerHTML = "";
     this.container.appendChild(table);
   }
 

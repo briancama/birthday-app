@@ -202,9 +202,16 @@ class BasePage {
   }
 
   // Challenge management methods that can be shared
-  async markChallengeComplete(assignmentId, challengeId, outcome, brianMode) {
+  async markChallengeComplete(assignmentId, challengeId, outcome, brianMode, vsUserId) {
     try {
       const now = new Date().toISOString();
+      console.log("[markChallengeComplete]", {
+        assignmentId,
+        challengeId,
+        outcome,
+        brianMode,
+        vsUserId,
+      });
 
       // Update user's assignment with outcome
       const { error: updateError } = await this.supabase
@@ -219,11 +226,43 @@ class BasePage {
         await this.handleBrianChallenge(challengeId, outcome, brianMode, now);
       }
 
+      // Handle user-vs-user challenges
+      if (vsUserId) {
+        console.log("[markChallengeComplete] calling handleVsUserChallenge for", vsUserId);
+        await this.handleVsUserChallenge(vsUserId, challengeId, outcome, now);
+      }
+
       return true;
     } catch (err) {
       console.error("Error marking challenge complete:", err);
       throw err;
     }
+  }
+
+  async handleVsUserChallenge(vsUserId, challengeId, outcome, completedAt) {
+    // Opponent always gets the inverse outcome
+    const opponentOutcome = outcome === "success" ? "failure" : "success";
+    console.log("[handleVsUserChallenge] upserting", { vsUserId, challengeId, opponentOutcome });
+
+    const { error } = await this.supabase.from("assignments").upsert(
+      [
+        {
+          user_id: vsUserId,
+          challenge_id: challengeId,
+          assigned_at: completedAt,
+          completed_at: completedAt,
+          outcome: opponentOutcome,
+          active: true,
+        },
+      ],
+      { onConflict: "user_id,challenge_id" }
+    );
+
+    if (error) {
+      console.error("[handleVsUserChallenge] upsert error:", error);
+      throw error;
+    }
+    console.log("[handleVsUserChallenge] upsert succeeded");
   }
 
   async handleBrianChallenge(challengeId, outcome, brianMode, completedAt) {

@@ -278,13 +278,14 @@ class DashboardPage extends BasePage {
         // Get challenge details from the assignment data stored on the card
         const challengeId = element.dataset.challengeId;
         const brianMode = element.dataset.brianMode;
+        const vsUser = element.dataset.vsUser || null;
 
         actionsContainer.outerHTML = `
                     <div class="challenge-actions">
-                        <button class="success-btn" data-id="${assignmentId}" data-challenge-id="${challengeId}" data-brian-mode="${brianMode}" data-sound="success" data-outcome="success">
+                        <button class="success-btn" data-id="${assignmentId}" data-challenge-id="${challengeId}" data-brian-mode="${brianMode}" data-vs-user="${vsUser || ""}" data-sound="success" data-outcome="success">
                             <img src="images/green-checkmark.gif" class="icon-gif icon-gif--with-text hide-mobile" alt="checkmark">SUCCESS
                         </button>
-                        <button class="failure-btn" data-id="${assignmentId}" data-challenge-id="${challengeId}" data-brian-mode="${brianMode}" data-sound="failure" data-outcome="failure">
+                        <button class="failure-btn" data-id="${assignmentId}" data-challenge-id="${challengeId}" data-brian-mode="${brianMode}" data-vs-user="${vsUser || ""}" data-sound="failure" data-outcome="failure">
                             <img src="images/failure.gif" class="icon-gif icon-gif--with-text hide-mobile" alt="cross">FAILURE
                         </button>
                     </div>
@@ -299,12 +300,14 @@ class DashboardPage extends BasePage {
             const assignmentId = btn.dataset.id;
             const challengeId = btn.dataset.challengeId;
             const brianMode = btn.dataset.brianMode;
+            const vsUser = btn.dataset.vsUser || null;
 
             EventBus.instance.emit(EventBus.EVENTS.CHALLENGE.COMPLETE, {
               assignmentId,
               challengeId,
               outcome,
               brianMode,
+              vsUser,
               button: btn,
               element: element,
             });
@@ -320,7 +323,7 @@ class DashboardPage extends BasePage {
   }
 
   async handleChallengeComplete(detail) {
-    const { assignmentId, challengeId, outcome, brianMode, element } = detail;
+    const { assignmentId, challengeId, outcome, brianMode, vsUser, element } = detail;
 
     // Optimistic update - immediately update the UI assuming success
     this.updateCardAfterCompletion(assignmentId, outcome, element);
@@ -342,7 +345,7 @@ class DashboardPage extends BasePage {
 
     try {
       // Make the backend call in the background
-      await this.markChallengeComplete(assignmentId, challengeId, outcome, brianMode);
+      await this.markChallengeComplete(assignmentId, challengeId, outcome, brianMode, vsUser);
 
       // Backend succeeded - reload stats to get accurate data
       await this.loadPersonalStats();
@@ -507,6 +510,10 @@ class DashboardPage extends BasePage {
       ) {
         const serverData = window.__SERVER_ASSIGNMENTS__;
         console.debug("Dashboard: hydrating server assignments", serverData && serverData.length);
+        console.log(
+          "[TRACE] SERVER_ASSIGNMENTS first challenge:",
+          JSON.stringify(serverData[0]?.challenges)
+        );
         // Hydrate DOM using the shared renderer. Clear loading state first so it doesn't erase rendered nodes.
         this.setLoadingState("challengesList", false);
         renderChallengeList(container, serverData, {
@@ -532,7 +539,7 @@ class DashboardPage extends BasePage {
                     id,
                     completed_at,
                     outcome,
-                    challenges (id, title, description, brian_mode, success_metric)
+                    challenges (id, title, description, brian_mode, success_metric, vs_user, vs_user_profile:users!vs_user(display_name, username))
                 `
         )
         .eq("user_id", this.userId)

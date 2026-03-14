@@ -17,6 +17,7 @@ export class AdminApprovalsPage extends BasePage {
     this.currentChallenge = null;
     this.assignmentService = null; // Will be initialized after auth
     this.assignmentVersion = null; // For optimistic locking
+    this.allUsers = []; // Cached user list for edit form datalists
   }
 
   async init() {
@@ -41,11 +42,26 @@ export class AdminApprovalsPage extends BasePage {
     const detailsOverlay = this.detailsModal?.querySelector(".challenge-modal-overlay");
 
     if (closeDetailsBtn) {
-      closeDetailsBtn.addEventListener("click", () => this.closeDetailsModal());
+      closeDetailsBtn.addEventListener("click", () => {
+        this.hideEditForm();
+        this.closeDetailsModal();
+      });
     }
     if (detailsOverlay) {
-      detailsOverlay.addEventListener("click", () => this.closeDetailsModal());
+      detailsOverlay.addEventListener("click", () => {
+        this.hideEditForm();
+        this.closeDetailsModal();
+      });
     }
+
+    document
+      .getElementById("editChallengeBtn")
+      ?.addEventListener("click", () => this.showEditForm());
+    document
+      .getElementById("duplicateChallengeBtn")
+      ?.addEventListener("click", () => this.handleDuplicate());
+    document.getElementById("cancelEditBtn")?.addEventListener("click", () => this.hideEditForm());
+    document.getElementById("saveEditBtn")?.addEventListener("click", () => this.handleEditSave());
 
     // Assignment Modal
     this.assignmentModal = document.getElementById("assignmentModal");
@@ -112,13 +128,14 @@ export class AdminApprovalsPage extends BasePage {
         });
       });
 
-      // Fetch usernames for created_by and suggested_for fields
+      // Fetch usernames for created_by, suggested_for, and vs_user fields
       if (data && data.length > 0) {
         // Filter out nulls — .in() with null values causes a Supabase error
         const userIds = [
           ...new Set([
             ...data.map((c) => c.created_by),
             ...data.filter((c) => c.suggested_for).map((c) => c.suggested_for),
+            ...data.filter((c) => c.vs_user).map((c) => c.vs_user),
           ]),
         ].filter(Boolean);
 
@@ -144,6 +161,11 @@ export class AdminApprovalsPage extends BasePage {
               challenge.created_by_display = displayNameMap[challenge.created_by];
               if (challenge.suggested_for) {
                 challenge.suggested_for_username = usernameMap[challenge.suggested_for];
+                challenge.suggested_for_display = displayNameMap[challenge.suggested_for];
+              }
+              if (challenge.vs_user) {
+                challenge.vs_user_username = usernameMap[challenge.vs_user];
+                challenge.vs_user_display = displayNameMap[challenge.vs_user];
               }
             });
           }
@@ -183,6 +205,10 @@ export class AdminApprovalsPage extends BasePage {
     this.approvedTable.render(challenges, {
       onAssign: (challenge) => this.handleManageAssignments(challenge),
       onViewDetails: (challenge) => this.showDetails(challenge),
+      onDuplicate: (challenge) => {
+        this.currentChallenge = challenge;
+        this.handleDuplicate();
+      },
     });
   }
 
@@ -200,13 +226,16 @@ export class AdminApprovalsPage extends BasePage {
    */
   showDetails(challenge) {
     this.currentChallenge = challenge;
+    this.hideEditForm();
 
     const detailsDiv = document.getElementById("challengeDetails");
 
     // Build intended for display - show original suggestion
     let intendedForDisplay = "Anyone";
-    if (challenge.suggested_for_username) {
-      intendedForDisplay = escapeHtml(challenge.suggested_for_username);
+    if (challenge.suggested_for_display || challenge.suggested_for_username) {
+      intendedForDisplay = escapeHtml(
+        challenge.suggested_for_display || challenge.suggested_for_username
+      );
     }
 
     // Build current assignments display
@@ -225,7 +254,7 @@ export class AdminApprovalsPage extends BasePage {
         </div>
         <div class="detail-row">
           <strong>Description:</strong>
-          <span>${escapeHtml(challenge.description)}</span>
+          <span style="white-space:pre-wrap">${escapeHtml(challenge.description)}</span>
         </div>
         <div class="detail-row">
           <strong>Success Metric:</strong>
@@ -240,6 +269,24 @@ export class AdminApprovalsPage extends BasePage {
           <span>${intendedForDisplay}</span>
         </div>
         ${
+          challenge.brian_mode
+            ? `
+        <div class="detail-row">
+          <strong>Brian Mode:</strong>
+          <span>${escapeHtml(challenge.brian_mode)}</span>
+        </div>`
+            : ""
+        }
+        ${
+          challenge.vs_user_display
+            ? `
+        <div class="detail-row">
+          <strong>VS User:</strong>
+          <span>${escapeHtml(challenge.vs_user_display)}</span>
+        </div>`
+            : ""
+        }
+        ${
           challenge.approval_status === "approved"
             ? `
         <div class="detail-row">
@@ -253,6 +300,208 @@ export class AdminApprovalsPage extends BasePage {
     }
 
     this.openDetailsModal();
+  }
+
+  /**
+   * Show the inline edit form populated with current challenge data
+   */
+  async showEditForm() {
+    const challenge = this.currentChallenge;
+    if (!challenge) return;
+
+    // Populate fields
+    document.getElementById("editTitle").value = challenge.title || "";
+    document.getElementById("editDescription").value = challenge.description || "";
+    document.getElementById("editSuccessMetric").value = challenge.success_metric || "";
+    document.getElementById("editBrianMode").value = challenge.brian_mode || "";
+
+    // Populate user datalists and set suggested_for / vs_user display values
+    await this.loadUsersForEdit();
+
+    document.getElementById("editSuggestedFor").value =
+      challenge.suggested_for_display || challenge.suggested_for_username || "";
+    document.getElementById("editVsUser").value =
+      challenge.vs_user_display || challenge.vs_user_username || "";
+
+    // Mutually exclusive: selecting brian_mode clears vs_user and vice-versa
+    document.getElementById("editBrianMode").addEventListener(
+      "change",
+      (e) => {
+        if (e.target.value) document.getElementById("editVsUser").value = "";
+      },
+      { once: true }
+    );
+
+    document.getElementById("editVsUser").addEventListener("input", () => {
+      if (document.getElementById("editVsUser").value) {
+        document.getElementById("editBrianMode").value = "";
+      }
+    });
+
+    // Hide view, show edit
+    document.getElementById("challengeDetails").style.display = "none";
+    document.getElementById("detailsModalActions").style.display = "none";
+    document.getElementById("challengeEditForm").style.display = "block";
+    document.getElementById("editError").style.display = "none";
+    document.getElementById("editSuccess").style.display = "none";
+  }
+
+  hideEditForm() {
+    document.getElementById("challengeDetails").style.display = "";
+    document.getElementById("detailsModalActions").style.display = "";
+    document.getElementById("challengeEditForm").style.display = "none";
+    document.getElementById("editError").style.display = "none";
+    document.getElementById("editSuccess").style.display = "none";
+  }
+
+  /**
+   * Load all users into the edit form datalists
+   */
+  async loadUsersForEdit() {
+    if (this.allUsers.length === 0) {
+      const { data, error } = await this.supabase
+        .from("users")
+        .select("id, username, display_name")
+        .order("display_name");
+      if (!error && data) this.allUsers = data;
+    }
+
+    const options = this.allUsers
+      .map(
+        (u) =>
+          `<option value="${escapeHtml(u.display_name || u.username)}" data-user-id="${u.id}"></option>`
+      )
+      .join("");
+
+    const dl1 = document.getElementById("editUsersDatalist");
+    const dl2 = document.getElementById("editVsUsersDatalist");
+    if (dl1) dl1.innerHTML = options;
+    if (dl2) dl2.innerHTML = options;
+  }
+
+  /**
+   * Resolve a datalist input value to a user ID
+   */
+  resolveUserIdFromInput(inputId) {
+    const input = document.getElementById(inputId);
+    const val = (input?.value || "").trim();
+    if (!val) return null;
+    // Match against allUsers by display_name or username (case-insensitive)
+    const match = this.allUsers.find(
+      (u) =>
+        (u.display_name || u.username).toLowerCase() === val.toLowerCase() ||
+        u.username.toLowerCase() === val.toLowerCase()
+    );
+    return match ? match.id : null;
+  }
+
+  /**
+   * Save edited challenge fields
+   */
+  async handleEditSave() {
+    const saveBtn = document.getElementById("saveEditBtn");
+    const errorDiv = document.getElementById("editError");
+    const successDiv = document.getElementById("editSuccess");
+    errorDiv.style.display = "none";
+    successDiv.style.display = "none";
+
+    const title = document.getElementById("editTitle").value.trim();
+    const description = document.getElementById("editDescription").value.trim();
+    if (!title || !description) {
+      errorDiv.textContent = "Title and Description are required.";
+      errorDiv.style.display = "block";
+      return;
+    }
+
+    const suggestedForId = this.resolveUserIdFromInput("editSuggestedFor");
+    const vsUserId = this.resolveUserIdFromInput("editVsUser");
+    const brianMode = document.getElementById("editBrianMode").value || null;
+
+    // vs_user and brian_mode mutually exclusive
+    const finalBrianMode = vsUserId ? null : brianMode;
+    const finalVsUser = vsUserId || null;
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Saving...";
+
+    try {
+      const { error } = await this.supabase
+        .from("challenges")
+        .update({
+          title,
+          description,
+          success_metric: document.getElementById("editSuccessMetric").value.trim() || null,
+          suggested_for: suggestedForId,
+          brian_mode: finalBrianMode,
+          vs_user: finalVsUser,
+        })
+        .eq("id", this.currentChallenge.id);
+
+      if (error) throw error;
+
+      successDiv.textContent = "Challenge saved!";
+      successDiv.style.display = "block";
+
+      setTimeout(async () => {
+        this.hideEditForm();
+        this.closeDetailsModal();
+        await this.loadAllChallenges();
+      }, 1200);
+    } catch (err) {
+      errorDiv.textContent = "Save failed: " + err.message;
+      errorDiv.style.display = "block";
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = "💾 Save Changes";
+    }
+  }
+
+  /**
+   * Duplicate the current challenge as a new pending submission, then open edit form on the copy
+   */
+  async handleDuplicate() {
+    const challenge = this.currentChallenge;
+    if (!challenge) return;
+
+    const dupBtn = document.getElementById("duplicateChallengeBtn");
+    if (dupBtn) {
+      dupBtn.disabled = true;
+      dupBtn.textContent = "Duplicating...";
+    }
+
+    try {
+      const newId = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const { error } = await this.supabase.from("challenges").insert([
+        {
+          id: newId,
+          title: challenge.title + " (copy)",
+          description: challenge.description,
+          success_metric: challenge.success_metric || null,
+          brian_mode: challenge.brian_mode || null,
+          type: challenge.type || "assigned",
+          created_by: this.userId,
+          suggested_for: null,
+          vs_user: null,
+          approval_status: "pending",
+        },
+      ]);
+
+      if (error) throw error;
+
+      // Reload list and open edit form on the new copy
+      await this.loadAllChallenges();
+      this.closeDetailsModal();
+      alert(
+        `Challenge duplicated as "${challenge.title} (copy)" — it is now in Pending. Find it there to edit and approve.`
+      );
+    } catch (err) {
+      alert("Duplicate failed: " + err.message);
+    } finally {
+      if (dupBtn) {
+        dupBtn.disabled = false;
+        dupBtn.textContent = "📋 Duplicate";
+      }
+    }
   }
 
   /**
