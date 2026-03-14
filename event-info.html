@@ -25,7 +25,9 @@
     <div class="myspace-header full-width-content">
       <div class="myspace-header__logo">
         <img src="images/brispace_logo.jpg" alt="brispace logo" />
-        <img src="images/profile.gif" alt="profile" class="icon-gif user-profile-button" />
+        <a href="/users/<%= navData.user.id %>" class="profile-nav-link" style="opacity:0; visibility: hidden; pointer-events:none;">
+          <img src="/images/profile.gif" alt="profile" class="icon-gif user-profile-button" />
+        </a>
         <button class="mobile-menu-toggle" data-sound="menu" aria-label="Toggle navigation menu">
           <span class="hamburger-icon">☰</span>
         </button>

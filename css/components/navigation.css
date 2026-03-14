@@ -36,9 +36,10 @@ body.has-bottom-menu {
 .user-profile-button {
   max-height: 30px;
   cursor: pointer;
-  /* Hidden until the profile link is wired up */
   opacity: 0;
   pointer-events: none;
+  visibility: hidden;
+  margin-left: 0;
 }
 
 .profile-nav-link {
@@ -52,6 +53,7 @@ body.has-bottom-menu {
   opacity: 1;
   pointer-events: auto;
   animation: fadeInUp 0.35s ease both;
+  margin-left: auto;
 }
 
 /* Mobile Menu Toggle - always visible */

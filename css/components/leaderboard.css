@@ -167,15 +167,28 @@
 @media (min-width: 769px) {
   .leaderboard-cards {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
     gap: var(--spacing-md);
   }
 }
 
 /* Mobile Adjustments */
 @media (max-width: 768px) {
+  .leaderboard-cards {
+    grid-template-columns: 1fr auto;
+  }
+
+  .leaderboard-card {
+    padding: var(--spacing-sm);
+    gap: var(--spacing-xs) var(--spacing-sm);
+  }
+
+  .leaderboard-card__rank {
+    grid-row: 1;
+    grid-column: 1;
+  }
+
   .rank-number {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
   }
 
   .leaderboard-card__name {
@@ -183,11 +196,12 @@
   }
 
   .total-value {
-    font-size: 2rem;
+    font-size: 1.8rem;
   }
 
   .leaderboard-card__stats {
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
+    grid-column: 1 / 3;
   }
 
   .leaderboard-card__stat-label {
