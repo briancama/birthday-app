@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const { getSupabase } = require("../js/utils/server-utils");
+const fs = require("fs");
+const path = require("path");
 
 // Shared Supabase client
 const supabase = getSupabase();
@@ -116,12 +118,51 @@ router.get("/:identifier", async (req, res) => {
       console.warn("userCount/allUsers query failed:", e.message);
     }
 
-    res.render("user", {
-      user,
-      profile_title: data.profile_title,
-      userCount,
-      allUsers: allUsers || [],
-    });
+    // Fetch user's achievements (server-side) so profile pages show badges immediately
+    let userAchievements = [];
+    try {
+      const { data: ua, error: uaErr } = await supabase
+        .from("user_achievements")
+        .select("achievement_id, awarded_at, achievements(name,description,image_url)")
+        .eq("user_id", data.user_id || data.id)
+        .order("awarded_at", { ascending: false });
+      if (!uaErr && Array.isArray(ua)) userAchievements = ua;
+    } catch (e) {
+      console.warn("user achievements query failed:", e && e.message ? e.message : e);
+    }
+
+    // Render template; wrap to provide clearer template error context when EJS fails
+    try {
+      res.render("user", {
+        user,
+        profile_title: data.profile_title,
+        userCount,
+        allUsers: allUsers || [],
+        userAchievements: userAchievements || [],
+      });
+    } catch (renderErr) {
+      // Log a helpful snippet around the reported template line if available
+      console.error("EJS render error for templates/user.ejs:", renderErr && renderErr.message ? renderErr.message : renderErr);
+      try {
+        const match = (renderErr && renderErr.message && renderErr.message.match(/\((\d+):(\d+)\)/)) || null;
+        const tplPath = path.join(__dirname, "../templates/user.ejs");
+        if (match && fs.existsSync(tplPath)) {
+          const errLine = parseInt(match[1], 10);
+          const file = fs.readFileSync(tplPath, "utf8").split("\n");
+          const start = Math.max(0, errLine - 4);
+          const end = Math.min(file.length, errLine + 3);
+          console.error(`--- ${tplPath}:${errLine} (context) ---`);
+          for (let i = start; i < end; i++) {
+            const lineMarker = i + 1 === errLine ? "=>" : "  ";
+            console.error(`${lineMarker} ${i + 1}: ${file[i]}`);
+          }
+          console.error("--- end template context ---");
+        }
+      } catch (innerErr) {
+        console.error("Failed to show template context:", innerErr);
+      }
+      return res.status(500).send("Template rendering error (see server logs)");
+    }
   } catch (err) {
     console.error("Error in /users/:identifier route", err);
     res.status(500).send("Internal server error");

@@ -1,5 +1,6 @@
 import { BasePage } from "./base-page.js";
 import { ChallengeCard } from "../components/challenge-card.js";
+import { renderChallengeList } from "../components/challenge-list.js";
 import { CocktailEntryModal } from "../components/cocktail-entry-modal.js";
 import { EventBus } from "../events/event-bus.js";
 import { featureFlags } from "../utils/feature-flags.js";
@@ -19,19 +20,26 @@ class DashboardPage extends BasePage {
   }
 
   async onReady() {
-    // Ensure Firebase session is valid before proceeding
+    // Initialize Firebase SDK, but prefer a soft client init so we don't
+    // forcibly redirect if the server-rendered nav state already authenticates.
     await firebaseAuth.init();
-    const sdkUser = firebaseAuth.getCurrentUser();
-    if (!sdkUser || !sdkUser.uid) {
-      this.showErrorToast("Authentication required. Please log in.");
-      window.location.href = "/";
-      return;
+    // Try a softInit (no redirect). If it fails, fall back to server-provided nav state.
+    await appState.softInit();
+    if (appState.getUserId()) {
+      this.currentUser = appState.getCurrentUser();
+      this.userId = appState.getUserId();
+    } else {
+      const navState = window.__NAV_STATE__ || {};
+      if (navState.user && navState.user.id) {
+        // Use server-provided user info when client-side Firebase session is not present.
+        this.currentUser = navState.user;
+        this.userId = navState.user.id;
+      } else {
+        this.showErrorToast("Authentication required. Please log in.");
+        window.location.href = "/";
+        return;
+      }
     }
-
-    // Load user profile from appState
-    await appState.init();
-    this.currentUser = appState.getCurrentUser();
-    this.userId = appState.getUserId();
 
     // Visitors don't have challenge access — send them to their profile
     if (appState.getUserType() === "visitor") {
@@ -87,8 +95,13 @@ class DashboardPage extends BasePage {
       });
     }
 
-    // Check event status once and store it
-    this.eventStarted = await featureFlags.isEventStarted(this.supabase);
+    // Check event status once and store it. Prefer server-provided flag when available
+    const navState = window.__NAV_STATE__ || {};
+    if (typeof navState.eventStarted !== "undefined") {
+      this.eventStarted = !!navState.eventStarted;
+    } else {
+      this.eventStarted = await featureFlags.isEventStarted(this.supabase);
+    }
 
     // If event started, show stats and load data
     if (this.eventStarted) {
@@ -160,7 +173,11 @@ class DashboardPage extends BasePage {
     } else {
       const preview = document.getElementById("challengesList");
       if (preview) {
-        preview.innerHTML = `
+        // Only show the preview if there are no existing challenge cards (avoid overwriting server-rendered content)
+        const hasCards =
+          preview.querySelectorAll && preview.querySelectorAll(".challenge-card").length > 0;
+        if (!hasCards) {
+          preview.innerHTML = `
                     <div class="feature-preview" style="text-align: center;">
                         <img style="margin-top:-25px;" src="images/construction.gif" alt="Under Construction" class="preview-gif">
                         <div style="text-align: left; padding: 1rem;">
@@ -173,7 +190,8 @@ class DashboardPage extends BasePage {
                         </div>
                     </div>
                 `;
-        preview.className = "feature-preview";
+          preview.className = "feature-preview";
+        }
       }
     }
     await this.loadCocktailCompetitionStatus();
@@ -480,8 +498,33 @@ class DashboardPage extends BasePage {
   async loadChallenges() {
     const container = document.getElementById("challengesList");
     this.setLoadingState("challengesList", true);
-
     try {
+      // If server provided initial assignments, hydrate from that blob first
+      if (
+        window.__SERVER_ASSIGNMENTS__ &&
+        Array.isArray(window.__SERVER_ASSIGNMENTS__) &&
+        window.__SERVER_ASSIGNMENTS__.length > 0
+      ) {
+        const serverData = window.__SERVER_ASSIGNMENTS__;
+        console.debug("Dashboard: hydrating server assignments", serverData && serverData.length);
+        // Hydrate DOM using the shared renderer. Clear loading state first so it doesn't erase rendered nodes.
+        this.setLoadingState("challengesList", false);
+        renderChallengeList(container, serverData, {
+          revealedId: this.revealedChallengeId,
+          onReveal: (detail) => this.handleChallengeReveal(detail),
+          onComplete: (detail) => this.handleChallengeComplete(detail),
+          cardOptions: {
+            showActions: true,
+            allowReveal: true,
+            showBrianMode: true,
+            showIndex: true,
+          },
+        });
+        // Mark as hydrated to avoid clobbering server-rendered DOM elsewhere
+        window.__SERVER_ASSIGNMENTS_HYDRATED__ = true;
+        return;
+      }
+
       const { data, error } = await this.supabase
         .from("assignments")
         .select(
@@ -507,7 +550,12 @@ class DashboardPage extends BasePage {
         return;
       }
 
-      this.renderChallenges(container, data);
+      renderChallengeList(container, data, {
+        revealedId: this.revealedChallengeId,
+        onReveal: (detail) => this.handleChallengeReveal(detail),
+        onComplete: (detail) => this.handleChallengeComplete(detail),
+        cardOptions: { showActions: true, allowReveal: true, showBrianMode: true, showIndex: true },
+      });
     } catch (err) {
       this.setLoadingState("challengesList", false);
       container.innerHTML = `<div class="empty">Error loading challenges: ${err.message}</div>`;

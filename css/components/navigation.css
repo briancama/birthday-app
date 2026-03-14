@@ -12,6 +12,16 @@ body.has-bottom-menu {
   position: relative;
 }
 
+.site-navigation--old {
+  margin-top: 12px;
+}
+
+.site-navigation--old .mobile-menu-toggle {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -33,13 +43,9 @@ body.has-bottom-menu {
 
 .profile-nav-link {
   margin-left: auto;
-  margin-right: 16px;
+  margin-right: 12px;
   display: inline-flex;
   align-items: center;
-}
-
-.user-profile-button {
-  margin-right: 40px;
 }
 
 .profile-nav-link .user-profile-button {
@@ -56,9 +62,6 @@ body.has-bottom-menu {
   border: 2px solid var(--border-color);
   padding: var(--spacing-xs) var(--spacing-sm);
   font-size: 1.2rem;
-  position: absolute;
-  top: 17px;
-  right: var(--spacing-sm);
   z-index: 1000;
   cursor: pointer;
   font-family: "Arial", sans-serif;

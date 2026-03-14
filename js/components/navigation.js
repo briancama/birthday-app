@@ -133,6 +133,7 @@ class NavigationController {
     if (path.includes("cocktail-judging")) return "cocktail-judging";
     if (path.includes("cocktail-rubric")) return "rubric";
     if (path.includes("challenges-submit")) return "challenges-submit";
+    if (path.includes("challenges")) return "challenges";
     if (path.includes("admin-approvals")) return "admin-approvals";
 
     return "dashboard"; // default

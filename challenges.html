@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="css/components/navigation.css" />
     <link rel="stylesheet" href="css/components/submissions.css" />
     <link rel="stylesheet" href="css/components/event-card.css" />
+    <link rel="stylesheet" href="css/components/character-select.css" />
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
@@ -18,7 +19,7 @@
   <body>
     <div class="container">
       <!-- Navigation Component -->
-      <nav class="site-navigation mobile-menu-default">
+      <nav class="site-navigation site-navigation--old mobile-menu-default">
         <button
           class="mobile-menu-toggle active"
           data-sound="menu"
@@ -50,26 +51,47 @@
               <img src="images/trophy.gif" alt="trophy" class="icon-gif icon-gif--with-text" />
               <span>LEADERBOARD</span>
             </a>
+            <button class="nav-tab logout-btn">
+              <img
+                src="/images/logout.gif"
+                alt="logout"
+                class="icon-gif icon-gif--lg icon-gif--with-text"
+              />
+              <span>LOGOUT</span>
+            </button>
           </div>
         </div>
       </nav>
 
       <main>
-        <h1>Challenges</h1>
-
         <section class="section">
-          <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 12px">
-            <input
-              id="challengeTargetInput"
-              placeholder="Enter username or user id to challenge"
-              style="flex: 1; padding: 8px"
-            />
-            <button id="challengeTargetBtn" class="btn btn-primary">Challenge</button>
-          </div>
+          <h2>Complete Challenges</h2>
 
-          <div id="challengesList">
+          <div id="challengesList" style="margin-bottom: 2rem">
             <div class="loading">Loading challenges...</div>
           </div>
+        </section>
+        <section class="section section--character-select">
+          <div class="character-select__intro-overlay">
+            <div class="character-select__intro-inner">
+              <p>
+                Welcome to the Challenger Selection! Choose another challenger and hope they get the
+                message and attempt to complete one of their challenges to earn points and climb the
+                leaderboard. Each character has unique challenges, so pick wisely and get ready to
+                watch them perform!
+              </p>
+              <button class="btn character-select__intro-start" data-no-sound>Start</button>
+            </div>
+          </div>
+          <h2 class="character-select__title">Challenger Selection</h2>
+          <div class="character-select__map-container">
+            <img
+              src="/images/street-fighter-map.png"
+              alt="Street Fighter Map"
+              class="character-select__map"
+            />
+          </div>
+          <div id="characterSelectContainer"></div>
         </section>
       </main>
     </div>

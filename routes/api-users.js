@@ -9,10 +9,31 @@ const supabase = getSupabase();
 // creates a notification for them. Requires the caller to be authenticated.
 router.post("/users/:id/challenge", async (req, res) => {
   try {
-    const targetId = req.params.id;
+    const rawTarget = req.params.id;
     const signedUserId = requireSignedUser(req);
     if (!signedUserId) return res.status(401).json({ error: "Not authenticated" });
-    if (signedUserId === targetId)
+
+    // Resolve target: allow either UUID (users.id) or username slug in URL
+    let targetUserId = rawTarget;
+    const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+    if (!uuidRegex.test(rawTarget)) {
+      // Looks like a username slug — look up the user's UUID
+      try {
+        const { data: userRow, error: userErr } = await supabase
+          .from("users")
+          .select("id")
+          .eq("username", rawTarget)
+          .maybeSingle();
+        if (userErr) throw userErr;
+        if (!userRow || !userRow.id) return res.status(404).json({ error: "Target user not found" });
+        targetUserId = userRow.id;
+      } catch (lookupErr) {
+        console.error("Failed to look up target user by username:", lookupErr.message || lookupErr);
+        return res.status(500).json({ error: "Failed to resolve target user" });
+      }
+    }
+
+    if (signedUserId === targetUserId)
       return res.status(400).json({ error: "Cannot challenge yourself" });
 
     // Create a simple notification so the target user is reminded to perform
@@ -22,7 +43,7 @@ router.post("/users/:id/challenge", async (req, res) => {
       const { data: notif, error: notifErr } = await supabase
         .from("notifications")
         .insert({
-          user_id: targetId,
+          user_id: targetUserId,
           payload: { type: "challenge_reminder", from_user: signedUserId },
           read: false,
         })

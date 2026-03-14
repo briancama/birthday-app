@@ -8,7 +8,8 @@ import { createCommentCard } from "../components/myspace-comment-card.js";
 class UserProfilePage extends BasePage {
   constructor() {
     // Public page — no forced auth redirect; softInit will load user if signed in.
-    super({ requiresAuth: false, siteAward: false });
+    // Do not disable `siteAward` here so BasePage can display the random site award.
+    super({ requiresAuth: false });
     this.profileUserId = document.body.dataset.profileUserId || null;
     this.isOwner = false;
   }
@@ -325,6 +326,12 @@ class UserProfilePage extends BasePage {
   async loadAchievements() {
     const container = document.getElementById("achievements-container");
     if (!container || !this.profileUserId) return;
+    // If server already rendered achievements, skip client hydration to avoid duplicates
+    try {
+      if (container.classList && container.classList.contains("server-rendered")) return;
+    } catch (e) {
+      // ignore classList access errors
+    }
     try {
       const { data, error } = await this.supabase
         .from("user_achievements")

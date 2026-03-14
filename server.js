@@ -134,6 +134,17 @@ app.use(async (req, res, next) => {
       hasPushSubscription: hasPush,
       eventStarted,
     };
+    // Precompute a sanitized JSON blob for navData to safely embed in templates
+    try {
+      let navJson = JSON.stringify(res.locals.navData || {});
+      navJson = navJson
+        .replace(/</g, "\\u003c")
+        .replace(/\u2028/g, "\\u2028")
+        .replace(/\u2029/g, "\\u2029");
+      res.locals.navDataJson = navJson;
+    } catch (e) {
+      res.locals.navDataJson = "{}";
+    }
   } catch (err) {
     // fallback: leave navData minimal
     res.locals.navData = { isAuthenticated: false };
@@ -204,8 +215,59 @@ app.get("/", async (req, res, next) => {
 
 // Serve static files from workspace root
 // Rendered routes (prefer explicit server-rendered pages where desired)
-app.get(["/dashboard", "/dashboard.html"], (req, res) => {
-  return res.render("dashboard");
+app.get(["/dashboard", "/dashboard.html"], async (req, res) => {
+  try {
+    const supabase = getSupabase();
+    const assignments = [];
+
+    // If we have a server-resolved user, pre-fetch their assignments for server-side render
+    const user = res.locals && res.locals.navData && res.locals.navData.user;
+    if (supabase && user && user.id) {
+      const { data, error } = await supabase
+        .from("assignments")
+        .select(
+          `id, completed_at, outcome, challenges (id, title, description, brian_mode, success_metric)`
+        )
+        .eq("user_id", user.id)
+        .eq("active", true)
+        .order("assigned_at", { ascending: true });
+
+      if (!error && Array.isArray(data)) {
+        // Sort: incomplete first, completed at the bottom (preserves assigned_at order within each group)
+        const sorted = data.slice().sort((a, b) => {
+          const aComplete = a.completed_at ? 1 : 0;
+          const bComplete = b.completed_at ? 1 : 0;
+          return aComplete - bComplete;
+        });
+        sorted.forEach((row) => assignments.push(row));
+      }
+    }
+
+    // Precompute a JSON blob with unsafe chars escaped for safe embedding
+    // Escape '<' to prevent </script> injection and also escape line separator
+    // characters U+2028/U+2029 which break JS string literals when embedded.
+    let assignmentsJson = JSON.stringify(assignments) || "[]";
+    assignmentsJson = assignmentsJson
+      .replace(/</g, "\\u003c")
+      .replace(/\u2028/g, "\\u2028")
+      .replace(/\u2029/g, "\\u2029");
+    // Log size for debugging EJS compile issues
+    try {
+      console.debug(`Dashboard: assignmentsJson length=${assignmentsJson.length}`);
+    } catch (e) {
+      /* ignore logging errors */
+    }
+    return res.render("dashboard", { assignments, assignmentsJson });
+  } catch (err) {
+    console.warn("Dashboard server render failed to fetch assignments:", err && err.message);
+    const assignmentsJson = JSON.stringify([]);
+    return res.render("dashboard", { assignments: [], assignmentsJson });
+  }
+});
+
+// Leaderboard: server-rendered to include navigation partial
+app.get(["/leaderboard", "/leaderboard.html"], (req, res) => {
+  return res.render("leaderboard");
 });
 
 app.use(express.static(path.join(__dirname)));

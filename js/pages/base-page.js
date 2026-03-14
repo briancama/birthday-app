@@ -370,6 +370,10 @@ class BasePage {
     this.audioManager.preload("homer-woohoo", "/audio/homer-woohoo.mp3", true);
     this.audioManager.preload("hm", "/audio/hm.mp3", true);
     this.audioManager.preload("womp-womp-tuba", "/audio/womp-womp-tuba.mp3", true);
+    // Street Fighter sound effect used by character selector
+    this.audioManager.preload("sf_perfect", "/audio/sf_perfect.mp3", true);
+    // Load select sound immediately to avoid first-play latency on tiles
+    this.audioManager.preload("sf_select", "/audio/sf_select.ogg", false);
 
     // Initialize audio on first interaction (required for mobile).
     // Listen for touchend in addition to click — on iOS, preventDefault() on a
@@ -384,9 +388,12 @@ class BasePage {
       document.removeEventListener("touchend", initAudio);
       document.removeEventListener("keydown", initAudio);
     };
-    document.addEventListener("click", initAudio, { once: true });
-    document.addEventListener("touchend", initAudio, { once: true });
-    document.addEventListener("keydown", initAudio, { once: true });
+    // Use capture and include pointerdown so initialization runs before
+    // target click handlers (reduces delay on first sound play).
+    document.addEventListener("pointerdown", initAudio, { once: true, capture: true });
+    document.addEventListener("click", initAudio, { once: true, capture: true });
+    document.addEventListener("touchend", initAudio, { once: true, capture: true });
+    document.addEventListener("keydown", initAudio, { once: true, capture: true });
 
     // Add click sounds to common button selectors
     addClickSound("button:not([data-no-sound])");
@@ -532,19 +539,19 @@ class BasePage {
 
     // Each entry can optionally provide a sound path; if null we default to the generic "thanks" sound
     const siteAwardsImages = [
-      { img: "images/site-awards_blink182.gif", sound: "/audio/thanks_blink182.mp3" },
-      { img: "images/site-awards_hackers.gif", sound: "/audio/thanks_hackers.mp3" },
-      { img: "images/site-awards_pikachu.gif", sound: "/audio/thanks_pikachu.mp3" },
-      { img: "images/site-awards_christian.gif", sound: "/audio/thanks_christian.mp3" },
-      { img: "images/site-awards_hanson.gif", sound: "/audio/thanks_mmmbop.mp3" },
-      { img: "images/site-awards_aaroncarter.gif", sound: null },
-      { img: "images/site-awards_angel.gif", sound: "/audio/thanks_fairy.mp3" },
-      { img: "images/site-awards_pug.gif", sound: "/audio/thanks_pug.mp3" },
-      { img: "images/site-awards_predator.gif", sound: "/audio/thanks_predator.mp3" },
-      { img: "images/site-awards_southpark.gif", sound: "/audio/thanks_south-park.mp3" },
-      { img: "images/site-awards_jackpot.gif", sound: "/audio/thanks_jackpot.mp3" },
-      { img: "images/site-awards_olsen.gif", sound: "/audio/thanks_olsen.mp3" },
-      { img: "images/site-awards-bomb.gif", sound: "/audio/thanks_bomb.mp3" },
+      { img: "/images/site-awards_blink182.gif", sound: "/audio/thanks_blink182.mp3" },
+      { img: "/images/site-awards_hackers.gif", sound: "/audio/thanks_hackers.mp3" },
+      { img: "/images/site-awards_pikachu.gif", sound: "/audio/thanks_pikachu.mp3" },
+      { img: "/images/site-awards_christian.gif", sound: "/audio/thanks_christian.mp3" },
+      { img: "/images/site-awards_hanson.gif", sound: "/audio/thanks_mmmbop.mp3" },
+      { img: "/images/site-awards_aaroncarter.gif", sound: null },
+      { img: "/images/site-awards_angel.gif", sound: "/audio/thanks_fairy.mp3" },
+      { img: "/images/site-awards_pug.gif", sound: "/audio/thanks_pug.mp3" },
+      { img: "/images/site-awards_predator.gif", sound: "/audio/thanks_predator.mp3" },
+      { img: "/images/site-awards_southpark.gif", sound: "/audio/thanks_south-park.mp3" },
+      { img: "/images/site-awards_jackpot.gif", sound: "/audio/thanks_jackpot.mp3" },
+      { img: "/images/site-awards_olsen.gif", sound: "/audio/thanks_olsen.mp3" },
+      { img: "/images/site-awards-bomb.gif", sound: "/audio/thanks_bomb.mp3" },
     ];
     // Allow a forced override entry (string img path or { img, sound } object)
     let randomEntry;
@@ -575,7 +582,7 @@ class BasePage {
     const voteLabel = document.createElement("div");
     voteLabel.textContent = "Vote for Me!";
     voteLabel.style.cssText =
-      'text-align:center;font-size:0.75rem;font-family: "Comic Sans", "Comic Sans MS", "Chalkboard", "ChalkboardSE-Regular", cursive, sans-serif;color:#ff69b4;margin-top:4px;cursor:pointer;user-select:none;';
+      'text-align:center;font-weight: 600; font-size:1rem;font-family: "Comic Sans", "Comic Sans MS", "Chalkboard", "ChalkboardSE-Regular", cursive, sans-serif;color:#ff69b4;margin-top:4px;cursor:pointer;user-select:none;';
 
     // Wrap image + label in a container
     const awardContainer = document.createElement("div");

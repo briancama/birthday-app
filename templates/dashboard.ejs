@@ -19,12 +19,17 @@
 
   <body>
     <!-- Server-rendered Navigation -->
-      <% const navLocal = Object.assign({}, (typeof navData !== 'undefined' ? navData : {}), { pageTitle: 'Dashboard' }); %>
-      <%- include('partials/navigation', { navData: navLocal }) %>
+    <% const navLocal = Object.assign({}, (typeof navData !== 'undefined' ? navData : {}), { pageTitle: 'Dashboard' }); %>
+    <%- include('partials/navigation', { navData: navLocal }) %>
     <div class="container">
       <!-- Scrolling Marquee -->
       <marquee behavior="scroll" direction="left" scrollamount="6">
-        *** WELCOME TO THE BIRTHDAY CHALLENGE ZONE<span id="marqueeUsername" style="opacity: 0"></span>! *** Check out the event info for details, submit your challenges, and get ready to party! ***
+        *** WELCOME TO THE BIRTHDAY CHALLENGE ZONE<span
+          id="marqueeUsername"
+          style="opacity: 0"
+        ></span
+        >! *** Check out the event info for details, submit your challenges, and get ready to party!
+        ***
       </marquee>
       <div class="section" id="personalStatsSection" style="display: none">
         <h2 class="text-shadow-light">YOUR STATS</h2>
@@ -63,45 +68,183 @@
       </div>
 
       <!-- Cocktail Competition Section -->
-      <div class="section text-center" style="display: flex; flex-direction: column; min-height: 377px; align-items: center">
+      <div
+        class="section text-center"
+        style="display: flex; flex-direction: column; min-height: 377px; align-items: center"
+      >
         <h2 class="text-shadow-light">
-          <span><img class="icon-gif icon-gif--lg icon-gif--with-text" src="/images/cocktail_stirrer.gif" alt="Cocktail Icon" />COCKTAIL COMPETITION<img class="icon-gif icon-gif--lg icon-gif--with-text" src="/images/cocktail_stirrer.gif" alt="Cocktail Icon"/></span>
+          <span
+            ><img
+              class="icon-gif icon-gif--lg icon-gif--with-text"
+              src="/images/cocktail_stirrer.gif"
+              alt="Cocktail Icon" />COCKTAIL COMPETITION<img
+              class="icon-gif icon-gif--lg icon-gif--with-text"
+              src="/images/cocktail_stirrer.gif"
+              alt="Cocktail Icon"
+          /></span>
         </h2>
-        <p style="margin: 0rem auto 1.5rem; max-width: 600px">Mix your best cocktail and compete! Check the rubric for judging criteria, and when voting opens, rate everyone's creations.</p>
-        <a href="/cocktail-rubric" class="btn btn-tertiary" style="min-width: 280px; margin-bottom: 0.75rem;" target="_blank">VIEW RUBRIC</a>
-        <button id="registerCocktailBtn" class="btn btn-primary cocktail-button-fade-in" style="min-width: 280px; margin-bottom: 0.75rem; opacity: 0">REGISTER COCKTAIL</button>
+        <p style="margin: 0rem auto 1.5rem; max-width: 600px">
+          Mix your best cocktail and compete! Check the rubric for judging criteria, and when voting
+          opens, rate everyone's creations.
+        </p>
+        <a
+          href="/cocktail-rubric"
+          class="btn btn-tertiary"
+          style="min-width: 280px; margin-bottom: 0.75rem"
+          target="_blank"
+          >VIEW RUBRIC</a
+        >
+        <button
+          id="registerCocktailBtn"
+          class="btn btn-primary cocktail-button-fade-in"
+          style="min-width: 280px; margin-bottom: 0.75rem; opacity: 0"
+        >
+          REGISTER COCKTAIL
+        </button>
         <div id="cocktailJudgingLink" style="display: none">
-          <a href="/cocktail-judging" class="btn btn-secondary" style="min-width: 280px">JUDGE COCKTAILS NOW</a>
+          <a href="/cocktail-judging" class="btn btn-secondary" style="min-width: 280px"
+            >JUDGE COCKTAILS NOW</a
+          >
         </div>
       </div>
 
       <!-- RSVP'd Events Section -->
       <div class="section">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+          "
+        >
           <h2 class="text-shadow-light" style="margin-bottom: 0">YOUR EVENTS</h2>
-          <a href="/event-info.html" class="dashboard-events-link" style="font-family: Arial; font-size: 1em; text-decoration: underline; color: var(--accent-color); font-weight: bold; margin-left: 1em;">See All Events</a>
+          <a
+            href="/event-info.html"
+            class="dashboard-events-link"
+            style="
+              font-family: Arial;
+              font-size: 1em;
+              text-decoration: underline;
+              color: var(--accent-color);
+              font-weight: bold;
+              margin-left: 1em;
+            "
+            >See All Events</a
+          >
         </div>
         <ul id="userEventsSection" style="padding: 0"></ul>
       </div>
 
       <!-- Flame Divider -->
       <div class="flame-divider">
-        <img src="/images/flame_transparent.gif" alt="Flame Divider" onerror="this.style.display = 'none'" />
+        <img
+          src="/images/flame_transparent.gif"
+          alt="Flame Divider"
+          onerror="this.style.display = 'none'"
+        />
       </div>
 
       <div class="section">
-        <h2 class="text-shadow-light">YOUR CHALLENGES <img src="/images/flame.gif" class="icon-gif icon-gif--with-text" /></h2>
-        <div id="challengesList" class="challenge-list"></div>
+        <h2 class="text-shadow-light">
+          YOUR CHALLENGES <img src="/images/flame.gif" class="icon-gif icon-gif--with-text" />
+        </h2>
+        <div id="challengesList" class="challenge-list">
+          <% if (typeof assignments !== 'undefined' && Array.isArray(assignments) &&
+          assignments.length > 0) { %> <% const firstIncomplete = assignments.findIndex(a =>
+          !a.completed_at); %>
+          <% assignments.forEach(function(assignment, idx) { %>
+          <% const isCompleted = !!assignment.completed_at; %>
+          <% const outcome = assignment.outcome || ''; %>
+          <% const brianMode = assignment.challenges && assignment.challenges.brian_mode; %>
+          <% const isRevealed = false; %>
+          <% const canReveal = !isCompleted && (firstIncomplete === idx); %>
+          <% const isLocked = !isCompleted && (firstIncomplete < idx); %>
+          <% let cardClass = 'challenge-card'; %>
+          <% if (isCompleted) { cardClass += ' completed ' + outcome; } else if (isLocked) { cardClass += ' locked'; } else if (isRevealed) { cardClass += ' revealed'; } else if (canReveal) { cardClass += ' unrevealed'; } %>
+
+          <div
+            class="<%= cardClass %>"
+            data-assignment-id="<%= assignment.id %>"
+            data-challenge-id="<%= assignment.challenges && assignment.challenges.id %>"
+            data-brian-mode="<%= brianMode || '' %>"
+          >
+            <div class="challenge-info">
+              <div class="challenge-title">
+                <span class="title-hidden"><%= 'Challenge ' + (idx + 1) %></span>
+                <span class="title-revealed"
+                  ><%= assignment.challenges && assignment.challenges.title %></span
+                >
+                <% if (brianMode === 'vs') { %>
+                <span class="brian-mode-badge"
+                  ><img src="/images/vs.gif" class="icon-gif" alt="VS Brian"
+                /></span>
+                <% } else if (brianMode) { %>
+                <span class="brian-mode-badge"
+                  ><img src="/images/with.gif" class="icon-gif" alt="With Brian"
+                /></span>
+                <% } %>
+              </div>
+              <div class="challenge-description">
+                <p><%= assignment.challenges && assignment.challenges.description %></p>
+                <% if (assignment.challenges && assignment.challenges.success_metric) { %>
+                <details class="success-metric">
+                  <summary><strong>Success Metric</strong></summary>
+                  <p><%= assignment.challenges.success_metric %></p>
+                </details>
+                <% } %>
+              </div>
+            </div>
+            <% if (isCompleted) { %>
+            <span class="outcome-badge <%= outcome %>"
+              ><%= outcome === 'success' ? 'SUCCESS!' : 'FAILURE!' %></span
+            >
+            <% } else if (isLocked) { %>
+            <span class="locked-badge">🔒 LOCKED</span>
+            <% } else if (canReveal) { %>
+            <span class="reveal"
+              ><img src="/images/reveal.gif" class="icon-gif" alt="reveal" /> CLICK TO REVEAL
+              <img src="/images/reveal.gif" class="icon-gif" alt="reveal"
+            /></span>
+            <% } %>
+          </div>
+          <% }); %>
+          <% } %>
+        </div>
+        <script>
+          // Hydration blob: server precomputes safe JSON
+          window.__SERVER_ASSIGNMENTS__ = <%- typeof assignmentsJson !== 'undefined' ? assignmentsJson : '[]' %>;
+        </script>
       </div>
 
       <!-- Achievements Section (hidden until user has awards) -->
       <div class="section" id="achievementsSection">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+          "
+        >
           <h2 class="text-shadow-light" style="margin-bottom: 0">ACHIEVEMENTS</h2>
-          <div class="achievements-counter" id="achievementsCounter" style="font-size: 12px; font-weight: bold; color: var(--accent-color)"></div>
+          <div
+            class="achievements-counter"
+            id="achievementsCounter"
+            style="font-size: 12px; font-weight: bold; color: var(--accent-color)"
+          ></div>
         </div>
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-          <div id="achievementsLegend" class="hide-desktop" style="font-size: 10px; color: #666">Click for details</div>
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+          "
+        >
+          <div id="achievementsLegend" class="hide-desktop" style="font-size: 10px; color: #666">
+            Click for details
+          </div>
         </div>
         <div id="achievementsList" class="achievements-grid" style="padding-top: 8px"></div>
       </div>
