@@ -3,6 +3,7 @@ import { audioManager, addClickSound } from "../utils/audio.js";
 import { achievementService } from "../services/achievement-service.js";
 import { EventBus } from "../events/event-bus.js";
 import * as notificationService from "../services/notification-service.js";
+import { initNavigation } from "../components/navigation.js";
 
 class BasePage {
   constructor({
@@ -22,6 +23,9 @@ class BasePage {
   }
 
   async init() {
+    // Wire navigation immediately — before any async work so the mobile menu
+    // toggle is interactive right away without waiting for auth / audio / etc.
+    initNavigation();
     // One-time reset: clear stale audio-muted / music-muted flags so users
     // aren't silently stuck with muted audio after this deploy.
     const AUDIO_RESET_KEY = "audio-reset-v1";

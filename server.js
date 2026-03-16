@@ -221,8 +221,10 @@ app.get(["/dashboard", "/dashboard.html"], async (req, res) => {
     const assignments = [];
 
     // If we have a server-resolved user, pre-fetch their assignments for server-side render
+    // Only fetch if the event has started — otherwise show the pre-event preview
     const user = res.locals && res.locals.navData && res.locals.navData.user;
-    if (supabase && user && user.id) {
+    const eventStarted = !!(res.locals.navData && res.locals.navData.eventStarted);
+    if (supabase && user && user.id && eventStarted) {
       const { data, error } = await supabase
         .from("assignments")
         .select(
@@ -257,11 +259,11 @@ app.get(["/dashboard", "/dashboard.html"], async (req, res) => {
     } catch (e) {
       /* ignore logging errors */
     }
-    return res.render("dashboard", { assignments, assignmentsJson });
+    return res.render("dashboard", { assignments, assignmentsJson, eventStarted });
   } catch (err) {
     console.warn("Dashboard server render failed to fetch assignments:", err && err.message);
     const assignmentsJson = JSON.stringify([]);
-    return res.render("dashboard", { assignments: [], assignmentsJson });
+    return res.render("dashboard", { assignments: [], assignmentsJson, eventStarted: false });
   }
 });
 

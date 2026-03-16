@@ -118,10 +118,6 @@ body {
   margin-bottom: 3.4rem;
 }
 
-.myspace-section:has(.myspace-section-gif) {
-  margin-top: -1.5rem;
-}
-
 .myspace-section:last-child {
   margin-bottom: 0;
 }
@@ -183,6 +179,11 @@ body {
   .myspace-profile-row {
     gap: 1rem;
   }
+
+/* Hide gif-stepper images by default until JS reveals them (prevents flash of raw GIF) */
+[data-gif-stepper] {
+  visibility: hidden;
+}
 
   .myspace-section-gif {
     display: flex;

@@ -4,7 +4,6 @@ import { renderChallengeList } from "../components/challenge-list.js";
 import { CocktailEntryModal } from "../components/cocktail-entry-modal.js";
 import { EventBus } from "../events/event-bus.js";
 import { featureFlags } from "../utils/feature-flags.js";
-import { initNavigation } from "../components/navigation.js";
 import { appState, APP_CONFIG } from "../app.js";
 import { UserEventsSection } from "../components/user-events-section.js";
 import { firebaseAuth } from "../services/firebase-auth.js";
@@ -49,7 +48,6 @@ class DashboardPage extends BasePage {
     }
 
     this.setupEventListeners();
-    initNavigation();
     this.setPageTitle("Dashboard");
     this.updateMarqueeUsername();
 
@@ -95,12 +93,16 @@ class DashboardPage extends BasePage {
       });
     }
 
-    // Check event status once and store it. Prefer server-provided flag when available
-    const navState = window.__NAV_STATE__ || {};
-    if (typeof navState.eventStarted !== "undefined") {
-      this.eventStarted = !!navState.eventStarted;
+    // Check event status — prefer server-embedded flag, then __NAV_STATE__, then client query
+    if (typeof window.__EVENT_STARTED__ !== "undefined") {
+      this.eventStarted = !!window.__EVENT_STARTED__;
     } else {
-      this.eventStarted = await featureFlags.isEventStarted(this.supabase);
+      const navState = window.__NAV_STATE__ || {};
+      if (typeof navState.eventStarted !== "undefined") {
+        this.eventStarted = !!navState.eventStarted;
+      } else {
+        this.eventStarted = await featureFlags.isEventStarted(this.supabase);
+      }
     }
 
     // If event started, show stats and load data
@@ -510,10 +512,6 @@ class DashboardPage extends BasePage {
       ) {
         const serverData = window.__SERVER_ASSIGNMENTS__;
         console.debug("Dashboard: hydrating server assignments", serverData && serverData.length);
-        console.log(
-          "[TRACE] SERVER_ASSIGNMENTS first challenge:",
-          JSON.stringify(serverData[0]?.challenges)
-        );
         // Hydrate DOM using the shared renderer. Clear loading state first so it doesn't erase rendered nodes.
         this.setLoadingState("challengesList", false);
         renderChallengeList(container, serverData, {

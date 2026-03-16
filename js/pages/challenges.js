@@ -244,10 +244,10 @@ class ChallengesPage extends BasePage {
 
           actionsContainer.outerHTML = `
             <div class="challenge-actions">
-              <button class="success-btn" data-id="${assignmentId}" data-challenge-id="${challengeId}" data-brian-mode="${brianMode}" data-vs-user="${vsUser || ''}" data-sound="success" data-outcome="success">
+              <button class="success-btn" data-id="${assignmentId}" data-challenge-id="${challengeId}" data-brian-mode="${brianMode}" data-vs-user="${vsUser || ""}" data-sound="success" data-outcome="success">
                 <img src="/images/green-checkmark.gif" class="icon-gif icon-gif--with-text hide-mobile" alt="checkmark">SUCCESS
               </button>
-              <button class="failure-btn" data-id="${assignmentId}" data-challenge-id="${challengeId}" data-brian-mode="${brianMode}" data-vs-user="${vsUser || ''}" data-sound="failure" data-outcome="failure">
+              <button class="failure-btn" data-id="${assignmentId}" data-challenge-id="${challengeId}" data-brian-mode="${brianMode}" data-vs-user="${vsUser || ""}" data-sound="failure" data-outcome="failure">
                 <img src="/images/failure.gif" class="icon-gif icon-gif--with-text hide-mobile" alt="cross">FAILURE
               </button>
             </div>

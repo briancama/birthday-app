@@ -195,6 +195,10 @@
     text-shadow: none;
   }
 
+  .nav-user-info .secret-arnold {
+    color: #dbdbdb;
+  }
+
   .login-container .form-group {
     padding: var(--spacing-md);
   }

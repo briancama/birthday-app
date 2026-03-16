@@ -24,8 +24,8 @@ class GifStepper {
     if (!(img instanceof HTMLImageElement)) throw new Error("GifStepper requires an <img> element");
     if (!("ImageDecoder" in window)) {
       // ImageDecoder is Chromium-only — not available on iOS/Safari.
-      // The gif-stepper mechanic only works on desktop; hide the GIF on mobile.
-      img.remove();
+      // Restore visibility so the GIF plays normally as a fallback.
+      img.style.visibility = "visible";
       return;
     }
 
@@ -80,6 +80,7 @@ class GifStepper {
       width: "100%",
       height: "auto",
       objectFit: "contain",
+      visibility: "hidden",
     });
     this.ctx = this.canvas.getContext("2d");
 
@@ -158,8 +159,12 @@ class GifStepper {
       this.canvas.height = bmp.height;
 
       this.ctx.drawImage(bmp, 0, 0);
+      // First frame is painted — reveal the canvas
+      this.canvas.style.visibility = "visible";
     } catch (err) {
       console.error("GifStepper failed to load:", this.src, err);
+      // Decode failed — restore the original img so something is visible
+      this.canvas.style.visibility = "visible";
     }
   }
 

@@ -1,9 +1,29 @@
+<% if (navData && navData.pageTitle) { %>
+<nav class="site-navigation site-navigation--old mobile-menu-default">
+  <button class="mobile-menu-toggle" data-sound="menu" aria-label="Toggle navigation menu">
+    <span class="hamburger-icon">☰</span>
+  </button>
+  <div class="nav-user-info">
+    <div class="user-welcome">
+      <span data-nav="page-title"><%= navData.pageTitle %></span>
+      <img src="/images/star_icon.gif" alt="star" class="icon-gif" />
+      <span id="secretArnold" class="secret-arnold">RICKTER</span>
+      <% if (navData && navData.user) { %>
+      <a href="/users/<%= navData.user.username %>" class="profile-nav-link">
+        <img src="/images/profile.gif" alt="profile" class="icon-gif user-profile-button" />
+      </a>
+      <% } %>
+    </div>
+  </div>
+  <div class="nav-menu">
+    <div class="nav-tabs">
+<% } else { %>
 <div class="myspace-header full-width-content">
   <div class="myspace-header__logo">
     <img src="/images/brispace_logo.jpg" alt="brispace logo" />
     <span id="secretArnold" class="secret-arnold">RICKTER</span>
     <% if (navData && navData.user) { %>
-    <a href="/users/<%= navData.user.id %>" class="profile-nav-link">
+    <a href="/users/<%= navData.user.username %>" class="profile-nav-link">
       <img src="/images/profile.gif" alt="profile" class="icon-gif user-profile-button" />
     </a>
     <% } %>
@@ -13,6 +33,7 @@
   </div>
   <div class="nav-menu">
     <div class="nav-tabs">
+<% } %>
       <% if (navData && navData.user && navData.user.user_type === 'participant') { %>
       <a href="/dashboard" class="nav-tab" data-sound="menu" data-page="dashboard">
         <img src="/images/home.gif" alt="home" class="icon-gif icon-gif--lg icon-gif--with-text" />
@@ -33,7 +54,7 @@
         <img src="/images/trophy.gif" alt="trophy" class="icon-gif icon-gif--with-text" />
         <span>LEADERBOARD</span>
       </a>
-      <% if (navData && navData.user && navData.user.user_type === 'participant') { %>
+      <% if (navData && navData.user && navData.user.user_type === 'participant' && navData.eventStarted) { %>
       <a
         href="/challenges"
         class="nav-tab"
@@ -75,7 +96,6 @@
     // Use server-provided sanitized JSON to avoid embedding issues.
     window.__NAV_STATE__ = <%- typeof navDataJson !== 'undefined' ? navDataJson : JSON.stringify(navData || {}) %>;
   </script>
-  <!-- Arnold Easter Egg Modal (moved into navigation partial) -->
   <div
     id="arnoldModal"
     style="
@@ -137,4 +157,9 @@
       </div>
     </div>
   </div>
+<% if (!navData || !navData.pageTitle) { %>
+<!-- Different html element used between myspace and old style -->
 </div>
+<% } else { %>
+</nav>
+<% } %>
