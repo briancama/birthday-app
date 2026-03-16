@@ -209,13 +209,6 @@ class BasePage {
   async markChallengeComplete(assignmentId, challengeId, outcome, brianMode, vsUserId) {
     try {
       const now = new Date().toISOString();
-      console.log("[markChallengeComplete]", {
-        assignmentId,
-        challengeId,
-        outcome,
-        brianMode,
-        vsUserId,
-      });
 
       // Update user's assignment with outcome
       const { error: updateError } = await this.supabase
@@ -232,7 +225,6 @@ class BasePage {
 
       // Handle user-vs-user challenges
       if (vsUserId) {
-        console.log("[markChallengeComplete] calling handleVsUserChallenge for", vsUserId);
         await this.handleVsUserChallenge(vsUserId, challengeId, outcome, now);
       }
 
@@ -246,7 +238,6 @@ class BasePage {
   async handleVsUserChallenge(vsUserId, challengeId, outcome, completedAt) {
     // Opponent always gets the inverse outcome
     const opponentOutcome = outcome === "success" ? "failure" : "success";
-    console.log("[handleVsUserChallenge] upserting", { vsUserId, challengeId, opponentOutcome });
 
     const { error } = await this.supabase.from("assignments").upsert(
       [
@@ -263,10 +254,8 @@ class BasePage {
     );
 
     if (error) {
-      console.error("[handleVsUserChallenge] upsert error:", error);
       throw error;
     }
-    console.log("[handleVsUserChallenge] upsert succeeded");
   }
 
   async handleBrianChallenge(challengeId, outcome, brianMode, completedAt) {

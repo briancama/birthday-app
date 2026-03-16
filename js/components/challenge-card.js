@@ -249,10 +249,6 @@ class ChallengeCard extends EventTarget {
           e.stopPropagation();
 
           const outcome = btn.dataset.outcome;
-          console.log(
-            "[TRACE] card complete - challenges object:",
-            JSON.stringify(this.assignment.challenges)
-          );
           const eventDetail = {
             assignmentId: this.assignment.id,
             challengeId: this.assignment.challenges.id,
