@@ -51,6 +51,7 @@ export class SecretTrackPlayer {
     this.overlay.innerHTML = `
       <div class="secret-player-modal">
         <div class="secret-player-header">
+         <span class="secret-player-title">HIDDEN TRACK</span>
           <button class="secret-player-close" title="Exit secret track" aria-label="Close secret track">✖</button>
         </div>
         <div class="secret-player-track-info">
