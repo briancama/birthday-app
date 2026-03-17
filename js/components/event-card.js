@@ -134,7 +134,9 @@ export class EventCard extends EventTarget {
       desc.textContent = this.event.description;
       card.appendChild(desc);
     }
-
+    const linkContainer = document.createElement("div");
+    linkContainer.className = "event-card-links";
+    card.appendChild(linkContainer);
     // Location (with directions link if present)
     if (this.event.location) {
       const loc = document.createElement("div");
@@ -149,7 +151,7 @@ export class EventCard extends EventTarget {
       } else {
         loc.textContent = this.event.location;
       }
-      card.appendChild(loc);
+      linkContainer.appendChild(loc);
     }
 
     // General link (if present)
@@ -160,7 +162,7 @@ export class EventCard extends EventTarget {
       link.rel = "noopener noreferrer";
       link.className = "event-card-link";
       link.textContent = this.event.link_label || "More Info";
-      card.appendChild(link);
+      linkContainer.appendChild(link);
     }
 
     // RSVP buttons (optional)
