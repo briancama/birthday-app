@@ -62,6 +62,9 @@ export class SecretTrackPlayer {
         </div>
         <div class="secret-player-time" id="secretTime">0:00 / 0:00</div>
         <div class="secret-player-status" id="secretStatus">Now this is what I call music!!!</div>
+        <div class="secret-player-controls">
+          <button class="secret-player-play-btn" id="secretPlayBtn" aria-label="Play/Pause">▶️</button>
+        </div>
         <div class="secret-player-hint" id="secretHint"></div>
       </div>
     `;
@@ -72,10 +75,6 @@ export class SecretTrackPlayer {
     this.overlay
       .querySelector("#secretPlayBtn")
       .addEventListener("click", () => this._togglePlayPause());
-    // Temporary skip button for testing
-    this.overlay
-      .querySelector("#secretSkipBtn")
-      .addEventListener("click", () => this._onTrackEnded());
 
     // Click outside the modal to close
     this.overlay.addEventListener("click", (e) => {
@@ -140,6 +139,8 @@ export class SecretTrackPlayer {
       this.audio.play().then(() => {
         if (playBtn) playBtn.textContent = "⏸️";
         if (hintEl) hintEl.textContent = "";
+      }).catch(() => {
+        if (playBtn) playBtn.textContent = "▶️";
       });
     } else {
       this.audio.pause();
