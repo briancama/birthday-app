@@ -26,6 +26,10 @@ export const MUSIC_SONGS = [
     title: "Coheed and Cambria - Welcome Home",
     url: "/songs/Coheed and Cambria - Welcome Home.mp3",
   },
+  {
+    title: "Dashboard Confessional - Screaming Infidelities",
+    url: "/songs/Dashboard Confessional - Screaming Infidelities.mp3",
+  },
   { title: "D4L - Laffy Taffy", url: "/songs/D4L - Laffy Taffy (Official Video)-trim.mp3" },
   {
     title: "Fall Out Boy - Sugar, We're Goin Down",
@@ -87,8 +91,4 @@ export const MUSIC_SONGS = [
     url: "/songs/The Darkness - I Believe In A Thing Called Love (Official Music Video) [HD]-trim.mp3",
   },
   { title: "Tom Tom Club - Genius of Love", url: "/songs/Tom Tom Club - Genius of Love.mp3" },
-  {
-    title: "Dashboard Confessional - Screaming Infidelities",
-    url: "/songs/Dashboard Confessional - Screaming Infidelities.mp3",
-  },
 ];

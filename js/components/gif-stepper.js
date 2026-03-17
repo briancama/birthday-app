@@ -30,7 +30,9 @@ class GifStepper {
     }
 
     this.img = img;
-    this.src = img.src;
+    // Prefer data-src (lazy-load pattern) over src so the browser never
+    // makes an eager duplicate fetch alongside our own fetch() call below.
+    this.src = img.dataset.src || img.src;
     this.stepsPerClick = options.stepsPerClick ?? parseInt(img.dataset.stepsPerClick) ?? 1;
     this.frames = [];
     this.current = -1;

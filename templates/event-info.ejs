@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/images/brispace_favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Birthday Challenge Zone: Event Info</title>
+    <link rel="stylesheet" href="/css/geocities.css" />
+    <link rel="stylesheet" href="/css/components/navigation.css" />
+    <link rel="stylesheet" href="/css/components/leaderboard.css" />
+    <link rel="stylesheet" href="/css/components/forms.css" />
+    <link rel="stylesheet" href="/css/components/myspace.css" />
+    <link rel="stylesheet" href="/css/components/myspace-comments.css" />
+    <link rel="stylesheet" href="/css/components/event-card.css" />
+    <link rel="stylesheet" href="/css/components/submissions.css" />
+    <!-- Preload above-the-fold images -->
+    <link rel="preload" as="image" href="/images/brispace_logo.jpg" />
+    <% if (navData && navData.user && navData.user.headshot) { %>
+    <link rel="preload" as="image" href="<%= navData.user.headshot %>" />
+    <% } %>
+    <!-- Firebase SDK -->
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
+  </head>
+  <body class="myspace has-bottom-menu">
+    <%- include('partials/navigation', { navData: (typeof navData !== 'undefined' ? navData : {}) })
+    %>
+
+    <div class="myspace-container full-width-content">
+      <div class="container myspace-layout">
+        <aside class="myspace-sidebar">
+          <div class="myspace-section">
+            <h2 class="myspace-name" id="myspaceName">
+              <%= (navData && navData.user && navData.user.display_name) ? navData.user.display_name
+              : '' %>
+            </h2>
+            <div class="myspace-profile-row">
+              <img
+                src="<%= (navData && navData.user && navData.user.headshot) ? navData.user.headshot : '/images/headshot.jpg' %>"
+                alt="Profile headshot"
+                class="myspace-headshot"
+                data-headshot="user-<%= (navData && navData.user && navData.user.id) ? navData.user.id : 'unknown' %>"
+              />
+              <div class="myspace-about">
+                <p class="myspace-about__hint">
+                  Upload a <strong>vintage 2000s photo</strong> of yourself.
+                </p>
+              </div>
+            </div>
+          </div>
+          <section class="event-details-card myspace-section">
+            <div class="event-details-header">Event Details</div>
+            <div class="event-details-list">
+              <div class="event-details-row">
+                <div class="event-details-label">Date</div>
+                <div class="event-details-value">March 19-22, 2026</div>
+              </div>
+              <div class="event-details-row">
+                <div class="event-details-label">Location</div>
+                <div class="event-details-value">367 Compass St, Pacific Beach, WA 98571</div>
+              </div>
+              <div class="event-details-row">
+                <div class="event-details-label">Themes</div>
+                <div class="event-details-value">
+                  2000's, Karaoke, Cocktails, Challenges, Friends, Fun
+                </div>
+              </div>
+              <div class="event-details-row">
+                <div class="event-details-label">Party Jams</div>
+                <div class="event-details-value">
+                  OutKast, TLC, Eminem, Nell<span data-ytmnd="y" class="ytmnd-letter">y</span>,
+                  Usher, Linkin Park, Blink-182, Sum 41, The Killers, Fall Ou<span
+                    data-ytmnd="T"
+                    class="ytmnd-letter"
+                    >t</span
+                  >
+                  Boy, My Chemical Romance, No Doubt, The White Stripes, Yeah Yeah Yeahs, The
+                  Strokes, Red Hot Chili Peppers,
+                  <span data-ytmnd="M" class="ytmnd-letter">M</span>aroon 5, 50 Cent, Ja Rule,
+                  Ashanti, Shakira, Evanescence, Foo Fighters, Incubus, System of a Down, Muse, The
+                  Offspring, Jimmy Eat World, Gorillaz, Franz Ferdi<span
+                    data-ytmnd="n"
+                    class="ytmnd-letter"
+                    >n</span
+                  >and, Modest Mouse, Dashboard Confessional, Tegan and Sara, Good Charlotte, Papa
+                  Roach, Jet, Alien Ant Farm, Lit, Puddle of Mudd, Lifehouse, Coldplay, Snow Patrol,
+                  The All-American Rejects, Bowling For Soup, Reel Big Fish, The Darkness,
+                  Cohee<span data-ytmnd="d" class="ytmnd-letter">d</span> and Cambria, Yellowcard,
+                  Ashlee Simpson, Weezer
+                </div>
+              </div>
+              <div class="event-details-row">
+                <div class="event-details-label">Contact</div>
+                <div class="event-details-value">briancama@gmail.com</div>
+              </div>
+            </div>
+          </section>
+          <div class="myspace-section" id="musicPlayerContainer"></div>
+          <div class="myspace-section">
+            <img
+              class="myspace-section-gif"
+              src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+              data-src="/images/iron-man.gif"
+              width="347"
+              height="207"
+              data-gif-stepper
+              data-gif-sound="proton-cannon.mp3"
+              data-gif-sound-percent="70"
+              data-steps-per-click="3"
+            />
+          </div>
+        </aside>
+        <main class="myspace-main">
+          <!-- Retro announcement banner -->
+          <div class="myspace-section">
+            <div class="retro-banner" id="retroBanner">
+              <div class="retro-banner__gif">
+                <img src="/images/drink-banner-image.gif" alt="Register Cocktails" />
+              </div>
+              <div class="retro-banner__text">
+                <div class="retro-banner__line" id="retroBannerText">
+                  40 Proof - Cocktail Contest
+                </div>
+              </div>
+              <div class="retro-banner__gif">
+                <img src="/images/drink-banner.gif" alt="Register Cocktails" />
+              </div>
+            </div>
+          </div>
+          <div class="myspace-section">
+            <h3>Schedule</h3>
+            <ul id="eventSchedule" class="event-schedule">
+              <p>Loading schedule...</p>
+            </ul>
+          </div>
+          <div class="myspace-section myspace-guestbook">
+            <h3>Event Comments</h3>
+            <div class="myspace-comments-header">
+              Displaying <span id="commentsCount">0</span> of
+              <span id="commentsTotal">0</span> comments (<a href="#" id="viewAllComments"
+                >Add Comment</a
+              >)
+            </div>
+            <div class="myspace-comments-list" id="myspaceCommentsList">
+              <p class="text-center">Loading comments...</p>
+            </div>
+            <div class="myspace-comments-actions">
+              <a href="#" id="addCommentBtn" class="add-comment-link">Add Comment</a>
+            </div>
+            <!-- Modal for add/edit comment -->
+            <div id="guestbookModal" class="guestbook-modal" style="display: none">
+              <div class="guestbook-modal-overlay"></div>
+              <div class="guestbook-modal-content myspace-add-comment-modal">
+                <button id="closeGuestbook" class="close-btn" aria-label="Close">✖️</button>
+                <h1 class="add-comment-title">Add Comment</h1>
+                <div class="add-comment-subheader">Be nice.</div>
+                <form id="guestbook-form">
+                  <div class="form-group">
+                    <label for="guestMessage" class="add-comment-label"><b>Your Comment:</b></label>
+                    <textarea
+                      id="guestMessage"
+                      required
+                      maxlength="200"
+                      rows="6"
+                      class="add-comment-textarea"
+                    ></textarea>
+                  </div>
+                  <div class="add-comment-actions">
+                    <button id="commentSubmit" type="button" class="add-comment-btn">
+                      Add Comment
+                    </button>
+                    <button type="button" id="cancelGuestbook" class="cancel-comment-btn">
+                      Cancel
+                    </button>
+                  </div>
+                  <div id="guestbookError" class="error-message"></div>
+                  <div id="guestbookSuccess" class="success-message"></div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script src="/js/components/gif-stepper.js"></script>
+    <script type="module">
+      import { EventInfoPage } from "/js/pages/event-info.js";
+
+      const page = new EventInfoPage();
+      page.init().then(() => {
+        // Retro banner text rotation
+        try {
+          const messages = ["40 Proof - Cocktail Contest", "Register Now"];
+          let idx = 0;
+          const el = document.getElementById("retroBannerText");
+          if (el) {
+            el.textContent = messages[0];
+            setInterval(() => {
+              el.classList.add("hidden");
+              setTimeout(() => {
+                idx = (idx + 1) % messages.length;
+                el.textContent = messages[idx];
+                if (messages[idx] === "Register Now") {
+                  el.classList.add("cta-blink");
+                } else {
+                  el.classList.remove("cta-blink");
+                }
+                el.classList.remove("hidden");
+              }, 320);
+            }, 2600);
+          }
+        } catch (e) {
+          console.warn("Retro banner init failed", e);
+        }
+      });
+    </script>
+    <bottom-menu></bottom-menu>
+    <script type="module" src="/js/components/bottom-menu.js"></script>
+  </body>
+</html>

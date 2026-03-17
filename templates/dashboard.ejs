@@ -17,11 +17,11 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
   </head>
 
-  <body>
-    <!-- Server-rendered Navigation -->
-    <% const navLocal = Object.assign({}, (typeof navData !== 'undefined' ? navData : {}), { pageTitle: 'Dashboard' }); %>
-    <%- include('partials/navigation', { navData: navLocal }) %>
+  <body class="has-bottom-menu">
     <div class="container">
+      <!-- Server-rendered Navigation -->
+      <% const navLocal = Object.assign({}, (typeof navData !== 'undefined' ? navData : {}), { pageTitle: 'Dashboard' }); %>
+      <%- include('partials/navigation', { navData: navLocal }) %>
       <!-- Scrolling Marquee -->
       <marquee behavior="scroll" direction="left" scrollamount="6">
         *** WELCOME TO THE BIRTHDAY CHALLENGE ZONE<span

@@ -73,12 +73,15 @@ app.use(async (req, res, next) => {
 
     // Try to resolve the signed cookie value to a users row. The cookie may
     // already be a UUID or a development shortcut like 'local-dev-user'. Try
-    // id first, then username.
-    let { data: user, error: userErr } = await supabase
-      .from("users")
-      .select("id, username, display_name, user_type, headshot")
-      .eq("id", signed)
-      .maybeSingle();
+    // id first (only if value looks like a UUID), then username.
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(signed);
+    let { data: user, error: userErr } = isUuid
+      ? await supabase
+          .from("users")
+          .select("id, username, display_name, user_type, headshot")
+          .eq("id", signed)
+          .maybeSingle()
+      : { data: null, error: null };
 
     if ((!user || userErr) && signed) {
       const { data: byName } = await supabase
@@ -91,32 +94,30 @@ app.use(async (req, res, next) => {
 
     if (!user) return next();
 
-    // Does this user have a push subscription saved?
-    let hasPush = false;
-    try {
-      const { data: subs, error: subErr } = await supabase
-        .from("push_subscriptions")
-        .select("id")
-        .eq("user_id", user.id)
-        .limit(1);
-      if (!subErr && subs && subs.length) hasPush = true;
-    } catch (e) {
-      /* ignore */
-    }
-
-    // Read feature flag for event_started
-    let eventStarted = false;
-    try {
-      const { data: flag, error: flagErr } = await supabase
+    // Run push subscription check and event_started flag in parallel
+    const [pushResult, flagResult] = await Promise.allSettled([
+      supabase.from("push_subscriptions").select("id").eq("user_id", user.id).limit(1),
+      supabase
         .from("app_settings")
         .select("setting_value")
         .eq("setting_key", "event_started")
-        .maybeSingle();
-      if (!flagErr && flag && flag.setting_value && flag.setting_value.enabled === true)
-        eventStarted = true;
-    } catch (e) {
-      /* ignore */
-    }
+        .maybeSingle(),
+    ]);
+
+    const hasPush = !!(
+      pushResult.status === "fulfilled" &&
+      !pushResult.value.error &&
+      pushResult.value.data &&
+      pushResult.value.data.length
+    );
+
+    const eventStarted = !!(
+      flagResult.status === "fulfilled" &&
+      !flagResult.value.error &&
+      flagResult.value.data &&
+      flagResult.value.data.setting_value &&
+      flagResult.value.data.setting_value.enabled === true
+    );
 
     // Simple admin check: username matches known admins (keep existing client-side conventions)
     const isAdmin = !!(user && (user.username === "brianc" || user.username === "admin"));
@@ -270,6 +271,21 @@ app.get(["/dashboard", "/dashboard.html"], async (req, res) => {
 // Leaderboard: server-rendered to include navigation partial
 app.get(["/leaderboard", "/leaderboard.html"], (req, res) => {
   return res.render("leaderboard");
+});
+
+// Challenge Workshop: server-rendered to include navigation partial
+app.get(["/challenges-submit", "/challenges-submit.html"], (req, res) => {
+  return res.render("challenges-submit");
+});
+
+// Admin Approvals: server-rendered to include navigation partial
+app.get(["/admin-approvals", "/admin-approvals.html"], (req, res) => {
+  return res.render("admin-approvals");
+});
+
+// Event Info: server-rendered to include navigation partial (myspace style)
+app.get(["/event-info", "/event-info.html"], (req, res) => {
+  return res.render("event-info");
 });
 
 app.use(express.static(path.join(__dirname)));

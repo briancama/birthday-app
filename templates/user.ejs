@@ -30,7 +30,7 @@
     <% } %>
   </head>
 
-  <body class="myspace" data-profile-user-id="<%= user.id %>">
+  <body class="myspace has-bottom-menu" data-profile-user-id="<%= user.id %>">
     <!-- Server-rendered navigation header -->
     <%- include('partials/navigation', { navData: navData }) %>
 
@@ -174,7 +174,10 @@
           <div class="myspace-section">
             <img
               class="myspace-section-gif"
-              src="/images/iron-man.gif"
+              src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+              data-src="/images/iron-man.gif"
+              width="347"
+              height="207"
               data-gif-stepper
               data-gif-sound="proton-cannon.mp3"
               data-gif-sound-percent="70"

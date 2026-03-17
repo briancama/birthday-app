@@ -19,6 +19,7 @@ export class ContestPlacementForm {
     const { data: users } = await supabase
       .from("users")
       .select("id, display_name, username")
+      .eq("user_type", "participant")
       .order("display_name");
     this.users = users || [];
   }

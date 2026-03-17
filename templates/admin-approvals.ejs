@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Admin Approvals - Birthday Challenge Zone</title>
+    <link rel="icon" type="image/png" href="/images/favicon.jpg" />
+    <link rel="stylesheet" href="/css/geocities.css" />
+    <link rel="stylesheet" href="/css/components/navigation.css" />
+    <link rel="stylesheet" href="/css/components/forms.css" />
+    <link rel="stylesheet" href="/css/components/submissions.css" />
+    <link rel="stylesheet" href="/css/components/contest-placements.css" />
+    <!-- Firebase SDK -->
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
+  </head>
+
+  <body class="has-bottom-menu">
+    <% const navLocal = Object.assign({}, (typeof navData !== 'undefined' ? navData : {}), {
+    pageTitle: 'Admin' }); %> <%- include('partials/navigation', { navData: navLocal }) %>
+
+    <div class="container">
+      <div class="section">
+        <h2 class="text-shadow-light">🔐 Pending Challenge Approvals</h2>
+        <div id="pendingContainer">
+          <div class="empty-state">Loading pending submissions...</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2 class="text-shadow-light">✅ Approved Challenges</h2>
+        <div id="approvedContainer">
+          <div class="empty-state">Loading approved challenges...</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <details class="denied-challenges-details">
+          <summary>
+            <h2 class="text-shadow-light">✖️ Denied Challenges</h2>
+          </summary>
+          <div id="deniedContainer">
+            <div class="empty-state">Loading denied challenges...</div>
+          </div>
+        </details>
+      </div>
+
+      <div class="section">
+        <h2 class="text-shadow-light">🏆 Contest/Competition Placements</h2>
+        <div id="contestPlacementFormContainer"></div>
+        <div id="contestPlacementTableContainer"></div>
+      </div>
+    </div>
+
+    <!-- Challenge Details Modal -->
+    <div id="detailsModal" class="challenge-modal">
+      <div class="challenge-modal-overlay"></div>
+      <div class="challenge-modal-content">
+        <button id="closeDetailsModal" class="close-btn">✖️</button>
+
+        <h2 class="text-center rainbow-text">Challenge Details</h2>
+
+        <!-- View mode -->
+        <div id="challengeDetails" class="challenge-details">
+          <!-- Details will be populated here -->
+        </div>
+
+        <!-- Modal action buttons -->
+        <div
+          id="detailsModalActions"
+          class="modal-action-buttons"
+          style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap"
+        >
+          <button id="editChallengeBtn" class="btn-secondary">✏️ Edit Challenge</button>
+          <button id="duplicateChallengeBtn" class="btn-secondary">📋 Duplicate</button>
+        </div>
+
+        <!-- Edit mode (hidden by default) -->
+        <div id="challengeEditForm" style="display: none; margin-top: 1rem">
+          <h3 style="margin-bottom: 0.75rem">Edit Challenge</h3>
+          <div class="form-group">
+            <label for="editTitle">Title</label>
+            <input type="text" id="editTitle" name="editTitle" maxlength="200" />
+          </div>
+          <div class="form-group">
+            <label for="editDescription">Description</label>
+            <textarea id="editDescription" name="editDescription" rows="4"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="editSuccessMetric">Success Metric</label>
+            <textarea id="editSuccessMetric" name="editSuccessMetric" rows="2"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="editSuggestedFor">Suggested For (user)</label>
+            <input
+              type="text"
+              id="editSuggestedFor"
+              name="editSuggestedFor"
+              list="editUsersDatalist"
+              placeholder="Leave blank for anyone"
+              autocomplete="off"
+            />
+            <datalist id="editUsersDatalist"></datalist>
+          </div>
+          <div class="form-group">
+            <label for="editBrianMode">Brian Mode</label>
+            <select id="editBrianMode" name="editBrianMode">
+              <option value="">None</option>
+              <option value="vs">VS Brian</option>
+              <option value="with">With Brian</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="editVsUser">VS User (opponent)</label>
+            <input
+              type="text"
+              id="editVsUser"
+              name="editVsUser"
+              list="editVsUsersDatalist"
+              placeholder="Leave blank — mutually exclusive with Brian Mode"
+              autocomplete="off"
+            />
+            <datalist id="editVsUsersDatalist"></datalist>
+            <small
+              >Setting a VS User overrides Brian Mode. Only the primary assignee sees this
+              challenge; the opponent's result is auto-created on completion.</small
+            >
+          </div>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem">
+            <button id="saveEditBtn">💾 Save Changes</button>
+            <button id="cancelEditBtn" class="btn-secondary">Cancel</button>
+          </div>
+          <div id="editError" class="error-message" style="display: none"></div>
+          <div id="editSuccess" class="success-message" style="display: none"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Assignment Modal -->
+    <div id="assignmentModal" class="challenge-modal">
+      <div class="challenge-modal-overlay"></div>
+      <div class="challenge-modal-content">
+        <button id="closeAssignmentModal" class="close-btn">✖️</button>
+
+        <h2 class="text-center rainbow-text">Approve & Assign Challenge</h2>
+
+        <form id="assignmentForm">
+          <div id="assignmentChallengeInfo" class="form-info">
+            <!-- Challenge info will be populated here -->
+          </div>
+
+          <div class="form-group">
+            <label>Assign To</label>
+            <div id="userCheckboxList" class="checkbox-list">
+              <!-- User checkboxes will be populated here -->
+            </div>
+            <small>Check to assign, uncheck to unassign users for this challenge.</small>
+          </div>
+
+          <button type="submit" id="approveAssignBtn">✅ SAVE ASSIGNMENTS</button>
+
+          <div id="assignmentError" class="error-message"></div>
+          <div id="assignmentSuccess" class="success-message"></div>
+        </form>
+      </div>
+    </div>
+
+    <script type="module">
+      import { appState } from "/js/app.js";
+      import { AdminApprovalsPage } from "/js/pages/admin-approvals.js";
+      import { ContestPlacementForm } from "/js/components/contest-placement-form.js";
+      import { Table } from "/js/components/contest-placement-table.js";
+
+      // Init page (BasePage handles auth + navigation internally)
+      const page = new AdminApprovalsPage();
+      page.init();
+
+      // Contest placement admin — runs independently of page auth
+      let currentEventId = null;
+      const formContainer = document.getElementById("contestPlacementFormContainer");
+      const tableContainer = document.getElementById("contestPlacementTableContainer");
+
+      async function renderPlacementTable(eventId) {
+        tableContainer.innerHTML = "";
+        if (!eventId) return;
+        const table = new ContestPlacementTable();
+        await table.init(eventId);
+        tableContainer.appendChild(table.element);
+      }
+
+      async function setupContestPlacementAdmin() {
+        const form = new ContestPlacementForm({
+          onSubmit: async (placement) => {
+            const supabase = appState.getSupabase();
+            const { error } = await supabase
+              .from("competition_placements")
+              .upsert([placement], { onConflict: ["event_id", "user_id"] });
+            if (error) {
+              alert("Error saving placement: " + error.message);
+              return;
+            }
+            alert("Placement saved!");
+            currentEventId = placement.event_id;
+            await renderPlacementTable(currentEventId);
+          },
+        });
+        await form.init();
+        formContainer.appendChild(form.element);
+
+        form.element.querySelector('select[name="event"]').addEventListener("change", async (e) => {
+          currentEventId = e.target.value;
+          await renderPlacementTable(currentEventId);
+        });
+      }
+
+      setupContestPlacementAdmin();
+    </script>
+  </body>
+</html>

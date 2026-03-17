@@ -46,6 +46,7 @@
 
 .myspace {
   padding-top: 0;
+  background-image: none;
 }
 
 .myspace-profile-row {
@@ -180,15 +181,20 @@ body {
     gap: 1rem;
   }
 
-/* Hide gif-stepper images by default until JS reveals them (prevents flash of raw GIF) */
-[data-gif-stepper] {
-  visibility: hidden;
-}
+  /* Hide gif-stepper images by default until JS reveals them (prevents flash of raw GIF) */
+  [data-gif-stepper] {
+    visibility: hidden;
+  }
 
   .myspace-section-gif {
     display: flex;
     align-items: center;
     flex-direction: column;
+    /* Reserve stable space matching the decoded canvas output size so the
+       layout never shifts whether this holds the placeholder <img> or the
+       gif-stepper canvas wrapper. 347x207 native → 200px max-width → ~119px tall */
+    max-width: 200px;
+    aspect-ratio: 347 / 207;
   }
 
   .myspace-section-gif canvas {

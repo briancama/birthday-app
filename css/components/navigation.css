@@ -42,8 +42,6 @@ body.has-bottom-menu {
   height: 30px;
   cursor: pointer;
   opacity: 0;
-  pointer-events: none;
-  visibility: hidden;
   margin-left: 0;
 }
 
@@ -260,4 +258,10 @@ body.has-bottom-menu {
     font-size: 14px;
     line-height: 2.2;
   }
+}
+
+/* Temporary disabling of user-profile until achievements ready */
+.profile-nav-link {
+  visibility: hidden;
+  pointer-events: none;
 }

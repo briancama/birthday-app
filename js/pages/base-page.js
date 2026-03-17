@@ -45,76 +45,82 @@ class BasePage {
       this.currentUser = appState.getCurrentUser();
     }
     this.setupHeadshotEventUpdates();
-    await this.initAudio();
-    // Initialize achievement service (idempotent) and UI listener
-    try {
-      await achievementService.init();
-      // Centralized achievement handler used for both EventBus and window events
-      const handleAchievementAward = (e) => {
-        try {
-          const detail = e.detail || {};
-          // Support both EventBus shape { name, points } and window shape { achievement: { name, points } }
-          const name =
-            detail.name || detail.achievement?.name || detail.achievementKey || "Achievement";
-          const points = detail.points || detail.achievement?.points || 0;
-
-          // Ensure the success container is attached to document.body so it's in the topmost DOM order
-          const existing = document.getElementById("successMessages");
-          if (existing && existing.parentNode !== document.body) {
-            document.body.appendChild(existing);
-          }
-
-          const successMessage = `Achievement unlocked: ${name} (+${points || 0} pts)`;
-          this.showSuccessToast(successMessage);
-          // play success sound if available and not suppressed
-          if (!this.suppressAchievementSound) {
+    // Run audio init, achievement service, and SW registration in parallel —
+    // none depends on the others, so no reason to wait for each sequentially.
+    await Promise.all([
+      this.initAudio(),
+      achievementService
+        .init()
+        .then(() => {
+          // Centralized achievement handler used for both EventBus and window events
+          const handleAchievementAward = (e) => {
             try {
-              this.audioManager.play && this.audioManager.play("success");
-            } catch (sErr) {
-              /* ignore */
-            }
-          }
-        } catch (err) {
-          console.warn("Error handling achievement event", err);
-        }
-      };
+              const detail = e.detail || {};
+              // Support both EventBus shape { name, points } and window shape { achievement: { name, points } }
+              const name =
+                detail.name || detail.achievement?.name || detail.achievementKey || "Achievement";
+              const points = detail.points || detail.achievement?.points || 0;
 
-      const achCleanup = EventBus.instance.listen("achievement:awarded", handleAchievementAward);
-      this.eventCleanup.push(achCleanup);
-      // Listen for generic UI toast events from other modules
-      const toastCleanup = EventBus.instance.listen("ui:toast", (e) => {
-        try {
-          const d = e.detail || {};
-          const type = d.type || "info";
-          const msg = d.message || d.text || "";
-          if (type === "error") this.showErrorToast(msg);
-          else this.showSuccessToast(msg);
-        } catch (err) {
-          console.warn("ui:toast handler error", err);
-        }
-      });
-      this.eventCleanup.push(toastCleanup);
-    } catch (e) {
-      console.warn("Failed to init achievement service", e);
-    }
-    // Register service worker for notifications (register-only; do not prompt permissions here)
-    try {
-      const swReg = await notificationService.registerServiceWorker("/sw-notifications.js");
-      if (swReg) {
-        // Forward messages from the service worker to the notification service handler
-        if (navigator.serviceWorker && navigator.serviceWorker.addEventListener) {
-          navigator.serviceWorker.addEventListener("message", (e) => {
-            try {
-              notificationService._handleIncomingNotification(e.data);
+              // Ensure the success container is attached to document.body so it's in the topmost DOM order
+              const existing = document.getElementById("successMessages");
+              if (existing && existing.parentNode !== document.body) {
+                document.body.appendChild(existing);
+              }
+
+              const successMessage = `Achievement unlocked: ${name} (+${points || 0} pts)`;
+              this.showSuccessToast(successMessage);
+              // play success sound if available and not suppressed
+              if (!this.suppressAchievementSound) {
+                try {
+                  this.audioManager.play && this.audioManager.play("success");
+                } catch (sErr) {
+                  /* ignore */
+                }
+              }
             } catch (err) {
-              console.warn("Failed to handle incoming notification message", err);
+              console.warn("Error handling achievement event", err);
+            }
+          };
+
+          const achCleanup = EventBus.instance.listen(
+            "achievement:awarded",
+            handleAchievementAward
+          );
+          this.eventCleanup.push(achCleanup);
+          // Listen for generic UI toast events from other modules
+          const toastCleanup = EventBus.instance.listen("ui:toast", (e) => {
+            try {
+              const d = e.detail || {};
+              const type = d.type || "info";
+              const msg = d.message || d.text || "";
+              if (type === "error") this.showErrorToast(msg);
+              else this.showSuccessToast(msg);
+            } catch (err) {
+              console.warn("ui:toast handler error", err);
             }
           });
-        }
-      }
-    } catch (swErr) {
-      console.warn("Service worker registration skipped or failed:", swErr);
-    }
+          this.eventCleanup.push(toastCleanup);
+        })
+        .catch((e) => console.warn("Failed to init achievement service", e)),
+      // Register service worker for notifications (register-only; do not prompt permissions here)
+      notificationService
+        .registerServiceWorker("/sw-notifications.js")
+        .then((swReg) => {
+          if (swReg) {
+            // Forward messages from the service worker to the notification service handler
+            if (navigator.serviceWorker && navigator.serviceWorker.addEventListener) {
+              navigator.serviceWorker.addEventListener("message", (e) => {
+                try {
+                  notificationService._handleIncomingNotification(e.data);
+                } catch (err) {
+                  console.warn("Failed to handle incoming notification message", err);
+                }
+              });
+            }
+          }
+        })
+        .catch((swErr) => console.warn("Service worker registration skipped or failed:", swErr)),
+    ]);
 
     await this.onReady();
   }

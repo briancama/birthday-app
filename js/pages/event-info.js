@@ -40,7 +40,6 @@ class EventInfoPage extends BasePage {
 
   onReady() {
     this.setupPageTitleAndUser();
-    this.setupHeadshot();
     this.setupHeadshotUpload();
     this.setupMusicPlayer();
     this.loadAndRenderEvents();
@@ -135,17 +134,6 @@ class EventInfoPage extends BasePage {
           nameElem.classList.add("fade-in");
         }
       }
-    }
-  }
-
-  setupHeadshot() {
-    const user = appState.getCurrentUser();
-    const headshotElem = document.querySelector(".myspace-headshot");
-    if (headshotElem) {
-      headshotElem.src = user && user.headshot ? user.headshot : "images/headshot.jpg";
-      // Always set data-headshot to user-{userId} (or user-unknown if not logged in)
-      const userId = user && user.id ? user.id : "unknown";
-      headshotElem.setAttribute("data-headshot", `user-${userId}`);
     }
   }
 

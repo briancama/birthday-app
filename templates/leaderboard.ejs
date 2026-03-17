@@ -12,12 +12,12 @@
     <link rel="stylesheet" href="/css/components/forms.css" />
 
     <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
   </head>
-  <body>
-    <% const navLocal = Object.assign({}, (typeof navData !== 'undefined' ? navData : {}), { pageTitle: 'Leaderboard' }); %>
-    <%- include('partials/navigation', { navData: navLocal }) %>
+  <body class="has-bottom-menu">
+    <% const navLocal = Object.assign({}, (typeof navData !== 'undefined' ? navData : {}), {
+    pageTitle: 'Leaderboard' }); %> <%- include('partials/navigation', { navData: navLocal }) %>
     <div class="section" style="margin-top: 2rem">
       <div class="leaderboard-header">
         <h2 class="text-shadow-light">
@@ -47,24 +47,10 @@
     </div>
 
     <script type="module">
-      import { appState } from "/js/app.js";
-      import { initNavigation } from "/js/components/navigation.js";
       import { LeaderboardPage } from "/js/pages/leaderboard.js";
 
-      (async function init() {
-        try {
-          const isAuthenticated = await appState.init();
-
-          if (isAuthenticated) {
-            initNavigation();
-
-            const leaderboard = new LeaderboardPage();
-            await leaderboard.init();
-          }
-        } catch (err) {
-          console.error("Leaderboard initialization failed:", err);
-        }
-      })();
+      const page = new LeaderboardPage();
+      page.init();
     </script>
 
     <bottom-menu></bottom-menu>
