@@ -9,6 +9,7 @@ import { EventBus } from "../events/event-bus.js";
 import { MUSIC_SONGS } from "../constants/music-songs.js";
 import { CocktailEntryModal } from "../components/cocktail-entry-modal.js";
 import { YTMNDEasterEgg } from "../components/ytmnd-easter-egg.js";
+import { SecretTrackPlayer } from "../components/secret-track-player.js";
 
 class EventInfoPage extends BasePage {
   // Fallback avatars for comments without user_id
@@ -99,6 +100,12 @@ class EventInfoPage extends BasePage {
       player.setSongs(MUSIC_SONGS);
       container.innerHTML = "";
       container.appendChild(player);
+
+      // Easter egg: rewind past track 0 opens the secret track overlay
+      player.addEventListener("music:secret-rewind", () => {
+        const secretPlayer = new SecretTrackPlayer();
+        secretPlayer.open();
+      });
 
       // Auto-play on the first user gesture (required by browsers/iOS).
       // togglePlayPause() awaits the internal _ready promise so it's safe to

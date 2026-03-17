@@ -209,7 +209,16 @@ class MusicPlayer extends HTMLElement {
 
   prevSong() {
     if (!this.songs.length) return;
-    let prevIdx = (this.currentIndex - 1 + this.songs.length) % this.songs.length;
+    if (this.currentIndex === 0) {
+      // Rewind past the first track — dispatch secret easter egg event instead of wrapping
+      try {
+        this.dispatchEvent(new CustomEvent("music:secret-rewind", { bubbles: true }));
+      } catch (e) {
+        /* ignore */
+      }
+      return;
+    }
+    let prevIdx = this.currentIndex - 1;
     this.playSong(prevIdx);
   }
 
