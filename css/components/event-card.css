@@ -322,7 +322,7 @@ body:not(.myspace) {
 .event-card-links {
   display: flex;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
 }
 
@@ -424,9 +424,6 @@ body:not(.myspace) {
 .event-card-location {
   font-size: 13px;
 }
-.event-card-location {
-  margin-bottom: 8px;
-}
 
 /* MySpace-style RSVP buttons for EventCard */
 .event-card--myspace .event-card-title {
@@ -450,7 +447,7 @@ body:not(.myspace) {
   display: flex;
   flex-direction: row;
   gap: 8px;
-  margin: 12px 0;
+  margin: 16px 0;
 }
 .event-card--myspace .rsvp-btn {
   background: white;

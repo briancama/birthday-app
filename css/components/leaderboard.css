@@ -163,18 +163,21 @@
   text-shadow: var(--text-shadow-light);
 }
 
+
+
 /* Desktop: 2 columns */
-@media (min-width: 769px) {
+@media (min-width: 968px) {
   .leaderboard-cards {
     display: grid;
     gap: var(--spacing-md);
+    grid-template-columns: 1fr 1fr;
   }
 }
 
 /* Mobile Adjustments */
 @media (max-width: 768px) {
   .leaderboard-cards {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr;
   }
 
   .leaderboard-card {
