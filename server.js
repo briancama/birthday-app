@@ -200,11 +200,11 @@ app.get("/", async (req, res, next) => {
 
     let destination;
     if (needsOnboarding) {
-      destination = "/register.html";
+      destination = "/register";
     } else if (userType === "participant") {
-      destination = "/dashboard.html";
+      destination = "/dashboard";
     } else {
-      destination = username ? `/users/${username}` : "/leaderboard.html";
+      destination = username ? `/users/${username}` : "/leaderboard";
     }
 
     return res.redirect(302, destination);
@@ -281,6 +281,12 @@ app.get(["/challenges-submit", "/challenges-submit.html"], (req, res) => {
 // Admin Approvals: server-rendered to include navigation partial
 app.get(["/admin-approvals", "/admin-approvals.html"], (req, res) => {
   return res.render("admin-approvals");
+});
+
+
+// Cocktail Judging: server-rendered to include navigation partial
+app.get(["/cocktail-judging", "/cocktail-judging.html"], (req, res) => {
+  return res.render("cocktail-judging");
 });
 
 // Event Info: server-rendered to include navigation partial (myspace style)

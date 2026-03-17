@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Cocktail Judging - Brian's Birthday Zone</title>
+    <link rel="icon" type="image/png" href="/images/favicon.jpg" />
+    <link rel="stylesheet" href="/css/geocities.css" />
+    <link rel="stylesheet" href="/css/components/navigation.css" />
+    <link rel="stylesheet" href="/css/components/submissions.css" />
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
+  </head>
+
+  <body class="has-bottom-menu">
+    <div class="container">
+      <!-- Server-rendered Navigation -->
+      <% const navLocal = Object.assign({}, (typeof navData !== 'undefined' ? navData : {}), { pageTitle: '40 Proof' }); %>
+      <%- include('partials/navigation', { navData: navLocal }) %>
+
+      <!-- Scrolling Marquee -->
+      <marquee behavior="scroll" direction="left" scrollamount="6">
+        *** COCKTAIL JUDGING ZONE! *** Rate each cocktail on a 1-5 scale * Pick your favorite!
+      </marquee>
+
+      <div class="section">
+        <h1 class="text-shadow-light" style="text-align: left">COCKTAIL ENTRIES</h1>
+        <p style="max-width: 600px; margin-bottom: 1rem">
+          Rate each cocktail on the rubric criteria (1-5 scale), then pick your favorite to crown
+          the champion!
+        </p>
+
+        <!-- Rubric Button + Progress Indicator Row -->
+        <div
+          style="
+            min-height: 60px;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            z-index: 10;
+          "
+        >
+          <a
+            href="cocktail-rubric.html"
+            target="_blank"
+            class="btn btn-secondary"
+            style="flex-shrink: 0"
+            >RUBRIC</a
+          >
+          <div
+            id="judgingStatus"
+            style="
+              padding: 0.5rem 1rem;
+              background: rgba(255, 255, 0, 0.9);
+              border: 2px solid #000;
+              font-weight: bold;
+              font-size: 0.9rem;
+            "
+          >
+            <p style="margin: 0">Loading...</p>
+          </div>
+        </div>
+
+        <div id="entriesList" class="entries-grid">
+          <div class="loading">Loading entries...</div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { CocktailJudgingPage } from "/js/pages/cocktail-judging.js";
+
+      (async () => {
+        try {
+          const page = new CocktailJudgingPage();
+          await page.init();
+        } catch (err) {
+          console.error("Cocktail judging initialization failed:", err);
+        }
+      })();
+    </script>
+    <bottom-menu></bottom-menu>
+    <script type="module" src="/js/components/bottom-menu.js"></script>
+  </body>
+</html>

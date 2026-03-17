@@ -153,8 +153,8 @@ class CocktailJudgingPage extends BasePage {
 
     // Calculate weighted total score (out of 100)
     const weightedTotal = judgment
-      ? (judgment.taste_score || 0) * 10 +
-        (judgment.presentation_score || 0) * 4 +
+      ? (judgment.taste_score || 0) * 11 +
+        (judgment.presentation_score || 0) * 3 +
         (judgment.workmanship_score || 0) * 3 +
         (judgment.creativity_score || 0) * 3
       : 0;
@@ -256,8 +256,8 @@ class CocktailJudgingPage extends BasePage {
 
   renderJudgmentView(entry, judgment, isFavorite) {
     const totalScore =
-      judgment.taste_score * 10 +
-      judgment.presentation_score * 4 +
+      judgment.taste_score * 11 +
+      judgment.presentation_score * 3 +
       judgment.workmanship_score * 3 +
       judgment.creativity_score * 3;
 
@@ -265,10 +265,10 @@ class CocktailJudgingPage extends BasePage {
             <div class="judgment-view">
                 <div class="scores-grid">
                     <div class="score-item">
-                        <strong>Taste:</strong> ${judgment.taste_score}/5 (${judgment.taste_score * 10} pts)
+                        <strong>Taste:</strong> ${judgment.taste_score}/5 (${judgment.taste_score * 11} pts)
                     </div>
                     <div class="score-item">
-                        <strong>Presentation:</strong> ${judgment.presentation_score}/5 (${judgment.presentation_score * 4} pts)
+                        <strong>Presentation:</strong> ${judgment.presentation_score}/5 (${judgment.presentation_score * 3} pts)
                     </div>
                     <div class="score-item">
                         <strong>Craftsmanship:</strong> ${judgment.workmanship_score}/5 (${judgment.workmanship_score * 3} pts)

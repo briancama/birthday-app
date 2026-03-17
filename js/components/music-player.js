@@ -4,6 +4,7 @@
 import { appState } from "../app.js";
 
 class MusicPlayer extends HTMLElement {
+    _firstInteraction = true;
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
@@ -28,13 +29,21 @@ class MusicPlayer extends HTMLElement {
         }
       }
       if (e.target.classList.contains("music-play-btn")) {
+        this._firstInteraction = false;
         this.togglePlayPause();
       }
       if (e.target.classList.contains("music-next-btn")) {
+        this._firstInteraction = false;
         this.nextSong();
       }
       if (e.target.classList.contains("music-prev-btn")) {
-        this.prevSong();
+        if (this._firstInteraction) {
+          this._firstInteraction = false;
+          // On first prev click, always skip playback and just update index/UI
+          this.prevSong({ skipAutoPlay: true, alwaysSkip: true });
+        } else {
+          this.prevSong();
+        }
       }
     });
     this.shadowRoot.addEventListener("input", (e) => {
@@ -61,7 +70,8 @@ class MusicPlayer extends HTMLElement {
 
   async setSongs(songs) {
     this.songs = songs;
-    this.currentIndex = 0;
+    // Default to index 12 (13th song) if no favorite, else will update below
+    this.currentIndex = songs.length > 11 ? 11 : 0;
     // Expose a promise so callers (e.g. togglePlayPause) can wait for
     // the favorite to be resolved before starting playback.
     let resolveReady;
@@ -83,7 +93,9 @@ class MusicPlayer extends HTMLElement {
       if (!favUrl) favUrl = localStorage.getItem("musicPlayerFavoriteSongUrl");
       if (favUrl) localStorage.setItem("musicPlayerFavoriteSongUrl", favUrl);
       const favIdx = favUrl ? songs.findIndex((s) => s.url === favUrl) : -1;
-      if (favIdx >= 0) this.currentIndex = favIdx;
+      if (favIdx >= 0) {
+        this.currentIndex = favIdx;
+      } // else leave as default (index 11 or 0)
     } catch (err) {
       console.warn("[MusicPlayer] Could not load favorite song:", err);
     }
@@ -207,10 +219,43 @@ class MusicPlayer extends HTMLElement {
     this.playSong(nextIdx);
   }
 
-  prevSong() {
+  prevSong(options = {}) {
     if (!this.songs.length) return;
+    // If alwaysSkip is set (first interaction), just update index/UI and return
+    if (options.alwaysSkip) {
+      if (this.currentIndex === 0) {
+        // If at first song, still trigger secret-rewind
+        if (this.audio) {
+          try {
+            this.audio.pause();
+            this.audio.currentTime = 0;
+            this.audio.removeEventListener("ended", this._boundOnEnded);
+            this.audio.removeEventListener("timeupdate", this._boundOnTimeUpdate);
+          } catch (e) {}
+          this.audio = null;
+          this.isPlaying = false;
+        }
+        try {
+          this.dispatchEvent(new CustomEvent("music:secret-rewind", { bubbles: true }));
+        } catch (e) {}
+      } else {
+        this.currentIndex = this.currentIndex - 1;
+        this.render();
+      }
+      return;
+    }
     if (this.currentIndex === 0) {
-      // Rewind past the first track — dispatch secret easter egg event instead of wrapping
+      // Stop and clean up current audio before dispatching secret-rewind
+      if (this.audio) {
+        try {
+          this.audio.pause();
+          this.audio.currentTime = 0;
+          this.audio.removeEventListener("ended", this._boundOnEnded);
+          this.audio.removeEventListener("timeupdate", this._boundOnTimeUpdate);
+        } catch (e) {}
+        this.audio = null;
+        this.isPlaying = false;
+      }
       try {
         this.dispatchEvent(new CustomEvent("music:secret-rewind", { bubbles: true }));
       } catch (e) {
@@ -219,7 +264,12 @@ class MusicPlayer extends HTMLElement {
       return;
     }
     let prevIdx = this.currentIndex - 1;
-    this.playSong(prevIdx);
+    if (!options.skipAutoPlay) {
+      this.playSong(prevIdx);
+    } else {
+      this.currentIndex = prevIdx;
+      this.render();
+    }
   }
 
   setVolume(vol) {

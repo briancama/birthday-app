@@ -1,3 +1,11 @@
+// Fun pause messages for the secret track player
+const SECRET_PAUSE_HINTS = [
+  "Now that's what I call not listening...",
+  "You know, you can't nominate me for a Grammy if you don't finish the album",
+  "Legends say only true fans make it to the end.",
+  "Come on, it's only 12 tracks. How bad can it be?",
+  "Are you really giving up on those sweet, sweet points?"
+];
 // js/components/secret-track-player.js
 // Secret Track Easter Egg — triggered by rewinding past track 0 on the music player.
 // Presents an overlay player with 3 hidden songs that must each be listened to completion.
@@ -6,14 +14,15 @@
 import { achievementService } from "../services/achievement-service.js";
 
 const SECRET_SONGS = [
-  { title: "She Bangs", url: "/songs/secret/secret-track-1.mp3" },
-  { title: "Friday", url: "/songs/secret/secret-track-2.mp3" },
-  { title: "Chocolate Rain", url: "/songs/secret/secret-track-3.mp3" },
+  { title: "She Bangs", url: "/songs/secret/she-bangs.mp3" },
+  { title: "Friday", url: "/songs/secret/friday.mp3" },
+  { title: "Chocolate Rain", url: "/songs/secret/chocolate-rain.mp3" },
 ];
 
 const ACHIEVEMENT_KEY = "secret_tracks";
 
 export class SecretTrackPlayer {
+    _pauseHintIndex = 0;
   constructor() {
     this.currentTrack = 0;
     this.completedTracks = 0;
@@ -25,7 +34,15 @@ export class SecretTrackPlayer {
     if (this.overlay) return;
     this._buildOverlay();
     document.body.appendChild(this.overlay);
-    this._loadTrack(0);
+    // Do not auto-load the first song; wait for user to click play
+    this.currentTrack = 0;
+    this.audio = null;
+    const playBtn = this.overlay.querySelector("#secretPlayBtn");
+    if (playBtn) {
+      playBtn.textContent = "▶️";
+      playBtn.style.display = "";
+    }
+    this._updateProgress(0, 0);
   }
 
   _buildOverlay() {
@@ -34,22 +51,18 @@ export class SecretTrackPlayer {
     this.overlay.innerHTML = `
       <div class="secret-player-modal">
         <div class="secret-player-header">
-          <span class="secret-player-title">◄◄ HIDDEN TRACK</span>
           <button class="secret-player-close" title="Exit secret track" aria-label="Close secret track">✖</button>
         </div>
         <div class="secret-player-track-info">
-          <div class="secret-player-track-number">Track <span id="secretTrackNum">1</span> of 3</div>
-          <div class="secret-player-track-name" id="secretTrackName">Loading...</div>
+          <div style="visibility: hidden;" class="secret-player-track-number">Track <span id="secretTrackNum">1</span> of 12</div>
+          <div class="secret-player-track-name" id="secretTrackName">BrisBops</div>
         </div>
         <div class="secret-player-progress-wrap">
           <div class="secret-player-progress-bar" id="secretProgressBar"></div>
         </div>
         <div class="secret-player-time" id="secretTime">0:00 / 0:00</div>
-        <div class="secret-player-status" id="secretStatus">You must listen to the full track to continue...</div>
-        <div class="secret-player-controls">
-          <button class="secret-player-play-btn" id="secretPlayBtn" aria-label="Play/Pause">▶️</button>
-        </div>
-        <div class="secret-player-hint" id="secretHint">Complete all 3 tracks to earn an achievement.</div>
+        <div class="secret-player-status" id="secretStatus">Now this is what I call music!!!</div>
+        <div class="secret-player-hint" id="secretHint"></div>
       </div>
     `;
 
@@ -59,6 +72,10 @@ export class SecretTrackPlayer {
     this.overlay
       .querySelector("#secretPlayBtn")
       .addEventListener("click", () => this._togglePlayPause());
+    // Temporary skip button for testing
+    this.overlay
+      .querySelector("#secretSkipBtn")
+      .addEventListener("click", () => this._onTrackEnded());
 
     // Click outside the modal to close
     this.overlay.addEventListener("click", (e) => {
@@ -67,6 +84,7 @@ export class SecretTrackPlayer {
   }
 
   _loadTrack(index) {
+      this._pauseHintIndex = 0;
     this.currentTrack = index;
     const song = SECRET_SONGS[index];
 
@@ -75,7 +93,9 @@ export class SecretTrackPlayer {
       this.audio.src = "";
       this.audio = null;
     }
-
+    // Set initial UI state
+    const trackInfoEl = this.overlay.querySelector(".secret-player-track-number");
+    if (trackInfoEl) trackInfoEl.style.visibility = "visible";
     const numEl = this.overlay.querySelector("#secretTrackNum");
     const nameEl = this.overlay.querySelector("#secretTrackName");
     const statusEl = this.overlay.querySelector("#secretStatus");
@@ -84,12 +104,12 @@ export class SecretTrackPlayer {
 
     if (numEl) numEl.textContent = index + 1;
     if (nameEl) nameEl.textContent = song.title;
-    if (statusEl) statusEl.textContent = "You must listen to the full track to continue...";
+    if (statusEl) statusEl.textContent = "Now this is what I call music!!!";
     if (playBtn) {
       playBtn.textContent = "▶️";
       playBtn.style.display = "";
     }
-    if (hintEl) hintEl.textContent = `Complete all 3 tracks to earn an achievement.`;
+    if (hintEl) hintEl.textContent = ``;
     this._updateProgress(0, 0);
 
     this.audio = new Audio(song.url);
@@ -109,15 +129,25 @@ export class SecretTrackPlayer {
   }
 
   _togglePlayPause() {
-    if (!this.audio) return;
     const playBtn = this.overlay.querySelector("#secretPlayBtn");
+    const hintEl = this.overlay.querySelector("#secretHint");
+    // If audio is not loaded, load and play the current track
+    if (!this.audio) {
+      this._loadTrack(this.currentTrack);
+      return;
+    }
     if (this.audio.paused) {
       this.audio.play().then(() => {
         if (playBtn) playBtn.textContent = "⏸️";
+        if (hintEl) hintEl.textContent = "";
       });
     } else {
       this.audio.pause();
       if (playBtn) playBtn.textContent = "▶️";
+      if (hintEl) {
+        hintEl.textContent = SECRET_PAUSE_HINTS[this._pauseHintIndex] || SECRET_PAUSE_HINTS[SECRET_PAUSE_HINTS.length - 1];
+        if (this._pauseHintIndex < SECRET_PAUSE_HINTS.length - 1) this._pauseHintIndex++;
+      }
     }
   }
 
@@ -156,7 +186,7 @@ export class SecretTrackPlayer {
       const hintEl = this.overlay?.querySelector("#secretHint");
       const remaining = 3 - this.completedTracks;
       if (statusEl) statusEl.textContent = "✓ Track complete! Loading next...";
-      if (hintEl) hintEl.textContent = `${remaining} track${remaining !== 1 ? "s" : ""} remaining`;
+      if (hintEl) hintEl.textContent = '';
       setTimeout(() => this._loadTrack(this.completedTracks), 1500);
     }
   }
@@ -166,12 +196,12 @@ export class SecretTrackPlayer {
     const hintEl = this.overlay?.querySelector("#secretHint");
     const nameEl = this.overlay?.querySelector("#secretTrackName");
     const playBtn = this.overlay?.querySelector("#secretPlayBtn");
-    const numEl = this.overlay?.querySelector("#secretTrackNum");
+    const trackInfoEl = this.overlay.querySelector(".secret-player-track-number");
 
     if (statusEl) statusEl.textContent = "★ YOU FOUND ALL THE SECRET TRACKS! ★";
     if (hintEl) hintEl.textContent = "Achievement unlocked!";
-    if (nameEl) nameEl.textContent = "The Full Brian Experience";
-    if (numEl) numEl.textContent = "3";
+    if (nameEl) nameEl.textContent = "12! Can you imagine!?";
+    if (trackInfoEl) trackInfoEl.style.visibility = "hidden";
     if (playBtn) playBtn.style.display = "none";
 
     try {
@@ -182,7 +212,7 @@ export class SecretTrackPlayer {
       console.warn("[SecretTrackPlayer] Failed to award achievement:", err);
     }
 
-    setTimeout(() => this.close(), 4000);
+    setTimeout(() => this.close(), 6000);
   }
 
   close() {
