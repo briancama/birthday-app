@@ -6,9 +6,9 @@
 import { achievementService } from "../services/achievement-service.js";
 
 const SECRET_SONGS = [
-  { title: "???", url: "/songs/secret/secret-track-1.mp3" },
-  { title: "???", url: "/songs/secret/secret-track-2.mp3" },
-  { title: "???", url: "/songs/secret/secret-track-3.mp3" },
+  { title: "She Bangs", url: "/songs/secret/secret-track-1.mp3" },
+  { title: "Friday", url: "/songs/secret/secret-track-2.mp3" },
+  { title: "Chocolate Rain", url: "/songs/secret/secret-track-3.mp3" },
 ];
 
 const ACHIEVEMENT_KEY = "secret_tracks";
@@ -53,8 +53,12 @@ export class SecretTrackPlayer {
       </div>
     `;
 
-    this.overlay.querySelector(".secret-player-close").addEventListener("click", () => this.close());
-    this.overlay.querySelector("#secretPlayBtn").addEventListener("click", () => this._togglePlayPause());
+    this.overlay
+      .querySelector(".secret-player-close")
+      .addEventListener("click", () => this.close());
+    this.overlay
+      .querySelector("#secretPlayBtn")
+      .addEventListener("click", () => this._togglePlayPause());
 
     // Click outside the modal to close
     this.overlay.addEventListener("click", (e) => {
@@ -81,7 +85,10 @@ export class SecretTrackPlayer {
     if (numEl) numEl.textContent = index + 1;
     if (nameEl) nameEl.textContent = song.title;
     if (statusEl) statusEl.textContent = "You must listen to the full track to continue...";
-    if (playBtn) { playBtn.textContent = "▶️"; playBtn.style.display = ""; }
+    if (playBtn) {
+      playBtn.textContent = "▶️";
+      playBtn.style.display = "";
+    }
     if (hintEl) hintEl.textContent = `Complete all 3 tracks to earn an achievement.`;
     this._updateProgress(0, 0);
 
@@ -91,11 +98,14 @@ export class SecretTrackPlayer {
     this.audio.addEventListener("timeupdate", () => this._onTimeUpdate());
     this.audio.addEventListener("loadedmetadata", () => this._onTimeUpdate());
 
-    this.audio.play().then(() => {
-      if (playBtn) playBtn.textContent = "⏸️";
-    }).catch(() => {
-      if (playBtn) playBtn.textContent = "▶️";
-    });
+    this.audio
+      .play()
+      .then(() => {
+        if (playBtn) playBtn.textContent = "⏸️";
+      })
+      .catch(() => {
+        if (playBtn) playBtn.textContent = "▶️";
+      });
   }
 
   _togglePlayPause() {
@@ -128,7 +138,9 @@ export class SecretTrackPlayer {
   _fmtTime(secs) {
     if (!secs || isNaN(secs)) return "0:00";
     const m = Math.floor(secs / 60);
-    const s = Math.floor(secs % 60).toString().padStart(2, "0");
+    const s = Math.floor(secs % 60)
+      .toString()
+      .padStart(2, "0");
     return `${m}:${s}`;
   }
 
