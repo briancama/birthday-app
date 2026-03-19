@@ -3,17 +3,16 @@
    ============================================================ */
 
 #goblinPixel {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 2px;
-  height: 2px;
-  background: gold;
-  box-shadow: 0 0 3px 1px gold;
-  z-index: 0;
-  cursor: default;
-  pointer-events: all;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px;
+    height: 2px;
+    background: gold;
+    box-shadow: 0 0 3px 1px gold;
+    cursor: default;
+    pointer-events: all;
 }
 
 /* Overlay: hidden by default, shown when golbin pixel is clicked */
