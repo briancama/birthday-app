@@ -134,15 +134,19 @@ class DashboardPage extends BasePage {
       if (!counterEl || !listEl || !section) return;
 
       const [{ data: allAchievements }, { data: userAwards }] = await Promise.all([
-        supabase.from("achievements").select("id,key,name,description,points"),
+        supabase.from("achievements").select("id,key,name,description,points,metadata"),
         supabase.from("user_achievements").select("achievement_id").eq("user_id", this.userId),
       ]);
 
-      const total = Array.isArray(allAchievements) ? allAchievements.length : 0;
       const awardedIds = Array.isArray(userAwards) ? userAwards.map((u) => u.achievement_id) : [];
-      const awarded = Array.isArray(allAchievements)
-        ? allAchievements.filter((a) => awardedIds.includes(a.id))
+
+      // Hidden achievements (metadata.hidden = true) are excluded from total count
+      // and only shown once earned
+      const visibleAchievements = Array.isArray(allAchievements)
+        ? allAchievements.filter((a) => !a.metadata?.hidden || awardedIds.includes(a.id))
         : [];
+      const total = visibleAchievements.length;
+      const awarded = visibleAchievements.filter((a) => awardedIds.includes(a.id));
 
       counterEl.innerHTML = `${awarded.length} / ${total} <span>complete</span>`;
       section.classList.toggle("visible", awarded.length > 0);

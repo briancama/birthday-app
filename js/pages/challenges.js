@@ -187,7 +187,16 @@ class ChallengesPage extends BasePage {
       if (body && body.notification) {
         EventBus.instance.emit("notification:created", { notification: body.notification });
       }
-      // Also emit a generic UI toast event for consistency with navigation
+      // If the server awarded an achievement (social_butterfly etc.), surface the toast.
+      // Awarding already happened server-side — this is UI-only.
+      if (body && body.achievement) {
+        EventBus.instance.emit("achievement:awarded", {
+          userId: this.userId,
+          achievementKey: body.achievement.key,
+          name: body.achievement.name,
+          points: body.achievement.points,
+        });
+      }
       EventBus.instance.emit("ui:toast", {
         type: "success",
         message: "Notification sent!",

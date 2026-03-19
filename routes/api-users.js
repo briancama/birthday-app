@@ -111,7 +111,24 @@ router.post("/users/:id/challenge", async (req, res) => {
       console.warn("Failed to create challenge notification:", notifyErr.message || notifyErr);
     }
 
-    return res.json({ ok: true, assignment_id: dormant.id, notification: notif });
+    // 5. Check and award social_butterfly achievement for the challenger (non-fatal)
+    let achievement = null;
+    try {
+      const { data: achData } = await supabase.rpc("rpc_award_on_challenge_threshold", { p_user_id: signedUserId });
+      const achRow = Array.isArray(achData) ? achData[0] : achData;
+      if (achRow?.awarded) {
+        const { data: ach } = await supabase
+          .from("achievements")
+          .select("key, name, points")
+          .eq("id", achRow.achievement_id)
+          .maybeSingle();
+        achievement = ach || null;
+      }
+    } catch (achieveErr) {
+      console.warn("Failed to check challenge threshold achievement:", achieveErr.message || achieveErr);
+    }
+
+    return res.json({ ok: true, assignment_id: dormant.id, notification: notif, achievement });
   } catch (err) {
     console.error("Error in POST /api/users/:id/challenge", err);
     return res.status(500).json({ error: "Internal server error" });
