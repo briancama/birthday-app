@@ -29,7 +29,7 @@ export class AdminApprovalsPage extends BasePage {
 
     this.initializeModals();
     this.initializeAssignmentForm();
-    await this.loadAllChallenges();
+    await Promise.all([this.loadAllChallenges(), this.loadAssignmentStats()]);
   }
 
   /**
@@ -184,6 +184,112 @@ export class AdminApprovalsPage extends BasePage {
     } catch (err) {
       console.error("Error loading challenges:", err);
       this.pendingTable.showError("Error loading challenges. Please refresh the page.");
+    }
+  }
+
+  /**
+   * Load and render a per-user assignment stats table.
+   * Counts:
+   *   - total active assignments per user
+   *   - assignments where the user is the vs opponent (challenge.vs_user === user_id)
+   */
+  async loadAssignmentStats() {
+    const container = document.getElementById("assignmentStatsContainer");
+    if (!container) return;
+
+    try {
+      // Two parallel queries — avoids relying on a specific FK constraint name
+      // for the challenges join which can silently drop rows if mismatched.
+      const [assignmentsResult, challengesResult] = await Promise.all([
+        this.supabase
+          .from("assignments")
+          .select(
+            `
+            user_id,
+            challenge_id,
+            users!assignments_user_id_fkey ( username, display_name )
+          `
+          ),
+        this.supabase
+          .from("challenges")
+          .select("id, vs_user")
+          .not("vs_user", "is", null),
+      ]);
+
+      if (assignmentsResult.error) throw assignmentsResult.error;
+      if (challengesResult.error) throw challengesResult.error;
+
+      // Build challenge_id -> vs_user map for quick lookup
+      const vsUserByChallenge = {};
+      (challengesResult.data || []).forEach((c) => {
+        vsUserByChallenge[c.id] = c.vs_user;
+      });
+
+      // Aggregate per user
+      const statsMap = {};
+      (assignmentsResult.data || []).forEach((row) => {
+        const uid = row.user_id;
+        if (!statsMap[uid]) {
+          statsMap[uid] = {
+            username: row.users?.username || uid,
+            display_name: row.users?.display_name || row.users?.username || uid,
+            total: 0,
+            as_vs: 0,
+          };
+        }
+        const s = statsMap[uid];
+        s.total += 1;
+        if (vsUserByChallenge[row.challenge_id] === uid) s.as_vs += 1;
+      });
+
+      const rows = Object.values(statsMap).sort((a, b) => b.total - a.total);
+
+      if (rows.length === 0) {
+        container.innerHTML = '<div class="empty-state">No active assignments found.</div>';
+        return;
+      }
+
+      const half = Math.ceil(rows.length / 2);
+      const leftRows = rows.slice(0, half);
+      const rightRows = rows.slice(half);
+
+      const renderRows = (list) =>
+        list
+          .map(
+            (r) => `
+          <div class="asg-row">
+            <span class="asg-name">${escapeHtml(r.display_name)}<span class="asg-handle"> @${escapeHtml(r.username)}</span></span>
+            <span class="asg-vs">${r.as_vs > 0 ? r.as_vs : "—"}</span>
+            <span class="asg-total">${r.total}</span>
+          </div>`
+          )
+          .join("");
+
+      const statsHtml = `
+        <div class="asg-grids">
+          <div class="asg-grid">
+            <div class="asg-header">
+              <span>User</span>
+              <span class="asg-vs" title="As VS opponent">VS</span>
+              <span class="asg-total" title="Total assignments">Total</span>
+            </div>
+            ${renderRows(leftRows)}
+          </div>
+          ${rightRows.length ? `
+          <div class="asg-grid">
+            <div class="asg-header">
+              <span>User</span>
+              <span class="asg-vs" title="As VS opponent">VS</span>
+              <span class="asg-total" title="Total assignments">Total</span>
+            </div>
+            ${renderRows(rightRows)}
+          </div>` : ""}
+        </div>`;
+
+      container.innerHTML = statsHtml;
+    } catch (err) {
+      console.error("Error loading assignment stats:", err);
+      container.innerHTML = '<div class="empty-state">Error loading assignment stats.</div>';
     }
   }
 

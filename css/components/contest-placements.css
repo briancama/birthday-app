@@ -42,3 +42,70 @@
 .contest-placement-table th {
   background: #f7d560;
 }
+
+/* Assignment stats grids */
+.asg-grids {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.asg-grid {
+  flex: 1 1 320px;
+  background: #2a2a40;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  overflow: hidden;
+  font-size: 0.8rem;
+}
+.asg-header,
+.asg-row {
+  display: grid;
+  grid-template-columns: 1fr 2.5rem 2.5rem;
+  align-items: center;
+  padding: 0.3rem 0.6rem;
+  gap: 0.25rem;
+}
+.asg-header {
+  background: linear-gradient(135deg, #1a1a3e, #2a2a5e);
+  color: #f7d560;
+  font-weight: 700;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  border-bottom: 1px solid rgba(247, 213, 96, 0.3);
+}
+.asg-row {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.asg-row:nth-child(odd)  { background: #32324e; }
+.asg-row:nth-child(even) { background: #3c3c5a; }
+.asg-row:last-child { border-bottom: none; }
+.asg-row:hover { background: rgba(247, 213, 96, 0.15); }
+.asg-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  color: #f0f0ff;
+}
+.asg-handle {
+  font-weight: 400;
+  opacity: 0.55;
+  font-size: 0.72rem;
+  color: #c0c0d8;
+}
+.asg-vs {
+  text-align: center;
+  color: #ff80ff;
+  font-weight: 700;
+}
+.asg-total {
+  text-align: center;
+  color: #f7d560;
+  font-weight: 700;
+}
+.asg-header .asg-vs,
+.asg-header .asg-total {
+  color: #f7d560;
+  font-weight: 700;
+}
