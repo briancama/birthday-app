@@ -78,6 +78,7 @@
   font-weight: bold;
   text-align: left;
   width: 225px;
+  min-width: 225px
 }
 .badge-points {
   font-family: math, monospace;
@@ -147,5 +148,6 @@
   .badge-name {
     margin-left: 0;
     width: auto;
+    min-width: 200px;
   }
 }

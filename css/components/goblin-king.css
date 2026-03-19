@@ -1,0 +1,52 @@
+/* ============================================================
+   Goblin King Easter Egg — Golden Pixel + Overlay
+   ============================================================ */
+
+#goblinPixel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 2px;
+  background: gold;
+  box-shadow: 0 0 3px 1px gold;
+  z-index: 0;
+  cursor: default;
+  pointer-events: all;
+}
+
+/* Overlay: hidden by default, shown when golbin pixel is clicked */
+#goblinOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  z-index: 10001;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  cursor: pointer;
+  gap: 1rem;
+}
+
+#goblinOverlay.goblin-active {
+  display: flex;
+}
+
+#goblinOverlay img {
+  max-width: 90vw;
+  max-height: 75vh;
+  display: block;
+  image-rendering: pixelated;
+  box-shadow: 0 0 40px gold;
+}
+
+#goblinOverlay p {
+  color: gold;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.85rem;
+  opacity: 0.7;
+  margin: 0;
+  text-align: center;
+}

@@ -164,3 +164,15 @@
 <% } else { %>
 </nav>
 <% } %>
+
+<script type="module">
+  // The treasure is closer than you think.
+  console.log("Your treasure lies at the very center of the maze and page.");
+
+  import { initGoblinKing } from "/js/components/goblin-king.js";
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => initGoblinKing(), { once: true });
+  } else {
+    initGoblinKing();
+  }
+</script>
