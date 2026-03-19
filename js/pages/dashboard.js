@@ -537,6 +537,7 @@ class DashboardPage extends BasePage {
                     id,
                     completed_at,
                     outcome,
+                    triggered_at,
                     challenges (id, title, description, brian_mode, success_metric, vs_user, vs_user_profile:users!vs_user(display_name, username))
                 `
         )
@@ -591,9 +592,10 @@ class DashboardPage extends BasePage {
       const isCompleted = !!assignment.completed_at;
       const outcome = assignment.outcome;
       const brianMode = assignment.challenges.brian_mode;
+      const isTriggered = !!assignment.triggered_at;
       const isRevealed = this.revealedChallengeId === assignment.id;
-      const canReveal = !isCompleted && (firstIncompleteIndex === index || isRevealed);
-      const isLocked = !isCompleted && firstIncompleteIndex < index && !isRevealed;
+      const canReveal = !isCompleted && isTriggered && (firstIncompleteIndex === index || isRevealed);
+      const isLocked = !isCompleted && (!isTriggered || (firstIncompleteIndex < index && !isRevealed));
 
       const state = {
         isCompleted,

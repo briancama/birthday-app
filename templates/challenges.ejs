@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Challenges - Birthday Challenge Zone</title>
+    <link rel="icon" type="image/png" href="/images/favicon.jpg" />
+    <link rel="stylesheet" href="/css/geocities.css" />
+    <link rel="stylesheet" href="/css/components/navigation.css" />
+    <link rel="stylesheet" href="/css/components/submissions.css" />
+    <link rel="stylesheet" href="/css/components/event-card.css" />
+    <link rel="stylesheet" href="/css/components/character-select.css" />
+    <!-- Firebase SDK -->
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
+  </head>
+
+  <body class="has-bottom-menu">
+    <% const navLocal = Object.assign({}, (typeof navData !== 'undefined' ? navData : {}), { pageTitle: 'My Challenges' }); %>
+    <%- include('partials/navigation', { navData: navLocal }) %>
+
+    <main>
+      <section class="section">
+        <h2>Complete Challenges</h2>
+        <div id="challengesList" style="margin-bottom: 2rem">
+          <div class="loading">Loading challenges...</div>
+        </div>
+      </section>
+      <section class="section section--character-select">
+        <div class="character-select__intro-overlay">
+          <div class="character-select__intro-inner">
+            <p>
+              Welcome to the Challenger Selection! Choose another challenger and hope they get the
+              message and attempt to complete one of their challenges to earn points and climb the
+              leaderboard. Each character has unique challenges, so pick wisely and get ready to
+              watch them perform!
+            </p>
+            <button class="btn character-select__intro-start" data-no-sound>Start</button>
+          </div>
+        </div>
+        <h2 class="character-select__title">Challenger Selection</h2>
+        <div class="character-select__map-container">
+          <img
+            src="/images/street-fighter-map.png"
+            alt="Street Fighter Map"
+            class="character-select__map"
+          />
+        </div>
+        <div id="characterSelectContainer"></div>
+      </section>
+    </main>
+
+    <script type="module">
+      import { ChallengesPage } from "/js/pages/challenges.js";
+
+      const page = new ChallengesPage();
+      window.addEventListener("DOMContentLoaded", () => page.init());
+    </script>
+
+    <bottom-menu></bottom-menu>
+    <script type="module" src="/js/components/bottom-menu.js"></script>
+  </body>
+</html>

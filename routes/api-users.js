@@ -36,28 +36,123 @@ router.post("/users/:id/challenge", async (req, res) => {
     if (signedUserId === targetUserId)
       return res.status(400).json({ error: "Cannot challenge yourself" });
 
-    // Create a simple notification so the target user is reminded to perform
-    // their next challenge. This route intentionally does NOT assign a new
-    // challenge row — it only notifies the target to take action.
+    // 1. Check the target's active challenge count (cap = 2)
+    const { count: activeCount, error: countErr } = await supabase
+      .from("assignments")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", targetUserId)
+      .not("triggered_at", "is", null)
+      .is("completed_at", null);
+
+    if (countErr) {
+      console.error("Failed to count active challenges:", countErr.message);
+      return res.status(500).json({ error: "Failed to check challenge capacity" });
+    }
+
+    if (activeCount >= 2) {
+      return res.status(409).json({
+        error: "User is at challenge capacity",
+        active_count: activeCount,
+      });
+    }
+
+    // 2. Find the next dormant assignment for the target (oldest assigned_at).
+    //    Does NOT filter on active — we re-activate it as part of the trigger.
+    const { data: dormant, error: dormantErr } = await supabase
+      .from("assignments")
+      .select("id")
+      .eq("user_id", targetUserId)
+      .is("triggered_at", null)
+      .is("completed_at", null)
+      .order("assigned_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (dormantErr) {
+      console.error("Failed to find dormant assignment:", dormantErr.message);
+      return res.status(500).json({ error: "Failed to find next challenge" });
+    }
+
+    if (!dormant) {
+      return res.status(404).json({ error: "No dormant challenges remaining for this user" });
+    }
+
+    // 3. Trigger: set active = true, triggered_at, and record who challenged
+    const { error: triggerErr } = await supabase
+      .from("assignments")
+      .update({
+        active: true,
+        triggered_at: new Date().toISOString(),
+        updated_by: signedUserId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", dormant.id);
+
+    if (triggerErr) {
+      console.error("Failed to trigger assignment:", triggerErr.message);
+      return res.status(500).json({ error: "Failed to trigger challenge" });
+    }
+
+    // 4. Create a notification for the target
+    let notif = null;
     try {
-      const { data: notif, error: notifErr } = await supabase
+      const { data: notifData, error: notifErr } = await supabase
         .from("notifications")
         .insert({
           user_id: targetUserId,
-          payload: { type: "challenge_reminder", from_user: signedUserId },
+          payload: { type: "challenge_triggered", from_user: signedUserId, assignment_id: dormant.id },
           read: false,
         })
         .select()
         .single();
-
-      if (notifErr) throw notifErr;
-      return res.json({ ok: true, notification: notif });
+      if (!notifErr) notif = notifData;
     } catch (notifyErr) {
-      console.error("Failed to create challenge notification:", notifyErr.message || notifyErr);
-      return res.status(500).json({ error: "Failed to create notification" });
+      // Non-fatal — assignment was triggered successfully
+      console.warn("Failed to create challenge notification:", notifyErr.message || notifyErr);
     }
+
+    return res.json({ ok: true, assignment_id: dormant.id, notification: notif });
   } catch (err) {
     console.error("Error in POST /api/users/:id/challenge", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// GET /api/users/active-challenge-counts
+// Returns active (triggered, incomplete) challenge counts and total incomplete
+// (dormant + active) counts per user. Used by character select to enforce the
+// 2-challenge cap and to disable players who have no challenges remaining.
+router.get("/users/active-challenge-counts", async (req, res) => {
+  try {
+    const [activeResult, incompleteResult] = await Promise.all([
+      supabase
+        .from("assignments")
+        .select("user_id")
+        .not("triggered_at", "is", null)
+        .is("completed_at", null)
+        .eq("active", true),
+      supabase
+        .from("assignments")
+        .select("user_id")
+        .is("completed_at", null),
+    ]);
+
+    if (activeResult.error) throw activeResult.error;
+    if (incompleteResult.error) throw incompleteResult.error;
+
+    const counts = {};
+    (activeResult.data || []).forEach(({ user_id }) => {
+      counts[user_id] = (counts[user_id] || 0) + 1;
+    });
+
+    const incompleteCounts = {};
+    (incompleteResult.data || []).forEach(({ user_id }) => {
+      incompleteCounts[user_id] = (incompleteCounts[user_id] || 0) + 1;
+    });
+
+    return res.json({ counts, incompleteCounts });
+  } catch (err) {
+    console.error("Error in GET /api/users/active-challenge-counts", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 });

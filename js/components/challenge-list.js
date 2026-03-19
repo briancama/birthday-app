@@ -32,9 +32,10 @@ export function renderChallengeList(container, data, options = {}) {
     const isCompleted = !!assignment.completed_at;
     const outcome = assignment.outcome;
     const brianMode = assignment.challenges.brian_mode;
+    const isTriggered = !!assignment.triggered_at;
     const isRevealed = revealedId === assignment.id;
-    const canReveal = !isCompleted && (firstIncompleteIndex === index || isRevealed);
-    const isLocked = !isCompleted && firstIncompleteIndex < index && !isRevealed;
+    const canReveal = !isCompleted && isTriggered && (firstIncompleteIndex === index || isRevealed);
+    const isLocked = !isCompleted && (!isTriggered || (firstIncompleteIndex < index && !isRevealed));
 
     const state = { isCompleted, outcome, brianMode, isRevealed, canReveal, isLocked };
 

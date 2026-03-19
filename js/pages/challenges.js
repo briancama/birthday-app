@@ -56,7 +56,7 @@ class ChallengesPage extends BasePage {
           .order("display_name", { ascending: true });
         if (!error && users && users.length) {
           characters = users.map((u) => ({
-            id: u.username || u.id,
+            id: u.id,
             name: u.display_name || u.username || "Player",
             image: u.headshot || "/images/headshot.jpg",
           }));
@@ -75,7 +75,21 @@ class ChallengesPage extends BasePage {
       }
     }
 
-    const selector = createCharacterSelect({ characters, size: 180, columns: 4, gap: 12 });
+    // Fetch active challenge counts so at-cap players are shown as busy
+    let activeCounts = {};
+    let incompleteCounts = {};
+    try {
+      const resp = await fetch("/api/users/active-challenge-counts", { credentials: "include" });
+      if (resp.ok) {
+        const body = await resp.json();
+        activeCounts = body.counts || {};
+        incompleteCounts = body.incompleteCounts || {};
+      }
+    } catch (e) {
+      // ignore — selector will show all players as available
+    }
+
+    const selector = createCharacterSelect({ characters, size: 180, columns: 4, gap: 12, activeCounts, incompleteCounts });
 
     // Track selection on the page and show confirmation overlay
     this.selectedCharacter = null;
@@ -196,7 +210,7 @@ class ChallengesPage extends BasePage {
       const { data, error } = await this.supabase
         .from("assignments")
         .select(
-          `id, completed_at, outcome, assigned_at, challenges (id, title, description, brian_mode, success_metric, vs_user, vs_user_profile:users!vs_user(display_name, username))`
+          `id, completed_at, outcome, assigned_at, triggered_at, challenges (id, title, description, brian_mode, success_metric, vs_user, vs_user_profile:users!vs_user(display_name, username))`
         )
         .eq("user_id", this.userId)
         .eq("active", true)
@@ -207,7 +221,7 @@ class ChallengesPage extends BasePage {
       this.setLoadingState("challengesList", false);
 
       if (!data || data.length === 0) {
-        container.innerHTML = '<div class="empty">No challenges assigned yet.</div>';
+        container.innerHTML = '<div class="empty">No one has challenged you yet!</div>';
         container.className = "";
         return;
       }

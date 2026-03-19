@@ -1,7 +1,6 @@
 import { BasePage } from "./base-page.js";
 import { FavoriteButton } from "../components/favorite-button.js";
 import { featureFlags } from "../utils/feature-flags.js";
-import { firebaseAuth } from "../services/firebase-auth.js";
 import { EventBus } from "../events/event-bus.js";
 
 class CocktailJudgingPage extends BasePage {
@@ -65,6 +64,46 @@ class CocktailJudgingPage extends BasePage {
       console.error("Error loading competition data:", err);
       this.showFormError("Failed to load competition data. Please refresh the page.");
     }
+  }
+
+  async loadEntries() {
+    const { data, error } = await this.supabase
+      .from("cocktail_entries")
+      .select("*, users(display_name, username)")
+      .eq("competition_id", this.activeCompetition.id)
+      .order("submitted_at", { ascending: true });
+
+    if (error) throw error;
+    this.entries = data || [];
+  }
+
+  async loadMyJudgments() {
+    const entryIds = this.entries.map((e) => e.id);
+    if (!entryIds.length) {
+      this.myJudgments = new Map();
+      return;
+    }
+
+    const { data, error } = await this.supabase
+      .from("cocktail_judgments")
+      .select("*")
+      .eq("judge_user_id", this.userId)
+      .in("entry_id", entryIds);
+
+    if (error) throw error;
+    this.myJudgments = new Map((data || []).map((j) => [j.entry_id, j]));
+  }
+
+  async loadMyFavorite() {
+    const { data, error } = await this.supabase
+      .from("cocktail_favorites")
+      .select("entry_id")
+      .eq("judge_user_id", this.userId)
+      .eq("competition_id", this.activeCompetition.id)
+      .maybeSingle();
+
+    if (error) throw error;
+    this.myFavorite = data?.entry_id || null;
   }
 
   showVotingNotStarted() {
@@ -211,7 +250,7 @@ class CocktailJudgingPage extends BasePage {
                             <span class="score-value">${judgment.taste_score || "—"}</span>
                         </div>
                         <div class="score-compact">
-                            <span class="score-label">Presentation</span>
+                            <span class="score-label score-label--short">Presentation</span>
                             <span class="score-value">${judgment.presentation_score || "—"}</span>
                         </div>
                         <div class="score-compact">
@@ -219,7 +258,7 @@ class CocktailJudgingPage extends BasePage {
                             <span class="score-value">${judgment.workmanship_score || "—"}</span>
                         </div>
                         <div class="score-compact">
-                            <span class="score-label">Creativity</span>
+                            <span class="score-label score-label--short">Creativity</span>
                             <span class="score-value">${judgment.creativity_score || "—"}</span>
                         </div>
                         ${
@@ -296,7 +335,7 @@ class CocktailJudgingPage extends BasePage {
             <form class="judgment-form" data-entry-id="${entry.id}">
                 <div class="scoring-grid">
                     <div class="score-input">
-                        <label>Taste & Flavor (x10)</label>
+                        <label>Taste & Flavor (x11)</label>
                         <select name="taste_score">
                             <option value="">Select...</option>
                             <option value="1" ${existingJudgment?.taste_score === 1 ? "selected" : ""}>1 - Poor</option>
@@ -308,7 +347,7 @@ class CocktailJudgingPage extends BasePage {
                     </div>
 
                     <div class="score-input">
-                        <label>Presentation (x4)</label>
+                        <label>Presentation (x3)</label>
                         <select name="presentation_score">
                             <option value="">Select...</option>
                             <option value="1" ${existingJudgment?.presentation_score === 1 ? "selected" : ""}>1 - Basic</option>

@@ -592,6 +592,17 @@
     width: 100%;
     margin-top: 0.5rem;
   }
+
+  .score-compact {
+    min-width: 45px;
+  }
+
+  .score-label--short {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 9ch; /* or a specific width, e.g., width: 100%; */
+  }
 }
 
 /* Scam GIF container visibility helpers

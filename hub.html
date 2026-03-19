@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Game Hub - Brian's Birthday Zone</title>
+    <link rel="icon" type="image/png" href="images/favicon.jpg" />
+    <link rel="stylesheet" href="css/geocities.css" />
+    <link rel="stylesheet" href="css/components/hub.css" />
+  </head>
+  <body>
+
+    <!-- ================================================
+         Start Overlay — required for browser autoplay policy
+         ================================================ -->
+    <div id="startOverlay">
+      <h1>* GAME HUB *</h1>
+      <p>BROADCAST SCREEN</p>
+      <button id="startBtn">START HUB</button>
+    </div>
+
+    <!-- ================================================
+         Main Hub Screen
+         ================================================ -->
+    <div id="hubMain">
+
+      <header class="hub-header">
+        <h1>BIRTHDAY GAME HUB</h1>
+        <div class="hub-subtitle">LIVE BROADCAST SCREEN</div>
+      </header>
+
+      <div class="hub-body">
+
+        <!-- Player Board -->
+        <section class="hub-player-board">
+          <div class="hub-section-title">PLAYER BOARD</div>
+          <div id="playerGrid" class="hub-player-grid">
+            <div class="hub-loading">LOADING PLAYERS...</div>
+          </div>
+        </section>
+
+        <!-- Activity Feed -->
+        <aside class="hub-feed">
+          <div class="hub-feed-header">ACTIVITY FEED</div>
+          <div id="feedList" class="hub-feed-list">
+            <div class="hub-empty">WAITING FOR ACTIVITY...</div>
+          </div>
+        </aside>
+
+      </div>
+    </div>
+
+    <script type="module">
+      import { SUPABASE_CONFIG } from "./js/config.js";
+      import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.94.1/+esm";
+
+      // ----------------------------------------------------------------
+      // Supabase client
+      // ----------------------------------------------------------------
+      const supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+
+      // ----------------------------------------------------------------
+      // Audio
+      // ----------------------------------------------------------------
+      let audioReady = false;
+      const challengeAudio = new Audio("/audio/weeoooweee.mp3");
+
+      function playAlertSound() {
+        if (!audioReady) return;
+        challengeAudio.currentTime = 0;
+        challengeAudio.play().catch(() => {/* browser may still block */});
+      }
+
+      // ----------------------------------------------------------------
+      // State
+      // ----------------------------------------------------------------
+      let players = [];          // { id, name, image }[]
+      let playerCounts = {};     // { [userId]: number }
+      let playerHomeFlags = {};  // { [userId]: boolean }
+      let feedEvents = [];       // max 15 entries, newest first
+
+      // Sets to deduplicate realtime events — seeded at startup from DB state
+      const seenTriggeredIds = new Set(); // assignment IDs whose triggered_at we've already processed
+      const seenCompletedIds = new Set(); // assignment IDs whose completed_at we've already processed
+      // Note: auto-paired vs/with opponent rows have completed_at set but triggered_at NULL.
+      // We detect these synchronously (no async needed) to avoid race conditions.
+
+      const MAX_FEED = 15;
+
+      // ----------------------------------------------------------------
+      // DOM helpers
+      // ----------------------------------------------------------------
+      const playerGrid = document.getElementById("playerGrid");
+      const feedList = document.getElementById("feedList");
+
+      // ----------------------------------------------------------------
+      // Data: load all participants
+      // ----------------------------------------------------------------
+      async function loadPlayers() {
+        const { data, error } = await supabase
+          .from("users")
+          .select("id, username, display_name, headshot")
+          .eq("user_type", "participant")
+          .order("display_name", { ascending: true });
+
+        if (error || !data) {
+          console.error("Failed to load players:", error?.message);
+          return;
+        }
+
+        players = data.map((u) => ({
+          id: u.id,
+          name: u.display_name || u.username || "Player",
+          image: u.headshot || "/images/headshot.jpg",
+          username: u.username,
+        }));
+      }
+
+      // ----------------------------------------------------------------
+      // Data: load active challenge counts for all players
+      // ----------------------------------------------------------------
+      async function loadAllCounts() {
+        // Fetch all active (triggered but not completed) assignments
+        // Also select `id` so we can seed seenTriggeredIds and avoid re-firing old events
+        const { data, error } = await supabase
+          .from("assignments")
+          .select("id, user_id, challenge_id, challenges(home_only)")
+          .not("triggered_at", "is", null)
+          .is("completed_at", null)
+          .eq("active", true);
+
+        if (error) {
+          console.error("Failed to load counts:", error.message);
+          return;
+        }
+
+        // Reset
+        playerCounts = {};
+        playerHomeFlags = {};
+
+        for (const row of data || []) {
+          const uid = row.user_id;
+          playerCounts[uid] = (playerCounts[uid] || 0) + 1;
+          if (row.challenges && row.challenges.home_only) {
+            playerHomeFlags[uid] = true;
+          }
+          // Seed the dedup set — these are already-known triggered assignments
+          seenTriggeredIds.add(row.id);
+        }
+
+        // Also seed seenCompletedIds from recently completed assignments so we
+        // don't re-fire completions that happened before the hub started
+        const { data: completed } = await supabase
+          .from("assignments")
+          .select("id")
+          .not("completed_at", "is", null);
+        for (const row of completed || []) {
+          seenCompletedIds.add(row.id);
+        }
+      }
+
+      // ----------------------------------------------------------------
+      // Data: load recent activity for initial feed (last N assignments
+      //       that have been triggered or completed, newest first)
+      // ----------------------------------------------------------------
+      async function loadRecentActivity() {
+        const { data, error } = await supabase
+          .from("assignments")
+          .select(`
+            id,
+            user_id,
+            triggered_at,
+            completed_at,
+            outcome,
+            updated_by,
+            challenges(title, home_only, brian_mode, vs_user)
+          `)
+          .not("triggered_at", "is", null)
+          .order("updated_at", { ascending: false })
+          .limit(MAX_FEED);
+
+        if (error) {
+          console.error("Failed to load recent activity:", error.message);
+          return;
+        }
+
+        feedEvents = [];
+        for (const row of (data || []).reverse()) {
+          addFeedEventFromRow(row, /* animate */ false);
+        }
+        renderFeed();
+      }
+
+      // ----------------------------------------------------------------
+      // Lookup helper: player name by UUID
+      // ----------------------------------------------------------------
+      function getPlayerName(userId) {
+        if (!userId) return "Someone";
+        const p = players.find((x) => x.id === userId);
+        return p ? p.name : "A player";
+      }
+
+      // ----------------------------------------------------------------
+      // Construct a feed event object from a raw assignment row
+      // ----------------------------------------------------------------
+      function addFeedEventFromRow(row, animate = true) {
+        // Auto-paired opponent rows have no triggered_at — skip them entirely
+        if (!row.triggered_at) return;
+
+        const playerName = getPlayerName(row.user_id);
+        const challengerName = row.updated_by && row.updated_by !== row.user_id
+          ? getPlayerName(row.updated_by)
+          : null;
+        const brianMode = row.challenges?.brian_mode;
+        const vsUser = row.challenges?.vs_user;
+
+        if (row.completed_at) {
+          let icon, html;
+
+          if (vsUser) {
+            // User-vs-user challenge
+            const opponentName = getPlayerName(vsUser);
+            const winner = row.outcome === "success" ? playerName : opponentName;
+            const loser = row.outcome === "success" ? opponentName : playerName;
+            icon = "⚔️";
+            html = `<strong>${winner}</strong> defeated <strong>${loser}</strong> in a challenge`;
+          } else if (brianMode === "vs" || brianMode === "with") {
+            // Brian-mode challenge
+            const brianPlayer = players.find((p) => p.username === "brianc");
+            const brianName = brianPlayer ? brianPlayer.name : "Brian";
+            if (brianMode === "vs") {
+              const winner = row.outcome === "success" ? playerName : brianName;
+              const loser = row.outcome === "success" ? brianName : playerName;
+              icon = "⚔️";
+              html = `<strong>${winner}</strong> defeated <strong>${loser}</strong> in a challenge`;
+            } else {
+              const bothOutcome = row.outcome === "success" ? "succeeded" : "failed";
+              icon = row.outcome === "success" ? "🤝" : "😬";
+              html = `<strong>${playerName}</strong> and <strong>${brianName}</strong> ${bothOutcome} a challenge together`;
+            }
+          } else {
+            const outcomeText = row.outcome === "success" ? "SUCCEEDED at" : "FAILED";
+            icon = row.outcome === "success" ? "✅" : "❌";
+            html = `<strong>${playerName}</strong> ${outcomeText} a challenge`;
+          }
+
+          pushFeedEvent({ type: "completed", icon, html, time: new Date(row.completed_at), animate });
+        } else if (row.triggered_at) {
+          const msg = challengerName
+            ? `<strong>${playerName}</strong> was challenged by <strong>${challengerName}</strong>`
+            : `<strong>${playerName}</strong> was challenged`;
+          pushFeedEvent({ type: "challenged", icon: "🎯", html: msg, time: new Date(row.triggered_at), animate });
+
+          if (row.challenges && row.challenges.home_only) {
+            pushFeedEvent({
+              type: "home",
+              icon: "🏠",
+              html: `<strong>${playerName}</strong> has a home challenge waiting`,
+              time: new Date(row.triggered_at),
+              animate,
+            });
+          }
+        }
+      }
+
+      function pushFeedEvent(entry) {
+        feedEvents.unshift(entry); // newest first
+        if (feedEvents.length > MAX_FEED) feedEvents.length = MAX_FEED;
+      }
+
+      // ----------------------------------------------------------------
+      // Render: Player Board
+      // ----------------------------------------------------------------
+      function renderPlayerBoard() {
+        if (!players.length) {
+          playerGrid.innerHTML = '<div class="hub-empty">NO PLAYERS LOADED</div>';
+          return;
+        }
+
+        playerGrid.innerHTML = "";
+        for (const p of players) {
+          const count = playerCounts[p.id] || 0;
+          const hasHome = !!playerHomeFlags[p.id];
+
+          const stateClass =
+            count >= 2 ? "state-active-2" : count === 1 ? "state-active-1" : "state-idle";
+
+          const countLabel =
+            count === 0 ? "NO ACTIVE" : count === 1 ? "1 ACTIVE" : "2 ACTIVE (FULL)";
+
+          const homeHtml = hasHome
+            ? `<span class="hub-home-flag" title="Home challenge active">🏠</span>`
+            : "";
+
+          const card = document.createElement("div");
+          card.className = `hub-player-card ${stateClass}`;
+          card.dataset.playerId = p.id;
+          card.innerHTML = `
+            ${homeHtml}
+            <img class="hub-player-avatar" src="${escHtml(p.image)}" alt="${escHtml(p.name)}" onerror="this.src='/images/headshot.jpg'" />
+            <div class="hub-player-name">${escHtml(p.name)}</div>
+            <div class="hub-count-badge count-${count}">${countLabel}</div>
+          `;
+          playerGrid.appendChild(card);
+        }
+      }
+
+      // ----------------------------------------------------------------
+      // Render: Activity Feed
+      // ----------------------------------------------------------------
+      function renderFeed() {
+        if (!feedEvents.length) {
+          feedList.innerHTML = '<div class="hub-empty">WAITING FOR ACTIVITY...</div>';
+          return;
+        }
+
+        feedList.innerHTML = "";
+        for (const ev of feedEvents) {
+          const el = document.createElement("div");
+          el.className = `hub-feed-entry hub-feed-entry--${ev.type}`;
+          el.innerHTML = `
+            <div class="hub-feed-entry-text">
+              <span class="hub-feed-entry-icon">${ev.icon}</span>${ev.html}
+            </div>
+            <div class="hub-feed-entry-time">${timeAgo(ev.time)}</div>
+          `;
+          feedList.appendChild(el);
+        }
+      }
+
+      // ----------------------------------------------------------------
+      // Prepend a single animated entry to the feed DOM without
+      // re-rendering the whole list (keeps existing entries stable)
+      // ----------------------------------------------------------------
+      function prependFeedEntry(ev) {
+        // Remove "waiting" placeholder if present
+        const placeholder = feedList.querySelector(".hub-empty");
+        if (placeholder) placeholder.remove();
+
+        const el = document.createElement("div");
+        el.className = `hub-feed-entry hub-feed-entry--${ev.type}`;
+        el.innerHTML = `
+          <div class="hub-feed-entry-text">
+            <span class="hub-feed-entry-icon">${ev.icon}</span>${ev.html}
+          </div>
+          <div class="hub-feed-entry-time">just now</div>
+        `;
+        feedList.insertBefore(el, feedList.firstChild);
+
+        // Trim overflow
+        while (feedList.children.length > MAX_FEED) {
+          feedList.removeChild(feedList.lastChild);
+        }
+      }
+
+      // ----------------------------------------------------------------
+      // Update a single player card in-place
+      // ----------------------------------------------------------------
+      function updatePlayerCard(userId) {
+        const card = playerGrid.querySelector(`[data-player-id="${userId}"]`);
+        if (!card) return;
+
+        const count = playerCounts[userId] || 0;
+        const hasHome = !!playerHomeFlags[userId];
+
+        const stateClass =
+          count >= 2 ? "state-active-2" : count === 1 ? "state-active-1" : "state-idle";
+
+        const countLabel =
+          count === 0 ? "NO ACTIVE" : count === 1 ? "1 ACTIVE" : "2 ACTIVE (FULL)";
+
+        card.className = `hub-player-card ${stateClass}`;
+
+        // Update home flag
+        let homeFlag = card.querySelector(".hub-home-flag");
+        if (hasHome && !homeFlag) {
+          homeFlag = document.createElement("span");
+          homeFlag.className = "hub-home-flag";
+          homeFlag.title = "Home challenge active";
+          homeFlag.textContent = "🏠";
+          card.prepend(homeFlag);
+        } else if (!hasHome && homeFlag) {
+          homeFlag.remove();
+        }
+
+        // Update badge
+        const badge = card.querySelector(".hub-count-badge");
+        if (badge) {
+          badge.className = `hub-count-badge count-${count}`;
+          badge.textContent = countLabel;
+        }
+      }
+
+      // ----------------------------------------------------------------
+      // Shared: re-fetch and refresh a player's card state
+      // ----------------------------------------------------------------
+      async function refreshPlayerCard(userId) {
+        const { data: active } = await supabase
+          .from("assignments")
+          .select("id, challenges(home_only)")
+          .eq("user_id", userId)
+          .not("triggered_at", "is", null)
+          .is("completed_at", null);
+
+        playerCounts[userId] = (active || []).length;
+        playerHomeFlags[userId] = (active || []).some(
+          (r) => r.challenges && r.challenges.home_only
+        );
+
+        updatePlayerCard(userId);
+      }
+
+      // ----------------------------------------------------------------
+      // Realtime: assignment change
+      //
+      // Strategy: subscribe to ALL assignment events and use in-memory Sets
+      // to detect what is genuinely new. This avoids depending on:
+      //   - REPLICA IDENTITY FULL (needed to get old row in UPDATE payloads)
+      //   - the notifications table (which has no RLS read policies for anon)
+      //
+      // seenTriggeredIds is pre-seeded from DB state at startup so we never
+      // fire a "challenged" event for an assignment the hub already knew about.
+      // ----------------------------------------------------------------
+      async function handleAssignmentChange(payload) {
+        const { new: newRow } = payload;
+        if (!newRow || !newRow.id || !newRow.user_id) return;
+
+        const userId = newRow.user_id;
+        const assignmentId = newRow.id;
+
+        // ── New challenge triggered ────────────────────────────────────
+        if (newRow.triggered_at && !seenTriggeredIds.has(assignmentId)) {
+          seenTriggeredIds.add(assignmentId);
+
+          // Re-fetch to get updated_by (challenger) and home_only
+          const { data: fullRow } = await supabase
+            .from("assignments")
+            .select("id, user_id, updated_by, challenges(title, home_only)")
+            .eq("id", assignmentId)
+            .maybeSingle();
+
+          await refreshPlayerCard(userId);
+
+          const targetName = getPlayerName(userId);
+          const challengerUserId = fullRow && fullRow.updated_by !== userId
+            ? fullRow.updated_by
+            : null;
+          const challengerName = challengerUserId ? getPlayerName(challengerUserId) : null;
+
+          const msg = challengerName
+            ? `<strong>${targetName}</strong> was challenged by <strong>${challengerName}</strong>`
+            : `<strong>${targetName}</strong> was challenged`;
+
+          const ev = { type: "challenged", icon: "🎯", html: msg, time: new Date() };
+          pushFeedEvent(ev);
+          prependFeedEntry(ev);
+          playAlertSound();
+
+          if (fullRow && fullRow.challenges && fullRow.challenges.home_only) {
+            const homeEv = {
+              type: "home",
+              icon: "🏠",
+              html: `<strong>${targetName}</strong> has a home challenge waiting`,
+              time: new Date(),
+            };
+            pushFeedEvent(homeEv);
+            prependFeedEntry(homeEv);
+          }
+        }
+
+        // ── Challenge completed ────────────────────────────────────────
+        if (newRow.completed_at && !seenCompletedIds.has(assignmentId)) {
+          seenCompletedIds.add(assignmentId);
+
+          // Auto-paired opponent rows are upserted with completed_at but no triggered_at.
+          // Detect synchronously — no async needed, no race condition.
+          if (!newRow.triggered_at) {
+            await refreshPlayerCard(userId);
+            return; // Suppress — shown as combined message from the primary user's event
+          }
+
+          await refreshPlayerCard(userId);
+
+          // Re-fetch to check for vs/with so we can build a combined message
+          const { data: fullRow } = await supabase
+            .from("assignments")
+            .select("id, user_id, outcome, challenge_id, challenges(title, brian_mode, vs_user)")
+            .eq("id", assignmentId)
+            .maybeSingle();
+
+          const brianMode = fullRow?.challenges?.brian_mode;
+          const vsUser = fullRow?.challenges?.vs_user;
+          const challengeId = fullRow?.challenge_id;
+          const playerName = getPlayerName(userId);
+          const outcome = newRow.outcome;
+
+          let ev;
+
+          if (vsUser && challengeId) {
+            // User-vs-user challenge (vs_user field on the challenge)
+            const opponentName = getPlayerName(vsUser);
+            const winner = outcome === "success" ? playerName : opponentName;
+            const loser = outcome === "success" ? opponentName : playerName;
+            ev = {
+              type: "completed",
+              icon: "⚔️",
+              html: `<strong>${winner}</strong> defeated <strong>${loser}</strong> in a challenge`,
+              time: new Date(),
+            };
+          } else if ((brianMode === "vs" || brianMode === "with") && challengeId) {
+            // Brian-mode challenge — find Brian in the players list by username
+            const brianPlayer = players.find((p) => p.username === "brianc");
+            const brianName = brianPlayer ? getPlayerName(brianPlayer.id) : "Brian";
+
+            if (brianMode === "vs") {
+              const winner = outcome === "success" ? playerName : brianName;
+              const loser = outcome === "success" ? brianName : playerName;
+              ev = {
+                type: "completed",
+                icon: "⚔️",
+                html: `<strong>${winner}</strong> defeated <strong>${loser}</strong> in a challenge`,
+                time: new Date(),
+              };
+            } else {
+              const bothOutcome = outcome === "success" ? "succeeded" : "failed";
+              ev = {
+                type: "completed",
+                icon: outcome === "success" ? "🤝" : "😬",
+                html: `<strong>${playerName}</strong> and <strong>${brianName}</strong> ${bothOutcome} a challenge together`,
+                time: new Date(),
+              };
+            }
+          }
+
+          // Fall back to individual message for normal challenges
+          if (!ev) {
+            const outcomeText = outcome === "success" ? "SUCCEEDED at" : "FAILED";
+            ev = {
+              type: "completed",
+              icon: outcome === "success" ? "✅" : "❌",
+              html: `<strong>${playerName}</strong> ${outcomeText} a challenge`,
+              time: new Date(),
+            };
+          }
+
+          pushFeedEvent(ev);
+          prependFeedEntry(ev);
+        }
+      }
+
+      // ----------------------------------------------------------------
+      // Realtime subscription — single channel on assignments table
+      // ----------------------------------------------------------------
+      function startRealtime() {
+        supabase
+          .channel("assignments-hub")
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "assignments" },
+            handleAssignmentChange
+          )
+          .subscribe((status) => {
+            console.log("[HUB] Assignments realtime:", status);
+          });
+      }
+
+      // ----------------------------------------------------------------
+      // Utility: escape HTML
+      // ----------------------------------------------------------------
+      function escHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      // ----------------------------------------------------------------
+      // Utility: relative time
+      // ----------------------------------------------------------------
+      function timeAgo(date) {
+        if (!date) return "";
+        const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
+        if (diff < 60) return "just now";
+        const mins = Math.floor(diff / 60);
+        if (mins < 60) return `${mins} min ago`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `${hrs} ${hrs === 1 ? "hour" : "hours"} ago`;
+        const days = Math.floor(hrs / 24);
+        return `${days} ${days === 1 ? "day" : "days"} ago`;
+      }
+
+      // Refresh relative timestamps every minute
+      setInterval(() => {
+        feedList.querySelectorAll(".hub-feed-entry-time").forEach((el, i) => {
+          if (feedEvents[i] && feedEvents[i].time) {
+            el.textContent = timeAgo(feedEvents[i].time);
+          }
+        });
+      }, 60_000);
+
+      // ----------------------------------------------------------------
+      // Start Hub button
+      // ----------------------------------------------------------------
+      document.getElementById("startBtn").addEventListener("click", async () => {
+        const overlay = document.getElementById("startOverlay");
+        const main = document.getElementById("hubMain");
+
+        // Warm up audio (satisfies autoplay policy)
+        try {
+          await challengeAudio.play();
+          challengeAudio.pause();
+          challengeAudio.currentTime = 0;
+          audioReady = true;
+        } catch (e) {
+          // Audio may still fail — proceed anyway
+        }
+
+        // Load initial data
+        playerGrid.innerHTML = '<div class="hub-loading">LOADING PLAYERS...</div>';
+
+        await loadPlayers();
+        await Promise.all([loadAllCounts(), loadRecentActivity()]);
+
+        renderPlayerBoard();
+        renderFeed();
+
+        // Start Supabase realtime subscription
+        startRealtime();
+
+        // Fade out overlay, show main
+        overlay.style.transition = "opacity 0.4s";
+        overlay.style.opacity = "0";
+        setTimeout(() => {
+          overlay.style.display = "none";
+          main.style.display = "flex";
+        }, 400);
+      });
+    </script>
+  </body>
+</html>

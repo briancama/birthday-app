@@ -229,7 +229,7 @@ app.get(["/dashboard", "/dashboard.html"], async (req, res) => {
       const { data, error } = await supabase
         .from("assignments")
         .select(
-          `id, completed_at, outcome, challenges (id, title, description, brian_mode, success_metric, vs_user, vs_user_profile:users!vs_user(display_name, username))`
+          `id, completed_at, outcome, triggered_at, challenges (id, title, description, brian_mode, success_metric, vs_user, vs_user_profile:users!vs_user(display_name, username))`
         )
         .eq("user_id", user.id)
         .eq("active", true)
@@ -289,14 +289,17 @@ app.get(["/cocktail-judging", "/cocktail-judging.html"], (req, res) => {
   return res.render("cocktail-judging");
 });
 
+// Challenges: server-rendered to include navigation partial
+app.get(["/challenges", "/challenges.html"], (req, res) => {
+  return res.render("challenges");
+});
+
 // Event Info: server-rendered to include navigation partial (myspace style)
 app.get(["/event-info", "/event-info.html"], (req, res) => {
   return res.render("event-info");
 });
 
-app.use(express.static(path.join(__dirname)));
-
-// Mount users route
+// Mount API/auth routes BEFORE static so they are never shadowed by file serving
 const usersRouter = require("./routes/users");
 app.use("/users", usersRouter);
 const apiUsersRouter = require("./routes/api-users");
@@ -307,6 +310,8 @@ app.use("/auth", authRouter);
 // Notifications route (push subscriptions, send/list/mark-read)
 const notificationsRouter = require("./routes/notifications");
 app.use("/notifications", notificationsRouter);
+
+app.use(express.static(path.join(__dirname)));
 
 app.listen(port, () => {
   console.log(`Birthday App server running at http://localhost:${port}`);

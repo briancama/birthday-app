@@ -314,6 +314,7 @@ export class AdminApprovalsPage extends BasePage {
     document.getElementById("editDescription").value = challenge.description || "";
     document.getElementById("editSuccessMetric").value = challenge.success_metric || "";
     document.getElementById("editBrianMode").value = challenge.brian_mode || "";
+    document.getElementById("editHomeOnly").checked = !!challenge.home_only;
 
     // Populate user datalists and set suggested_for / vs_user display values
     await this.loadUsersForEdit();
@@ -434,6 +435,7 @@ export class AdminApprovalsPage extends BasePage {
           suggested_for: suggestedForId,
           brian_mode: finalBrianMode,
           vs_user: finalVsUser,
+          home_only: document.getElementById("editHomeOnly").checked,
         })
         .eq("id", this.currentChallenge.id);
 
