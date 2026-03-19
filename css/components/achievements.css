@@ -29,6 +29,8 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   gap: 18px;
   line-height: 1.8;
+  cursor: pointer;
+  outline: none;
 }
 
 .challenge-badge::after {
@@ -55,8 +57,13 @@
     transform 0.15s ease;
 }
 
-.challenge-badge:active::after {
-  opacity: 1; /* visible on tap */
+/* On touch devices only: show tooltip on tap (active/focus) */
+@media (pointer: coarse) {
+  .challenge-badge:active::after,
+  .challenge-badge:focus::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 .badge-name {
   font-size: 12px;

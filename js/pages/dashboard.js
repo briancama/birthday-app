@@ -159,7 +159,7 @@ class DashboardPage extends BasePage {
           const points = ach.points || 0;
           const initial = (name && name.charAt(0)) || "*";
           return `
-            <div class="challenge-badge" title="${desc}" data-title="${desc}">
+            <div class="challenge-badge" tabindex="0" title="${desc}" data-title="${desc}">
               <span class="badge-icon" aria-hidden="true">${initial}</span>
               <span class="badge-name">${name}</span>
               <span class="badge-description hide-mobile">${desc}</span>
