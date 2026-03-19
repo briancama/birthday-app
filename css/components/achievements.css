@@ -57,10 +57,12 @@
     transform 0.15s ease;
 }
 
-.challenge-badge:hover::after,
-.challenge-badge:active::after {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
+@media screen and (max-width: 768px) {
+  .challenge-badge:hover::after,
+  .challenge-badge:active::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 /* On touch devices, keep tooltip visible after tap via :focus */
