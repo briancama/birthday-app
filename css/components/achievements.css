@@ -57,9 +57,14 @@
     transform 0.15s ease;
 }
 
-/* On touch devices only: show tooltip on tap (active/focus) */
+.challenge-badge:hover::after,
+.challenge-badge:active::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* On touch devices, keep tooltip visible after tap via :focus */
 @media (pointer: coarse) {
-  .challenge-badge:active::after,
   .challenge-badge:focus::after {
     opacity: 1;
     transform: translateX(-50%) translateY(0);

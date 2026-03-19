@@ -198,35 +198,32 @@ export class AdminApprovalsPage extends BasePage {
     if (!container) return;
 
     try {
-      // Two parallel queries — avoids relying on a specific FK constraint name
-      // for the challenges join which can silently drop rows if mismatched.
+      // Two parallel queries:
+      // 1. All assignments (for the Total column) with user info
+      // 2. All challenges where vs_user IS NOT NULL (for the VS column)
+      //    VS count comes directly from challenges, not from assignments, because
+      //    opponent assignment rows don't exist until the challenge is completed.
       const [assignmentsResult, challengesResult] = await Promise.all([
         this.supabase
           .from("assignments")
           .select(
             `
             user_id,
-            challenge_id,
             users!assignments_user_id_fkey ( username, display_name )
           `
           ),
         this.supabase
           .from("challenges")
-          .select("id, vs_user")
+          .select("vs_user, users!challenges_vs_user_fkey ( username, display_name )")
           .not("vs_user", "is", null),
       ]);
 
       if (assignmentsResult.error) throw assignmentsResult.error;
       if (challengesResult.error) throw challengesResult.error;
 
-      // Build challenge_id -> vs_user map for quick lookup
-      const vsUserByChallenge = {};
-      (challengesResult.data || []).forEach((c) => {
-        vsUserByChallenge[c.id] = c.vs_user;
-      });
-
-      // Aggregate per user
+      // Aggregate assignment totals per user
       const statsMap = {};
+
       (assignmentsResult.data || []).forEach((row) => {
         const uid = row.user_id;
         if (!statsMap[uid]) {
@@ -237,9 +234,22 @@ export class AdminApprovalsPage extends BasePage {
             as_vs: 0,
           };
         }
-        const s = statsMap[uid];
-        s.total += 1;
-        if (vsUserByChallenge[row.challenge_id] === uid) s.as_vs += 1;
+        statsMap[uid].total += 1;
+      });
+
+      // Count how many challenges list each user as vs_user.
+      // Also ensures vs-only users appear in the table even if they have no assignments yet.
+      (challengesResult.data || []).forEach((c) => {
+        const uid = c.vs_user;
+        if (!statsMap[uid]) {
+          statsMap[uid] = {
+            username: c.users?.username || uid,
+            display_name: c.users?.display_name || c.users?.username || uid,
+            total: 0,
+            as_vs: 0,
+          };
+        }
+        statsMap[uid].as_vs += 1;
       });
 
       const rows = Object.values(statsMap).sort((a, b) => b.total - a.total);
