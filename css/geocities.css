@@ -108,6 +108,7 @@
     padding: var(--spacing-md);
     color: var(--text-dark);
     padding-top: 0;
+    position:relative;
   }
 
   /* Typography */
