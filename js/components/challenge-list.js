@@ -25,7 +25,6 @@ export function renderChallengeList(container, data, options = {}) {
     if (assignmentId) existingCardMap.set(assignmentId, card);
   });
 
-  const firstIncompleteIndex = data.findIndex((a) => !a.completed_at);
   const validAssignmentIds = new Set(data.map((a) => a.id));
 
   data.forEach((assignment, index) => {
@@ -34,8 +33,9 @@ export function renderChallengeList(container, data, options = {}) {
     const brianMode = assignment.challenges.brian_mode;
     const isTriggered = !!assignment.triggered_at;
     const isRevealed = revealedId === assignment.id;
-    const canReveal = !isCompleted && isTriggered && (firstIncompleteIndex === index || isRevealed);
-    const isLocked = !isCompleted && (!isTriggered || (firstIncompleteIndex < index && !isRevealed));
+    // Any triggered incomplete challenge is revealable; dormant ones are locked
+    const canReveal = !isCompleted && isTriggered;
+    const isLocked = !isCompleted && !isTriggered;
 
     const state = { isCompleted, outcome, brianMode, isRevealed, canReveal, isLocked };
 

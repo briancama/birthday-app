@@ -236,11 +236,10 @@ app.get(["/dashboard", "/dashboard.html"], async (req, res) => {
         .order("assigned_at", { ascending: true });
 
       if (!error && Array.isArray(data)) {
-        // Sort: incomplete first, completed at the bottom (preserves assigned_at order within each group)
+        // Sort: triggered+incomplete first, then dormant, then completed
         const sorted = data.slice().sort((a, b) => {
-          const aComplete = a.completed_at ? 1 : 0;
-          const bComplete = b.completed_at ? 1 : 0;
-          return aComplete - bComplete;
+          const grp = (r) => r.completed_at ? 2 : r.triggered_at ? 0 : 1;
+          return grp(a) - grp(b);
         });
         sorted.forEach((row) => assignments.push(row));
       }

@@ -535,7 +535,7 @@ class DashboardPage extends BasePage {
         return;
       }
 
-      const { data, error } = await this.supabase
+      const { data: rawData, error } = await this.supabase
         .from("assignments")
         .select(
           `
@@ -551,6 +551,14 @@ class DashboardPage extends BasePage {
         .order("assigned_at", { ascending: true });
 
       if (error) throw error;
+
+      // Sort: triggered+incomplete first, then dormant, then completed
+      const data = rawData
+        ? rawData.slice().sort((a, b) => {
+            const grp = (r) => r.completed_at ? 2 : r.triggered_at ? 0 : 1;
+            return grp(a) - grp(b);
+          })
+        : rawData;
 
       // Clear loading state
       this.setLoadingState("challengesList", false);

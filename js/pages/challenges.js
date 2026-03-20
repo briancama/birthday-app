@@ -216,7 +216,7 @@ class ChallengesPage extends BasePage {
     this.setLoadingState("challengesList", true);
 
     try {
-      const { data, error } = await this.supabase
+      const { data: rawData, error } = await this.supabase
         .from("assignments")
         .select(
           `id, completed_at, outcome, assigned_at, triggered_at, challenges (id, title, description, brian_mode, success_metric, vs_user, vs_user_profile:users!vs_user(display_name, username))`
@@ -226,6 +226,14 @@ class ChallengesPage extends BasePage {
         .order("assigned_at", { ascending: true });
 
       if (error) throw error;
+
+      // Sort: triggered+incomplete first, then dormant, then completed
+      const data = rawData
+        ? rawData.slice().sort((a, b) => {
+            const grp = (r) => r.completed_at ? 2 : r.triggered_at ? 0 : 1;
+            return grp(a) - grp(b);
+          })
+        : rawData;
 
       this.setLoadingState("challengesList", false);
 

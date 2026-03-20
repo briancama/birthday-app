@@ -145,16 +145,15 @@
             </div>
           </div>
           <% } else if (typeof assignments !== 'undefined' && Array.isArray(assignments) &&
-          assignments.length > 0) { %> <% const firstIncomplete = assignments.findIndex(a =>
-          !a.completed_at); %>
+          assignments.length > 0) { %>
           <% assignments.forEach(function(assignment, idx) { %>
           <% const isCompleted = !!assignment.completed_at; %>
           <% const outcome = assignment.outcome || ''; %>
           <% const brianMode = assignment.challenges && assignment.challenges.brian_mode; %>
           <% const isTriggered = !!assignment.triggered_at; %>
           <% const isRevealed = false; %>
-          <% const canReveal = !isCompleted && isTriggered && (firstIncomplete === idx); %>
-          <% const isLocked = !isCompleted && (!isTriggered || firstIncomplete < idx); %>
+          <% const canReveal = !isCompleted && isTriggered; %>
+          <% const isLocked = !isCompleted && !isTriggered; %>
           <% let cardClass = 'challenge-card'; %>
           <% if (isCompleted) { cardClass += ' completed ' + outcome; } else if (isLocked) { cardClass += ' locked'; } else if (isRevealed) { cardClass += ' revealed'; } else if (canReveal) { cardClass += ' unrevealed'; } %>
 
