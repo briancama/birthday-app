@@ -176,3 +176,62 @@
     initGoblinKing();
   }
 </script>
+
+<!-- Y2K Timer: loaded on every page -->
+<script src="/js/components/y2k-timer.js"></script>
+<y2k-timer id="y2kTimer" no-fab position="bottom-left"></y2k-timer>
+
+<button id="y2kToggleBtn" title="Timer" aria-label="Toggle countdown timer">
+  <span id="y2kBtnIcon">&#9201;</span>
+</button>
+
+<style>
+  #y2kToggleBtn {
+    position: fixed;
+    padding: 12px;
+    left: 14px;
+    bottom: 20px;
+    z-index: 200;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(10, 10, 26, 0.55);
+    border: 1.5px solid rgba(0, 245, 255, 0.45);
+    color: rgba(0, 245, 255, 0.85);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 0 8px rgba(0, 245, 255, 0.25);
+    transition: box-shadow 0.2s, transform 0.15s, background 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #y2kToggleBtn:hover {
+    background: rgba(10, 10, 26, 0.75);
+    box-shadow: 0 0 14px rgba(0, 245, 255, 0.5);
+    transform: scale(1.08);
+  }
+  #y2kToggleBtn:active { transform: scale(0.94); }
+  #y2kBtnIcon {
+    line-height: 1;
+  }
+  @media (max-width: 768px) {
+    /* Sit above the bottom-menu bar (70px tall) */
+    #y2kToggleBtn { bottom: 80px; }
+  }
+</style>
+
+<script>
+  (function () {
+    const btn = document.getElementById('y2kToggleBtn');
+    const timer = document.getElementById('y2kTimer');
+    if (!btn || !timer) return;
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation(); // prevent the timer's outside-click listener from immediately closing
+      timer._togglePanel();
+    });
+  })();
+</script>

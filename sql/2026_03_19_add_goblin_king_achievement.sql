@@ -9,7 +9,7 @@ VALUES (
   'goblin_king',
   'Goblin King',
   'You danced magic and slapped that baby. Baby.',
-  50,
+  2,
   '{"hidden": true, "trigger": "easter_egg:goblin_pixel"}'::jsonb
 )
 ON CONFLICT (key) DO NOTHING;
