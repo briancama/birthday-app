@@ -512,7 +512,8 @@ class DashboardPage extends BasePage {
       if (
         window.__SERVER_ASSIGNMENTS__ &&
         Array.isArray(window.__SERVER_ASSIGNMENTS__) &&
-        window.__SERVER_ASSIGNMENTS__.length > 0
+        window.__SERVER_ASSIGNMENTS__.length > 0 &&
+        !window.__SERVER_ASSIGNMENTS_HYDRATED__
       ) {
         const serverData = window.__SERVER_ASSIGNMENTS__;
         console.debug("Dashboard: hydrating server assignments", serverData && serverData.length);

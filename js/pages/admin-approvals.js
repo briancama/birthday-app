@@ -211,7 +211,8 @@ export class AdminApprovalsPage extends BasePage {
             user_id,
             users!assignments_user_id_fkey ( username, display_name )
           `
-          ),
+          )
+          .eq("active", true),
         this.supabase
           .from("challenges")
           .select("vs_user, users!challenges_vs_user_fkey ( username, display_name )")
