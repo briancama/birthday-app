@@ -151,9 +151,10 @@
           <% const isCompleted = !!assignment.completed_at; %>
           <% const outcome = assignment.outcome || ''; %>
           <% const brianMode = assignment.challenges && assignment.challenges.brian_mode; %>
+          <% const isTriggered = !!assignment.triggered_at; %>
           <% const isRevealed = false; %>
-          <% const canReveal = !isCompleted && (firstIncomplete === idx); %>
-          <% const isLocked = !isCompleted && (firstIncomplete < idx); %>
+          <% const canReveal = !isCompleted && isTriggered && (firstIncomplete === idx); %>
+          <% const isLocked = !isCompleted && (!isTriggered || firstIncomplete < idx); %>
           <% let cardClass = 'challenge-card'; %>
           <% if (isCompleted) { cardClass += ' completed ' + outcome; } else if (isLocked) { cardClass += ' locked'; } else if (isRevealed) { cardClass += ' revealed'; } else if (canReveal) { cardClass += ' unrevealed'; } %>
 
