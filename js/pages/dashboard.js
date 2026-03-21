@@ -1,7 +1,7 @@
 import { BasePage } from "./base-page.js";
 import { ChallengeCard } from "../components/challenge-card.js";
 import { renderChallengeList } from "../components/challenge-list.js";
-import { CocktailEntryModal } from "../components/cocktail-entry-modal.js";
+// import { CocktailEntryModal } from "../components/cocktail-entry-modal.js"; // Cocktail competition removed
 import { EventBus } from "../events/event-bus.js";
 import { featureFlags } from "../utils/feature-flags.js";
 import { appState, APP_CONFIG } from "../app.js";
@@ -14,7 +14,7 @@ class DashboardPage extends BasePage {
     this.revealedChallengeId = null;
     this.refreshInterval = null;
     this.eventCleanup = [];
-    this.cocktailModal = null;
+    // this.cocktailModal = null; // Cocktail competition removed
     this.activeCompetition = null;
   }
 
@@ -72,26 +72,7 @@ class DashboardPage extends BasePage {
       this.showErrorToast(e.detail.error || "Authentication error");
     });
 
-    // Initialize cocktail entry modal
-    try {
-      this.cocktailModal = new CocktailEntryModal();
-      await this.cocktailModal.init();
-    } catch (err) {
-      console.error("✖️ Failed to initialize cocktail modal:", err);
-    }
-
-    // Setup cocktail registration button
-    const registerBtn = document.getElementById("registerCocktailBtn");
-    if (registerBtn) {
-      registerBtn.addEventListener("click", () => {
-        if (this.cocktailModal) {
-          this.cocktailModal.open();
-        } else {
-          console.error("✖️ Modal not initialized");
-          alert("Cocktail modal failed to initialize. Please refresh the page.");
-        }
-      });
-    }
+    // Cocktail competition modal and button setup removed
 
     // Check event status — prefer server-embedded flag, then __NAV_STATE__, then client query
     if (typeof window.__EVENT_STARTED__ !== "undefined") {
@@ -200,7 +181,7 @@ class DashboardPage extends BasePage {
         }
       }
     }
-    await this.loadCocktailCompetitionStatus();
+    // await this.loadCocktailCompetitionStatus(); // Cocktail competition removed
   }
 
   async loadPersonalStats() {
@@ -851,64 +832,7 @@ class DashboardPage extends BasePage {
     if (this.userErrorCleanup) this.userErrorCleanup();
   }
 
-  async loadCocktailCompetitionStatus() {
-    const registerBtn = document.getElementById("registerCocktailBtn");
-    const judgingLink = document.getElementById("cocktailJudgingLink");
-
-    try {
-      // Get most recent competition
-      const { data: competitions, error } = await this.supabase
-        .from("cocktail_competitions")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(1);
-
-      if (error) throw error;
-
-      if (!competitions || competitions.length === 0) {
-        // No competition exists - hide section entirely
-        if (registerBtn) registerBtn.style.display = "none";
-        return;
-      }
-
-      this.activeCompetition = competitions[0];
-
-      // Check if user has already registered
-      const { data: entry, error: entryError } = await this.supabase
-        .from("cocktail_entries")
-        .select("id")
-        .eq("competition_id", this.activeCompetition.id)
-        .eq("user_id", this.userId)
-        .maybeSingle();
-
-      if (entryError) throw entryError;
-
-      // Update button text if user has registered
-      if (registerBtn && entry) {
-        registerBtn.textContent = "UPDATE COCKTAIL";
-      }
-
-      // Show judging link only if voting is open
-      if (judgingLink && this.activeCompetition.voting_open) {
-        judgingLink.style.display = "block";
-      }
-
-      // Trigger fade-in for cocktail buttons after content is set
-      setTimeout(() => {
-        document.querySelectorAll(".cocktail-button-fade-in").forEach((btn) => {
-          btn.classList.add("loaded");
-        });
-      }, 50); // Small delay to ensure DOM is ready
-    } catch (err) {
-      console.error("Error loading cocktail competition status:", err);
-      // Still fade in buttons even on error
-      setTimeout(() => {
-        document.querySelectorAll(".cocktail-button-fade-in").forEach((btn) => {
-          btn.classList.add("loaded");
-        });
-      }, 50);
-    }
-  }
+  // loadCocktailCompetitionStatus removed (cocktail competition complete)
 }
 
 export { DashboardPage };
