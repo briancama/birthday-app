@@ -19,6 +19,16 @@ class CocktailLeaderboardPage extends BasePage {
         leaderboardDiv.innerHTML = "<p>No cocktail entries found.</p>";
         return;
       }
+      // Compute total rubric score for each row and sort descending
+      const rowsWithTotal = data.map((row) => {
+        const taste = row.taste_avg || 0;
+        const presentation = row.presentation_avg || 0;
+        const workmanship = row.workmanship_avg || 0;
+        const creativity = row.creativity_avg || 0;
+        const total = taste * 11 + presentation * 3 + workmanship * 3 + creativity * 3;
+        return { ...row, total };
+      });
+      rowsWithTotal.sort((a, b) => b.total - a.total);
       leaderboardDiv.innerHTML = `
         <table class="cocktail-leaderboard-table">
           <thead>
@@ -36,29 +46,21 @@ class CocktailLeaderboardPage extends BasePage {
             </tr>
           </thead>
           <tbody>
-            ${data
-              .map((row, i) => {
-                // Rubric weights: taste*11, presentation*3, workmanship*3, creativity*3
-                const taste = row.taste_avg || 0;
-                const presentation = row.presentation_avg || 0;
-                const workmanship = row.workmanship_avg || 0;
-                const creativity = row.creativity_avg || 0;
-                const total = taste * 11 + presentation * 3 + workmanship * 3 + creativity * 3;
-                return `
+            ${rowsWithTotal
+              .map((row, i) => `
                   <tr>
                     <td>${i + 1}</td>
                     <td>${row.entry_name || "Unnamed"}</td>
                     <td>${row.username || "?"}</td>
-                    <td><strong>${total.toFixed(1)}</strong></td>
-                    <td>${taste.toFixed(2)}</td>
-                    <td>${presentation.toFixed(2)}</td>
-                    <td>${workmanship.toFixed(2)}</td>
-                    <td>${creativity.toFixed(2)}</td>
+                    <td><strong>${row.total.toFixed(1)}</strong></td>
+                    <td>${(row.taste_avg || 0).toFixed(2)}</td>
+                    <td>${(row.presentation_avg || 0).toFixed(2)}</td>
+                    <td>${(row.workmanship_avg || 0).toFixed(2)}</td>
+                    <td>${(row.creativity_avg || 0).toFixed(2)}</td>
                     <td>${row.judgments_count ?? 0}</td>
                     <td>${row.favorites_count ?? 0}</td>
                   </tr>
-                `;
-              })
+                `)
               .join("")}
           </tbody>
         </table>
