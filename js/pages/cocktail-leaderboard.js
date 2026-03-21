@@ -26,7 +26,7 @@ class CocktailLeaderboardPage extends BasePage {
               <th>Rank</th>
               <th>Cocktail</th>
               <th>By</th>
-              <th>Avg Score</th>
+              <th>Total (out of 100)</th>
               <th>Taste</th>
               <th>Presentation</th>
               <th>Craft</th>
@@ -37,22 +37,28 @@ class CocktailLeaderboardPage extends BasePage {
           </thead>
           <tbody>
             ${data
-              .map(
-                (row, i) => `
+              .map((row, i) => {
+                // Rubric weights: taste*11, presentation*3, workmanship*3, creativity*3
+                const taste = row.taste_avg || 0;
+                const presentation = row.presentation_avg || 0;
+                const workmanship = row.workmanship_avg || 0;
+                const creativity = row.creativity_avg || 0;
+                const total = taste * 11 + presentation * 3 + workmanship * 3 + creativity * 3;
+                return `
                   <tr>
                     <td>${i + 1}</td>
                     <td>${row.entry_name || "Unnamed"}</td>
                     <td>${row.username || "?"}</td>
-                    <td><strong>${row.avg_score?.toFixed(2) ?? "—"}</strong></td>
-                    <td>${row.taste_avg?.toFixed(2) ?? "—"}</td>
-                    <td>${row.presentation_avg?.toFixed(2) ?? "—"}</td>
-                    <td>${row.workmanship_avg?.toFixed(2) ?? "—"}</td>
-                    <td>${row.creativity_avg?.toFixed(2) ?? "—"}</td>
+                    <td><strong>${total.toFixed(1)}</strong></td>
+                    <td>${taste.toFixed(2)}</td>
+                    <td>${presentation.toFixed(2)}</td>
+                    <td>${workmanship.toFixed(2)}</td>
+                    <td>${creativity.toFixed(2)}</td>
                     <td>${row.judgments_count ?? 0}</td>
                     <td>${row.favorites_count ?? 0}</td>
                   </tr>
-                `
-              )
+                `;
+              })
               .join("")}
           </tbody>
         </table>
