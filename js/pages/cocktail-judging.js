@@ -71,6 +71,7 @@ class CocktailJudgingPage extends BasePage {
       .from("cocktail_entries")
       .select("*, users(display_name, username)")
       .eq("competition_id", this.activeCompetition.id)
+      .order("display_order", { ascending: true, nullsFirst: false })
       .order("submitted_at", { ascending: true });
 
     if (error) throw error;
