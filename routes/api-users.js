@@ -135,6 +135,100 @@ router.post("/users/:id/challenge", async (req, res) => {
   }
 });
 
+// POST /api/assignments/:id/swap
+// Lets the authenticated user swap out one of their own active (triggered,
+// incomplete) challenges back to dormant and activates the next dormant one
+// in queue instead. The swap is self-service — the caller must own the
+// assignment being swapped out.
+router.post("/assignments/:id/swap", async (req, res) => {
+  try {
+    const signedUserId = requireSignedUser(req);
+    if (!signedUserId) return res.status(401).json({ error: "Not authenticated" });
+
+    const assignmentId = req.params.id;
+
+    // 1. Verify the assignment belongs to the signed user and is triggered+incomplete
+    const { data: assignment, error: fetchErr } = await supabase
+      .from("assignments")
+      .select("id, user_id, triggered_at, completed_at")
+      .eq("id", assignmentId)
+      .maybeSingle();
+
+    if (fetchErr) {
+      console.error("swap: failed to fetch assignment:", fetchErr.message);
+      return res.status(500).json({ error: "Failed to fetch assignment" });
+    }
+    if (!assignment) return res.status(404).json({ error: "Assignment not found" });
+    if (assignment.user_id !== signedUserId)
+      return res.status(403).json({ error: "Not your challenge" });
+    if (!assignment.triggered_at)
+      return res.status(400).json({ error: "Challenge is not currently active" });
+    if (assignment.completed_at)
+      return res.status(400).json({ error: "Challenge is already completed" });
+
+    // 2. Find the next dormant assignment for this user (oldest assigned_at),
+    //    excluding the one being swapped out.
+    const { data: dormant, error: dormantErr } = await supabase
+      .from("assignments")
+      .select("id")
+      .eq("user_id", signedUserId)
+      .is("triggered_at", null)
+      .is("completed_at", null)
+      .neq("id", assignmentId)
+      .order("assigned_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (dormantErr) {
+      console.error("swap: failed to find dormant:", dormantErr.message);
+      return res.status(500).json({ error: "Failed to find next challenge" });
+    }
+    if (!dormant) {
+      return res.status(404).json({ error: "No dormant challenges available to swap in" });
+    }
+
+    // 3. Un-trigger the current assignment (reset to dormant)
+    const { error: resetErr } = await supabase
+      .from("assignments")
+      .update({
+        triggered_at: null,
+        active: false,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", assignmentId);
+
+    if (resetErr) {
+      console.error("swap: failed to reset assignment:", resetErr.message);
+      return res.status(500).json({ error: "Failed to swap out challenge" });
+    }
+
+    // 4. Trigger the dormant assignment
+    const { error: triggerErr } = await supabase
+      .from("assignments")
+      .update({
+        active: true,
+        triggered_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", dormant.id);
+
+    if (triggerErr) {
+      console.error("swap: failed to trigger new assignment:", triggerErr.message);
+      // Attempt to roll back the reset (best-effort)
+      await supabase
+        .from("assignments")
+        .update({ triggered_at: assignment.triggered_at, active: true })
+        .eq("id", assignmentId);
+      return res.status(500).json({ error: "Failed to swap in new challenge" });
+    }
+
+    return res.json({ ok: true, swapped_out: assignmentId, swapped_in: dormant.id });
+  } catch (err) {
+    console.error("Error in POST /api/assignments/:id/swap", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // GET /api/users/active-challenge-counts
 // Returns active (triggered, incomplete) challenge counts and total incomplete
 // (dormant + active) counts per user. Used by character select to enforce the

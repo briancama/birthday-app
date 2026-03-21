@@ -197,6 +197,7 @@ class ChallengeCard extends EventTarget {
                 <button class="failure-btn" data-id="${this.assignment.id}" data-sound="failure" data-outcome="failure">
                     <img src="images/failure.gif" class="icon-gif icon-gif--with-text hide-mobile" alt="cross">FAILURE
                 </button>
+                <button class="swap-btn" data-action="swap" title="Swap this challenge for a different one">⇄ SWAP</button>
             </div>
         `;
   }
@@ -211,6 +212,24 @@ class ChallengeCard extends EventTarget {
 
   addEventListeners(card, state) {
     const { isCompleted, canReveal, isRevealed } = state;
+
+    // Swap button on the revealed card (alongside success/failure)
+    if (isRevealed && this.options.showActions) {
+      const swapBtn = card.querySelector('.swap-btn[data-action="swap"]');
+      if (swapBtn) {
+        swapBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const eventDetail = {
+            assignmentId: this.assignment.id,
+            element: card,
+            component: this,
+            button: swapBtn,
+          };
+          this.dispatchEvent(new CustomEvent("swap", { detail: eventDetail, bubbles: true }));
+          EventBus.instance.emit(EventBus.EVENTS.CHALLENGE.SWAP, eventDetail);
+        });
+      }
+    }
 
     // Click to reveal for unrevealed challenges
     if (!isCompleted && canReveal && !isRevealed && this.options.allowReveal) {
@@ -322,7 +341,7 @@ class ChallengeCard extends EventTarget {
 
     // Update the actions section (buttons -> badge)
     const actionsContainer = card.querySelector(
-      ".challenge-actions, .outcome-badge, .reveal, .locked-badge"
+      ".challenge-actions, .outcome-badge, .reveal-actions, .reveal, .locked-badge"
     );
     if (actionsContainer) {
       if (isCompleted) {

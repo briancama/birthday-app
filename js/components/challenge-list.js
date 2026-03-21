@@ -6,6 +6,7 @@ import { ChallengeCard } from "./challenge-card.js";
  * - revealedId: assignment id that should be shown as revealed
  * - onReveal(detail): handler when card emits reveal
  * - onComplete(detail): handler when card emits complete
+ * - onSwap(detail): handler when card emits swap
  * - cardOptions: options passed to ChallengeCard constructor
  */
 export function renderChallengeList(container, data, options = {}) {
@@ -14,6 +15,7 @@ export function renderChallengeList(container, data, options = {}) {
     revealedId = null,
     onReveal = () => {},
     onComplete = () => {},
+    onSwap = () => {},
     cardOptions = {},
   } = options;
 
@@ -47,6 +49,7 @@ export function renderChallengeList(container, data, options = {}) {
       const challengeCard = new ChallengeCard(assignment, index, cardOptions);
       challengeCard.addEventListener("reveal", (e) => onReveal(e.detail));
       challengeCard.addEventListener("complete", (e) => onComplete(e.detail));
+      challengeCard.addEventListener("swap", (e) => onSwap(e.detail));
       const newCard = challengeCard.create(state);
       existingCard.replaceWith(newCard);
       existingCardMap.delete(assignment.id);
@@ -54,6 +57,7 @@ export function renderChallengeList(container, data, options = {}) {
       const challengeCard = new ChallengeCard(assignment, index, cardOptions);
       challengeCard.addEventListener("reveal", (e) => onReveal(e.detail));
       challengeCard.addEventListener("complete", (e) => onComplete(e.detail));
+      challengeCard.addEventListener("swap", (e) => onSwap(e.detail));
       const el = challengeCard.create(state);
       container.appendChild(el);
     }

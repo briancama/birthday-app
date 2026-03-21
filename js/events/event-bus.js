@@ -70,6 +70,7 @@ EventBus.EVENTS = {
     COMPLETE: "challenge:complete",
     COMPLETED_SUCCESS: "challenge:completed-success",
     COMPLETED_ERROR: "challenge:completed-error",
+    SWAP: "challenge:swap",
     UPDATED: "challenge:updated",
     LOADING: "challenge:loading",
   },

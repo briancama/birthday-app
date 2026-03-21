@@ -256,6 +256,11 @@ class DashboardPage extends BasePage {
     // Store cleanup functions for later removal
     this.eventCleanup.push(revealCleanup, completeCleanup);
 
+    const swapCleanup = EventBus.instance.listen(EventBus.EVENTS.CHALLENGE.SWAP, async (e) => {
+      await this.handleChallengeSwap(e.detail);
+    });
+    this.eventCleanup.push(swapCleanup);
+
     // Refresh achievements UI when an achievement is awarded for this user
     const achCleanup = EventBus.instance.listen("achievement:awarded", (e) => {
       try {
@@ -279,7 +284,7 @@ class DashboardPage extends BasePage {
       element.classList.add("revealed");
 
       // Update the reveal prompt to action buttons
-      const actionsContainer = element.querySelector(".challenge-actions, .reveal");
+        const actionsContainer = element.querySelector(".challenge-actions, .reveal-actions, .reveal");
       if (actionsContainer) {
         // Get challenge details from the assignment data stored on the card
         const challengeId = element.dataset.challengeId;
@@ -294,6 +299,7 @@ class DashboardPage extends BasePage {
                         <button class="failure-btn" data-id="${assignmentId}" data-challenge-id="${challengeId}" data-brian-mode="${brianMode}" data-vs-user="${vsUser || ""}" data-sound="failure" data-outcome="failure">
                             <img src="images/failure.gif" class="icon-gif icon-gif--with-text hide-mobile" alt="cross">FAILURE
                         </button>
+                        <button class="swap-btn" data-action="swap" data-id="${assignmentId}" title="Swap this challenge for a different one">⇄ SWAP</button>
                     </div>
                 `;
 
@@ -307,6 +313,15 @@ class DashboardPage extends BasePage {
             const challengeId = btn.dataset.challengeId;
             const brianMode = btn.dataset.brianMode;
             const vsUser = btn.dataset.vsUser || null;
+
+            if (btn.dataset.action === "swap") {
+              EventBus.instance.emit(EventBus.EVENTS.CHALLENGE.SWAP, {
+                assignmentId,
+                element,
+                button: btn,
+              });
+              return;
+            }
 
             EventBus.instance.emit(EventBus.EVENTS.CHALLENGE.COMPLETE, {
               assignmentId,
@@ -326,6 +341,35 @@ class DashboardPage extends BasePage {
     }
 
     this.revealedChallengeId = assignmentId;
+  }
+
+  async handleChallengeSwap({ assignmentId, element, button }) {
+    if (button) {
+      button.disabled = true;
+      button.textContent = "...";
+    }
+
+    try {
+      const res = await fetch(`/api/assignments/${assignmentId}/swap`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const body = await res.json();
+
+      if (!res.ok) {
+        throw new Error(body.error || "Swap failed");
+      }
+
+      // Two cards changed — reload the whole list for accuracy
+      await this.loadChallenges();
+    } catch (err) {
+      console.error("Challenge swap failed:", err);
+      if (button) {
+        button.disabled = false;
+        button.textContent = "\u21c4 SWAP";
+      }
+      this.showErrorToast(err.message || "Failed to swap challenge");
+    }
   }
 
   async handleChallengeComplete(detail) {
