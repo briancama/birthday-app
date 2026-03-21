@@ -40,16 +40,16 @@ INSERT INTO public.cocktail_leaderboard (
 )
 SELECT
   e.id, e.competition_id, e.entry_name, e.user_id, u.username,
-  ROUND( NULLIF( AVG(
+  COALESCE(ROUND(AVG(
     ((cj.taste_score::numeric
       + cj.presentation_score::numeric
       + cj.workmanship_score::numeric
       + cj.creativity_score::numeric) / 4.0)
-  ), NULL )::numeric, 3) AS avg_score,
-  ROUND( AVG(cj.taste_score::numeric)::numeric, 3) AS taste_avg,
-  ROUND( AVG(cj.presentation_score::numeric)::numeric, 3) AS presentation_avg,
-  ROUND( AVG(cj.workmanship_score::numeric)::numeric, 3) AS workmanship_avg,
-  ROUND( AVG(cj.creativity_score::numeric)::numeric, 3) AS creativity_avg,
+  )::numeric, 3), 0) AS avg_score,
+  COALESCE(ROUND(AVG(cj.taste_score::numeric)::numeric, 3), 0) AS taste_avg,
+  COALESCE(ROUND(AVG(cj.presentation_score::numeric)::numeric, 3), 0) AS presentation_avg,
+  COALESCE(ROUND(AVG(cj.workmanship_score::numeric)::numeric, 3), 0) AS workmanship_avg,
+  COALESCE(ROUND(AVG(cj.creativity_score::numeric)::numeric, 3), 0) AS creativity_avg,
   COUNT(cj.id) AS judgments_count,
   COALESCE(fav.favorites_count, 0) AS favorites_count,
   MAX(cj.submitted_at) AS last_judged_at,

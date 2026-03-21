@@ -1,4 +1,44 @@
-/* Leaderboard Page Styles */
+main {
+  max-width: 700px;
+  margin: 2rem auto;
+  background: #fffbe8;
+  border: 2px solid #e0c97f;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px #0002;
+  padding: 2rem 1.5rem;
+}
+
+.cocktail-leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5rem;
+  background: #fff;
+}
+.cocktail-leaderboard-table th,
+.cocktail-leaderboard-table td {
+  border: 1px solid #e0c97f;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+}
+.cocktail-leaderboard-table th {
+  background: #ffe9a7;
+  font-weight: bold;
+}
+.cocktail-leaderboard-table tr:nth-child(even) {
+  background: #fffbe8;
+}
+.cocktail-leaderboard-table tr:nth-child(odd) {
+  background: #fff;
+}
+.cocktail-leaderboard-table td strong {
+  color: #b8860b;
+  font-size: 1.1em;
+}
+.error {
+  color: #b00;
+  font-weight: bold;
+  margin-top: 1rem;
+}/* Leaderboard Page Styles */
 
 /* Leaderboard Header - Flex container for title and controls */
 .leaderboard-header {
