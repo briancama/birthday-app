@@ -409,6 +409,20 @@
   border-color: #00ff00;
 }
 
+.entry-card-compact.status-own {
+  border-color: #aa44ff;
+  opacity: 0.8;
+}
+
+.own-entry-badge {
+  display: inline-block;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #cc88ff;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
 .entry-compact-header {
   display: flex;
   justify-content: space-between;

@@ -141,14 +141,17 @@ class CocktailJudgingPage extends BasePage {
 
   renderEntries() {
     const statusDiv = document.getElementById("judgingStatus");
-    const completedCount = Array.from(this.myJudgments.values()).filter((j) =>
-      this.isJudgmentComplete(j)
-    ).length;
-    const totalCount = this.entries.length;
     const favoriteIcon = this.myFavorite ? "⭐" : "☆";
 
+    // Own entry can't be judged — exclude it from the progress counter
+    const judgableEntries = this.entries.filter((e) => e.user_id !== this.userId);
+    const judgableCount = judgableEntries.length;
+    const completedJudgableCount = judgableEntries.filter((e) =>
+      this.isJudgmentComplete(this.myJudgments.get(e.id))
+    ).length;
+
     statusDiv.innerHTML = `
-            <p style="margin: 0;">Progress: ${completedCount}/${totalCount} completed ${favoriteIcon} ${this.myFavorite ? "Favorite picked!" : "Pick favorite"}</p>
+            <p style="margin: 0;">Progress: ${completedJudgableCount}/${judgableCount} completed ${favoriteIcon} ${this.myFavorite ? "Favorite picked!" : "Pick favorite"}</p>
         `;
 
     const entriesDiv = document.getElementById("entriesList");
@@ -186,9 +189,10 @@ class CocktailJudgingPage extends BasePage {
   }
 
   renderCompactCard(entry) {
+    const isOwnEntry = entry.user_id === this.userId;
     const judgment = this.myJudgments.get(entry.id);
     const isFavorite = this.myFavorite === entry.id;
-    const status = this.getEntryStatus(entry);
+    const status = isOwnEntry ? "own" : this.getEntryStatus(entry);
     const isComplete = status === "completed";
 
     // Calculate weighted total score (out of 100)
@@ -207,7 +211,7 @@ class CocktailJudgingPage extends BasePage {
                             ${entry.entry_name}
                         </h3>
                         <p class="entry-compact-author">
-                            by ${entry.users?.display_name || entry.users?.username || "Unknown"}
+                            by ${isOwnEntry ? "<strong>You</strong>" : (entry.users?.display_name || entry.users?.username || "Unknown")}
                             <button class="btn-info-icon"
                                     data-action="toggle-description"
                                     data-entry-id="${entry.id}"
@@ -218,7 +222,7 @@ class CocktailJudgingPage extends BasePage {
                         </p>
                     </div>
                     <div class="entry-compact-actions">
-                        ${FavoriteButton.toHTML({ entryId: entry.id, isFavorite, style: "icon" })}
+                        ${isOwnEntry ? "" : FavoriteButton.toHTML({ entryId: entry.id, isFavorite, style: "icon" })}
                         ${
                           isComplete
                             ? `
@@ -243,7 +247,7 @@ class CocktailJudgingPage extends BasePage {
                 </div>
 
                 ${
-                  status !== "not-started"
+                  !isOwnEntry && status !== "not-started"
                     ? `
                     <div class="entry-compact-scores">
                         <div class="score-compact">
@@ -278,7 +282,9 @@ class CocktailJudgingPage extends BasePage {
                 }
 
                 ${
-                  !isComplete
+                  isOwnEntry
+                    ? `<div class="own-entry-badge">&#127775; YOUR ENTRY</div>`
+                    : !isComplete
                     ? `
                     <button class="btn-primary"
                             data-action="open-judging-modal"
@@ -541,6 +547,14 @@ class CocktailJudgingPage extends BasePage {
     e.preventDefault();
     const form = e.target;
     const entryId = form.dataset.entryId;
+
+    // Guard: never allow judging your own entry
+    const ownEntry = this.entries.find((en) => en.id === entryId);
+    if (ownEntry && ownEntry.user_id === this.userId) {
+      console.warn("Attempted to judge own entry — blocked.");
+      if (closeModal) closeModal();
+      return;
+    }
     const submitBtn = form.querySelector('button[type="submit"]');
     const errorDiv = form.querySelector(".error-message");
 
