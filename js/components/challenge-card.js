@@ -1,6 +1,7 @@
 import { appState } from "../app.js";
 import { EventBus } from "../events/event-bus.js";
 import { formatAndEscapeText } from "../utils/text-format.js";
+import { computeChallengeState } from "../utils/challenge-state.js";
 
 class ChallengeCard extends EventTarget {
   constructor(assignment, index, options = {}) {
@@ -24,13 +25,14 @@ class ChallengeCard extends EventTarget {
   }
 
   create(state) {
-    const { isCompleted, outcome, brianMode, isRevealed, canReveal, isLocked } = state;
-
+    // Always use the state object for all UI logic
+    const { isCompleted, outcome, isRevealed, canReveal, isLocked, forceReveal, displayTitle } = state;
     const card = document.createElement("div");
     let cardClass = "challenge-card";
-
     if (isCompleted) {
       cardClass += ` completed ${outcome}`;
+    } else if (forceReveal) {
+      cardClass += " challenges-disabled";
     } else if (isLocked) {
       cardClass += " locked";
     } else if (isRevealed) {
@@ -38,53 +40,42 @@ class ChallengeCard extends EventTarget {
     } else if (canReveal) {
       cardClass += " unrevealed";
     }
-
     card.className = cardClass;
-    card.dataset.assignmentId = this.assignment.id; // Add data attribute for tracking
-    card.dataset.challengeId = this.assignment.challenges.id; // Store challenge ID
-    card.dataset.brianMode = this.assignment.challenges.brian_mode || ""; // Store brian mode
-    card.dataset.vsUser = this.assignment.challenges.vs_user || ""; // Store vs_user for reveal handler
+    card.dataset.assignmentId = this.assignment.id;
+    card.dataset.challengeId = this.assignment.challenges.id;
+    card.dataset.brianMode = this.assignment.challenges.brian_mode || "";
+    card.dataset.vsUser = this.assignment.challenges.vs_user || "";
     card.innerHTML = this.getCardHTML(state);
     this.addEventListeners(card, state);
-
     return card;
   }
 
   getCardHTML(state) {
-    const { isCompleted, outcome, brianMode, isRevealed, canReveal, isLocked } = state;
-
+    // Use only the state object for all display logic
+    const { isCompleted, outcome, brianMode, isRevealed, canReveal, isLocked, forceReveal, displayTitle } = state;
     const vsUser = this.assignment.challenges.vs_user;
     const vsUserProfile = this.assignment.challenges.vs_user_profile;
-    const vsUserDisplay = vsUserProfile
-      ? vsUserProfile.display_name || vsUserProfile.username
-      : null;
-
+    const vsUserDisplay = vsUserProfile ? vsUserProfile.display_name || vsUserProfile.username : null;
     let opponentBadge = "";
     if (vsUser && this.options.showBrianMode) {
       const namePart = vsUserDisplay ? ` ${vsUserDisplay}` : "";
-      opponentBadge = `<span class="brian-mode-badge"><img src="images/vs.gif" class="icon-gif icon-gif--with-text" alt="VS">${namePart}</span>`;
+      opponentBadge = `<span class=\"brian-mode-badge\"><img src=\"images/vs.gif\" class=\"icon-gif icon-gif--with-text\" alt=\"VS\">${namePart}</span>`;
     } else if (brianMode && this.options.showBrianMode) {
-      opponentBadge = `<span class="brian-mode-badge">${brianMode === "vs" ? '<img src="images/vs.gif" class="icon-gif icon-gif--with-text" alt="VS Brian">' : '<img src="images/with.gif" class="icon-gif icon-gif--with-text" alt="With Brian">'}</span>`;
+      opponentBadge = `<span class=\"brian-mode-badge\">${brianMode === "vs" ? '<img src=\"images/vs.gif\" class=\"icon-gif icon-gif--with-text\" alt=\"VS Brian\">' : '<img src=\"images/with.gif\" class=\"icon-gif icon-gif--with-text\" alt=\"With Brian\">'}</span>`;
     }
-
-    // Always include full title and description, just hide with CSS
-    const fullTitle = `${this.assignment.challenges.title}`;
-    const hiddenTitle = this.options.showIndex ? `Challenge ${this.index + 1}` : "Hidden Challenge";
-
-    const displayDescription = this.getFullDescription();
-    const actionsHTML = this.getActionsHTML(state);
-
+    // Use state.displayTitle and get description based on state
+    const displayDescription = forceReveal || isRevealed || isCompleted ? this.getFullDescription() : "";
+    const actionsHTML = forceReveal ? "" : this.getActionsHTML(state);
     return `
-            <div class="challenge-info">
-                <div class="challenge-title">
-                    <span class="title-hidden">${hiddenTitle}</span>
-                    <span class="title-revealed">${fullTitle}</span>
-                    ${opponentBadge}
-                </div>
-                <div class="challenge-description">${displayDescription}</div>
-            </div>
-            ${actionsHTML}
-        `;
+      <div class="challenge-info">
+        <div class="challenge-title">
+          <span class="title-revealed">${displayTitle}</span>
+          ${opponentBadge}
+        </div>
+        <div class="challenge-description">${displayDescription}</div>
+      </div>
+      ${actionsHTML}
+    `;
   }
 
   getFullDescription() {

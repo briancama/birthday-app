@@ -1,0 +1,12 @@
+<% /*
+  challenge-list.ejs - Server-side partial for rendering a list of challenge cards
+  Usage: include('partials/challenge-list', { assignments, options })
+  assignments: array of assignment objects (see challenge-card.ejs)
+  options: options to pass to each card (see challenge-card.ejs)
+*/ %>
+<div class="challenge-list">
+  <% assignments.forEach(function(assignment, idx) { %>
+    <% const state = computeChallengeState(assignment, Object.assign({}, options, { index: idx })); %>
+    <%- include('./challenge-card', { assignment, index: idx, options, state }) %>
+  <% }); %>
+</div>

@@ -1,0 +1,52 @@
+<% /*
+  challenge-card.ejs - Server-side partial for rendering a single challenge card
+  Usage: include('partials/challenge-card', { assignment, index, options })
+  assignment: { challenges: { title, description, brian_mode, vs_user, vs_user_profile }, completed_at, outcome, triggered_at }
+  index: number (0-based)
+  options: { showActions, allowReveal, showBrianMode, showIndex, forceReveal, challengesEnabled }
+*/ %>
+<% // Use shared state logic for SSR
+   const isCompleted = state.isCompleted;
+   const outcome = state.outcome;
+   const brianMode = state.brianMode;
+   const isTriggered = state.isTriggered;
+   const isRevealed = state.isRevealed;
+   const canReveal = state.canReveal;
+   const isLocked = state.isLocked;
+   const forceReveal = state.forceReveal;
+   const displayTitle = state.displayTitle;
+   const vsUser = assignment.challenges.vs_user;
+   const vsUserProfile = assignment.challenges.vs_user_profile;
+   const vsUserDisplay = vsUserProfile ? (vsUserProfile.display_name || vsUserProfile.username) : null;
+   let cardClass = 'challenge-card';
+   if (isCompleted) cardClass += ` completed ${outcome}`;
+   else if (forceReveal) cardClass += ' challenges-disabled';
+   else if (!isCompleted && !isTriggered) cardClass += ' locked';
+   else if (!isCompleted && isTriggered) cardClass += ' unrevealed';
+   // VS badge logic
+   let opponentBadge = '';
+   if (vsUser && (options?.showBrianMode ?? true)) {
+     const namePart = vsUserDisplay ? ` ${vsUserDisplay}` : '';
+     opponentBadge = `<span class=\"brian-mode-badge\"><img src=\"images/vs.gif\" class=\"icon-gif icon-gif--with-text\" alt=\"VS\">${namePart}</span>`;
+   } else if (brianMode && (options?.showBrianMode ?? true)) {
+     opponentBadge = `<span class=\"brian-mode-badge\">${brianMode === 'vs' ? '<img src=\"images/vs.gif\" class=\"icon-gif icon-gif--with-text\" alt=\"VS Brian\">' : '<img src=\"images/with.gif\" class=\"icon-gif icon-gif--with-text\" alt=\"With Brian\">'}</span>`;
+   }
+%>
+<div class="<%= cardClass %>" data-assignment-id="<%= assignment.id %>" data-challenge-id="<%= assignment.challenges.id %>" data-brian-mode="<%= assignment.challenges.brian_mode || '' %>" data-vs-user="<%= assignment.challenges.vs_user || '' %>">
+  <div class="challenge-info">
+    <div class="challenge-title">
+      <span class="title-revealed"><%- displayTitle %></span>
+      <%- opponentBadge %>
+    </div>
+    <div class="challenge-description"><%- assignment.challenges.description %></div>
+  </div>
+  <% if (!forceReveal && !isCompleted && isTriggered && challengesEnabled) { %>
+    <div class="challenge-actions">
+      <button class="success-btn">SUCCESS</button>
+      <button class="failure-btn">FAILURE</button>
+      <button class="swap-btn">⇄ SWAP</button>
+    </div>
+  <% } else if (isCompleted) { %>
+    <span class="outcome-badge <%= outcome %>"><%= outcome === 'success' ? 'SUCCESS!' : 'FAILURE!' %></span>
+  <% } %>
+</div>

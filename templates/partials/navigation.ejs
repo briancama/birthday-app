@@ -44,7 +44,7 @@
         <img src="/images/question.gif" alt="info" class="icon-gif icon-gif--with-text" />
         <span>EVENT INFO</span>
       </a>
-      <% if (navData && navData.user && navData.user.user_type === 'participant') { %>
+      <% if (navData && navData.user && navData.user.user_type === 'participant' && navData.challengesEnabled !== false) { %>
       <a href="/challenges-submit" class="nav-tab" data-sound="menu" data-page="challenges-submit">
         <img src="/images/star_icon.gif" alt="star" class="icon-gif icon-gif--with-text" />
         <span>SUBMIT CHALLENGE</span>
@@ -54,7 +54,7 @@
         <img src="/images/trophy.gif" alt="trophy" class="icon-gif icon-gif--with-text" />
         <span>LEADERBOARD</span>
       </a>
-      <% if (navData && navData.user && navData.user.user_type === 'participant' && navData.eventStarted) { %>
+      <% if (navData && navData.user && navData.user.user_type === 'participant' && navData.eventStarted && navData.challengesEnabled !== false) { %>
       <a
         href="/challenges"
         class="nav-tab"

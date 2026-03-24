@@ -3,6 +3,7 @@
  * Fixed sticky navigation menu at bottom of screen on mobile
  */
 import { appState } from "../app.js";
+import { featureFlags } from "../utils/feature-flags.js";
 
 export class BottomMenu extends HTMLElement {
   constructor() {
@@ -11,20 +12,21 @@ export class BottomMenu extends HTMLElement {
     this.cleanupFunctions = [];
   }
 
-  connectedCallback() {
+  async connectedCallback() {
     this.render();
     this.setupEventListeners();
-    // Show the bottom menu immediately so page rendering isn't dependent
-    // on the cocktail competition availability check.
     this.showMenu();
-    // Run the cocktail competition check asynchronously; if an active
-    // competition with `voting_open` exists, reveal the Judge link.
     this.checkCocktailCompetition().then((active) => {
       if (active) this.showCocktailMenu();
     });
-    // Add bottom padding to body
+    // Hide submit challenge if challenges are disabled
+    const supabase = appState.getSupabase();
+    const enabled = await featureFlags.isChallengesEnabled(supabase);
+    if (!enabled) {
+      const submit = this.querySelector('[data-page="challenges-submit"]');
+      if (submit) submit.style.display = "none";
+    }
     document.body.classList.add("has-bottom-menu");
-    // Subscribe to app state changes
     appState.on("user:loaded", () => this.updateMenuState());
   }
 

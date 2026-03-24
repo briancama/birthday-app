@@ -596,6 +596,35 @@
   }
 
   .challenge-card.locked {
+  /* previously closed here in error; removed stray bracket so following styles are valid */
+
+/* Special style for disabled challenges (all incomplete revealed/locked) */
+.challenge-card.challenges-disabled {
+  background: repeating-linear-gradient(135deg, #e0e0e0 0 10px, #c0c0c0 10px 20px);
+  border: 3px dashed #888;
+  opacity: 1;
+  filter: grayscale(0.2) contrast(0.9);
+  box-shadow: 0 0 8px 2px #88888855;
+  position: relative;
+}
+
+.challenge-card.challenges-disabled::after {
+  content: "CHALLENGES DISABLED";
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: #ffeb3b;
+  color: #b71c1c;
+  font-size: 0.85rem;
+  font-family: 'Courier New', Courier, monospace;
+  padding: 2px 8px;
+  border: 1.5px solid #b71c1c;
+  border-radius: 4px;
+  z-index: 2;
+  letter-spacing: 1px;
+  box-shadow: 1px 1px 0 #b71c1c44;
+  pointer-events: none;
+}
     background: #d3d3d3;
     opacity: 0.7;
   }
@@ -655,6 +684,9 @@
   .challenge-card .title-revealed {
     display: none;
   }
+  .challenge-card.challenges-disabled .title-revealed {
+    display: inline;
+  }
 
   .challenge-card.revealed .title-hidden,
   .challenge-card.completed .title-hidden {
@@ -670,6 +702,9 @@
   .challenge-card.unrevealed .challenge-description,
   .challenge-card.locked .challenge-description {
     display: none;
+  }
+  .challenge-card.challenges-disabled .challenge-description {
+    display: block;
   }
 
   /* Hide brian badge until revealed */

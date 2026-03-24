@@ -6,6 +6,8 @@ import { createCharacterSelect } from "../components/character-select.js";
 import { audioManager } from "../utils/audio.js";
 import { EventBus } from "../events/event-bus.js";
 import { renderChallengeList } from "../components/challenge-list.js";
+import { loadAndRenderChallenges } from "../services/challenge-loader.js";
+import { getChallengeCardOptions } from "../utils/challenge-state.js";
 import { featureFlags } from "../utils/feature-flags.js";
 
 class ChallengesPage extends BasePage {
@@ -170,91 +172,17 @@ class ChallengesPage extends BasePage {
   }
 
   // Send challenge POST to server for selected target id
-  async performChallenge(targetId) {
-    if (!targetId) throw new Error("No target specified");
-    const resp = await fetch(`/api/users/${encodeURIComponent(targetId)}/challenge`, {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-    });
-    const body = await resp.json().catch(() => ({}));
-    if (!resp.ok) {
-      throw new Error(body.error || resp.statusText || "Request failed");
-    }
-
-    // Notify other components/pages about the new notification so UI can update
-    try {
-      if (body && body.notification) {
-        EventBus.instance.emit("notification:created", { notification: body.notification });
-      }
-      // If the server awarded an achievement (social_butterfly etc.), surface the toast.
-      // Awarding already happened server-side — this is UI-only.
-      if (body && body.achievement) {
-        EventBus.instance.emit("achievement:awarded", {
-          userId: this.userId,
-          achievementKey: body.achievement.key,
-          name: body.achievement.name,
-          points: body.achievement.points,
-        });
-      }
-      EventBus.instance.emit("ui:toast", {
-        type: "success",
-        message: "Notification sent!",
-      });
-    } catch (e) {
-      // Ignore EventBus failures
-    }
-
-    return body;
-  }
-
-  // Deprecated: challenge via text input removed — selector-only flow
-
   async loadChallenges() {
-    const container = this.challengesContainer;
-    if (!container) return;
-    this.setLoadingState("challengesList", true);
-
-    try {
-      const { data: rawData, error } = await this.supabase
-        .from("assignments")
-        .select(
-          `id, completed_at, outcome, assigned_at, triggered_at, challenges (id, title, description, brian_mode, success_metric, vs_user, vs_user_profile:users!vs_user(display_name, username))`
-        )
-        .eq("user_id", this.userId)
-        .eq("active", true)
-        .order("assigned_at", { ascending: true });
-
-      if (error) throw error;
-
-      // Sort: triggered+incomplete first, then dormant, then completed
-      const data = rawData
-        ? rawData.slice().sort((a, b) => {
-            const grp = (r) => r.completed_at ? 2 : r.triggered_at ? 0 : 1;
-            return grp(a) - grp(b);
-          })
-        : rawData;
-
-      this.setLoadingState("challengesList", false);
-
-      if (!data || data.length === 0) {
-        container.innerHTML = '<div class="empty">No one has challenged you yet!</div>';
-        container.className = "";
-        return;
-      }
-
-      renderChallengeList(container, data, {
-        revealedId: this.revealedChallengeId,
-        onReveal: (detail) => this.handleChallengeReveal(detail),
-        onComplete: (detail) => this.handleChallengeComplete(detail),
-        onSwap: (detail) => this.handleChallengeSwap(detail),
-        cardOptions: { showActions: true, allowReveal: true, showBrianMode: true, showIndex: true },
-      });
-    } catch (err) {
-      this.setLoadingState("challengesList", false);
-      container.innerHTML = `<div class="empty">Error loading challenges: ${err.message}</div>`;
-      container.className = "";
-    }
+    await loadAndRenderChallenges({
+      supabase: this.supabase,
+      userId: this.userId,
+      revealedChallengeId: this.revealedChallengeId,
+      container: this.challengesContainer,
+      renderChallengeList,
+      onReveal: (detail) => this.handleChallengeReveal(detail),
+      onComplete: (detail) => this.handleChallengeComplete(detail),
+      onSwap: (detail) => this.handleChallengeSwap?.(detail),
+    });
   }
 
   // Render handled by shared `renderChallengeList` component

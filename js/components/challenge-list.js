@@ -1,4 +1,6 @@
+
 import { ChallengeCard } from "./challenge-card.js";
+import { computeChallengeState } from "../utils/challenge-state.js";
 
 /**
  * Render or update a list of assignment challenge cards into `container`.
@@ -17,6 +19,7 @@ export function renderChallengeList(container, data, options = {}) {
     onComplete = () => {},
     onSwap = () => {},
     cardOptions = {},
+    challengesEnabled = true,
   } = options;
 
   // Preserve scroll position and existing card states
@@ -30,23 +33,15 @@ export function renderChallengeList(container, data, options = {}) {
   const validAssignmentIds = new Set(data.map((a) => a.id));
 
   data.forEach((assignment, index) => {
-    const isCompleted = !!assignment.completed_at;
-    const outcome = assignment.outcome;
-    const brianMode = assignment.challenges.brian_mode;
-    const isTriggered = !!assignment.triggered_at;
-    const isRevealed = revealedId === assignment.id;
-    // Any triggered incomplete challenge is revealable; dormant ones are locked
-    const canReveal = !isCompleted && isTriggered;
-    const isLocked = !isCompleted && !isTriggered;
-
-    const state = { isCompleted, outcome, brianMode, isRevealed, canReveal, isLocked };
-
+    // Use shared logic for state
+    const state = computeChallengeState(assignment, { revealedId, challengesEnabled, ...cardOptions, index });
+    // If forceReveal, override showIndex to false so real title is always shown
+    const cardOpts = state.forceReveal ? { ...cardOptions, showIndex: false } : cardOptions;
     const existingCard = existingCardMap.get(assignment.id);
-
     if (existingCard && isSameCardState(existingCard, state)) {
       existingCardMap.delete(assignment.id);
     } else if (existingCard) {
-      const challengeCard = new ChallengeCard(assignment, index, cardOptions);
+      const challengeCard = new ChallengeCard(assignment, index, cardOpts);
       challengeCard.addEventListener("reveal", (e) => onReveal(e.detail));
       challengeCard.addEventListener("complete", (e) => onComplete(e.detail));
       challengeCard.addEventListener("swap", (e) => onSwap(e.detail));
@@ -54,7 +49,7 @@ export function renderChallengeList(container, data, options = {}) {
       existingCard.replaceWith(newCard);
       existingCardMap.delete(assignment.id);
     } else {
-      const challengeCard = new ChallengeCard(assignment, index, cardOptions);
+      const challengeCard = new ChallengeCard(assignment, index, cardOpts);
       challengeCard.addEventListener("reveal", (e) => onReveal(e.detail));
       challengeCard.addEventListener("complete", (e) => onComplete(e.detail));
       challengeCard.addEventListener("swap", (e) => onSwap(e.detail));

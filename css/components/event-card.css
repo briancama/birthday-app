@@ -1,3 +1,9 @@
+.challenge-card.challenges-disabled {
+  background: repeating-linear-gradient(135deg, #f7e7b7, #f7e7b7 20px, #ffe7e7 20px, #ffe7e7 40px);
+  border: 2px dashed #c00;
+  opacity: 0.85;
+  filter: grayscale(0.2);
+}
 .event-list-item:not(:last-child) {
   margin-bottom: 24px;
 }

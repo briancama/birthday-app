@@ -11,6 +11,8 @@ const path = require("path");
 const cookieParser = require("cookie-parser");
 const { getSupabase } = require("./js/utils/server-utils");
 const app = express();
+// Shared challenge state logic for SSR
+const { computeChallengeState, getChallengeCardOptions } = require("./js/utils/challenge-state.js");
 const port = process.env.PORT || 8000;
 
 // Use EJS for server-rendered pages
@@ -18,6 +20,12 @@ app.set("views", path.join(__dirname, "templates"));
 app.set("view engine", "ejs");
 
 app.use(express.json());
+// Expose challenge state helper to EJS templates
+app.use((req, res, next) => {
+  res.locals.computeChallengeState = computeChallengeState;
+  res.locals.getChallengeCardOptions = getChallengeCardOptions;
+  next();
+});
 // signed cookies for simple session-style authentication
 app.use(cookieParser(process.env.COOKIE_SECRET || "dev-secret"));
 
@@ -94,13 +102,19 @@ app.use(async (req, res, next) => {
 
     if (!user) return next();
 
-    // Run push subscription check and event_started flag in parallel
-    const [pushResult, flagResult] = await Promise.allSettled([
+
+    // Run push subscription check, event_started, and challenges_enabled in parallel
+    const [pushResult, eventFlagResult, challengesFlagResult] = await Promise.allSettled([
       supabase.from("push_subscriptions").select("id").eq("user_id", user.id).limit(1),
       supabase
         .from("app_settings")
         .select("setting_value")
         .eq("setting_key", "event_started")
+        .maybeSingle(),
+      supabase
+        .from("app_settings")
+        .select("setting_value")
+        .eq("setting_key", "challenges_enabled")
         .maybeSingle(),
     ]);
 
@@ -112,11 +126,19 @@ app.use(async (req, res, next) => {
     );
 
     const eventStarted = !!(
-      flagResult.status === "fulfilled" &&
-      !flagResult.value.error &&
-      flagResult.value.data &&
-      flagResult.value.data.setting_value &&
-      flagResult.value.data.setting_value.enabled === true
+      eventFlagResult.status === "fulfilled" &&
+      !eventFlagResult.value.error &&
+      eventFlagResult.value.data &&
+      eventFlagResult.value.data.setting_value &&
+      eventFlagResult.value.data.setting_value.enabled === true
+    );
+
+    const challengesEnabled = !(
+      challengesFlagResult.status === "fulfilled" &&
+      !challengesFlagResult.value.error &&
+      challengesFlagResult.value.data &&
+      challengesFlagResult.value.data.setting_value &&
+      challengesFlagResult.value.data.setting_value.enabled === false
     );
 
     // Simple admin check: username matches known admins (keep existing client-side conventions)
@@ -134,6 +156,7 @@ app.use(async (req, res, next) => {
       isAuthenticated: true,
       hasPushSubscription: hasPush,
       eventStarted,
+      challengesEnabled,
     };
     // Precompute a sanitized JSON blob for navData to safely embed in templates
     try {
@@ -214,56 +237,51 @@ app.get("/", async (req, res, next) => {
   }
 });
 
+// Shared helper to fetch assignments for SSR
+async function fetchUserAssignments(supabase, user, eventStarted) {
+  const assignments = [];
+  if (supabase && user && user.id && eventStarted) {
+    const { data, error } = await supabase
+      .from("assignments")
+      .select(
+        `id, completed_at, outcome, triggered_at, challenges (id, title, description, brian_mode, success_metric, vs_user, vs_user_profile:users!vs_user(display_name, username))`
+      )
+      .eq("user_id", user.id)
+      .eq("active", true)
+      .order("assigned_at", { ascending: true });
+    if (!error && Array.isArray(data)) {
+      const sorted = data.slice().sort((a, b) => {
+        const grp = (r) => r.completed_at ? 2 : r.triggered_at ? 0 : 1;
+        return grp(a) - grp(b);
+      });
+      sorted.forEach((row) => assignments.push(row));
+    }
+  }
+  let assignmentsJson = JSON.stringify(assignments) || "[]";
+  assignmentsJson = assignmentsJson
+    .replace(/</g, "\\u003c")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+  return { assignments, assignmentsJson };
+}
+
 // Serve static files from workspace root
 // Rendered routes (prefer explicit server-rendered pages where desired)
 app.get(["/dashboard", "/dashboard.html"], async (req, res) => {
   try {
     const supabase = getSupabase();
-    const assignments = [];
-
-    // If we have a server-resolved user, pre-fetch their assignments for server-side render
-    // Only fetch if the event has started — otherwise show the pre-event preview
     const user = res.locals && res.locals.navData && res.locals.navData.user;
     const eventStarted = !!(res.locals.navData && res.locals.navData.eventStarted);
-    if (supabase && user && user.id && eventStarted) {
-      const { data, error } = await supabase
-        .from("assignments")
-        .select(
-          `id, completed_at, outcome, triggered_at, challenges (id, title, description, brian_mode, success_metric, vs_user, vs_user_profile:users!vs_user(display_name, username))`
-        )
-        .eq("user_id", user.id)
-        .eq("active", true)
-        .order("assigned_at", { ascending: true });
-
-      if (!error && Array.isArray(data)) {
-        // Sort: triggered+incomplete first, then dormant, then completed
-        const sorted = data.slice().sort((a, b) => {
-          const grp = (r) => r.completed_at ? 2 : r.triggered_at ? 0 : 1;
-          return grp(a) - grp(b);
-        });
-        sorted.forEach((row) => assignments.push(row));
-      }
-    }
-
-    // Precompute a JSON blob with unsafe chars escaped for safe embedding
-    // Escape '<' to prevent </script> injection and also escape line separator
-    // characters U+2028/U+2029 which break JS string literals when embedded.
-    let assignmentsJson = JSON.stringify(assignments) || "[]";
-    assignmentsJson = assignmentsJson
-      .replace(/</g, "\\u003c")
-      .replace(/\u2028/g, "\\u2028")
-      .replace(/\u2029/g, "\\u2029");
-    // Log size for debugging EJS compile issues
+    const challengesEnabled = !!(res.locals.navData && res.locals.navData.challengesEnabled);
+    const { assignments, assignmentsJson } = await fetchUserAssignments(supabase, user, eventStarted);
     try {
       console.debug(`Dashboard: assignmentsJson length=${assignmentsJson.length}`);
-    } catch (e) {
-      /* ignore logging errors */
-    }
-    return res.render("dashboard", { assignments, assignmentsJson, eventStarted });
+    } catch (e) {}
+    return res.render("dashboard", { assignments, assignmentsJson, eventStarted, challengesEnabled });
   } catch (err) {
     console.warn("Dashboard server render failed to fetch assignments:", err && err.message);
     const assignmentsJson = JSON.stringify([]);
-    return res.render("dashboard", { assignments: [], assignmentsJson, eventStarted: false });
+    return res.render("dashboard", { assignments: [], assignmentsJson, eventStarted: false, challengesEnabled: false });
   }
 });
 
@@ -289,8 +307,18 @@ app.get(["/cocktail-judging", "/cocktail-judging.html"], (req, res) => {
 });
 
 // Challenges: server-rendered to include navigation partial
-app.get(["/challenges", "/challenges.html"], (req, res) => {
-  return res.render("challenges");
+app.get(["/challenges", "/challenges.html"], async (req, res) => {
+  try {
+    const supabase = getSupabase();
+    const user = res.locals && res.locals.navData && res.locals.navData.user;
+    const eventStarted = !!(res.locals.navData && res.locals.navData.eventStarted);
+    const challengesEnabled = !!(res.locals.navData && res.locals.navData.challengesEnabled);
+    const { assignments, assignmentsJson } = await fetchUserAssignments(supabase, user, eventStarted);
+    return res.render("challenges", { assignments, assignmentsJson, eventStarted, challengesEnabled });
+  } catch (err) {
+    const assignmentsJson = JSON.stringify([]);
+    return res.render("challenges", { assignments: [], assignmentsJson, eventStarted: false, challengesEnabled: false });
+  }
 });
 
 // Event Info: server-rendered to include navigation partial (myspace style)

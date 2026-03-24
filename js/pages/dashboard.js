@@ -1,6 +1,8 @@
 import { BasePage } from "./base-page.js";
 import { ChallengeCard } from "../components/challenge-card.js";
 import { renderChallengeList } from "../components/challenge-list.js";
+import { getChallengeCardOptions } from "../utils/challenge-state.js";
+import { loadAndRenderChallenges } from "../services/challenge-loader.js";
 // import { CocktailEntryModal } from "../components/cocktail-entry-modal.js"; // Cocktail competition removed
 import { EventBus } from "../events/event-bus.js";
 import { featureFlags } from "../utils/feature-flags.js";
@@ -530,81 +532,16 @@ class DashboardPage extends BasePage {
   }
 
   async loadChallenges() {
-    const container = document.getElementById("challengesList");
-    this.setLoadingState("challengesList", true);
-    try {
-      // If server provided initial assignments, hydrate from that blob first
-      if (
-        window.__SERVER_ASSIGNMENTS__ &&
-        Array.isArray(window.__SERVER_ASSIGNMENTS__) &&
-        window.__SERVER_ASSIGNMENTS__.length > 0 &&
-        !window.__SERVER_ASSIGNMENTS_HYDRATED__
-      ) {
-        const serverData = window.__SERVER_ASSIGNMENTS__;
-        console.debug("Dashboard: hydrating server assignments", serverData && serverData.length);
-        // Hydrate DOM using the shared renderer. Clear loading state first so it doesn't erase rendered nodes.
-        this.setLoadingState("challengesList", false);
-        renderChallengeList(container, serverData, {
-          revealedId: this.revealedChallengeId,
-          onReveal: (detail) => this.handleChallengeReveal(detail),
-          onComplete: (detail) => this.handleChallengeComplete(detail),
-          cardOptions: {
-            showActions: true,
-            allowReveal: true,
-            showBrianMode: true,
-            showIndex: true,
-          },
-        });
-        // Mark as hydrated to avoid clobbering server-rendered DOM elsewhere
-        window.__SERVER_ASSIGNMENTS_HYDRATED__ = true;
-        return;
-      }
-
-      const { data: rawData, error } = await this.supabase
-        .from("assignments")
-        .select(
-          `
-                    id,
-                    completed_at,
-                    outcome,
-                    triggered_at,
-                    challenges (id, title, description, brian_mode, success_metric, vs_user, vs_user_profile:users!vs_user(display_name, username))
-                `
-        )
-        .eq("user_id", this.userId)
-        .eq("active", true)
-        .order("assigned_at", { ascending: true });
-
-      if (error) throw error;
-
-      // Sort: triggered+incomplete first, then dormant, then completed
-      const data = rawData
-        ? rawData.slice().sort((a, b) => {
-            const grp = (r) => r.completed_at ? 2 : r.triggered_at ? 0 : 1;
-            return grp(a) - grp(b);
-          })
-        : rawData;
-
-      // Clear loading state
-      this.setLoadingState("challengesList", false);
-
-      if (!data || data.length === 0) {
-        container.innerHTML = '<div class="empty">No challenges assigned yet.</div>';
-        container.className = "";
-        return;
-      }
-
-      renderChallengeList(container, data, {
-        revealedId: this.revealedChallengeId,
-        onReveal: (detail) => this.handleChallengeReveal(detail),
-        onComplete: (detail) => this.handleChallengeComplete(detail),
-        cardOptions: { showActions: true, allowReveal: true, showBrianMode: true, showIndex: true },
-      });
-    } catch (err) {
-      this.setLoadingState("challengesList", false);
-      container.innerHTML = `<div class="empty">Error loading challenges: ${err.message}</div>`;
-      container.className = "";
-    }
+    await loadAndRenderChallenges({
+      supabase: this.supabase,
+      userId: this.userId,
+      revealedChallengeId: this.revealedChallengeId,
+      container: document.getElementById("challengesList"),
+      renderChallengeList,
+      onReveal: (detail) => this.handleChallengeReveal(detail),
+      onComplete: (detail) => this.handleChallengeComplete(detail),
+      onSwap: (detail) => this.handleChallengeSwap?.(detail),
+    });
   }
 
   renderChallenges(container, data) {

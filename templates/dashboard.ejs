@@ -107,63 +107,7 @@
           </div>
           <% } else if (typeof assignments !== 'undefined' && Array.isArray(assignments) &&
           assignments.length > 0) { %>
-          <% assignments.forEach(function(assignment, idx) { %>
-          <% const isCompleted = !!assignment.completed_at; %>
-          <% const outcome = assignment.outcome || ''; %>
-          <% const brianMode = assignment.challenges && assignment.challenges.brian_mode; %>
-          <% const isTriggered = !!assignment.triggered_at; %>
-          <% const isRevealed = false; %>
-          <% const canReveal = !isCompleted && isTriggered; %>
-          <% const isLocked = !isCompleted && !isTriggered; %>
-          <% let cardClass = 'challenge-card'; %>
-          <% if (isCompleted) { cardClass += ' completed ' + outcome; } else if (isLocked) { cardClass += ' locked'; } else if (isRevealed) { cardClass += ' revealed'; } else if (canReveal) { cardClass += ' unrevealed'; } %>
-
-          <div
-            class="<%= cardClass %>"
-            data-assignment-id="<%= assignment.id %>"
-            data-challenge-id="<%= assignment.challenges && assignment.challenges.id %>"
-            data-brian-mode="<%= brianMode || '' %>"
-          >
-            <div class="challenge-info">
-              <div class="challenge-title">
-                <span class="title-hidden"><%= 'Challenge ' + (idx + 1) %></span>
-                <span class="title-revealed"
-                  ><%= assignment.challenges && assignment.challenges.title %></span
-                >
-                <% if (brianMode === 'vs') { %>
-                <span class="brian-mode-badge"
-                  ><img src="/images/vs.gif" class="icon-gif" alt="VS Brian"
-                /></span>
-                <% } else if (brianMode) { %>
-                <span class="brian-mode-badge"
-                  ><img src="/images/with.gif" class="icon-gif" alt="With Brian"
-                /></span>
-                <% } %>
-              </div>
-              <div class="challenge-description">
-                <p><%= assignment.challenges && assignment.challenges.description %></p>
-                <% if (assignment.challenges && assignment.challenges.success_metric) { %>
-                <details class="success-metric">
-                  <summary><strong>Success Metric</strong></summary>
-                  <p><%= assignment.challenges.success_metric %></p>
-                </details>
-                <% } %>
-              </div>
-            </div>
-            <% if (isCompleted) { %>
-            <span class="outcome-badge <%= outcome %>"
-              ><%= outcome === 'success' ? 'SUCCESS!' : 'FAILURE!' %></span
-            >
-            <% } else if (isLocked) { %>
-            <span class="locked-badge">🔒 LOCKED</span>
-            <% } else if (canReveal) { %>
-            <span class="reveal"
-              ><img src="/images/reveal.gif" class="icon-gif" alt="reveal" /> CLICK TO REVEAL
-              <img src="/images/reveal.gif" class="icon-gif" alt="reveal"
-            /></span>
-            <% } %>
-          </div>
-          <% }); %>
+          <%- include('partials/challenge-list', { assignments, options: getChallengeCardOptions({ challengesEnabled: typeof challengesEnabled !== 'undefined' ? challengesEnabled : false }) }) %>
           <% } %>
         </div>
         <script>
