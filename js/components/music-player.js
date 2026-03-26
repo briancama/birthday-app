@@ -4,9 +4,9 @@
 import { appState } from "../app.js";
 
 class MusicPlayer extends HTMLElement {
-    _firstInteraction = true;
   constructor() {
     super();
+    this._firstInteraction = true;
     this.attachShadow({ mode: "open" });
     this.songs = [];
     this.currentIndex = 0;
