@@ -1,0 +1,45 @@
+.brispace-friends-list {
+  display: flex;
+  padding: 8px;
+  border: 1px solid var(--myspace-light-orange);
+  flex-wrap: wrap;
+  gap: 18px 12px;
+  margin-bottom: 0.8rem;
+
+  @media screen and (min-width: 768px) {
+    gap: 24px 18px;
+  }
+}
+.brispace-browse-link {
+  margin-top: 0.5rem;
+  text-align: right;
+}
+.brispace-browse-link a {
+  color: #003399;
+  font-weight: bold;
+  text-decoration: underline;
+}
+.brispace-auth {
+  margin-bottom: 2.2rem;
+}
+
+.myspace-footer {
+  background: #b6cdfb;
+  color: #003399;
+  text-align: center;
+  padding: 1.2rem 0 0.6rem 0;
+  margin-top: 2.5rem;
+  border-top: 2px solid #6699cc;
+}
+.footer-links {
+  margin-bottom: 0.5rem;
+}
+.footer-links a {
+  color: #003399;
+  text-decoration: underline;
+  margin: 0 0.5em;
+}
+.footer-copy {
+  font-size: 0.98em;
+  color: #336699;
+}

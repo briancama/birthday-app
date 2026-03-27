@@ -34,7 +34,7 @@ app.use(cookieParser(process.env.COOKIE_SECRET || "dev-secret"));
 // Activated only when NODE_ENV !== 'production'. Optionally override ID with
 // query `?devUserId=...` or env `DEV_LOCAL_USER_ID`.
 app.use((req, res, next) => {
-  if (process.env.NODE_ENV !== "production") {
+  if (process.env.NODE_ENV !== "production" && !process.env.DEV_DISABLE_AUTOLOGIN) {
     try {
       const signed = req.signedCookies && req.signedCookies.user_id;
       if (!signed) {
@@ -101,7 +101,6 @@ app.use(async (req, res, next) => {
     }
 
     if (!user) return next();
-
 
     // Run push subscription check, event_started, and challenges_enabled in parallel
     const [pushResult, eventFlagResult, challengesFlagResult] = await Promise.allSettled([
@@ -191,49 +190,27 @@ app.use((req, res, next) => {
   next();
 });
 
-// GET / — smart root handler:
-//   ?logout  → clear cookie and serve login page
-//   cookie present + valid user → server-side redirect to correct destination
-//   otherwise → fall through to express.static (serves index.html)
-app.get("/", async (req, res, next) => {
-  // Handle ?logout — clear server cookie and serve login page directly
-  if ("logout" in req.query) {
-    res.clearCookie("user_id");
-    return next(); // express.static serves index.html
-  }
-
-  const userId = req.signedCookies && req.signedCookies.user_id;
-  if (!userId) return next();
-
+// GET / — Brispace homepage
+app.get("/", async (req, res) => {
   try {
     const supabase = getSupabase();
-    if (!supabase) return next();
-
-    const { data } = await supabase
+    let latestUsers = [];
+    // Fetch latest 4 users with headshots
+    const { data: users } = await supabase
       .from("users")
-      .select("username, display_name, user_type")
-      .eq("id", userId)
-      .maybeSingle();
-
-    if (!data) return next(); // unknown user, serve login
-
-    const needsOnboarding = !data.display_name;
-    const userType = data.user_type || "visitor";
-    const username = data.username || null;
-
-    let destination;
-    if (needsOnboarding) {
-      destination = "/register";
-    } else if (userType === "participant") {
-      destination = "/dashboard";
-    } else {
-      destination = username ? `/users/${username}` : "/leaderboard";
+      .select("id, username, display_name, headshot")
+      .not("headshot", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(12); // fetch more in case some have missing headshots
+    if (Array.isArray(users)) {
+      latestUsers = users.filter((u) => u.headshot).slice(0, 4);
     }
-
-    return res.redirect(302, destination);
-  } catch (e) {
-    // On any error just serve the login page
-    return next();
+    // Get current user if authenticated
+    const currentUser =
+      res.locals.navData && res.locals.navData.user ? res.locals.navData.user : null;
+    return res.render("brispace", { latestUsers, currentUser });
+  } catch (err) {
+    return res.render("brispace", { latestUsers: [], currentUser: null });
   }
 });
 
@@ -251,7 +228,7 @@ async function fetchUserAssignments(supabase, user, eventStarted) {
       .order("assigned_at", { ascending: true });
     if (!error && Array.isArray(data)) {
       const sorted = data.slice().sort((a, b) => {
-        const grp = (r) => r.completed_at ? 2 : r.triggered_at ? 0 : 1;
+        const grp = (r) => (r.completed_at ? 2 : r.triggered_at ? 0 : 1);
         return grp(a) - grp(b);
       });
       sorted.forEach((row) => assignments.push(row));
@@ -273,15 +250,29 @@ app.get(["/dashboard", "/dashboard.html"], async (req, res) => {
     const user = res.locals && res.locals.navData && res.locals.navData.user;
     const eventStarted = !!(res.locals.navData && res.locals.navData.eventStarted);
     const challengesEnabled = !!(res.locals.navData && res.locals.navData.challengesEnabled);
-    const { assignments, assignmentsJson } = await fetchUserAssignments(supabase, user, eventStarted);
+    const { assignments, assignmentsJson } = await fetchUserAssignments(
+      supabase,
+      user,
+      eventStarted
+    );
     try {
       console.debug(`Dashboard: assignmentsJson length=${assignmentsJson.length}`);
     } catch (e) {}
-    return res.render("dashboard", { assignments, assignmentsJson, eventStarted, challengesEnabled });
+    return res.render("dashboard", {
+      assignments,
+      assignmentsJson,
+      eventStarted,
+      challengesEnabled,
+    });
   } catch (err) {
     console.warn("Dashboard server render failed to fetch assignments:", err && err.message);
     const assignmentsJson = JSON.stringify([]);
-    return res.render("dashboard", { assignments: [], assignmentsJson, eventStarted: false, challengesEnabled: false });
+    return res.render("dashboard", {
+      assignments: [],
+      assignmentsJson,
+      eventStarted: false,
+      challengesEnabled: false,
+    });
   }
 });
 
@@ -300,7 +291,6 @@ app.get(["/admin-approvals", "/admin-approvals.html"], (req, res) => {
   return res.render("admin-approvals");
 });
 
-
 // Cocktail Judging: server-rendered to include navigation partial
 app.get(["/cocktail-judging", "/cocktail-judging.html"], (req, res) => {
   return res.render("cocktail-judging");
@@ -313,11 +303,25 @@ app.get(["/challenges", "/challenges.html"], async (req, res) => {
     const user = res.locals && res.locals.navData && res.locals.navData.user;
     const eventStarted = !!(res.locals.navData && res.locals.navData.eventStarted);
     const challengesEnabled = !!(res.locals.navData && res.locals.navData.challengesEnabled);
-    const { assignments, assignmentsJson } = await fetchUserAssignments(supabase, user, eventStarted);
-    return res.render("challenges", { assignments, assignmentsJson, eventStarted, challengesEnabled });
+    const { assignments, assignmentsJson } = await fetchUserAssignments(
+      supabase,
+      user,
+      eventStarted
+    );
+    return res.render("challenges", {
+      assignments,
+      assignmentsJson,
+      eventStarted,
+      challengesEnabled,
+    });
   } catch (err) {
     const assignmentsJson = JSON.stringify([]);
-    return res.render("challenges", { assignments: [], assignmentsJson, eventStarted: false, challengesEnabled: false });
+    return res.render("challenges", {
+      assignments: [],
+      assignmentsJson,
+      eventStarted: false,
+      challengesEnabled: false,
+    });
   }
 });
 

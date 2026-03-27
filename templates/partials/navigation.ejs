@@ -22,14 +22,16 @@
   <div class="myspace-header__logo">
     <img src="/images/brispace_logo.jpg" alt="brispace logo" />
     <span id="secretArnold" class="secret-arnold">RICKTER</span>
-    <% if (navData && navData.user) { %>
-    <a href="/users/<%= navData.user.username %>" class="profile-nav-link">
-      <img src="/images/profile.gif" alt="profile" class="icon-gif user-profile-button" />
-    </a>
-    <% } %>
-    <button class="mobile-menu-toggle" data-sound="menu" aria-label="Toggle navigation menu">
-      <span class="hamburger-icon">☰</span>
-    </button>
+    <div class="nav-content-right">
+      <% if (navData && navData.user) { %>
+      <a href="/users/<%= navData.user.username %>" class="profile-nav-link">
+        <img src="/images/profile.gif" alt="profile" class="icon-gif user-profile-button" />
+      </a>
+      <% } %>
+      <button class="mobile-menu-toggle" data-sound="menu" aria-label="Toggle navigation menu">
+        <span class="hamburger-icon">☰</span>
+      </button>
+    </div>
   </div>
   <div class="nav-menu">
     <div class="nav-tabs">
@@ -177,7 +179,8 @@
   }
 </script>
 
-<!-- Y2K Timer: loaded on every page -->
+<!--
+Y2K Timer: commented out on request
 <script src="/js/components/y2k-timer.js"></script>
 <y2k-timer id="y2kTimer" no-fab position="bottom-left"></y2k-timer>
 
@@ -235,3 +238,4 @@
     });
   })();
 </script>
+-->

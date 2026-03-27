@@ -194,8 +194,11 @@ class FirebaseAuthService {
    */
   async signOut() {
     try {
-      await this.auth.signOut();
+      if (!this.auth) return;
+      await this.auth.signOut(); // this should clear Firebase's IndexedDB entry
       this.confirmationResult = null;
+      // Belt-and-suspenders: clear firebase_uid from localStorage
+      localStorage.removeItem("firebase_uid");
     } catch (err) {
       throw err;
     }

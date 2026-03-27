@@ -45,8 +45,13 @@ body.has-bottom-menu {
   margin-left: 0;
 }
 
-.profile-nav-link {
+.nav-content-right {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.profile-nav-link {
   margin-right: 12px;
   display: inline-flex;
   align-items: center;
@@ -207,7 +212,6 @@ body.has-bottom-menu {
   position: relative;
   border: 3px solid #000;
   background: white;
-  width: 100%;
   max-width: 800px;
   margin: 0 auto;
   padding-bottom: var(--spacing-sm);

@@ -1,0 +1,11 @@
+<div class="user-display-card">
+  <a href="/users/<%= user.username || user.id %>" class="user-display-link">
+    <div class="user-display-name"><%= user.display_name || user.username || 'User' %></div>
+    <img
+      class="user-display-avatar"
+      src="<%= user.headshot || '/images/headshot.jpg' %>"
+      alt="<%= user.display_name || user.username || 'User' %> avatar"
+      data-headshot="user-<%= user.id %>"
+    />
+  </a>
+</div>

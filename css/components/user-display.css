@@ -1,0 +1,30 @@
+.user-display-card {
+  display: inline-block;
+  text-align: center;
+  vertical-align: top;
+}
+.user-display-link {
+  text-decoration: none;
+  color: #003399;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.user-display-avatar {
+  width: 76px;
+  object-fit: contain;
+  background: #fff;
+  margin-bottom: 4px;
+
+  @media screen and (min-width: 768px) {
+    width: 88px;
+  }
+}
+.user-display-name {
+  font-size: 12px;
+  font-weight: bold;
+  color: #003399;
+  text-shadow: 0 1px 0 #fff;
+  margin-top: 2px;
+}

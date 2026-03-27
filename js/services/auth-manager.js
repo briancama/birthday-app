@@ -131,6 +131,7 @@ class AuthManager extends EventTarget {
     });
     this.currentUser = null;
     this.userId = null;
+    this.supabase = null;
     this.emit("user:logout", {});
     this.redirectToLogin();
   }
