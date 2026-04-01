@@ -226,6 +226,7 @@ body.has-bottom-menu {
 
 .myspace-container {
   background: white;
+  padding-bottom: 1.5rem;
 }
 
 /* No media query needed for toggle visibility */

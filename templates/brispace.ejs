@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BriSpace - A Place for Friends</title>
     <link rel="icon" type="image/png" href="/images/favicon.jpg" />
+    <link rel="stylesheet" href="/css/geocities.css" />
     <link rel="stylesheet" href="/css/components/myspace.css" />
     <link rel="stylesheet" href="/css/components/navigation.css" />
     <link rel="stylesheet" href="/css/components/brispace-home.css" />
@@ -28,7 +29,11 @@
               <p>
                 BriSpace is a place for friends, nostalgia, and self-expression. Create your
                 profile, connect with others, and relive the best of the 2000s internet—no
-                challenges required!
+                profile, connect with others, and relive the best of the 2000s internet. Whether
+                you're here to share your latest adventures, show off your old school bling, or just
+                hang out and get pwned by some bomb dot com memes, BriSpace is your space.
+                <p>When you're here you're family, and trust me we're eating good in the neighborhood.</p>
+                <p class="text-micro">I want my baby back, baby back, baby back.</p>
               </p>
             </div>
           </section>
@@ -52,19 +57,21 @@
           <% if (!currentUser) { %>
           <div id="loginSignupContainer"></div>
           <% } else { %>
-          <div class="brispace-welcome">
-            <h2>
+          <div class="login-signup-form">
+            <h3>
               Welcome back,
               <%= currentUser.display_name || 'friend' %>!
-            </h2>
-            <a href="/user/<%= currentUser.id %>" class="btn btn-primary">Go to your profile</a>
+            </h3>
+            <a href="/users/<%= currentUser.username %>"
+              >Go to your profile</a
+            >
           </div>
           <% } %>
         </aside>
       </div>
     </main>
 
-    <footer class="myspace-footer">
+    <footer class="myspace-footer full-width-content">
       <div class="footer-links">
         <a href="/about">About</a> | <a href="/privacy">Privacy</a> |
         <a href="/contact">Contact</a>
@@ -73,9 +80,7 @@
     </footer>
     <script type="module">
       import { createLoginSignupForm } from "/js/components/login-signup.js";
-      import { initNavigation } from "/js/components/navigation.js";
       import { BrispacePage } from "/js/pages/brispace.js";
-      initNavigation();
       const page = new BrispacePage();
       await page.init();
       const isAuthenticated = document.body.dataset.auth === "true";

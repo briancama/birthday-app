@@ -1,3 +1,14 @@
+.brispace-intro-box {
+  p:not(:last-of-type) {
+    margin-bottom: 1rem;
+    line-height: 1.35;
+  }
+}
+
+.text-micro {
+  font-size: 8px;
+}
+
 .brispace-friends-list {
   display: flex;
   padding: 8px;
@@ -19,16 +30,12 @@
   font-weight: bold;
   text-decoration: underline;
 }
-.brispace-auth {
-  margin-bottom: 2.2rem;
-}
 
 .myspace-footer {
   background: #b6cdfb;
   color: #003399;
   text-align: center;
   padding: 1.2rem 0 0.6rem 0;
-  margin-top: 2.5rem;
   border-top: 2px solid #6699cc;
 }
 .footer-links {

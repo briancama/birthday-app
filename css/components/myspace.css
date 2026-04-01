@@ -70,7 +70,6 @@
 
 .myspace {
   padding-top: 0;
-  background-image: none;
 }
 
 .myspace-profile-row {
@@ -143,6 +142,11 @@ body {
   border-color: var(--myspace-dark-blue);
 }
 
+/* Myspace navigation styles */
+.myspace .nav-tab {
+  color: white;
+}
+
 /* Header/layout styles moved to navigation.css for global reuse */
 
 .myspace-title {
@@ -161,11 +165,11 @@ body {
 
 .myspace-sidebar {
   width: 360px;
-  padding: 1rem;
 }
 .myspace-main {
   flex: 1;
   padding: 0.5rem;
+  padding-top: 0;
 }
 
 .myspace-name {
@@ -258,6 +262,11 @@ body {
   }
   .myspace-sidebar {
     width: 100%;
+    order: 1;
+  }
+
+  .myspace-main {
+    order: 2;
   }
   .myspace-profile-row {
     gap: 1rem;

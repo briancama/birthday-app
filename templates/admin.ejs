@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BriSpace :: Admin</title>
+    <link rel="icon" type="image/png" href="/images/favicon.jpg" />
+    <link rel="stylesheet" href="/css/geocities.css" />
+    <link rel="stylesheet" href="/css/components/myspace.css" />
+    <link rel="stylesheet" href="/css/components/navigation.css" />
+    <link rel="stylesheet" href="/css/components/login-signup.css" />
+    <link rel="stylesheet" href="/css/components/admin.css" />
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
+  </head>
+  <body class="myspace" data-auth="<%= !!currentUser %>">
+    <%- include('partials/navigation', { navData: (typeof navData !== 'undefined' ? navData : {}) })
+    %>
+
+    <main class="myspace-container full-width-content">
+      <div class="container myspace-layout admin-layout">
+        <!-- LEFT: Dashboard (intentionally obscured after login for Chaos Admin joke) -->
+        <div class="admin-dashboard-panel">
+          <div class="admin-dash-content <%= currentUser ? 'admin-dash-locked' : '' %>">
+            <div class="admin-dash-header">
+              <span class="admin-dash-title">BriSpace Control Panel v2.0</span>
+              <span class="admin-dash-status"><span class="admin-status-dot"></span> LIVE</span>
+            </div>
+
+            <!-- Stat Cards -->
+            <div class="admin-stat-cards">
+              <div class="admin-stat-card">
+                <div class="admin-stat-label">Total Users</div>
+                <div class="admin-stat-value">24</div>
+                <div class="admin-stat-delta">+3 this week</div>
+              </div>
+              <div class="admin-stat-card">
+                <div class="admin-stat-label">Active Sessions</div>
+                <div class="admin-stat-value">7</div>
+                <div class="admin-stat-delta admin-stat-delta--warn">2 suspicious</div>
+              </div>
+              <div class="admin-stat-card">
+                <div class="admin-stat-label">Challenges Pending</div>
+                <div class="admin-stat-value">12</div>
+                <div class="admin-stat-delta">Needs approval</div>
+              </div>
+              <div class="admin-stat-card">
+                <div class="admin-stat-label">System Load</div>
+                <div class="admin-stat-value">34%</div>
+                <div class="admin-stat-delta admin-stat-delta--ok">Nominal</div>
+              </div>
+            </div>
+
+            <!-- Fake Bar Chart -->
+            <div class="admin-chart-box">
+              <div class="admin-chart-label">Daily Active Users &mdash; Last 7 Days</div>
+              <div class="admin-chart">
+                <div class="admin-bar" style="height: 40%"><span>M</span></div>
+                <div class="admin-bar" style="height: 65%"><span>T</span></div>
+                <div class="admin-bar" style="height: 50%"><span>W</span></div>
+                <div class="admin-bar" style="height: 90%"><span>T</span></div>
+                <div class="admin-bar" style="height: 75%"><span>F</span></div>
+                <div class="admin-bar admin-bar--today" style="height: 85%"><span>S</span></div>
+                <div class="admin-bar" style="height: 30%"><span>S</span></div>
+              </div>
+            </div>
+
+            <!-- Recent Users Table -->
+            <div class="admin-table-box">
+              <div class="admin-table-label">Recent Registrations</div>
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Username</th>
+                    <th>Joined</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>guest_42</td>
+                    <td>2d ago</td>
+                    <td>participant</td>
+                    <td><span class="admin-badge admin-badge--ok">Active</span></td>
+                  </tr>
+                  <tr>
+                    <td>coolkid99</td>
+                    <td>3d ago</td>
+                    <td>participant</td>
+                    <td><span class="admin-badge admin-badge--ok">Active</span></td>
+                  </tr>
+                  <tr>
+                    <td>???</td>
+                    <td>5d ago</td>
+                    <td>unknown</td>
+                    <td><span class="admin-badge admin-badge--warn">Review</span></td>
+                  </tr>
+                  <tr>
+                    <td>nightowl_x</td>
+                    <td>1w ago</td>
+                    <td>participant</td>
+                    <td><span class="admin-badge admin-badge--ok">Active</span></td>
+                  </tr>
+                  <tr>
+                    <td>tester_bot</td>
+                    <td>1w ago</td>
+                    <td>spectator</td>
+                    <td><span class="admin-badge">Idle</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- System Activity Log -->
+            <div class="admin-log-box">
+              <div class="admin-table-label">System Log</div>
+              <div class="admin-log">
+                <div class="admin-log-entry">
+                  <span class="admin-log-time">08:42:01</span> Challenge #14 submitted for review
+                </div>
+                <div class="admin-log-entry">
+                  <span class="admin-log-time">07:18:55</span> User <em>nightowl_x</em> completed
+                  challenge
+                </div>
+                <div class="admin-log-entry admin-log-entry--warn">
+                  <span class="admin-log-time">06:03:12</span> Failed login attempt (3x) for unknown
+                  user
+                </div>
+                <div class="admin-log-entry">
+                  <span class="admin-log-time">05:51:00</span> Leaderboard recalculated
+                </div>
+                <div class="admin-log-entry">
+                  <span class="admin-log-time">02:00:00</span> Nightly backup completed
+                </div>
+              </div>
+            </div>
+
+            <% if (currentUser) { %>
+            <!-- Admin Actions (only shown when logged in) -->
+            <div class="admin-actions">
+              <a href="/admin-approvals" class="admin-action-btn">Challenge Approvals</a>
+              <a href="/leaderboard" class="admin-action-btn">Leaderboard</a>
+              <a href="/cocktail-judging" class="admin-action-btn">Cocktail Judging</a>
+            </div>
+            <% } %>
+          </div>
+
+          <% if (!currentUser) { %>
+          <!-- Default Overlay (non-logged-in users) -->
+          <div class="admin-lock-overlay">
+            <div class="admin-lock-content">
+              <img
+                src="/images/construction.gif"
+                alt="under construction"
+                class="admin-lock-gif"
+                onerror="this.style.display = 'none'"
+              />
+              <div class="admin-lock-title">AUTHORIZED ACCESS ONLY</div>
+              <div class="admin-lock-sub">
+                Administrative controls are currently unavailable.<br />Please verify to continue.
+              </div>
+            </div>
+          </div>
+          <% } else { %>
+          <!-- Chaos Overlay (logged-in users on admin page) -->
+          <div class="admin-lock-overlay admin-chaos-overlay">
+            <div class="admin-lock-content admin-chaos-content">
+              <div class="admin-lock-title">ADMINISTRATOR MODE</div>
+              <button type="button" id="adminChaosButton" class="admin-chaos-btn">
+                ACTIVATE VIBE CODE PROTOCOL
+              </button>
+              <div
+                class="admin-chaos-copy"
+                data-prefix="Tests"
+                data-suffix="spiritually passing."
+              ></div>
+              <div
+                class="admin-chaos-copy"
+                data-prefix="Rollback strategy"
+                data-suffix="positive thinking."
+              ></div>
+              <div class="admin-chaos-fineprint" data-final-text="spaghetti code complete"></div>
+            </div>
+          </div>
+          <% } %>
+        </div>
+
+        <!-- RIGHT: Login sidebar -->
+        <aside class="myspace-sidebar brispace-auth admin-sidebar">
+          <% if (!currentUser) { %>
+          <div class="admin-login-box">
+            <div class="admin-login-header">
+              <img
+                src="/images/star_icon.gif"
+                alt="star"
+                class="icon-gif"
+                onerror="this.style.display = 'none'"
+              />
+              Administrator Override
+              <img
+                src="/images/star_icon.gif"
+                alt="star"
+                class="icon-gif"
+                onerror="this.style.display = 'none'"
+              />
+            </div>
+            <p class="admin-login-hint">Verify your phone number to claim admin privileges.</p>
+            <div id="adminLoginContainer"></div>
+          </div>
+          <% } else { %>
+          <div class="admin-welcome-box">
+            <div class="admin-login-header">
+              Welcome back, <%= currentUser.display_name || currentUser.username %>.
+            </div>
+            <p class="admin-login-hint">The kingdom is yours. Try not to break it.</p>
+          </div>
+          <% } %>
+        </aside>
+      </div>
+    </main>
+
+    <footer class="myspace-footer full-width-content">
+      <div class="footer-links">
+        <a href="/about">About</a> | <a href="/privacy">Privacy</a> | <a href="/contact">Contact</a>
+      </div>
+      <div class="footer-copy">&copy; 2004 BriSpace. All rights reserved.</div>
+    </footer>
+
+    <script type="module">
+      import { createLoginSignupForm } from "/js/components/login-signup.js";
+      import { AdminPage } from "/js/pages/admin.js";
+
+      const page = new AdminPage();
+      await page.init();
+
+      const hasCookie = (name) => {
+        const prefix = `${name}=`;
+        return document.cookie.split(";").some((part) => part.trim().startsWith(prefix));
+      };
+
+      const setChaosButtonComplete = (button) => {
+        if (!button) return;
+        button.textContent = "Vibe Check - Passed";
+        button.disabled = true;
+        button.classList.add("admin-chaos-btn--complete");
+      };
+
+      const isAuthenticated = document.body.dataset.auth === "true";
+      if (!isAuthenticated) {
+        const container = document.getElementById("adminLoginContainer");
+        if (container) {
+          const form = createLoginSignupForm({
+            heading: "New Administrator Phone Verification",
+            loginLabel: "Login",
+            hideSignup: true,
+            postLoginRedirect: "/admin",
+            onSuccess: () => {
+              window.location.href = "/admin";
+            },
+          });
+          container.appendChild(form);
+        }
+      } else {
+        const chaosButton = document.getElementById("adminChaosButton");
+        const chaosLines = Array.from(document.querySelectorAll(".admin-chaos-copy"));
+        const chaosFineprint = document.querySelector(".admin-chaos-fineprint");
+
+        if (hasCookie("brispace_forgot_phone_seen")) {
+          setChaosButtonComplete(chaosButton);
+        }
+
+        const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+        const typeText = async (element, text, delay = 34) => {
+          element.textContent = "";
+          for (const char of text) {
+            element.textContent += char;
+            await wait(delay);
+          }
+        };
+
+        const animateLine = async (element) => {
+          const prefix = element.dataset.prefix || "";
+          const suffix = element.dataset.suffix || "";
+
+          element.textContent = prefix;
+          await wait(220);
+
+          for (let index = 0; index < 3; index += 1) {
+            element.textContent = `${prefix}${".".repeat(index + 1)}`;
+            await wait(180);
+          }
+
+          element.textContent = `${prefix}: `;
+          await wait(120);
+          for (const char of suffix) {
+            element.textContent += char;
+            await wait(26);
+          }
+        };
+
+        const animateChaosSequence = async () => {
+          chaosLines.forEach((line) => {
+            line.textContent = "";
+          });
+          if (chaosFineprint) chaosFineprint.textContent = "";
+
+          for (const line of chaosLines) {
+            await animateLine(line);
+            await wait(240);
+          }
+
+          if (chaosFineprint) {
+            await typeText(chaosFineprint, chaosFineprint.dataset.finalText || "", 24);
+          }
+        };
+
+        if (chaosButton) {
+          chaosButton.addEventListener("click", async () => {
+            if (chaosButton.classList.contains("admin-chaos-btn--complete")) return;
+            chaosButton.disabled = true;
+            try {
+              await animateChaosSequence();
+
+              if (!localStorage.getItem("brispace_forgot_flow")) return;
+
+              window.dispatchEvent(
+                new CustomEvent("achievement:trigger", {
+                  detail: { key: "forgot_phone", source: "adminChaosButton" },
+                })
+              );
+
+              localStorage.removeItem("brispace_forgot_flow");
+              document.cookie =
+                "brispace_forgot_phone_seen=1; path=/; max-age=31536000; samesite=lax";
+              setChaosButtonComplete(chaosButton);
+            } catch (_) {
+            } finally {
+              if (!chaosButton.classList.contains("admin-chaos-btn--complete")) {
+                chaosButton.disabled = false;
+              }
+            }
+          });
+        }
+      }
+    </script>
+  </body>
+</html>

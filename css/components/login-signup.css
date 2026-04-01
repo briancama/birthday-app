@@ -5,6 +5,13 @@
   max-width: 340px;
   margin: 0 auto 24px auto;
   box-shadow: 0 2px 12px #b6cdfb44;
+
+  @media screen and (max-width: 768px) {
+    padding: 24px 0.5rem;
+    margin: 0.5rem 0.5rem 1.5rem;
+    box-shadow: none;
+    max-width: none;
+  }
 }
 .login-signup-step {
   margin-bottom: 18px;
@@ -13,29 +20,52 @@
   gap: 8px;
 }
 .login-signup-form label {
-  font-weight: bold;
   color: #003399;
   margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: normal;
 }
 .login-signup-form input[type="tel"],
 .login-signup-form input[type="text"] {
   padding: 8px;
-  border-radius: 6px;
   border: 1.5px solid #6699cc;
   font-size: 1em;
   margin-bottom: 4px;
 }
 .login-signup-form button {
-  background: #6699cc;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
+  background: unset;
+  font-family: Verdana;
+  text-shadow: none;
+  text-transform: uppercase;
+  font-weight: normal;
+  border-style: solid;
+  border-width: 1px;
+  /* border-style: inherit; */
   padding: 8px 16px;
   font-size: 1em;
   cursor: pointer;
   margin-top: 6px;
 }
-.login-signup-form button:disabled {
+
+.login-signup-form .login-secondary-btn {
+  border-color: #ccc #444 #444 #ccc;
+  color: var(--myspace-dark-blue);
+  transition: background 0.3s ease-in-out;
+  &:hover {
+    background: var(--myspace-light-blue);
+  }
+}
+
+.login-signup-form .login-primary-btn {
+  background: var(--myspace-orange);
+  border-color: var(--myspace-light-orange) #da5500 #da5500 var(--myspace-light-orange);
+  color: white;
+  transition: background 0.3s ease-in-out;
+  &:hover {
+    background: #da5500;
+  }
+}
+.login .login-signup-form button:disabled {
   background: #b6cdfb;
   color: #888;
 }

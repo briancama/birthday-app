@@ -286,6 +286,13 @@ app.get(["/challenges-submit", "/challenges-submit.html"], (req, res) => {
   return res.render("challenges-submit");
 });
 
+// Admin: server-rendered landing with dashboard and login
+app.get(["/admin", "/admin.html"], (req, res) => {
+  const currentUser =
+    res.locals.navData && res.locals.navData.user ? res.locals.navData.user : null;
+  return res.render("admin", { currentUser });
+});
+
 // Admin Approvals: server-rendered to include navigation partial
 app.get(["/admin-approvals", "/admin-approvals.html"], (req, res) => {
   return res.render("admin-approvals");

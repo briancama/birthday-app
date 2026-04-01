@@ -36,6 +36,38 @@
   <div class="nav-menu">
     <div class="nav-tabs">
 <% } %>
+      <% const isLoggedIn = !!(navData && navData.user); %>
+      <% const isParticipant = !!(isLoggedIn && navData.user.user_type === 'participant'); %>
+      <% const isVisitorView = !isParticipant; %>
+
+      <% if (isVisitorView) { %>
+      <a href="/" class="nav-tab" data-sound="menu" data-page="home">
+        <img src="/images/home.gif" alt="home" class="icon-gif icon-gif--lg icon-gif--with-text" />
+        <span>HOME</span>
+      </a>
+      <a href="/browse" class="nav-tab" data-sound="menu" data-page="browse">
+        <img src="/images/reveal.gif" alt="browse" class="icon-gif icon-gif--lg icon-gif--with-text" />
+        <span>BROWSE</span>
+      </a>
+      <a href="/leaderboard" class="nav-tab" data-sound="menu" data-page="leaderboard">
+        <img src="/images/trophy.gif" alt="trophy" class="icon-gif icon-gif--with-text" />
+        <span>LEADERBOARD</span>
+      </a>
+      <% if (isLoggedIn) { %>
+      <a href="/users/<%= navData.user.username %>" class="nav-tab" data-sound="menu" data-page="edit-profile">
+        <img src="/images/pencil.gif" alt="profile" class="icon-gif icon-gif--lg icon-gif--with-text" />
+        <span>EDIT PROFILE</span>
+      </a>
+      <button class="nav-tab logout-btn">
+        <img
+          src="/images/logout.gif"
+          alt="logout"
+          class="icon-gif icon-gif--lg icon-gif--with-text"
+        />
+        <span>LOGOUT</span>
+      </button>
+      <% } %>
+      <% } else { %>
       <% if (navData && navData.user && navData.user.user_type === 'participant') { %>
       <a href="/dashboard" class="nav-tab" data-sound="menu" data-page="dashboard">
         <img src="/images/home.gif" alt="home" class="icon-gif icon-gif--lg icon-gif--with-text" />
@@ -90,6 +122,7 @@
         />
         <span>LOGOUT</span>
       </button>
+      <% } %>
     </div>
   </div>
 
