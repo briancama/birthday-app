@@ -485,7 +485,7 @@ class MusicPlayer extends HTMLElement {
     this.shadowRoot.innerHTML = `
   ${style}
   <div class="music-player">
-    <div class="music-title"><img class="music-icon" src="images/music_note.gif" alt="Music Icon" /> 2000s Music Player</div>
+    <div class="music-title"><img class="music-icon" src="/images/music_note.gif" alt="Music Icon" /> 2000s Music Player</div>
     ${controls}
     ${current}
     ${songDropdown}

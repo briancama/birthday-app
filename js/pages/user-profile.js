@@ -4,6 +4,8 @@ import { BasePage } from "./base-page.js";
 import { appState } from "../app.js";
 import { featureFlags } from "../utils/feature-flags.js";
 import { createCommentCard } from "../components/myspace-comment-card.js";
+import { MUSIC_SONGS } from "../constants/music-songs.js";
+import { SecretTrackPlayer } from "../components/secret-track-player.js";
 
 class UserProfilePage extends BasePage {
   constructor() {
@@ -21,6 +23,7 @@ class UserProfilePage extends BasePage {
     if (this.isOwner) document.body.classList.add("is-owner");
 
     this.setupHeadshotUpload();
+    this.setupMusicPlayer();
     this.setupInlineEdits();
     this.loadAchievements();
     this.loadWall();
@@ -98,6 +101,37 @@ class UserProfilePage extends BasePage {
       uploader.init().then((uploadEl) => {
         aboutDiv.appendChild(uploadEl);
       });
+    });
+  }
+
+  // ── Music player ──────────────────────────────────────────────────────────
+  setupMusicPlayer() {
+    import("../components/music-player.js").then(({ MusicPlayer }) => {
+      let container = document.getElementById("musicPlayerContainer");
+      if (!container) {
+        container = document.createElement("div");
+        container.id = "musicPlayerContainer";
+        const aboutDiv = document.querySelector(".myspace-about");
+        if (aboutDiv) aboutDiv.insertBefore(container, aboutDiv.firstChild);
+        else document.body.insertBefore(container, document.body.firstChild);
+      }
+      const player = document.createElement("music-player");
+      player.setSongs(MUSIC_SONGS);
+      container.innerHTML = "";
+      container.appendChild(player);
+      player.addEventListener("music:secret-rewind", () => {
+        const secretPlayer = new SecretTrackPlayer();
+        secretPlayer.open();
+      });
+      const startOnGesture = () => {
+        if (!player.isPlaying) player.togglePlayPause();
+        document.removeEventListener("click", startOnGesture);
+        document.removeEventListener("touchend", startOnGesture);
+        document.removeEventListener("keydown", startOnGesture);
+      };
+      document.addEventListener("click", startOnGesture, { once: true });
+      document.addEventListener("touchend", startOnGesture, { once: true });
+      document.addEventListener("keydown", startOnGesture, { once: true });
     });
   }
 
