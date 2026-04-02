@@ -31,7 +31,7 @@
 }
 
 .profile-edit-btn--below {
-  bottom: -24px;
+  bottom: -32px;
   right: 0;
 }
 
@@ -380,4 +380,16 @@ body.is-owner .wall-entry__delete,
   color: #666;
   font-size: 0.85rem;
   margin-top: 0.5rem;
+}
+
+.profile-publish-toggle {
+  color: var(--myspace-orange);
+  font-size: 13px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+
+  &:has(input:checked) {
+    color: var(--myspace-mid-blue);
+  }
 }

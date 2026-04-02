@@ -55,11 +55,10 @@
                   class="myspace-headshot"
                   data-headshot="user-profile"
                 />
-                <div id="challenge-user-container" style="margin-top: 12px">
-                  <button id="challenge-user-btn" class="btn btn-primary" style="display: none">
-                    Challenge
-                  </button>
-                </div>
+                <!-- Add User to top 8 -->
+                <% if (typeof isOwnProfile !== 'undefined' && !isOwnProfile && typeof isInTopN !== 'undefined' && !isInTopN) { %>
+                  <button id="add-to-topn-btn" class="btn btn--primary">Add to my Top 8</button>
+                <% } %>
               </div>
               <div class="myspace-about">
                 <p class="profile-status-text" data-display="status">
@@ -78,6 +77,7 @@
                 </div>
               </div>
             </div>
+            <!-- Challenge button removed: replaced by Top 8 and publish profile features -->
             <button id="edit-profile-btn" class="profile-edit-btn profile-edit-btn--below">
               ✏ edit
             </button>
@@ -113,6 +113,15 @@
               </div>
             </form>
           </div>
+          <!-- User Publish Toggle -->
+          <% if (typeof isOwnProfile !== 'undefined' && isOwnProfile) { %>
+            <div class="profile-publish-toggle-standalone">
+              <label class="profile-publish-toggle">
+                <input type="checkbox" id="publish-profile-toggle" data-field="is_published" <%= user.is_published ? 'checked' : '' %> />
+                <span>Publish my profile (visible to others)</span>
+              </label>
+            </div>
+          <% } %>
           <section class="event-details-card myspace-section profile-section">
             <div class="event-details-header">
               <%= profile_title || (user.display_name ? user.display_name + "'s Interests" :
@@ -287,10 +296,7 @@
 
     <script src="/js/components/gif-stepper.js"></script>
     <script type="module">
-      import { navigationController } from "/js/components/navigation.js";
       import { UserProfilePage } from "/js/pages/user-profile.js";
-
-      navigationController.init();
 
       const page = new UserProfilePage();
       window.addEventListener("DOMContentLoaded", () => page.init());

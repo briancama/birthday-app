@@ -25,7 +25,6 @@
 .event-details-card {
   background: var(--myspace-light-blue);
   border: 2px solid #6699cc;
-  max-width: 350px;
   margin: 1rem 0;
 }
 .event-details-header {
@@ -70,6 +69,44 @@
 
 .myspace {
   padding-top: 0;
+
+  .btn {
+  background: unset;
+  font-family: Verdana;
+  text-shadow: none;
+  text-transform: uppercase;
+  font-weight: normal;
+  border-style: solid;
+  border-width: 1px;
+  /* border-style: inherit; */
+  padding: 8px 16px;
+  font-size: 1em;
+  cursor: pointer;
+    margin-top: 6px;
+  }
+
+  .btn--secondary{
+    border-color: #ccc #444 #444 #ccc;
+    color: var(--myspace-dark-blue);
+    transition: background 0.3s ease-in-out;
+    &:hover {
+      background: var(--myspace-light-blue);
+    }
+  }
+
+  .btn--primary {
+    background: var(--myspace-orange);
+    border-color: var(--myspace-light-orange) #da5500 #da5500 var(--myspace-light-orange);
+    color: white;
+    transition: background 0.3s ease-in-out;
+    &:hover {
+      background: #da5500;
+    }
+  }
+  .btn:disabled {
+    background: #b6cdfb;
+    color: #888;
+  }
 }
 
 .myspace-profile-row {
@@ -80,7 +117,6 @@
 }
 .myspace-headshot {
   width: 180px;
-  aspect-ratio: 2 / 3;
   height: auto;
   object-fit: contain;
   object-position: top center;
@@ -165,6 +201,7 @@ body {
   margin: 0 auto;
   padding-top: 2rem;
   max-width: 1000px;
+  padding-left: 0.5rem;
 }
 
 .myspace-sidebar {
@@ -222,6 +259,7 @@ body {
 .myspace-about {
   font-size: 1em;
   margin-bottom: 0;
+  min-height: 220px;
 }
 
 .myspace-about__hint {
@@ -263,6 +301,7 @@ body {
     flex-direction: column;
     gap: 0;
     padding-top: 0.75rem;
+    padding: 0.75rem 0.5rem 0;
   }
   .myspace-sidebar {
     width: 100%;
@@ -271,6 +310,8 @@ body {
 
   .myspace-main {
     order: 2;
+    padding-left: 0;
+    padding-right: 0;
   }
   .myspace-profile-row {
     gap: 1rem;
@@ -301,6 +342,17 @@ body {
    and falls back to removing top margin on the GIF section for older browsers. */
   .myspace-section:has(+ .myspace-section .myspace-section-gif) {
     margin-bottom: 0;
+  }
+
+  .event-details-card {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .myspace-headshot {
+    width: 140px;
   }
 }
 

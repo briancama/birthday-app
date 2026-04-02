@@ -393,7 +393,10 @@ const ALLOWED_PROFILE_FIELDS = [
   "about_html",
   "general_interest",
   "television",
+  "is_published",
 ];
+
+// Note: looking_for was removed — column does not exist in user_profile table.
 
 router.patch("/users/:id/profile-fields", async (req, res) => {
   try {
@@ -406,7 +409,12 @@ router.patch("/users/:id/profile-fields", async (req, res) => {
     for (const field of ALLOWED_PROFILE_FIELDS) {
       if (field in (req.body || {})) {
         const val = req.body[field];
-        updates[field] = typeof val === "string" ? val.trim().slice(0, 300) : null;
+        if (field === "is_published") {
+          // Accept boolean or string 'true'/'false'
+          updates[field] = val === true || val === 'true';
+        } else {
+          updates[field] = typeof val === "string" ? val.trim().slice(0, 300) : null;
+        }
       }
     }
     // Coerce age to integer (stored as integer column)

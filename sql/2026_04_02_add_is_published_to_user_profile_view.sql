@@ -1,7 +1,7 @@
--- Canonical definition of user_profile_view.
--- Run this AFTER user_profile_fields.sql (which adds the flat columns).
--- NOTE: Uses DROP + CREATE (not CREATE OR REPLACE) because PostgreSQL does not
--- allow renaming view columns via CREATE OR REPLACE VIEW.
+-- 2026_04_02_add_is_published_to_user_profile_view.sql
+-- Recreates user_profile_view to expose is_published (replaces is_public).
+-- Must DROP first because PostgreSQL does not allow renaming view columns
+-- via CREATE OR REPLACE VIEW.
 
 DROP VIEW IF EXISTS public.user_profile_view;
 

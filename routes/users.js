@@ -69,7 +69,7 @@ router.get("/:identifier", async (req, res) => {
             profile_intro: null,
             profile_title: null,
             profile_details: [],
-            is_public: true,
+            is_published: false,
           };
         }
       } catch (e) {
@@ -94,13 +94,14 @@ router.get("/:identifier", async (req, res) => {
       // Sidebar detail fields
       status: data.status || null,
       hometown: data.hometown || null,
-      looking_for: data.looking_for || null,
       fav_movie: data.fav_movie || null,
       fav_song: data.fav_song || null,
       general_interest: data.general_interest || null,
       television: data.television || null,
       // Top N — ensure it's always an array
       top_n: Array.isArray(data.top_n) ? data.top_n : [],
+      // Publish toggle state
+      is_published: data.is_published === true,
     };
 
     // userCount = number of registered users (display_name set) — drives the Top N feature
@@ -133,12 +134,24 @@ router.get("/:identifier", async (req, res) => {
 
     // Render template; wrap to provide clearer template error context when EJS fails
     try {
+      // Use navData.user.id for current user identity
+      let isOwnProfile = false;
+      let isInTopN = false;
+      const navUserId = res.locals && res.locals.navData && res.locals.navData.user && res.locals.navData.user.id;
+      const profileId = (user.id || "") + "";
+      if (navUserId && navUserId === profileId) isOwnProfile = true;
+      // Check if viewer is in this user's Top N
+      if (navUserId && Array.isArray(user.top_n)) {
+        isInTopN = user.top_n.some(u => u && (String(u.id) === navUserId || String(u.user_id) === navUserId));
+      }
       res.render("user", {
         user,
         profile_title: data.profile_title,
         userCount,
         allUsers: allUsers || [],
         userAchievements: userAchievements || [],
+        isOwnProfile,
+        isInTopN,
       });
     } catch (renderErr) {
       // Log a helpful snippet around the reported template line if available

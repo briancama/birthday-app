@@ -29,6 +29,32 @@ class UserProfilePage extends BasePage {
     this.loadWall();
     this.setupWallPost();
     this.setupChallengeButton();
+
+    // Wire up publish profile toggle (standalone)
+    if (this.isOwner) {
+      const publishToggle = document.getElementById("publish-profile-toggle");
+      if (publishToggle) {
+        publishToggle.addEventListener("change", async (e) => {
+          publishToggle.disabled = true;
+          const checked = publishToggle.checked;
+          try {
+            const resp = await fetch(`/api/users/${this.profileUserId}/profile-fields`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({ is_published: checked }),
+            });
+            if (!resp.ok) throw new Error((await resp.json()).error || resp.statusText);
+            this.showSuccessToast(checked ? "Profile published!" : "Profile hidden.");
+          } catch (err) {
+            this.showErrorToast("Failed to update profile visibility: " + err.message);
+            publishToggle.checked = !checked; // revert
+          } finally {
+            publishToggle.disabled = false;
+          }
+        });
+      }
+    }
   }
 
   // Show and wire the "Challenge this user" button when appropriate.

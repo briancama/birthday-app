@@ -70,10 +70,10 @@ export function createLoginSignupForm({
   buttonRow.style.gap = "0.5em";
   // Two buttons: Login and Sign Up
   const loginBtn = document.createElement("button");
-  loginBtn.classList.add("login-secondary-btn");
+  loginBtn.classList.add("btn", "btn--secondary");
   loginBtn.textContent = loginLabel || "Login";
   const signupBtn = document.createElement("button");
-  signupBtn.classList.add("login-primary-btn");
+  signupBtn.classList.add("btn", "btn--primary");
   signupBtn.textContent = signupLabel || "Sign Up";
   loginBtn.style.marginRight = "0.5em";
 
