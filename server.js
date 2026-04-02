@@ -195,15 +195,24 @@ app.get("/", async (req, res) => {
   try {
     const supabase = getSupabase();
     let latestUsers = [];
-    // Fetch latest 4 users with headshots
+    // Fetch latest 4 users with headshots from public profiles only
     const { data: users } = await supabase
-      .from("users")
-      .select("id, username, display_name, headshot")
+      .from("user_profile_view")
+      .select("user_id, username, display_name, headshot, is_public, created_at")
+      .eq("is_public", true)
       .not("headshot", "is", null)
       .order("created_at", { ascending: false })
       .limit(12); // fetch more in case some have missing headshots
     if (Array.isArray(users)) {
-      latestUsers = users.filter((u) => u.headshot).slice(0, 4);
+      latestUsers = users
+        .filter((u) => u.headshot)
+        .slice(0, 4)
+        .map((u) => ({
+          id: u.user_id,
+          username: u.username,
+          display_name: u.display_name,
+          headshot: u.headshot,
+        }));
     }
     // Get current user if authenticated
     const currentUser =
