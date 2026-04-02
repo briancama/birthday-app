@@ -196,13 +196,16 @@ app.get("/", async (req, res) => {
     const supabase = getSupabase();
     let latestUsers = [];
     // Fetch latest 4 users with headshots from public profiles only
-    const { data: users } = await supabase
+    const { data: users, error: usersError } = await supabase
       .from("user_profile_view")
-      .select("user_id, username, display_name, headshot, is_public, created_at")
-      .eq("is_public", true)
+      .select("user_id, username, display_name, headshot, is_published, created_at")
+      .eq("is_published", true)
       .not("headshot", "is", null)
       .order("created_at", { ascending: false })
       .limit(12); // fetch more in case some have missing headshots
+    if (usersError) {
+      console.warn("Homepage latestUsers query failed:", usersError.message || usersError);
+    }
     if (Array.isArray(users)) {
       latestUsers = users
         .filter((u) => u.headshot)
