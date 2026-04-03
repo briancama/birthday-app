@@ -17,7 +17,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
   </head>
   <body class="myspace" data-auth="<%= !!currentUser %>">
-    <%- include('partials/navigation', { navData: (typeof navData !== 'undefined' ? navData : {}) })
+    <%- include('partials/navigation-visitor', { navData: (typeof navData !== 'undefined' ? navData : {}) })
     %>
     <main class="myspace-container full-width-content">
       <div class="container myspace-layout">
@@ -46,7 +46,7 @@
               user: user }) %> <% }); %>
             </div>
             <div class="brispace-browse-link">
-              <a href="/browse">Browse all &rarr;</a>
+              <a href="/friends">Browse all &rarr;</a>
             </div>
           </section>
           <% } %>

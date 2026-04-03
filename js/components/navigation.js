@@ -127,6 +127,7 @@ class NavigationController {
 
   getCurrentPage() {
     const path = window.location.pathname;
+    if (path.includes("friends")) return "friends";
     if (path.includes("dashboard")) return "dashboard";
     if (path.includes("leaderboard")) return "leaderboard";
     if (path.includes("event-info")) return "event-info";
@@ -141,6 +142,7 @@ class NavigationController {
 
   getPageTitle() {
     const pageTitles = {
+      friends: "Browse",
       dashboard: "Dashboard",
       leaderboard: "Leaderboard",
       "event-info": "Event Info",

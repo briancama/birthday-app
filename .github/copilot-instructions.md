@@ -86,6 +86,17 @@ Always implement and call `cleanup()` in pages/components to remove event listen
 - Confirm consistency in markup, CSS, and JS logic for navigation and mobile menu.
 - Add a note in copilot-instructions.md describing the update and affected files/components.
 
+### Brispace Visitor Navigation Split (2026)
+
+- Brispace visitor surfaces use a dedicated partial: `templates/partials/navigation-visitor.ejs`.
+- This split currently applies to:
+  - `templates/brispace.ejs`
+  - `templates/friends.ejs`
+  - `templates/user.ejs`
+- Keep `templates/partials/navigation.ejs` for participant/event app surfaces (dashboard/challenges/event-info/admin/cocktail pages).
+- The visitor partial intentionally keeps visitor-first menu items with reduced participant-specific branching.
+- If global navigation shell/markup changes (logo/header/toggle structure), update both partials to avoid drift unless the divergence is intentional.
+
 ---
 
 ### Rules for New Updates

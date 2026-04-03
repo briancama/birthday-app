@@ -1,0 +1,145 @@
+<% const visitorNavData = typeof navData !== 'undefined' && navData ? navData : {}; %>
+<% const isLoggedIn = !!visitorNavData.user; %>
+
+<div class="myspace-header full-width-content">
+  <div class="myspace-header__logo">
+    <a href="/" aria-label="Go to home page">
+      <img src="/images/brispace_logo.jpg" alt="brispace logo" />
+    </a>
+    <span id="secretArnold" class="secret-arnold">RICKTER</span>
+    <div class="nav-content-right">
+      <% if (isLoggedIn) { %>
+      <a href="/users/<%= visitorNavData.user.username %>" class="profile-nav-link">
+        <img src="/images/profile.gif" alt="profile" class="icon-gif user-profile-button" />
+      </a>
+      <% } %>
+      <button class="mobile-menu-toggle" data-sound="menu" aria-label="Toggle navigation menu">
+        <span class="hamburger-icon">☰</span>
+      </button>
+    </div>
+  </div>
+  <div class="nav-menu">
+    <div class="nav-tabs">
+      <a href="/" class="nav-tab" data-sound="menu" data-page="home">
+        <img src="/images/home.gif" alt="home" class="icon-gif icon-gif--lg icon-gif--with-text" />
+        <span>HOME</span>
+      </a>
+      <a href="/browse" class="nav-tab" data-sound="menu" data-page="browse">
+        <img
+          src="/images/reveal.gif"
+          alt="browse"
+          class="icon-gif icon-gif--lg icon-gif--with-text"
+        />
+        <span>BROWSE</span>
+      </a>
+      <a href="/leaderboard" class="nav-tab" data-sound="menu" data-page="leaderboard">
+        <img src="/images/trophy.gif" alt="trophy" class="icon-gif icon-gif--with-text" />
+        <span>LEADERBOARD</span>
+      </a>
+      <% if (isLoggedIn) { %>
+      <a
+        href="/users/<%= visitorNavData.user.username %>"
+        class="nav-tab"
+        data-sound="menu"
+        data-page="edit-profile"
+      >
+        <img
+          src="/images/pencil.gif"
+          alt="profile"
+          class="icon-gif icon-gif--lg icon-gif--with-text"
+        />
+        <span>EDIT PROFILE</span>
+      </a>
+      <button class="nav-tab logout-btn">
+        <img
+          src="/images/logout.gif"
+          alt="logout"
+          class="icon-gif icon-gif--lg icon-gif--with-text"
+        />
+        <span>LOGOUT</span>
+      </button>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Hydration blob for client-side navigation to avoid extra lookups.
+  // Use server-provided sanitized JSON to avoid embedding issues.
+  window.__NAV_STATE__ =
+    <%- typeof navDataJson !== 'undefined' ? navDataJson : JSON.stringify(visitorNavData) %>;
+</script>
+<div
+  id="arnoldModal"
+  style="
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  "
+>
+  <div
+    style="
+      background: #fff;
+      padding: 1rem;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 0 24px #000;
+      color: black;
+      max-width: 90%;
+      max-height: 90%;
+      overflow: auto;
+    "
+  >
+    <h2>Winner! Winner! Winner!</h2>
+    <p>
+      You found the secret Arnold easter egg.<br />
+      Don't worry it's not a tumor<br />
+      Get to the chopper and I'll be back with your prize!
+    </p>
+    <a
+      href="#"
+      id="rickRoll"
+      style="
+        display: inline-block;
+        margin-top: 1rem;
+        padding: 0.5rem 1.5rem;
+        background: #ff0000;
+        color: #fff;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: bold;
+      "
+      >Claim Prize</a
+    >
+    <img
+      id="arnoldGif"
+      src="/images/rick-roll.gif"
+      alt="Arnold GIF"
+      loading="lazy"
+      style="max-width: 100%; height: auto; display: none; margin: 0.5rem auto"
+    />
+    <audio id="arnoldAudio" src="/songs/rickroll.mp3" preload="auto"></audio>
+    <div style="margin-top: 1rem">
+      <button id="close-arnold" style="padding: 0.5rem 1rem">Close</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  // The treasure is closer than you think.
+  console.log("Your treasure lies at the very center of the maze and page.");
+
+  import { initGoblinKing } from "/js/components/goblin-king.js";
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => initGoblinKing(), { once: true });
+  } else {
+    initGoblinKing();
+  }
+</script>
