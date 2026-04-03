@@ -6,6 +6,35 @@ const path = require("path");
 
 // Shared Supabase client
 const supabase = getSupabase();
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function normalizeTopNRefs(topN) {
+  if (!Array.isArray(topN)) return [];
+  return topN
+    .map((entry) => {
+      if (!entry) return null;
+      if (typeof entry === "string") {
+        const v = entry.trim();
+        if (!v) return null;
+        return UUID_REGEX.test(v) ? { userId: v } : { username: v.toLowerCase() };
+      }
+      if (typeof entry !== "object") return null;
+      const userId =
+        typeof entry.user_id === "string" && entry.user_id.trim()
+          ? entry.user_id.trim()
+          : typeof entry.id === "string" && entry.id.trim() && UUID_REGEX.test(entry.id.trim())
+            ? entry.id.trim()
+            : null;
+      const username =
+        typeof entry.username === "string" && entry.username.trim()
+          ? entry.username.trim().toLowerCase()
+          : null;
+      if (userId) return { userId };
+      if (username) return { username };
+      return null;
+    })
+    .filter(Boolean);
+}
 
 // GET /users/:id
 // Renders the user profile page using templates/user.ejs
@@ -86,6 +115,7 @@ router.get("/:identifier", async (req, res) => {
     // Map/normalize all fields expected by templates/user.ejs
     const user = {
       id: data.user_id || data.id,
+      username: data.username || null,
       display_name: data.display_name || data.user_display_name,
       headshot: data.headshot_url || data.user_headshot_url || data.headshot,
       about_html: data.about_html || data.prompt_html || null,
@@ -104,20 +134,52 @@ router.get("/:identifier", async (req, res) => {
       is_published: data.is_published === true,
     };
 
-    // userCount = number of registered users (display_name set) — drives the Top N feature
-    let userCount = 1;
-    let allUsers = [];
+    // Resolve displayed Top N user cards from stored refs
+    let topNUsers = [];
+    const topNRefs = normalizeTopNRefs(user.top_n);
     try {
-      const { data: users, count } = await supabase
-        .from("users")
-        .select("id, display_name, headshot", { count: "exact" })
-        .not("display_name", "is", null)
-        .order("display_name", { ascending: true });
-      if (count && count > 0) userCount = count;
-      if (Array.isArray(users)) allUsers = users;
+      const idRefs = [...new Set(topNRefs.map((r) => r.userId).filter(Boolean))];
+      const usernameRefs = [...new Set(topNRefs.map((r) => r.username).filter(Boolean))];
+      const byId = {};
+      const byUsername = {};
+
+      const queries = [];
+      if (idRefs.length) {
+        queries.push(
+          supabase.from("users").select("id, username, display_name, headshot").in("id", idRefs)
+        );
+      }
+      if (usernameRefs.length) {
+        queries.push(
+          supabase
+            .from("users")
+            .select("id, username, display_name, headshot")
+            .in("username", usernameRefs)
+        );
+      }
+
+      const results = await Promise.all(queries);
+      results.forEach((r) => {
+        if (Array.isArray(r.data)) {
+          r.data.forEach((u) => {
+            if (u?.id) byId[u.id] = u;
+            if (u?.username) byUsername[u.username.toLowerCase()] = u;
+          });
+        }
+      });
+
+      const seen = new Set();
+      topNUsers = topNRefs
+        .map((ref) => (ref.userId ? byId[ref.userId] : byUsername[ref.username]))
+        .filter((u) => {
+          if (!u || seen.has(u.id)) return false;
+          seen.add(u.id);
+          return true;
+        });
     } catch (e) {
-      console.warn("userCount/allUsers query failed:", e.message);
+      console.warn("topN users query failed:", e.message);
     }
+    const topNCount = topNUsers.length;
 
     // Fetch user's achievements (server-side) so profile pages show badges immediately
     let userAchievements = [];
@@ -137,27 +199,54 @@ router.get("/:identifier", async (req, res) => {
       // Use navData.user.id for current user identity
       let isOwnProfile = false;
       let isInTopN = false;
-      const navUserId = res.locals && res.locals.navData && res.locals.navData.user && res.locals.navData.user.id;
+      let isTopNFull = false;
+      const navUserId =
+        res.locals && res.locals.navData && res.locals.navData.user && res.locals.navData.user.id;
       const profileId = (user.id || "") + "";
       if (navUserId && navUserId === profileId) isOwnProfile = true;
-      // Check if viewer is in this user's Top N
-      if (navUserId && Array.isArray(user.top_n)) {
-        isInTopN = user.top_n.some(u => u && (String(u.id) === navUserId || String(u.user_id) === navUserId));
+
+      // For Add-to-Top-8 button: compute whether viewed profile is already in VIEWER's Top N,
+      // and whether viewer's Top N is at capacity.
+      if (navUserId && !isOwnProfile) {
+        try {
+          const { data: viewerProfile } = await supabase
+            .from("user_profile")
+            .select("top_n")
+            .eq("user_id", navUserId)
+            .maybeSingle();
+
+          const viewerRefs = normalizeTopNRefs(viewerProfile?.top_n || []);
+          const viewerIds = new Set(viewerRefs.map((r) => r.userId).filter(Boolean));
+          const viewerUsernames = new Set(viewerRefs.map((r) => r.username).filter(Boolean));
+
+          isTopNFull = viewerRefs.length >= 8;
+          isInTopN =
+            viewerIds.has(profileId) ||
+            (user.username ? viewerUsernames.has(String(user.username).toLowerCase()) : false);
+        } catch (e) {
+          console.warn("Failed to compute viewer top_n status:", e.message || e);
+        }
       }
+
       res.render("user", {
         user,
         profile_title: data.profile_title,
-        userCount,
-        allUsers: allUsers || [],
+        topNCount,
+        topNUsers: topNUsers || [],
         userAchievements: userAchievements || [],
         isOwnProfile,
         isInTopN,
+        isTopNFull,
       });
     } catch (renderErr) {
       // Log a helpful snippet around the reported template line if available
-      console.error("EJS render error for templates/user.ejs:", renderErr && renderErr.message ? renderErr.message : renderErr);
+      console.error(
+        "EJS render error for templates/user.ejs:",
+        renderErr && renderErr.message ? renderErr.message : renderErr
+      );
       try {
-        const match = (renderErr && renderErr.message && renderErr.message.match(/\((\d+):(\d+)\)/)) || null;
+        const match =
+          (renderErr && renderErr.message && renderErr.message.match(/\((\d+):(\d+)\)/)) || null;
         const tplPath = path.join(__dirname, "../templates/user.ejs");
         if (match && fs.existsSync(tplPath)) {
           const errLine = parseInt(match[1], 10);

@@ -22,6 +22,7 @@ class UserProfilePage extends BasePage {
     this.isOwner = !!(this.profileUserId && this.userId && this.userId === this.profileUserId);
     if (this.isOwner) document.body.classList.add("is-owner");
 
+    this.setupTopNButtons();
     this.setupHeadshotUpload();
     this.setupMusicPlayer();
     this.setupInlineEdits();
@@ -55,6 +56,84 @@ class UserProfilePage extends BasePage {
         });
       }
     }
+  }
+
+  setupTopNButtons() {
+    this.setupAddToTopNButton();
+    this.setupTopNRemoveButtons();
+  }
+
+  setupAddToTopNButton() {
+    const btn = document.getElementById("add-to-topn-btn");
+    if (!btn || !this.userId || !this.profileUserId || this.isOwner) return;
+
+    btn.addEventListener("click", async () => {
+      if (btn.disabled) return;
+      const original = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Adding...";
+      try {
+        const resp = await fetch(`/api/users/${this.userId}/top-n/add`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ targetUserId: this.profileUserId }),
+        });
+        const body = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error(body.error || resp.statusText);
+
+        btn.textContent = "Added to Top 8";
+        this.showSuccessToast(body.already_added ? "Already in your Top 8." : "Added to your Top 8!");
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = original;
+        this.showErrorToast("Failed to add: " + err.message);
+      }
+    });
+  }
+
+  setupTopNRemoveButtons() {
+    if (!this.isOwner || !this.userId) return;
+    const buttons = document.querySelectorAll(".topn-remove-btn[data-user-id]");
+    if (!buttons.length) return;
+
+    buttons.forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const targetUserId = btn.dataset.userId;
+        if (!targetUserId) return;
+        btn.disabled = true;
+        const original = btn.textContent;
+        btn.textContent = "Removing...";
+        try {
+          const resp = await fetch(`/api/users/${this.userId}/top-n/${targetUserId}`, {
+            method: "DELETE",
+            credentials: "include",
+          });
+          const body = await resp.json().catch(() => ({}));
+          if (!resp.ok) throw new Error(body.error || resp.statusText);
+
+          const item = btn.closest(".top-n-item");
+          if (item) item.remove();
+
+          const countEl = document.querySelector(".top-n-count");
+          if (countEl) {
+            const nextCount = Math.max(parseInt(countEl.textContent || "0", 10) - 1, 0);
+            countEl.textContent = String(nextCount);
+          }
+
+          const grid = document.getElementById("topn-display");
+          if (grid && !grid.querySelector(".top-n-item")) {
+            grid.innerHTML = `<p class="top-n-empty">No users found.</p>`;
+          }
+
+          this.showSuccessToast("Removed from Top 8.");
+        } catch (err) {
+          btn.disabled = false;
+          btn.textContent = original;
+          this.showErrorToast("Failed to remove: " + err.message);
+        }
+      });
+    });
   }
 
   // Show and wire the "Challenge this user" button when appropriate.

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BriSpace - Friends</title>
+    <link rel="icon" type="image/png" href="/images/favicon.jpg" />
+    <link rel="stylesheet" href="/css/geocities.css" />
+    <link rel="stylesheet" href="/css/components/myspace.css" />
+    <link rel="stylesheet" href="/css/components/navigation.css" />
+    <link rel="stylesheet" href="/css/components/brispace-home.css" />
+    <link rel="stylesheet" href="/css/components/user-display.css" />
+    <link rel="stylesheet" href="/css/components/login-signup.css" />
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
+  </head>
+  <body class="myspace" data-auth="<%= !!currentUser %>">
+    <%- include('partials/navigation', { navData: (typeof navData !== 'undefined' ? navData : {}) })
+    %>
+    <main class="myspace-container full-width-content">
+      <div class="container myspace-layout">
+        <div class="myspace-main">
+          <section class="myspace-section">
+            <h3 class="myspace-section-alt-header">BriSpace Friends</h3>
+            <div class="brispace-intro-box">
+              <p>Everyone on the site, all in one place.</p>
+            </div>
+          </section>
+
+          <section class="myspace-section brispace-new-friends">
+            <h3 style="margin-bottom: 0">All users</h3>
+            <% if (allUsers && allUsers.length > 0) { %>
+            <div class="brispace-friends-list">
+              <% allUsers.forEach(function(user) { %> <%- include('partials/user-display', { user:
+              user }) %> <% }); %>
+            </div>
+            <% } else { %>
+            <p>No users found yet.</p>
+            <% } %>
+          </section>
+        </div>
+
+        <aside class="myspace-sidebar brispace-auth">
+          <% if (!currentUser) { %>
+          <div id="loginSignupContainer"></div>
+          <% } else { %>
+          <div class="login-signup-form">
+            <h3>
+              Welcome back,
+              <%= currentUser.display_name || 'friend' %>!
+            </h3>
+            <a href="/users/<%= currentUser.username %>">Go to your profile</a>
+          </div>
+          <% } %>
+        </aside>
+      </div>
+    </main>
+
+    <footer class="myspace-footer full-width-content">
+      <div class="footer-links">
+        <a href="/about">About</a> | <a href="/privacy">Privacy</a> |
+        <a href="/contact">Contact</a>
+      </div>
+      <div class="footer-copy">&copy; 2004 BriSpace. All rights reserved.</div>
+    </footer>
+
+    <script type="module">
+      import { createLoginSignupForm } from "/js/components/login-signup.js";
+      import { BrispacePage } from "/js/pages/brispace.js";
+      const page = new BrispacePage();
+      await page.init();
+      const isAuthenticated = document.body.dataset.auth === "true";
+      if (!isAuthenticated) {
+        const container = document.getElementById("loginSignupContainer");
+        if (container) {
+          const form = createLoginSignupForm({
+            onSuccess: () => {
+              window.location.href = "/friends";
+            },
+          });
+          container.appendChild(form);
+        }
+      }
+    </script>
+  </body>
+</html>

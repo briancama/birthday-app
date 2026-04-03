@@ -3,6 +3,63 @@ const router = express.Router();
 const { getSupabase, createSanitizer, requireSignedUser } = require("../js/utils/server-utils");
 
 const supabase = getSupabase();
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function extractTopNIdentifier(entry) {
+  if (!entry) return null;
+  if (typeof entry === "string") return entry.trim() || null;
+  if (typeof entry !== "object") return null;
+  if (typeof entry.user_id === "string" && entry.user_id.trim()) return entry.user_id.trim();
+  if (typeof entry.id === "string" && entry.id.trim()) return entry.id.trim();
+  if (typeof entry.username === "string" && entry.username.trim()) return entry.username.trim();
+  if (typeof entry.label === "string" && entry.label.trim()) return entry.label.trim();
+  return null;
+}
+
+async function normalizeTopNEntries(items, maxItems = 8) {
+  if (!Array.isArray(items) || items.length === 0) return [];
+
+  const ordered = [];
+  const usernameCandidates = [];
+
+  items.forEach((entry) => {
+    const identifier = extractTopNIdentifier(entry);
+    if (!identifier) return;
+    if (UUID_REGEX.test(identifier)) {
+      ordered.push({ type: "id", value: identifier });
+    } else {
+      const uname = identifier.toLowerCase();
+      ordered.push({ type: "username", value: uname });
+      usernameCandidates.push(uname);
+    }
+  });
+
+  const usernameToId = {};
+  if (usernameCandidates.length > 0) {
+    const uniqueUsernames = [...new Set(usernameCandidates)];
+    const { data: rows, error } = await supabase
+      .from("users")
+      .select("id, username")
+      .in("username", uniqueUsernames);
+    if (!error && Array.isArray(rows)) {
+      rows.forEach((u) => {
+        if (u?.username && u?.id) usernameToId[u.username.toLowerCase()] = u.id;
+      });
+    }
+  }
+
+  const seen = new Set();
+  const normalized = [];
+  for (const ref of ordered) {
+    const userId = ref.type === "id" ? ref.value : usernameToId[ref.value];
+    if (!userId || seen.has(userId)) continue;
+    seen.add(userId);
+    normalized.push({ user_id: userId });
+    if (normalized.length >= maxItems) break;
+  }
+
+  return normalized;
+}
 
 // POST /api/users/:id/challenge
 // Triggers assignment of the next available challenge to the target user and
@@ -15,7 +72,8 @@ router.post("/users/:id/challenge", async (req, res) => {
 
     // Resolve target: allow either UUID (users.id) or username slug in URL
     let targetUserId = rawTarget;
-    const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+    const uuidRegex =
+      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
     if (!uuidRegex.test(rawTarget)) {
       // Looks like a username slug — look up the user's UUID
       try {
@@ -25,7 +83,8 @@ router.post("/users/:id/challenge", async (req, res) => {
           .eq("username", rawTarget)
           .maybeSingle();
         if (userErr) throw userErr;
-        if (!userRow || !userRow.id) return res.status(404).json({ error: "Target user not found" });
+        if (!userRow || !userRow.id)
+          return res.status(404).json({ error: "Target user not found" });
         targetUserId = userRow.id;
       } catch (lookupErr) {
         console.error("Failed to look up target user by username:", lookupErr.message || lookupErr);
@@ -100,7 +159,11 @@ router.post("/users/:id/challenge", async (req, res) => {
         .from("notifications")
         .insert({
           user_id: targetUserId,
-          payload: { type: "challenge_triggered", from_user: signedUserId, assignment_id: dormant.id },
+          payload: {
+            type: "challenge_triggered",
+            from_user: signedUserId,
+            assignment_id: dormant.id,
+          },
           read: false,
         })
         .select()
@@ -114,7 +177,9 @@ router.post("/users/:id/challenge", async (req, res) => {
     // 5. Check and award social_butterfly achievement for the challenger (non-fatal)
     let achievement = null;
     try {
-      const { data: achData } = await supabase.rpc("rpc_award_on_challenge_threshold", { p_user_id: signedUserId });
+      const { data: achData } = await supabase.rpc("rpc_award_on_challenge_threshold", {
+        p_user_id: signedUserId,
+      });
       const achRow = Array.isArray(achData) ? achData[0] : achData;
       if (achRow?.awarded) {
         const { data: ach } = await supabase
@@ -125,7 +190,10 @@ router.post("/users/:id/challenge", async (req, res) => {
         achievement = ach || null;
       }
     } catch (achieveErr) {
-      console.warn("Failed to check challenge threshold achievement:", achieveErr.message || achieveErr);
+      console.warn(
+        "Failed to check challenge threshold achievement:",
+        achieveErr.message || achieveErr
+      );
     }
 
     return res.json({ ok: true, assignment_id: dormant.id, notification: notif, achievement });
@@ -242,10 +310,7 @@ router.get("/users/active-challenge-counts", async (req, res) => {
         .not("triggered_at", "is", null)
         .is("completed_at", null)
         .eq("active", true),
-      supabase
-        .from("assignments")
-        .select("user_id")
-        .is("completed_at", null),
+      supabase.from("assignments").select("user_id").is("completed_at", null),
     ]);
 
     if (activeResult.error) throw activeResult.error;
@@ -411,7 +476,7 @@ router.patch("/users/:id/profile-fields", async (req, res) => {
         const val = req.body[field];
         if (field === "is_published") {
           // Accept boolean or string 'true'/'false'
-          updates[field] = val === true || val === 'true';
+          updates[field] = val === true || val === "true";
         } else {
           updates[field] = typeof val === "string" ? val.trim().slice(0, 300) : null;
         }
@@ -447,7 +512,7 @@ router.patch("/users/:id/profile-fields", async (req, res) => {
 });
 
 // PATCH /api/users/:id/top-n
-// Body: { items: [{rank, label}] }  — max N items where N = current user count
+// Body: { items: [{ user_id }] } (legacy username/label/id values are best-effort normalized)
 router.patch("/users/:id/top-n", async (req, res) => {
   try {
     const targetId = req.params.id;
@@ -458,13 +523,7 @@ router.patch("/users/:id/top-n", async (req, res) => {
     const { items } = req.body || {};
     if (!Array.isArray(items)) return res.status(400).json({ error: "items must be an array" });
 
-    const clean = items
-      .slice(0, 50) // hard cap
-      .map((item, i) => ({
-        rank: typeof item.rank === "number" ? item.rank : i + 1,
-        label: typeof item.label === "string" ? item.label.trim().slice(0, 80) : "",
-      }))
-      .filter((item) => item.label);
+    const clean = await normalizeTopNEntries(items, 8);
 
     const { error } = await supabase
       .from("user_profile")
@@ -480,6 +539,108 @@ router.patch("/users/:id/top-n", async (req, res) => {
     return res.json({ ok: true, top_n: clean });
   } catch (err) {
     console.error("Error in PATCH /api/users/:id/top-n", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// POST /api/users/:id/top-n/add
+// Body: { targetUserId } — adds target user to caller's Top 8 (max 8)
+router.post("/users/:id/top-n/add", async (req, res) => {
+  try {
+    const ownerId = req.params.id;
+    const signedUserId = requireSignedUser(req);
+    if (!signedUserId) return res.status(401).json({ error: "Not authenticated" });
+    if (signedUserId !== ownerId) return res.status(403).json({ error: "Forbidden" });
+
+    const targetUserId =
+      typeof req.body?.targetUserId === "string" ? req.body.targetUserId.trim() : "";
+    if (!targetUserId || !UUID_REGEX.test(targetUserId)) {
+      return res.status(400).json({ error: "targetUserId must be a valid user id" });
+    }
+    if (targetUserId === ownerId) {
+      return res.status(400).json({ error: "Cannot add yourself to Top 8" });
+    }
+
+    const { data: targetUser, error: targetErr } = await supabase
+      .from("users")
+      .select("id")
+      .eq("id", targetUserId)
+      .maybeSingle();
+    if (targetErr) throw targetErr;
+    if (!targetUser) return res.status(404).json({ error: "Target user not found" });
+
+    const { data: profile, error: profileErr } = await supabase
+      .from("user_profile")
+      .select("top_n")
+      .eq("user_id", ownerId)
+      .maybeSingle();
+    if (profileErr) throw profileErr;
+
+    const current = await normalizeTopNEntries(profile?.top_n || [], 8);
+    const ids = current.map((x) => x.user_id);
+
+    if (ids.includes(targetUserId)) {
+      return res.json({
+        ok: true,
+        already_added: true,
+        top_n: current,
+        is_full: current.length >= 8,
+      });
+    }
+    if (current.length >= 8) {
+      return res.status(409).json({ error: "Top 8 is full", top_n: current, is_full: true });
+    }
+
+    const next = [...current, { user_id: targetUserId }];
+    const { error: upsertErr } = await supabase
+      .from("user_profile")
+      .upsert(
+        { user_id: ownerId, top_n: next, updated_at: new Date().toISOString() },
+        { onConflict: "user_id" }
+      );
+    if (upsertErr) throw upsertErr;
+
+    return res.json({ ok: true, top_n: next, is_full: next.length >= 8 });
+  } catch (err) {
+    console.error("Error in POST /api/users/:id/top-n/add", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// DELETE /api/users/:id/top-n/:targetUserId
+// Removes a target user from caller's Top 8
+router.delete("/users/:id/top-n/:targetUserId", async (req, res) => {
+  try {
+    const ownerId = req.params.id;
+    const targetUserId = req.params.targetUserId;
+    const signedUserId = requireSignedUser(req);
+    if (!signedUserId) return res.status(401).json({ error: "Not authenticated" });
+    if (signedUserId !== ownerId) return res.status(403).json({ error: "Forbidden" });
+    if (!targetUserId || !UUID_REGEX.test(targetUserId)) {
+      return res.status(400).json({ error: "targetUserId must be a valid user id" });
+    }
+
+    const { data: profile, error: profileErr } = await supabase
+      .from("user_profile")
+      .select("top_n")
+      .eq("user_id", ownerId)
+      .maybeSingle();
+    if (profileErr) throw profileErr;
+
+    const current = await normalizeTopNEntries(profile?.top_n || [], 8);
+    const next = current.filter((entry) => entry.user_id !== targetUserId);
+
+    const { error: upsertErr } = await supabase
+      .from("user_profile")
+      .upsert(
+        { user_id: ownerId, top_n: next, updated_at: new Date().toISOString() },
+        { onConflict: "user_id" }
+      );
+    if (upsertErr) throw upsertErr;
+
+    return res.json({ ok: true, top_n: next, is_full: next.length >= 8 });
+  } catch (err) {
+    console.error("Error in DELETE /api/users/:id/top-n/:targetUserId", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 });

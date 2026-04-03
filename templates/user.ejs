@@ -56,8 +56,23 @@
                   data-headshot="user-profile"
                 />
                 <!-- Add User to top 8 -->
-                <% if (typeof isOwnProfile !== 'undefined' && !isOwnProfile && typeof isInTopN !== 'undefined' && !isInTopN) { %>
-                  <button id="add-to-topn-btn" class="btn btn--primary">Add to my Top 8</button>
+                <% if (typeof isOwnProfile !== 'undefined' && !isOwnProfile) { %>
+                  <% const hasSignedInUser = !!(typeof navData !== 'undefined' && navData && navData.user && navData.user.id); %>
+                  <% if (hasSignedInUser) { %>
+                  <button
+                    id="add-to-topn-btn"
+                    class="btn btn--primary"
+                    <% if ((typeof isInTopN !== 'undefined' && isInTopN) || (typeof isTopNFull !== 'undefined' && isTopNFull)) { %>disabled<% } %>
+                  >
+                    <% if (typeof isInTopN !== 'undefined' && isInTopN) { %>
+                      Already in Top 8
+                    <% } else if (typeof isTopNFull !== 'undefined' && isTopNFull) { %>
+                      Top 8 Full
+                    <% } else { %>
+                      Add to my Top 8
+                    <% } %>
+                  </button>
+                  <% } %>
                 <% } %>
               </div>
               <div class="myspace-about">
@@ -183,6 +198,8 @@
 
           <!-- Gif stepper -->
           <div class="myspace-section">
+            <% const hasSignedInUser = !!(typeof navData !== 'undefined' && navData && navData.user && navData.user.id); %>
+            <% if (hasSignedInUser) { %>
             <img
               class="myspace-section-gif"
               src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
@@ -194,6 +211,15 @@
               data-gif-sound-percent="70"
               data-steps-per-click="3"
             />
+            <% } else { %>
+            <img
+              class="myspace-section-gif"
+              src="/images/iron-man.gif"
+              width="347"
+              height="207"
+              alt="Iron Man GIF"
+            />
+            <% } %>
           </div>
         </aside>
 
@@ -260,19 +286,14 @@
               <button class="wall-post-btn">Post</button>
             </div>
           </div>
-
+          <% if (typeof topNCount !== 'undefined' && topNCount > 0) { %>
           <!-- Top N -->
           <div class="myspace-section profile-section">
-            <h3>Brian's Friends</h3>
-            <div class="top-n-header">
-              Brian has
-              <span class="top-n-count"><%= userCount %></span>
-              friend<%= userCount === 1 ? '' : 's' %>.
-            </div>
+            <h3>My Top <%= topNCount || 0 %></h3>
             <div class="top-n-grid" id="topn-display">
-              <% allUsers = (typeof allUsers !== 'undefined' ? allUsers : []); %> <% if
-              (allUsers.length > 0) { %>
-              <% allUsers.forEach(function(user, i) { %>
+              <% topNUsers = (typeof topNUsers !== 'undefined' ? topNUsers : []); %> <% if
+              (topNUsers.length > 0) { %>
+              <% topNUsers.forEach(function(user, i) { %>
               <div class="top-n-item">
                 <a href="/users/<%= user.id %>" class="top-n-item__link">
                   <span class="top-n-item__label"><%- user.display_name %></span>
@@ -283,6 +304,11 @@
                     class="top-n-item__headshot"
                   />
                 </a>
+                <% if (typeof isOwnProfile !== 'undefined' && isOwnProfile) { %>
+                <button class="btn btn--secondary topn-remove-btn" data-user-id="<%= user.id %>">
+                  Remove
+                </button>
+                <% } %>
               </div>
               <% }); %>
               <% } else { %>
@@ -290,11 +316,14 @@
               <% } %>
             </div>
           </div>
+          <% } %>
         </main>
       </div>
     </div>
 
+    <% if (typeof navData !== 'undefined' && navData && navData.user && navData.user.id) { %>
     <script src="/js/components/gif-stepper.js"></script>
+    <% } %>
     <script type="module">
       import { UserProfilePage } from "/js/pages/user-profile.js";
 
