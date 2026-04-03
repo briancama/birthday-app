@@ -41,6 +41,33 @@
       <div class="container myspace-layout">
         <!-- ── Sidebar ──────────────────────────────────────────── -->
         <aside class="myspace-sidebar">
+          <% const PROFILE_GIF_OPTIONS = [
+            { key: 'afro-ninja', label: 'Afro Ninja', src: '/images/user-gifs/afro-ninja.gif' },
+            { key: 'aim', label: 'AIM', src: '/images/user-gifs/aim.gif' },
+            { key: 'backstreet-boys', label: 'Backstreet Boys', src: '/images/user-gifs/backstreet-boys.gif' },
+            { key: 'banana', label: 'Peanut Butter Jelly Time', src: '/images/user-gifs/banana.webp' },
+            { key: 'buffy', label: 'Buffy', src: '/images/user-gifs/buffy.gif' },
+            { key: 'dancingbaby', label: 'Dancing Baby', src: '/images/user-gifs/dancingbaby.gif' },
+            { key: 'dolphin', label: 'Dolphin', src: '/images/user-gifs/dolphin.gif' },
+            { key: 'elmo-fire', label: 'Elmo Fire', src: '/images/user-gifs/elmo-fire.webp' },
+            { key: 'gogeta-fusion', label: 'Dragonball Z', src: '/images/user-gifs/gogeta-fusion.gif' },
+            { key: 'hangover', label: 'Hangover', src: '/images/user-gifs/hangover.gif' },
+            { key: 'hide-the-simpsons', label: 'Bush Homer', src: '/images/user-gifs/hide-the-simpsons.gif' },
+            { key: 'i-said-hey-he-man', label: 'He-Man', src: '/images/user-gifs/i-said-hey-he-man.gif' },
+            { key: 'internet-dial-up', label: 'Internet Dial-Up', src: '/images/user-gifs/internet-dial-up.webp' },
+            { key: 'keycat-keyboard', label: 'Keyboard Cat', src: '/images/user-gifs/keycat-keyboard.webp' },
+            { key: 'kermit-the-frog-tea', label: 'Kermit Tea', src: '/images/user-gifs/kermit-the-frog-tea.gif' },
+            { key: 'leeroy-jenkins', label: 'Leeroy Jenkins', src: '/images/user-gifs/leeroy-jenkins.webp' },
+            { key: 'mind-blown', label: 'Mind Blown', src: '/images/user-gifs/mind-blown.webp' },
+            { key: 'not-okay-my-chemical-romance', label: 'Not Okay (MCR)', src: '/images/user-gifs/not-okay-my-chemical-romance.gif' },
+            { key: 'nsync', label: 'NSYNC', src: '/images/user-gifs/nsync.gif' },
+            { key: 'roller-skate', label: 'Roller Skate', src: '/images/user-gifs/roller-skate.gif' },
+            { key: 'smash-bros', label: 'Smash Bros', src: '/images/user-gifs/smash-bros.gif' },
+            { key: 'snake-juice', label: 'Snake Juice', src: '/images/user-gifs/snake-juice.gif' },
+            { key: 'spit-hot-fire', label: 'Spit Hot Fire', src: '/images/user-gifs/spit-hot-fire.gif' },
+            { key: 'spongebob', label: 'SpongeBob', src: '/images/user-gifs/spongebob.gif' }
+          ]; %>
+          <% const selectedProfileGif = PROFILE_GIF_OPTIONS.find((gif) => gif.key === user.profile_gif_key) || null; %>
           <!-- Name + headshot -->
           <div class="myspace-section profile-section">
             <h2 class="myspace-name">
@@ -93,9 +120,11 @@
               </div>
             </div>
             <!-- Challenge button removed: replaced by Top 8 and publish profile features -->
+            <% if (typeof isOwnProfile !== 'undefined' && isOwnProfile) { %>
             <button id="edit-profile-btn" class="profile-edit-btn profile-edit-btn--below">
               ✏ edit
             </button>
+            <% } %>
             <form id="edit-profile-form" class="profile-edit-form profile-edit-form--modal">
               <label
                 >Status<input
@@ -142,9 +171,11 @@
               <%= profile_title || (user.display_name ? user.display_name + "'s Interests" :
               "Interests") %>
             </div>
+            <% if (typeof isOwnProfile !== 'undefined' && isOwnProfile) { %>
             <button id="edit-interests-btn" class="profile-edit-btn profile-edit-btn--below">
               ✏ edit
             </button>
+            <% } %>
             <div class="event-details-list">
               <div class="event-details-row">
                 <div class="event-details-label">General</div>
@@ -194,33 +225,62 @@
           </section>
 
           <!-- Music player placeholder -->
-          <div class="myspace-section" id="musicPlayerContainer"></div>
+          <div class="myspace-section music-player-container" id="musicPlayerContainer"></div>
 
-          <!-- Gif stepper -->
-          <div class="myspace-section">
-            <% const hasSignedInUser = !!(typeof navData !== 'undefined' && navData && navData.user && navData.user.id); %>
-            <% if (hasSignedInUser) { %>
-            <img
-              class="myspace-section-gif"
-              src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
-              data-src="/images/iron-man.gif"
-              width="347"
-              height="207"
-              data-gif-stepper
-              data-gif-sound="proton-cannon.mp3"
-              data-gif-sound-percent="70"
-              data-steps-per-click="3"
-            />
-            <% } else { %>
-            <img
-              class="myspace-section-gif"
-              src="/images/iron-man.gif"
-              width="347"
-              height="207"
-              alt="Iron Man GIF"
-            />
+          <% if ((typeof isOwnProfile !== 'undefined' && isOwnProfile) || selectedProfileGif) { %>
+          <div class="myspace-section profile-gif-section">
+            <h3 class="profile-gif-section__title">Profile GIF</h3>
+
+            <%# ── Display: shown to everyone ── %>
+            <div id="profile-gif-preview" class="profile-gif-preview">
+              <img
+                id="profile-gif-image"
+                class="profile-gif-display<% if (!selectedProfileGif) { %> is-hidden<% } %>"
+                src="<%= selectedProfileGif ? selectedProfileGif.src : '' %>"
+                alt="Selected profile GIF"
+              />
+              <% if (!selectedProfileGif) { %>
+              <p id="profile-gif-empty-note" class="profile-gif-empty">
+                <% if (typeof isOwnProfile !== 'undefined' && isOwnProfile) { %>
+                  No GIF selected yet. Hit <strong>✦ Choose GIF</strong> to pick one.
+                <% } %>
+              </p>
+              <% } %>
+            </div>
+
+            <%# ── Owner-only controls ── %>
+            <% if (typeof isOwnProfile !== 'undefined' && isOwnProfile) { %>
+            <div class="profile-gif-owner-controls">
+              <button type="button" id="profile-gif-toggle" class="profile-edit-btn profile-edit-btn--static">
+                Choose GIF
+              </button>
+            </div>
+
+            <form id="profile-gif-form" class="profile-gif-form is-hidden">
+              <div class="profile-gif-grid">
+                <% PROFILE_GIF_OPTIONS.forEach(function(gif) { %>
+                <label class="profile-gif-thumb<% if (user.profile_gif_key === gif.key) { %> is-selected<% } %>">
+                  <input
+                    type="radio"
+                    name="profile-gif-key"
+                    value="<%= gif.key %>"
+                    data-gif-src="<%= gif.src %>"
+                    <% if (user.profile_gif_key === gif.key) { %>checked<% } %>
+                  />
+                  <img src="<%= gif.src %>" alt="<%= gif.label %>" loading="lazy" />
+                  <span class="profile-gif-thumb__label"><%= gif.label %></span>
+                </label>
+                <% }); %>
+              </div>
+              <div class="profile-gif-actions">
+                <button type="button" id="profile-gif-save" class="profile-edit-btn profile-edit-btn--static">Save GIF</button>
+                <button type="button" id="profile-gif-clear" class="profile-edit-btn profile-edit-btn--static">Clear</button>
+                <button type="button" id="profile-gif-cancel" class="profile-edit-btn profile-edit-btn--static">Cancel</button>
+              </div>
+            </form>
             <% } %>
           </div>
+          <% } %>
         </aside>
 
         <!-- ── Main column ───────────────────────────────────────── -->
@@ -228,9 +288,11 @@
           <!-- About Me -->
           <div class="myspace-section profile-section">
             <h3>About Me</h3>
+            <% if (typeof isOwnProfile !== 'undefined' && isOwnProfile) { %>
             <button class="profile-edit-btn profile-edit-btn--below" id="edit-bio-btn">
               ✏ edit
             </button>
+            <% } %>
             <div class="profile-about-content" id="bio-display">
               <% if (user.about_html) { %>
                 <%- user.about_html %>
@@ -321,9 +383,6 @@
       </div>
     </div>
 
-    <% if (typeof navData !== 'undefined' && navData && navData.user && navData.user.id) { %>
-    <script src="/js/components/gif-stepper.js"></script>
-    <% } %>
     <script type="module">
       import { UserProfilePage } from "/js/pages/user-profile.js";
 

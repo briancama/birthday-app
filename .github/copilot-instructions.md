@@ -97,6 +97,15 @@ Always implement and call `cleanup()` in pages/components to remove event listen
 - All event listeners must be cleaned up in cleanup().
 - Document any new shared patterns in copilot-instructions.md before implementation.
 
+## Profile GIF Selection & Sidebar Stepper Reuse (2026)
+
+- Profile pages support a curated user-selected GIF stored on `user_profile.profile_gif_key` and exposed via `user_profile_view`.
+- Owners always see the profile GIF picker UI on their own profile, even when no GIF is selected.
+- Non-owners see the selected profile GIF when one is set; if none is selected, no GIF block renders for non-owners.
+- The clickable GIF stepper is no longer rendered on profile pages.
+- GIF stepper markup is shared through a reusable sidebar partial and used as an optional component on homepage and friends sidebars.
+- Keep GIF catalog keys stable across client/server/template usage to preserve saved user selections.
+
 ## Headshot Upload & Event-Driven Avatar Updates (2026)
 
 ### Headshot Upload Pattern

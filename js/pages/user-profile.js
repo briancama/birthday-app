@@ -25,6 +25,7 @@ class UserProfilePage extends BasePage {
     this.setupTopNButtons();
     this.setupHeadshotUpload();
     this.setupMusicPlayer();
+    this.setupProfileGifPicker();
     this.setupInlineEdits();
     this.loadAchievements();
     this.loadWall();
@@ -83,7 +84,9 @@ class UserProfilePage extends BasePage {
         if (!resp.ok) throw new Error(body.error || resp.statusText);
 
         btn.textContent = "Added to Top 8";
-        this.showSuccessToast(body.already_added ? "Already in your Top 8." : "Added to your Top 8!");
+        this.showSuccessToast(
+          body.already_added ? "Already in your Top 8." : "Added to your Top 8!"
+        );
       } catch (err) {
         btn.disabled = false;
         btn.textContent = original;
@@ -237,6 +240,131 @@ class UserProfilePage extends BasePage {
       document.addEventListener("click", startOnGesture, { once: true });
       document.addEventListener("touchend", startOnGesture, { once: true });
       document.addEventListener("keydown", startOnGesture, { once: true });
+    });
+  }
+
+  // Profile GIF picker (owner only) persists a curated key to user_profile.profile_gif_key.
+  setupProfileGifPicker() {
+    if (!this.isOwner) return;
+
+    const toggleBtn = document.getElementById("profile-gif-toggle");
+    const form = document.getElementById("profile-gif-form");
+    if (!form) return;
+
+    const saveBtn = document.getElementById("profile-gif-save");
+    const clearBtn = document.getElementById("profile-gif-clear");
+    const cancelBtn = document.getElementById("profile-gif-cancel");
+    const previewImage = document.getElementById("profile-gif-image");
+    const emptyNote = document.getElementById("profile-gif-empty-note");
+
+    const openPicker = () => {
+      form.classList.remove("is-hidden");
+      if (toggleBtn) toggleBtn.textContent = "✦ Choose GIF";
+    };
+
+    const closePicker = () => {
+      form.classList.add("is-hidden");
+    };
+
+    toggleBtn?.addEventListener("click", () => {
+      form.classList.contains("is-hidden") ? openPicker() : closePicker();
+    });
+
+    cancelBtn?.addEventListener("click", closePicker);
+
+    const getSelectedInput = () => form.querySelector("input[name='profile-gif-key']:checked");
+
+    const setPreview = (src) => {
+      if (!previewImage) return;
+      if (!src) {
+        previewImage.src = "";
+        previewImage.classList.add("is-hidden");
+        if (emptyNote) emptyNote.classList.remove("is-hidden");
+      } else {
+        previewImage.src = src;
+        previewImage.classList.remove("is-hidden");
+        if (emptyNote) emptyNote.classList.add("is-hidden");
+      }
+    };
+
+    // Click-on-thumbnail selects it and live-previews it
+    form.querySelectorAll(".profile-gif-thumb").forEach((thumb) => {
+      thumb.addEventListener("click", () => {
+        form
+          .querySelectorAll(".profile-gif-thumb")
+          .forEach((t) => t.classList.remove("is-selected"));
+        thumb.classList.add("is-selected");
+        const input = thumb.querySelector("input[type='radio']");
+        if (input) {
+          input.checked = true;
+          setPreview(input.dataset.gifSrc || "");
+        }
+      });
+    });
+
+    saveBtn?.addEventListener("click", async () => {
+      const selected = getSelectedInput();
+      const selectedKey = selected?.value || null;
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Saving...";
+      if (clearBtn) clearBtn.disabled = true;
+      if (cancelBtn) cancelBtn.disabled = true;
+
+      try {
+        const resp = await fetch(`/api/users/${this.profileUserId}/profile-fields`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ profile_gif_key: selectedKey }),
+        });
+        if (!resp.ok) throw new Error((await resp.json()).error || resp.statusText);
+
+        setPreview(selected?.dataset.gifSrc || null);
+        closePicker();
+        this.showSuccessToast("Profile GIF saved!");
+      } catch (err) {
+        this.showErrorToast("Failed to save profile GIF: " + err.message);
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Save GIF";
+        if (clearBtn) clearBtn.disabled = false;
+        if (cancelBtn) cancelBtn.disabled = false;
+      }
+    });
+
+    clearBtn?.addEventListener("click", async () => {
+      clearBtn.disabled = true;
+      clearBtn.textContent = "Clearing...";
+      if (saveBtn) saveBtn.disabled = true;
+      if (cancelBtn) cancelBtn.disabled = true;
+
+      try {
+        const resp = await fetch(`/api/users/${this.profileUserId}/profile-fields`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ profile_gif_key: null }),
+        });
+        if (!resp.ok) throw new Error((await resp.json()).error || resp.statusText);
+
+        form.querySelectorAll("input[name='profile-gif-key']").forEach((input) => {
+          input.checked = false;
+        });
+        form
+          .querySelectorAll(".profile-gif-thumb")
+          .forEach((t) => t.classList.remove("is-selected"));
+        setPreview(null);
+        closePicker();
+        this.showSuccessToast("Profile GIF cleared.");
+      } catch (err) {
+        this.showErrorToast("Failed to clear profile GIF: " + err.message);
+      } finally {
+        clearBtn.disabled = false;
+        clearBtn.textContent = "Clear";
+        if (saveBtn) saveBtn.disabled = false;
+        if (cancelBtn) cancelBtn.disabled = false;
+      }
     });
   }
 

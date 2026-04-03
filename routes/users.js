@@ -121,6 +121,7 @@ router.get("/:identifier", async (req, res) => {
       about_html: data.about_html || data.prompt_html || null,
       profile_bg_url: data.profile_bg_url || null,
       profile_bg_mode: data.profile_bg_mode || "cover",
+      profile_gif_key: data.profile_gif_key || null,
       // Sidebar detail fields
       status: data.status || null,
       hometown: data.hometown || null,

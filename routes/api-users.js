@@ -4,6 +4,32 @@ const { getSupabase, createSanitizer, requireSignedUser } = require("../js/utils
 
 const supabase = getSupabase();
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const PROFILE_GIF_KEYS = new Set([
+  "afro-ninja",
+  "aim",
+  "backstreet-boys",
+  "banana",
+  "buffy",
+  "dancingbaby",
+  "dolphin",
+  "elmo-fire",
+  "gogeta-fusion",
+  "hangover",
+  "hide-the-simpsons",
+  "i-said-hey-he-man",
+  "internet-dial-up",
+  "keycat-keyboard",
+  "kermit-the-frog-tea",
+  "leeroy-jenkins",
+  "mind-blown",
+  "not-okay-my-chemical-romance",
+  "nsync",
+  "roller-skate",
+  "smash-bros",
+  "snake-juice",
+  "spit-hot-fire",
+  "spongebob",
+]);
 
 function extractTopNIdentifier(entry) {
   if (!entry) return null;
@@ -459,6 +485,7 @@ const ALLOWED_PROFILE_FIELDS = [
   "general_interest",
   "television",
   "is_published",
+  "profile_gif_key",
 ];
 
 // Note: looking_for was removed — column does not exist in user_profile table.
@@ -477,6 +504,13 @@ router.patch("/users/:id/profile-fields", async (req, res) => {
         if (field === "is_published") {
           // Accept boolean or string 'true'/'false'
           updates[field] = val === true || val === "true";
+        } else if (field === "profile_gif_key") {
+          if (typeof val !== "string" || !val.trim()) {
+            updates[field] = null;
+          } else {
+            const normalized = val.trim().toLowerCase();
+            updates[field] = PROFILE_GIF_KEYS.has(normalized) ? normalized : null;
+          }
         } else {
           updates[field] = typeof val === "string" ? val.trim().slice(0, 300) : null;
         }

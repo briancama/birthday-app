@@ -18,6 +18,7 @@ SELECT
   p.profile_title,
   p.profile_bg_url,
   p.profile_bg_mode,
+  p.profile_gif_key,
   p.is_published,
 
   -- ── Sidebar / details card ────────────────────────────────────────────

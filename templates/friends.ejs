@@ -54,18 +54,10 @@
             <a href="/users/<%= currentUser.username %>">Go to your profile</a>
           </div>
           <% } %>
+          <%- include('partials/sidebar-gif-stepper', { hasSignedInUser: !!currentUser }) %>
         </aside>
       </div>
     </main>
-
-    <footer class="myspace-footer full-width-content">
-      <div class="footer-links">
-        <a href="/about">About</a> | <a href="/privacy">Privacy</a> |
-        <a href="/contact">Contact</a>
-      </div>
-      <div class="footer-copy">&copy; 2004 BriSpace. All rights reserved.</div>
-    </footer>
-
     <script type="module">
       import { createLoginSignupForm } from "/js/components/login-signup.js";
       import { BrispacePage } from "/js/pages/brispace.js";
@@ -84,5 +76,8 @@
         }
       }
     </script>
+    <% if (currentUser) { %>
+    <script src="/js/components/gif-stepper.js"></script>
+    <% } %>
   </body>
 </html>

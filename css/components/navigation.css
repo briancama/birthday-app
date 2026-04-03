@@ -212,7 +212,7 @@ body.has-bottom-menu {
   position: relative;
   border: 3px solid #000;
   background: white;
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto;
   padding-bottom: var(--spacing-sm);
   padding-top: var(--spacing-sm);
@@ -225,7 +225,6 @@ body.has-bottom-menu {
 }
 
 .myspace-container {
-  background: white;
   padding-bottom: 1.5rem;
 }
 

@@ -1,0 +1,24 @@
+<div class="myspace-section">
+  <% if (typeof hasSignedInUser !== 'undefined' && hasSignedInUser) { %>
+  <img
+    class="myspace-section-gif"
+    src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+    data-src="/images/iron-man.gif"
+    width="347"
+    height="207"
+    data-gif-stepper
+    data-gif-sound="proton-cannon.mp3"
+    data-gif-sound-percent="70"
+    data-steps-per-click="3"
+    alt="Iron Man GIF"
+  />
+  <% } else { %>
+  <img
+    class="myspace-section-gif"
+    src="/images/iron-man.gif"
+    width="347"
+    height="207"
+    alt="Iron Man GIF"
+  />
+  <% } %>
+</div>

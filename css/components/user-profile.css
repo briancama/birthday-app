@@ -35,6 +35,12 @@
   right: 0;
 }
 
+.profile-edit-btn--static {
+  position: relative;
+  margin-top: 0.25rem;
+  right: 0;
+}
+
 .profile-edit-btn:hover {
   background: #00c;
   color: #fff;
@@ -180,6 +186,129 @@ body.is-owner #headshotUploadContainer {
   display: flex;
   justify-content: space-between;
   flex-direction: column;
+}
+
+.profile-gif-section__title {
+  margin-bottom: 0.45rem;
+}
+
+/* ── Preview (visible to all) ──────────────────────────────── */
+.profile-gif-preview {
+  margin-bottom: 0.5rem;
+}
+
+.profile-gif-display {
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  border: 2px solid #99c;
+  background: #fff;
+  object-fit: contain;
+  display: block;
+}
+
+.profile-gif-empty {
+  margin: 0.25rem 0 0;
+  font-size: 0.78rem;
+  color: #666;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+/* ── Toggle button to open picker ──────────────────────────── */
+.profile-gif-owner-controls {
+  margin-bottom: 0.5rem;
+  text-align: right;
+}
+
+.profile-gif-toggle-btn {
+  background: none;
+  border: none;
+  color: #00c;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.profile-gif-toggle-btn:hover {
+  color: #009;
+}
+
+.music-player-container {
+  min-height: 210px;
+}
+
+/* ── Picker form ───────────────────────────────────────────── */
+.profile-gif-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.25rem;
+}
+
+/* 3-per-row thumbnail grid */
+.profile-gif-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.profile-gif-thumb {
+  position: relative;
+  cursor: pointer;
+  border: 2px solid transparent;
+  background: rgba(0, 0, 0, 0.04);
+  transition: border-color 0.1s;
+  overflow: hidden;
+}
+
+.profile-gif-thumb input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.profile-gif-thumb img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+}
+
+.profile-gif-thumb__label {
+  display: block;
+  font-size: 0.6rem;
+  text-align: center;
+  padding: 2px 2px 3px;
+  line-height: 1.2;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-gif-thumb:hover {
+  border-color: #88c;
+}
+
+.profile-gif-thumb.is-selected {
+  border-color: #00c;
+  background: rgba(0, 0, 200, 0.08);
+}
+
+/* ── Actions row ───────────────────────────────────────────── */
+.profile-gif-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.is-hidden {
+  display: none !important;
 }
 
 /* ── About Me (main column) ─────────────────────────────────── */

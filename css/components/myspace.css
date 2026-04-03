@@ -71,21 +71,21 @@
   padding-top: 0;
 
   .btn {
-  background: unset;
-  font-family: Verdana;
-  text-shadow: none;
-  text-transform: uppercase;
-  font-weight: normal;
-  border-style: solid;
-  border-width: 1px;
-  /* border-style: inherit; */
-  padding: 8px 16px;
-  font-size: 1em;
-  cursor: pointer;
+    background: unset;
+    font-family: Verdana;
+    text-shadow: none;
+    text-transform: uppercase;
+    font-weight: normal;
+    border-style: solid;
+    border-width: 1px;
+    /* border-style: inherit; */
+    padding: 8px 16px;
+    font-size: 1em;
+    cursor: pointer;
     margin-top: 6px;
   }
 
-  .btn--secondary{
+  .btn--secondary {
     border-color: #ccc #444 #444 #ccc;
     color: var(--myspace-dark-blue);
     transition: background 0.3s ease-in-out;
@@ -199,9 +199,9 @@ body {
   display: flex;
   gap: 1rem;
   margin: 0 auto;
-  padding-top: 2rem;
   max-width: 1000px;
-  padding-left: 0.5rem;
+  padding: 2rem 1rem;
+  background: white;
 }
 
 .myspace-sidebar {
@@ -458,5 +458,9 @@ body {
 @media screen and (max-width: 768px) {
   .retro-banner__line {
     font-size: 20px;
+  }
+
+  .myspace-section:last-child {
+    margin-bottom: 2rem;
   }
 }

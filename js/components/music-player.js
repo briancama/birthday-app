@@ -357,6 +357,7 @@ class MusicPlayer extends HTMLElement {
           max-width: 100%;
           box-sizing:border-box;
           box-shadow: 0 0 12px #ff69b4;
+          min-height: 210px;
         }
         .music-title {
             font-size: 1.1em;
