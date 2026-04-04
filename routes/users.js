@@ -187,8 +187,11 @@ router.get("/:identifier", async (req, res) => {
     try {
       const { data: ua, error: uaErr } = await supabase
         .from("user_achievements")
-        .select("achievement_id, awarded_at, achievements(name,description,image_url)")
+        .select(
+          "achievement_id, awarded_at, achievements!inner(name,description,image_url,is_visitor_eligible)"
+        )
         .eq("user_id", data.user_id || data.id)
+        .eq("achievements.is_visitor_eligible", true)
         .order("awarded_at", { ascending: false });
       if (!uaErr && Array.isArray(ua)) userAchievements = ua;
     } catch (e) {

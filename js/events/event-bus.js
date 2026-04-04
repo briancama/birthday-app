@@ -102,6 +102,11 @@ EventBus.EVENTS = {
     UPDATED: "event:updated", // Event details updated
     RSVP_UPDATED: "event:rsvp-updated", // RSVP list/counts updated
   },
+
+  // Profile wall events
+  WALL: {
+    POSTED: "user:wall:posted", // User posted on another user's wall
+  },
 };
 
 // Development debugging helpers

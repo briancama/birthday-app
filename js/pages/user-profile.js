@@ -2,6 +2,7 @@
 // BriSpace user profile page — public view with owner-only inline editing.
 import { BasePage } from "./base-page.js";
 import { appState } from "../app.js";
+import { EventBus } from "../events/event-bus.js";
 import { featureFlags } from "../utils/feature-flags.js";
 import { createCommentCard } from "../components/myspace-comment-card.js";
 import { MUSIC_SONGS } from "../constants/music-songs.js";
@@ -714,6 +715,7 @@ class UserProfilePage extends BasePage {
         if (textarea) textarea.value = "";
         await this.loadWall();
         this.showSuccessToast("Comment posted!");
+        EventBus.instance.emit("user:wall:posted", { userId: this.userId });
       } catch (err) {
         this.showErrorToast("Failed: " + err.message);
       } finally {

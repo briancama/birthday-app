@@ -1,0 +1,133 @@
+.brispace-leaderboard-intro {
+  border: 1px solid var(--myspace-light-orange);
+  padding: 0.7rem 0.9rem;
+  background: #fff;
+}
+
+.brispace-leaderboard-intro p {
+  margin: 0;
+  line-height: 1.35;
+}
+
+.brispace-podium {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+}
+
+.podium-card {
+  border: 1px solid #9bb9e5;
+  background: linear-gradient(180deg, #f7fbff 0%, #eaf2ff 100%);
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.podium-rank {
+  font-weight: bold;
+  color: var(--myspace-dark-blue);
+  margin-bottom: 0.35rem;
+}
+
+.podium-headshot {
+  width: 66px;
+  height: 66px;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #8caad8;
+  object-fit: cover;
+  background: #d8e4f8;
+}
+
+.podium-name {
+  margin-top: 0.45rem;
+  font-weight: bold;
+  word-break: break-word;
+}
+
+.podium-name a {
+  color: var(--myspace-dark-blue);
+}
+
+.podium-score {
+  margin-top: 0.2rem;
+  color: #2e4f81;
+}
+
+.brispace-rank-list {
+  margin-top: 1rem;
+  border: 1px solid #9bb9e5;
+  background: #fff;
+}
+
+.brispace-rank-list__head,
+.brispace-rank-row {
+  display: grid;
+  grid-template-columns: 64px 1fr 120px;
+  align-items: center;
+}
+
+.brispace-rank-list__head {
+  background: #d4e2fb;
+  color: #103a78;
+  font-weight: bold;
+}
+
+.brispace-rank-list__head span,
+.brispace-rank-row span {
+  padding: 0.45rem 0.55rem;
+}
+
+.brispace-rank-row {
+  border-top: 1px solid #d6e1f2;
+}
+
+.brispace-rank-row:nth-child(even) {
+  background: #f6f9ff;
+}
+
+.brispace-rank-row--current {
+  background: #fff5d5;
+}
+
+.brispace-rank-user {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.brispace-rank-user img {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #8caad8;
+  object-fit: cover;
+  background: #d8e4f8;
+}
+
+.brispace-rank-score {
+  text-align: right;
+  font-weight: bold;
+  color: #133f7f;
+}
+
+.brispace-leaderboard-meta {
+  margin-top: 0.9rem;
+  color: #35598d;
+  font-size: 11px;
+}
+
+.brispace-empty {
+  border: 1px dashed #9fb7db;
+  background: #fff;
+  padding: 0.8rem;
+}
+
+@media (max-width: 900px) {
+  .brispace-podium {
+    grid-template-columns: 1fr;
+  }
+
+  .brispace-rank-list__head,
+  .brispace-rank-row {
+    grid-template-columns: 56px 1fr 96px;
+  }
+}

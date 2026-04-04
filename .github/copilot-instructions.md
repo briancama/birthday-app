@@ -93,9 +93,16 @@ Always implement and call `cleanup()` in pages/components to remove event listen
   - `templates/brispace.ejs`
   - `templates/friends.ejs`
   - `templates/user.ejs`
+  - `templates/scoreboard.ejs`
 - Keep `templates/partials/navigation.ejs` for participant/event app surfaces (dashboard/challenges/event-info/admin/cocktail pages).
 - The visitor partial intentionally keeps visitor-first menu items with reduced participant-specific branching.
 - If global navigation shell/markup changes (logo/header/toggle structure), update both partials to avoid drift unless the divergence is intentional.
+
+### Brispace Achievement Leaderboard Scope (2026)
+
+- `achievements.is_visitor_eligible` controls whether an achievement counts toward Brispace rank.
+- Keep participant-only achievements (`all_assigned_completed`, `first_challenge`, `three_challenges`, `the_challenger`) excluded from Brispace ranking unless requirements change.
+- No schema change is required in `user_achievements` for this split; filtering happens via the achievement catalog flag and leaderboard view.
 
 ---
 

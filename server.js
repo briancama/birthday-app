@@ -316,6 +316,58 @@ app.get(["/leaderboard", "/leaderboard.html"], (req, res) => {
   return res.render("leaderboard");
 });
 
+// Scoreboard: server-rendered Brispace ranking based on visitor-eligible achievements
+app.get(["/scoreboard", "/scoreboard.html"], async (req, res) => {
+  try {
+    const supabase = getSupabase();
+    const [leaderboardResult, publicProfilesResult] = await Promise.all([
+      supabase
+        .from("brispace_leaderboard")
+        .select(
+          "user_id, username, display_name, headshot, achievement_points, achievements_completed"
+        )
+        .order("achievement_points", { ascending: false })
+        .order("achievements_completed", { ascending: false }),
+      supabase.from("user_profile_view").select("user_id").eq("is_published", true),
+    ]);
+
+    const { data, error } = leaderboardResult;
+    const { data: publicProfiles, error: publicProfilesError } = publicProfilesResult;
+
+    if (error) throw error;
+    if (publicProfilesError) throw publicProfilesError;
+
+    const rows = Array.isArray(data) ? data : [];
+    const publicUserIds = new Set(
+      (Array.isArray(publicProfiles) ? publicProfiles : [])
+        .map((row) => row.user_id)
+        .filter(Boolean)
+    );
+    const publicRows = rows.filter((row) => publicUserIds.has(row.user_id));
+    const rankedUsers = publicRows.map((row, idx) => ({ ...row, rank: idx + 1 }));
+
+    const currentUser =
+      res.locals.navData && res.locals.navData.user ? res.locals.navData.user : null;
+
+    return res.render("scoreboard", {
+      rankedUsers,
+      podiumUsers: rankedUsers.slice(0, 3),
+      currentUser,
+      leaderboardGeneratedAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.warn("Brispace scoreboard query failed:", err && err.message ? err.message : err);
+    const currentUser =
+      res.locals.navData && res.locals.navData.user ? res.locals.navData.user : null;
+    return res.render("scoreboard", {
+      rankedUsers: [],
+      podiumUsers: [],
+      currentUser,
+      leaderboardGeneratedAt: new Date().toISOString(),
+    });
+  }
+});
+
 // Challenge Workshop: server-rendered to include navigation partial
 app.get(["/challenges-submit", "/challenges-submit.html"], (req, res) => {
   return res.render("challenges-submit");

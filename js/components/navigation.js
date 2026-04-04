@@ -162,6 +162,18 @@ class NavigationController {
     this.updateMenuOptions();
     this.ensureNotificationToggle();
     this.updateProfileButton(user);
+    this.updateBodyAuthClass(user);
+  }
+
+  updateBodyAuthClass(user) {
+    // Sync body class based on auth state for YTMND easter egg gating
+    if (user) {
+      document.body.classList.add("logged-in");
+      document.body.classList.remove("logged-out");
+    } else {
+      document.body.classList.add("logged-out");
+      document.body.classList.remove("logged-in");
+    }
   }
 
   updateProfileButton(user) {

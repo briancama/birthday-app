@@ -24,10 +24,11 @@ const ACHIEVEMENT_KEY = "ytmnd";
 const STORAGE_KEY = "ytmnd-found";
 
 export class YTMNDEasterEgg {
-  constructor() {
+  constructor(options = {}) {
     this._progress = 0;
     this._clickHandler = null;
     this._modal = null;
+    this._enabled = options.enabled !== false; // default enabled, respects explicit false
   }
 
   init() {
@@ -40,6 +41,9 @@ export class YTMNDEasterEgg {
     this._clickHandler = (e) => {
       const letter = e.target.closest("[data-ytmnd]");
       if (!letter) return; // ignore clicks on anything that isn't a YTMND letter
+
+      // Early exit if easter egg is disabled
+      if (!this._enabled) return;
 
       const expected = SEQUENCE[this._progress];
       const actual = letter.dataset.ytmnd.toUpperCase();
@@ -67,6 +71,10 @@ export class YTMNDEasterEgg {
     };
 
     document.addEventListener("click", this._clickHandler);
+  }
+
+  setEnabled(enabled) {
+    this._enabled = enabled;
   }
 
   destroy() {

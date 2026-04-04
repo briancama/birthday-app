@@ -108,7 +108,7 @@
     padding: var(--spacing-md);
     color: var(--text-dark);
     padding-top: 0;
-    position:relative;
+    position: relative;
   }
 
   /* Typography */
@@ -375,9 +375,11 @@
     font-weight: normal;
     text-shadow: none;
     opacity: 0.65;
-    transition: opacity 0.15s, border-color 0.15s;
-    width: 40px!important;
-    min-width: 60px!important;
+    transition:
+      opacity 0.15s,
+      border-color 0.15s;
+    width: 40px !important;
+    min-width: 60px !important;
     border-color: #d371df;
     color: #e60aff;
   }
@@ -596,35 +598,35 @@
   }
 
   .challenge-card.locked {
-  /* previously closed here in error; removed stray bracket so following styles are valid */
+    /* previously closed here in error; removed stray bracket so following styles are valid */
 
-/* Special style for disabled challenges (all incomplete revealed/locked) */
-.challenge-card.challenges-disabled {
-  background: repeating-linear-gradient(135deg, #e0e0e0 0 10px, #c0c0c0 10px 20px);
-  border: 3px dashed #888;
-  opacity: 1;
-  filter: grayscale(0.2) contrast(0.9);
-  box-shadow: 0 0 8px 2px #88888855;
-  position: relative;
-}
+    /* Special style for disabled challenges (all incomplete revealed/locked) */
+    .challenge-card.challenges-disabled {
+      background: repeating-linear-gradient(135deg, #e0e0e0 0 10px, #c0c0c0 10px 20px);
+      border: 3px dashed #888;
+      opacity: 1;
+      filter: grayscale(0.2) contrast(0.9);
+      box-shadow: 0 0 8px 2px #88888855;
+      position: relative;
+    }
 
-.challenge-card.challenges-disabled::after {
-  content: "CHALLENGES DISABLED";
-  position: absolute;
-  top: 8px;
-  right: 12px;
-  background: #ffeb3b;
-  color: #b71c1c;
-  font-size: 0.85rem;
-  font-family: 'Courier New', Courier, monospace;
-  padding: 2px 8px;
-  border: 1.5px solid #b71c1c;
-  border-radius: 4px;
-  z-index: 2;
-  letter-spacing: 1px;
-  box-shadow: 1px 1px 0 #b71c1c44;
-  pointer-events: none;
-}
+    .challenge-card.challenges-disabled::after {
+      content: "CHALLENGES DISABLED";
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      background: #ffeb3b;
+      color: #b71c1c;
+      font-size: 0.85rem;
+      font-family: "Courier New", Courier, monospace;
+      padding: 2px 8px;
+      border: 1.5px solid #b71c1c;
+      border-radius: 4px;
+      z-index: 2;
+      letter-spacing: 1px;
+      box-shadow: 1px 1px 0 #b71c1c44;
+      pointer-events: none;
+    }
     background: #d3d3d3;
     opacity: 0.7;
   }
@@ -1585,9 +1587,22 @@
    YTMND EASTER EGG
    ============================================================ */
 
-/* Individual letters scattered in prose — slightly bolder than surrounding text.
+/* YTMND Easter Egg: Interactive only when logged-in
+   For logged-out users, letters are plain text. For logged-in users,
+   individual letters scattered in prose — slightly bolder than surrounding text.
    The cursor change on hover is the only hint they're interactive. */
-[data-ytmnd] {
+
+/* Logged-out state: letters are not interactive */
+body.logged-out [data-ytmnd] {
+  font-size: 1em;
+  color: inherit;
+  user-select: none;
+  -webkit-user-select: none;
+  /* no cursor pointer, no hover effects, no interactivity */
+}
+
+/* Logged-in state: letters are fully interactive */
+body.logged-in [data-ytmnd] {
   font-size: calc(1em + 2px);
   cursor: pointer;
   color: inherit;
@@ -1595,14 +1610,14 @@
   user-select: none;
   -webkit-user-select: none;
 }
-[data-ytmnd]:hover {
+body.logged-in [data-ytmnd]:hover {
   color: var(--neon-cyan, #0ff);
 }
-[data-ytmnd].ytmnd-letter--hit {
+body.logged-in [data-ytmnd].ytmnd-letter--hit {
   color: #0f0;
   text-shadow: 0 0 6px #0f0;
 }
-[data-ytmnd].ytmnd-letter--miss {
+body.logged-in [data-ytmnd].ytmnd-letter--miss {
   color: #f00;
   text-shadow: 0 0 6px #f00;
   animation: ytmnd-shake 0.25s linear;

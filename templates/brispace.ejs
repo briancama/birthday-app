@@ -16,7 +16,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
   </head>
-  <body class="myspace" data-auth="<%= !!currentUser %>">
+  <body class="myspace <%= currentUser ? 'logged-in' : 'logged-out' %>" data-auth="<%= !!currentUser %>">
     <%- include('partials/navigation-visitor', { navData: (typeof navData !== 'undefined' ? navData : {}) })
     %>
     <main class="myspace-container full-width-content">
@@ -27,11 +27,11 @@
             <h3 class="myspace-section-alt-header">Welcome to BriSpace</h3>
             <div class="brispace-intro-box">
               <p>
-                BriSpace is a place for friends, nostalgia, and self-expression. Create your
+                BriSpace is a place for friends, <span data-ytmnd="N" class="ytmnd-letter">n</span>ostalgia, and self-expression. Create your
                 profile, connect with others, and relive the best of the 2000s internet. Whether
-                you're here to share your latest adventures, show off your old school bling, or just
-                hang out and get pwned by some bomb dot com memes, BriSpace is your space.
-                <p>When you're here you're family, and trust me we're eating good in the neighborhood.</p>
+                <span data-ytmnd="Y" class="ytmnd-letter">y</span>ou're here to share your latest adventures, show off your old school bling, or just
+                hang out and get pwned by some bomb dot com <span data-ytmnd="M" class="ytmnd-letter">m</span>emes, BriSpace is your space.
+                <p>When you're here you're family, and <span data-ytmnd="T" class="ytmnd-letter">t</span>rust me we're eating goo<span data-ytmnd="d" class="ytmnd-letter">d</span> in the neighborhood.</p>
                 <p class="text-micro">I want my baby back, baby back, baby back.</p>
               </p>
             </div>

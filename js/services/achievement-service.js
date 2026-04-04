@@ -17,6 +17,7 @@ class AchievementService {
     EventBus.instance.listen("cocktail:favorite:toggled", (e) => this.onFavoriteToggled(e));
     EventBus.instance.listen("user:guestbook:sign", (e) => this.onGuestbookSign(e));
     EventBus.instance.listen("event:rsvp", (e) => this.onEventRsvp(e));
+    EventBus.instance.listen("user:wall:posted", (e) => this.onWallPosted(e));
 
     // Also listen for simple DOM events (useful for inline scripts)
     window.addEventListener("achievement:trigger", (e) => {
@@ -171,6 +172,40 @@ class AchievementService {
       }
     } catch (err) {
       console.warn("AchievementService: onChallengeSubmitted error", err);
+    }
+  }
+
+  async onWallPosted(e) {
+    try {
+      const userId = e.detail?.userId || appState.getUserId();
+      if (!userId) return;
+      const supabase = appState.getSupabase();
+
+      // Find all wall:posted achievements (threshold-based)
+      const { data: achievements, error } = await supabase
+        .from("achievements")
+        .select("id,key,points,metadata")
+        .filter("metadata->>trigger", "eq", "wall:posted");
+      if (error) throw error;
+      if (!achievements || achievements.length === 0) return;
+
+      // Count cumulative posts on other people's walls (self-posts excluded)
+      const { count, error: cntErr } = await supabase
+        .from("profile_wall")
+        .select("id", { count: "exact", head: true })
+        .eq("author_user_id", userId)
+        .neq("target_user_id", userId);
+      if (cntErr) throw cntErr;
+      const wallPostCount = count ?? 0;
+
+      for (const a of achievements) {
+        const threshold = a.metadata?.threshold;
+        if (threshold && wallPostCount >= threshold) {
+          await this.awardByKey(a.key, { details: { wallPostCount } });
+        }
+      }
+    } catch (err) {
+      console.warn("AchievementService: onWallPosted error", err);
     }
   }
 

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BriSpace - Scoreboard</title>
+    <link rel="icon" type="image/png" href="/images/brispace_favicon.png" />
+    <link rel="stylesheet" href="/css/geocities.css" />
+    <link rel="stylesheet" href="/css/components/myspace.css" />
+    <link rel="stylesheet" href="/css/components/navigation.css" />
+    <link rel="stylesheet" href="/css/components/brispace-home.css" />
+    <link rel="stylesheet" href="/css/components/login-signup.css" />
+    <link rel="stylesheet" href="/css/components/brispace-leaderboard.css" />
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
+  </head>
+  <body class="myspace" data-auth="<%= !!currentUser %>">
+    <%- include('partials/navigation-visitor', { navData: (typeof navData !== 'undefined' ? navData
+    : {}) }) %>
+
+    <main class="myspace-container full-width-content">
+      <div class="container myspace-layout">
+        <div class="myspace-main">
+          <section class="myspace-section">
+            <h3 class="myspace-section-alt-header">BriSpace Achievement Scoreboard</h3>
+            <div class="brispace-leaderboard-intro">
+              <p>
+                Earn achievements by exploring and interacting across BriSpace. Some are obvious,
+                and some are <strong>hidden surprises</strong> waiting to be discovered.
+              </p>
+            </div>
+          </section>
+
+          <section class="myspace-section">
+            <h3 style="margin-bottom: 0">Top users right now</h3>
+
+            <% if (podiumUsers && podiumUsers.length > 0) { %>
+            <div class="brispace-podium">
+              <% podiumUsers.forEach(function(user) { %>
+              <article class="podium-card">
+                <div class="podium-rank">#<%= user.rank %></div>
+                <img
+                  class="podium-headshot"
+                  src="<%= user.headshot || '/images/profile.png' %>"
+                  alt="<%= user.display_name || user.username || 'User' %>"
+                />
+                <div class="podium-name">
+                  <a href="/users/<%= user.username %>">
+                    <%= user.display_name || user.username %>
+                  </a>
+                </div>
+                <div class="podium-score"><%= user.achievement_points || 0 %> pts</div>
+              </article>
+              <% }); %>
+            </div>
+            <% } else { %>
+            <div class="brispace-empty">No leaderboard data yet.</div>
+            <% } %>
+          </section>
+
+          <section class="myspace-section">
+            <h3 style="margin-bottom: 0">Full rankings</h3>
+
+            <% if (rankedUsers && rankedUsers.length > 0) { %>
+            <div class="brispace-rank-list">
+              <div class="brispace-rank-list__head">
+                <span>Rank</span>
+                <span>User</span>
+                <span style="text-align: right">Points</span>
+              </div>
+              <% rankedUsers.forEach(function(user) { %>
+              <div
+                class="brispace-rank-row <%= currentUser && currentUser.id === user.user_id ? 'brispace-rank-row--current' : '' %>"
+              >
+                <span>#<%= user.rank %></span>
+                <span>
+                  <span class="brispace-rank-user">
+                    <img
+                      src="<%= user.headshot || '/images/profile.png' %>"
+                      alt="<%= user.display_name || user.username || 'User' %>"
+                    />
+                    <a href="/users/<%= user.username %>">
+                      <%= user.display_name || user.username %>
+                    </a>
+                  </span>
+                </span>
+                <span class="brispace-rank-score"><%= user.achievement_points || 0 %></span>
+              </div>
+              <% }); %>
+            </div>
+            <p class="brispace-leaderboard-meta">
+              Updated at <%= new Date(leaderboardGeneratedAt).toLocaleTimeString() %>
+            </p>
+            <% } else { %>
+            <div class="brispace-empty">No users have scored visitor achievements yet.</div>
+            <% } %>
+          </section>
+        </div>
+
+        <aside class="myspace-sidebar brispace-auth">
+          <% if (!currentUser) { %>
+          <div id="loginSignupContainer"></div>
+          <% } else { %>
+          <div class="login-signup-form">
+            <h3>
+              Welcome back,
+              <%= currentUser.display_name || 'friend' %>!
+            </h3>
+            <a href="/users/<%= currentUser.username %>">Go to your profile</a>
+          </div>
+          <% } %>
+          <%- include('partials/sidebar-gif-stepper', { hasSignedInUser: !!currentUser }) %>
+        </aside>
+      </div>
+    </main>
+
+    <script type="module">
+      import { createLoginSignupForm } from "/js/components/login-signup.js";
+      import { BrispacePage } from "/js/pages/brispace.js";
+
+      const page = new BrispacePage();
+      await page.init();
+
+      const isAuthenticated = document.body.dataset.auth === "true";
+      if (!isAuthenticated) {
+        const container = document.getElementById("loginSignupContainer");
+        if (container) {
+          const form = createLoginSignupForm({
+            onSuccess: () => {
+              window.location.href = "/scoreboard";
+            },
+          });
+          container.appendChild(form);
+        }
+      }
+    </script>
+
+    <% if (currentUser) { %>
+    <script src="/js/components/gif-stepper.js"></script>
+    <% } %>
+  </body>
+</html>

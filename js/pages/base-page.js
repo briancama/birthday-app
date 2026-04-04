@@ -590,6 +590,11 @@ class BasePage {
       { img: "/images/site-awards_jackpot.gif", sound: "/audio/thanks_jackpot.mp3" },
       { img: "/images/site-awards_olsen.gif", sound: "/audio/thanks_olsen.mp3" },
       { img: "/images/site-awards-bomb.gif", sound: "/audio/thanks_bomb.mp3" },
+      { img: "/images/site-awards-bod.gif", sound: "/audio/thanks_bod.mp3" },
+      { img: "/images/site-awards-patriot.gif", sound: "/audio/thanks-patriot.mp3" },
+      { img: "/images/site-awards-seinfeld.gif", sound: "/audio/thanks-seinfeld.mp3" },
+      { img: "/images/site-awards-tweety.gif", sound: "/audio/thanks_tweety.mp3" },
+      { img: "/images/site-awards-voyager.gif", sound: "/audio/thanks_voyager.mp3" },
     ];
     // Allow a forced override entry (string img path or { img, sound } object)
     let randomEntry;
