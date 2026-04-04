@@ -2,13 +2,18 @@
 // Generic dialog chain engine for Win98-style modal flows
 // Usage: new DialogChain({ steps, onComplete }).start();
 
+import { formatPhoneInput } from "../utils/phone-format.js";
+
 export class DialogChain {
+  static _running = false;
   constructor({ steps, onComplete }) {
     this.steps = steps;
     this.onComplete = onComplete;
   }
 
   async start() {
+    if (DialogChain._running) return;
+    DialogChain._running = true;
     try {
       for (const raw of this.steps) {
         const item = typeof raw === "string" ? { type: "alert", text: raw } : raw;
@@ -22,6 +27,8 @@ export class DialogChain {
       }
     } catch (err) {
       console.error("DialogChain error:", err);
+    } finally {
+      DialogChain._running = false;
     }
   }
 
@@ -81,6 +88,27 @@ export class DialogChain {
           inputEl.setAttribute("inputmode", mode);
         }
         if (item.placeholder) inputEl.setAttribute("placeholder", item.placeholder);
+
+        const wantsPhoneFormat =
+          item.inputMode === "tel" || item.inputMode === "phone" || item.format === "phone";
+        if (wantsPhoneFormat) {
+          if (!inputEl.getAttribute("placeholder")) {
+            inputEl.setAttribute("placeholder", "(555) 555-5555");
+          }
+          inputEl.addEventListener("input", () => {
+            try {
+              const selStart = inputEl.selectionStart || 0;
+              const prevLen = inputEl.value.length;
+              inputEl.value = formatPhoneInput(inputEl.value);
+              const newLen = inputEl.value.length;
+              const delta = newLen - prevLen;
+              inputEl.selectionStart = inputEl.selectionEnd = Math.max(0, selStart + delta);
+            } catch (err) {
+              // ignore formatting errors
+            }
+          });
+        }
+
         content.appendChild(p);
         content.appendChild(inputEl);
       } else {

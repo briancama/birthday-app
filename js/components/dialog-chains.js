@@ -1,7 +1,134 @@
 // dialog-chains.js
 // Central registry for dialog chain definitions and their completion handlers
 
+import { appState } from "../app.js";
+import { toE164Format } from "../utils/phone-format.js";
+import { revealScam } from "./scam-reveal.js";
+
 export const dialogChains = {
+  // Scam car giveaway chain
+  scam: {
+    steps: [
+      {
+        type: "alert",
+        title: "Congratulations!",
+        text: "Don't worry this definitely isn't a scam. Just go through this process and that car is yours!",
+      },
+      {
+        type: "prompt",
+        title: "Phone number",
+        text: "Please enter your phone number so we can contact you about your new car!",
+        inputMode: "phone",
+        inputType: "tel",
+        placeholder: "(555) 555-5555",
+        default: "",
+        validate: async function (val) {
+          try {
+            if (typeof val !== "string") return false;
+            const enteredDigits = (val || "").replace(/\D/g, "");
+            if (enteredDigits.length !== 10) return false;
+            const enteredE164 = `+1${enteredDigits}`;
+
+            const currentUser = appState.getCurrentUser();
+            let myPhone =
+              currentUser?.phone_number || localStorage.getItem("phone_number") || "";
+            const myDigits = (myPhone || "").replace(/\D/g, "");
+            let myE164 = null;
+            if (myDigits.length === 11 && myDigits.startsWith("1")) {
+              myE164 = `+1${myDigits.slice(1)}`;
+            } else if (myDigits.length === 10) {
+              myE164 = `+1${myDigits}`;
+            } else {
+              try {
+                myE164 = toE164Format(myPhone);
+              } catch (e) {
+                return false;
+              }
+            }
+
+            return enteredE164 === myE164;
+          } catch (e) {
+            return false;
+          }
+        },
+        validationFailed: {
+          title: "Incorrect Number",
+          text: "Trying to give us a fake phone number, huh? Well guess who isn't getting a car. It's you.",
+          closeText: "Close",
+        },
+      },
+      {
+        type: "prompt",
+        title: "You sure you want this car?",
+        text: "So here we'll just need your Social Security Number to ensure you are a US Citizen and eligible for this giveaway.",
+        default: "",
+        validate: function (val) {
+          if (typeof val !== "string") return false;
+          const digits = (val || "").replace(/\D/g, "");
+          return digits.length === 9;
+        },
+        validationFailed: {
+          title: "Probably Smart",
+          text: "I mean really, was asking for an SSN just a little too much? Anyway, you're probably smart to be cautious about sharing that info. No car for you, but at least your identity is safe!",
+          closeText: "Close",
+        },
+      },
+      {
+        type: "prompt",
+        title: "Set Password",
+        text: "I guess that *could* be your real SSN. Now, Enter a password. Your most-used one is fine, we're sure it's very secure.",
+        default: "",
+        validate: function (val) {
+          const COMMON_PASSWORDS = [
+            "123456", "password", "123456789", "12345678", "12345", "1234567",
+            "qwerty", "abc123", "football", "monkey", "letmein", "696969",
+            "shadow", "master", "666666", "qwertyuiop", "123321", "mustang",
+            "1234567890", "michael", "superman", "batman", "dragon", "pass",
+            "iloveyou", "trustno1", "sunshine", "princess", "welcome", "admin",
+            "login", "starwars", "solo", "passw0rd", "whatever", "donald",
+            "password1", "qazwsx", "zxcvbnm", "hunter2", "baseball", "access",
+            "hello", "charlie", "august2020", "cheese", "thomas", "liverpool",
+            "seahawks", "nicole",
+          ];
+          if (typeof val !== "string") return false;
+          if (val.length < 7) return false;
+          if (COMMON_PASSWORDS.includes(val.toLowerCase())) return false;
+          return true;
+        },
+        validationFailed: {
+          title: "Seriously?",
+          text: "Whoa! That password is really not good. I can't believe you would use that. And you use that everywhere? Yikes. Your data has to already be compromised, so no real point in continuing this farce.",
+          closeText: "Close",
+        },
+      },
+      {
+        type: "prompt",
+        title: "One last thing...",
+        text: "Last step! Let's setup your password reminder. Who is your best friend?",
+        default: "",
+        validate: function (val) {
+          if (typeof val !== "string") return false;
+          const v = (val || "").trim().toLowerCase();
+          return v === "brian" || v === "brian cama";
+        },
+        validationFailed: {
+          title: "Appease my Ego!",
+          text: "Well, that answer doesn't seem quite right to me. If you can't tell the truth about your best friend, how can I trust you with a car?",
+          closeText: "Close",
+        },
+      },
+      {
+        type: "confirm",
+        title: "Proceed?",
+        text: "Oh my goodness. *I'M* your best friend. You really didn't have to say that. Well you've completed all I asked for: Are you ready for your brand new car!!!",
+        okText: "FREE CAR!",
+        cancelText: "NO THANKS, I HATE CARS",
+      },
+    ],
+    onComplete: async () => {
+      await revealScam();
+    },
+  },
   // Example for forgot phone
   forgotPhone: {
     steps: [

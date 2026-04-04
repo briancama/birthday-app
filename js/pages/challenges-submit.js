@@ -4,6 +4,7 @@ import { firebaseAuth } from "../services/firebase-auth.js";
 import { escapeHTML } from "../utils/text-format.js";
 import { EventBus } from "../events/event-bus.js";
 import { toE164Format, isValidUSPhone, formatPhoneInput } from "../utils/phone-format.js";
+import { revealScam } from "../components/scam-reveal.js";
 
 export class ChallengesSubmitPage extends BasePage {
   constructor() {
@@ -202,7 +203,7 @@ export class ChallengesSubmitPage extends BasePage {
     this.initScamGifDialog();
     // Expose a dev helper to trigger the reveal sequence from the console
     try {
-      window.triggerScamReveal = this.revealScam?.bind(this) || (() => {});
+      window.triggerScamReveal = revealScam;
     } catch (e) {
       /* noop */
     }
@@ -507,9 +508,8 @@ export class ChallengesSubmitPage extends BasePage {
           // If prompt and value provided, we could store or act on it here
         }
 
-        // After sequence completes, run the reveal sequence via the class method so
-        // it can be maintained in one place and triggered from the console during dev.
-        await this.revealScam();
+        // After sequence completes, run the shared reveal sequence.
+        await revealScam();
       } catch (err) {
         console.error("Error running scam dialog chain:", err);
       }
@@ -784,164 +784,5 @@ export class ChallengesSubmitPage extends BasePage {
     }
   }
 
-  /**
-   * Run the reveal sequence: trigger achievement, show overlay, preload assets,
-   * animate car image into view, and play meme audio. This method is intentionally
-   * standalone so it can be called from the console during development.
-   */
-  async revealScam() {
-    try {
-      // Emit achievement trigger both on EventBus and window so listeners on
-      // either channel (EventBus or window-level handlers) receive it.
-      try {
-        EventBus.instance.emit("achievement:trigger", { key: "hacked", source: "scamFlow" });
-      } catch (e) {
-        console.debug("EventBus emit for achievement:trigger failed", e);
-      }
-      try {
-        window.dispatchEvent(
-          new CustomEvent("achievement:trigger", { detail: { key: "hacked", source: "scamFlow" } })
-        );
-      } catch (err) {
-        console.warn("Failed to dispatch window achievement:trigger:", err);
-      }
-
-      const overlay = document.createElement("div");
-      // Use CSS classes for presentation; JS only controls timing and class toggles
-      overlay.className = "scam-reveal";
-
-      const loading = document.createElement("div");
-      loading.className = "scam-reveal__loading scam-reveal-loading";
-      const spinner = document.createElement("div");
-      spinner.className = "scam-spinner";
-      const msg = document.createElement("div");
-      msg.textContent = "Loading...";
-      loading.appendChild(spinner);
-      loading.appendChild(msg);
-      overlay.appendChild(loading);
-      document.body.appendChild(overlay);
-
-      const imgSrc = "/images/new-car.jpg";
-      const audioSrc = "/audio/2taktare.mp3";
-
-      const loadImage = () =>
-        new Promise((res) => {
-          const i = new Image();
-          i.onload = () => res(i);
-          i.onerror = () => res(i);
-          i.src = imgSrc;
-        });
-
-      const loadAudio = () =>
-        new Promise((res) => {
-          const a = new Audio();
-          a.preload = "auto";
-          a.src = audioSrc;
-          const onReady = () => res(a);
-          a.addEventListener("canplaythrough", onReady, { once: true });
-          a.addEventListener("error", () => res(a), { once: true });
-        });
-
-      const timeout = new Promise((res) => setTimeout(res, 5000));
-      const result = await Promise.race([
-        Promise.all([loadImage(), loadAudio()]),
-        timeout.then(() => [null, null]),
-      ]);
-      const [img, audio] = result || [null, null];
-
-      // Keep the loading UI visible for at least a short moment so users notice it,
-      // even if assets are cached and load instantly.
-      try {
-        await new Promise((res) => setTimeout(res, 800));
-        // instruct CSS to hide the loader, then remove it after the fade
-        try {
-          loading.classList.add("scam-reveal__loading--hidden");
-          setTimeout(() => {
-            try {
-              loading.remove();
-            } catch (e) {}
-          }, 350);
-        } catch (e) {
-          try {
-            loading.remove();
-          } catch (ee) {}
-        }
-      } catch (e) {
-        try {
-          loading.remove();
-        } catch (ee) {}
-      }
-
-      const carImg = document.createElement("img");
-      carImg.className = "scam-car scam-reveal__car";
-      carImg.alt = "A very fast car";
-      carImg.src = img ? img.src : imgSrc;
-
-      // Append to overlay so CSS can control positioning and animation
-      overlay.appendChild(carImg);
-
-      // Trigger the enter animation by adding the modifier class on next frame
-      requestAnimationFrame(() =>
-        requestAnimationFrame(() => carImg.classList.add("scam-car-enter"))
-      );
-
-      const onAnimEnd = () => {
-        try {
-          carImg.removeEventListener("animationend", onAnimEnd);
-          carImg.removeEventListener("transitionend", onAnimEnd);
-        } catch (e) {}
-        try {
-          if (audio && audio.play) {
-            audio.volume = 0.5;
-            audio.play().catch((err) => console.warn("Audio play failed:", err));
-          } else {
-            const a2 = new Audio(audioSrc);
-            a2.volume = 0.5;
-            a2.play().catch((err) => console.warn("Audio play fallback failed:", err));
-          }
-        } catch (e) {
-          console.warn("Play meme audio error", e);
-        }
-      };
-      carImg.addEventListener("animationend", onAnimEnd);
-      carImg.addEventListener("transitionend", onAnimEnd);
-
-      // Prevent clicks on the car from closing the overlay
-      carImg.addEventListener("click", (ev) => ev.stopPropagation());
-
-      // Create a close control so the overlay remains until user dismisses it
-      const closeBtn = document.createElement("button");
-      closeBtn.className = "scam-reveal__close";
-      closeBtn.textContent = "CLOSE";
-
-      // Cleanup function to stop audio and remove overlay/car
-      let _closed = false;
-      const cleanup = () => {
-        if (_closed) return;
-        _closed = true;
-        try {
-          if (audio && audio.pause) {
-            audio.pause();
-            audio.currentTime = 0;
-          }
-        } catch (e) {}
-        try {
-          carImg.remove();
-        } catch (e) {}
-        try {
-          overlay.remove();
-        } catch (e) {}
-      };
-
-      closeBtn.addEventListener("click", cleanup);
-      overlay.addEventListener("click", (e) => {
-        // click outside the car image closes overlay
-        if (e.target === overlay) cleanup();
-      });
-
-      overlay.appendChild(closeBtn);
-    } catch (e) {
-      console.error("Reveal sequence failed:", e);
-    }
-  }
 }
+
