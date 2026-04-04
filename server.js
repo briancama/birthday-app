@@ -231,13 +231,16 @@ app.get(["/friends", "/friends.html"], async (req, res) => {
   try {
     const supabase = getSupabase();
     const { data: users, error } = await supabase
-      .from("users")
-      .select("id, username, display_name, headshot, created_at")
+      .from("user_profile_view")
+      .select("user_id, username, display_name, headshot, created_at")
+      .eq("is_published", true)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
 
-    const allUsers = Array.isArray(users) ? users : [];
+    const allUsers = Array.isArray(users)
+      ? users.map((u) => ({ id: u.user_id, username: u.username, display_name: u.display_name, headshot: u.headshot, created_at: u.created_at }))
+      : [];
     const currentUser =
       res.locals.navData && res.locals.navData.user ? res.locals.navData.user : null;
     return res.render("friends", { allUsers, currentUser });
