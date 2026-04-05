@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const { getSupabase, createSanitizer, requireSignedUser } = require("../js/utils/server-utils");
+const fs = require("fs");
+const path = require("path");
 
 const supabase = getSupabase();
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -30,6 +32,26 @@ const PROFILE_GIF_KEYS = new Set([
   "spit-hot-fire",
   "spongebob",
 ]);
+const PROFILE_BACKGROUND_DIRECTORY = path.join(__dirname, "../images/backgrounds");
+const PROFILE_BACKGROUND_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp"]);
+
+function getAllowedProfileBackgroundUrls() {
+  try {
+    return fs
+      .readdirSync(PROFILE_BACKGROUND_DIRECTORY, { withFileTypes: true })
+      .filter((entry) => entry.isFile())
+      .map((entry) => entry.name)
+      .filter((name) => PROFILE_BACKGROUND_EXTENSIONS.has(path.extname(name).toLowerCase()))
+      .filter((name) => !name.includes("/") && !name.includes("\\"))
+      .sort((a, b) => a.localeCompare(b))
+      .map((name) => `/images/backgrounds/${name}`);
+  } catch (error) {
+    console.warn("Unable to read profile backgrounds directory:", error.message || error);
+    return [];
+  }
+}
+
+const PROFILE_BACKGROUND_URLS = new Set(getAllowedProfileBackgroundUrls());
 
 function extractTopNIdentifier(entry) {
   if (!entry) return null;
@@ -486,6 +508,8 @@ const ALLOWED_PROFILE_FIELDS = [
   "television",
   "is_published",
   "profile_gif_key",
+  "profile_bg_url",
+  "profile_bg_mode",
 ];
 
 // Note: looking_for was removed — column does not exist in user_profile table.
@@ -510,6 +534,16 @@ router.patch("/users/:id/profile-fields", async (req, res) => {
           } else {
             const normalized = val.trim().toLowerCase();
             updates[field] = PROFILE_GIF_KEYS.has(normalized) ? normalized : null;
+          }
+        } else if (field === "profile_bg_mode") {
+          const normalizedMode = typeof val === "string" ? val.trim().toLowerCase() : "";
+          updates[field] = normalizedMode === "tile" ? "tile" : "cover";
+        } else if (field === "profile_bg_url") {
+          if (typeof val !== "string" || !val.trim()) {
+            updates[field] = null;
+          } else {
+            const normalizedUrl = val.trim();
+            updates[field] = PROFILE_BACKGROUND_URLS.has(normalizedUrl) ? normalizedUrl : null;
           }
         } else {
           updates[field] = typeof val === "string" ? val.trim().slice(0, 300) : null;

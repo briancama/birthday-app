@@ -15,6 +15,8 @@ class UserProfilePage extends BasePage {
     super({ requiresAuth: false });
     this.profileUserId = document.body.dataset.profileUserId || null;
     this.isOwner = false;
+    this.profileBackgroundPersistedUrl = null;
+    this.localCleanup = [];
   }
 
   // BasePage calls initAuth only if requiresAuth:true; for public pages it calls softInit.
@@ -27,6 +29,7 @@ class UserProfilePage extends BasePage {
     this.setupHeadshotUpload();
     this.setupMusicPlayer();
     this.setupProfileGifPicker();
+    this.setupProfileBackgroundPicker();
     this.setupInlineEdits();
     this.loadAchievements();
     this.loadWall();
@@ -58,6 +61,12 @@ class UserProfilePage extends BasePage {
         });
       }
     }
+  }
+
+  addLocalListener(target, type, handler, options) {
+    if (!target || typeof target.addEventListener !== "function") return;
+    target.addEventListener(type, handler, options);
+    this.localCleanup.push(() => target.removeEventListener(type, handler, options));
   }
 
   setupTopNButtons() {
@@ -363,6 +372,175 @@ class UserProfilePage extends BasePage {
       } finally {
         clearBtn.disabled = false;
         clearBtn.textContent = "Clear";
+        if (saveBtn) saveBtn.disabled = false;
+        if (cancelBtn) cancelBtn.disabled = false;
+      }
+    });
+  }
+
+  setupProfileBackgroundPicker() {
+    if (!this.isOwner) return;
+
+    const shell = document.getElementById("profile-bg-picker-shell");
+    const toggleBtn = document.getElementById("profile-bg-toggle");
+    const panel = document.getElementById("profile-bg-panel");
+    const form = document.getElementById("profile-bg-form");
+    const saveBtn = document.getElementById("profile-bg-save");
+    const clearBtn = document.getElementById("profile-bg-clear");
+    const cancelBtn = document.getElementById("profile-bg-cancel");
+
+    if (!shell || !toggleBtn || !panel || !form) return;
+
+    const getSelectedInput = () => form.querySelector("input[name='profile-bg-url']:checked");
+    this.profileBackgroundPersistedUrl = getSelectedInput()?.value || null;
+
+    const applyBackground = (url) => {
+      if (!url) {
+        document.body.style.removeProperty("background-image");
+        document.body.style.removeProperty("background-repeat");
+        document.body.style.removeProperty("background-size");
+        return;
+      }
+      document.body.style.backgroundImage = `url("${url}")`;
+      document.body.style.backgroundRepeat = "repeat";
+      document.body.style.backgroundSize = "auto";
+    };
+
+    const syncSelectedThumb = (selectedUrl) => {
+      const thumbs = form.querySelectorAll(".profile-bg-thumb");
+      thumbs.forEach((thumb) => {
+        const input = thumb.querySelector("input[name='profile-bg-url']");
+        const matches = !!(input && input.value === selectedUrl);
+        thumb.classList.toggle("is-selected", matches);
+        if (input) input.checked = matches;
+      });
+    };
+
+    const openPanel = () => {
+      panel.classList.remove("is-hidden");
+      toggleBtn.setAttribute("aria-expanded", "true");
+    };
+
+    const closePanel = ({ restorePersisted = true } = {}) => {
+      panel.classList.add("is-hidden");
+      toggleBtn.setAttribute("aria-expanded", "false");
+      if (restorePersisted) {
+        syncSelectedThumb(this.profileBackgroundPersistedUrl);
+        applyBackground(this.profileBackgroundPersistedUrl);
+      }
+    };
+
+    const applySelectedPreview = () => {
+      const selectedUrl = getSelectedInput()?.value || null;
+      syncSelectedThumb(selectedUrl);
+      applyBackground(selectedUrl);
+    };
+
+    this.addLocalListener(toggleBtn, "click", () => {
+      if (panel.classList.contains("is-hidden")) {
+        openPanel();
+      } else {
+        closePanel({ restorePersisted: true });
+      }
+    });
+
+    this.addLocalListener(cancelBtn, "click", () => {
+      closePanel({ restorePersisted: true });
+    });
+
+    form.querySelectorAll(".profile-bg-thumb").forEach((thumb) => {
+      const input = thumb.querySelector("input[name='profile-bg-url']");
+      if (!input) return;
+
+      this.addLocalListener(thumb, "click", () => {
+        input.checked = true;
+        applySelectedPreview();
+      });
+
+      this.addLocalListener(input, "change", () => {
+        applySelectedPreview();
+      });
+    });
+
+    this.addLocalListener(document, "mousedown", (event) => {
+      if (panel.classList.contains("is-hidden")) return;
+      if (!shell.contains(event.target)) {
+        closePanel({ restorePersisted: true });
+      }
+    });
+
+    this.addLocalListener(document, "keydown", (event) => {
+      if (event.key === "Escape" && !panel.classList.contains("is-hidden")) {
+        closePanel({ restorePersisted: true });
+      }
+    });
+
+    this.addLocalListener(saveBtn, "click", async () => {
+      const selectedUrl = getSelectedInput()?.value || null;
+
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = "Saving...";
+      }
+      if (clearBtn) clearBtn.disabled = true;
+      if (cancelBtn) cancelBtn.disabled = true;
+
+      try {
+        const resp = await fetch(`/api/users/${this.profileUserId}/profile-fields`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ profile_bg_url: selectedUrl, profile_bg_mode: "tile" }),
+        });
+
+        if (!resp.ok) throw new Error((await resp.json()).error || resp.statusText);
+
+        this.profileBackgroundPersistedUrl = selectedUrl;
+        applyBackground(this.profileBackgroundPersistedUrl);
+        closePanel({ restorePersisted: false });
+        this.showSuccessToast("Background saved!");
+      } catch (err) {
+        this.showErrorToast("Failed to save background: " + err.message);
+      } finally {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = "Save";
+        }
+        if (clearBtn) clearBtn.disabled = false;
+        if (cancelBtn) cancelBtn.disabled = false;
+      }
+    });
+
+    this.addLocalListener(clearBtn, "click", async () => {
+      if (clearBtn) {
+        clearBtn.disabled = true;
+        clearBtn.textContent = "Clearing...";
+      }
+      if (saveBtn) saveBtn.disabled = true;
+      if (cancelBtn) cancelBtn.disabled = true;
+
+      try {
+        const resp = await fetch(`/api/users/${this.profileUserId}/profile-fields`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ profile_bg_url: null, profile_bg_mode: "tile" }),
+        });
+
+        if (!resp.ok) throw new Error((await resp.json()).error || resp.statusText);
+
+        this.profileBackgroundPersistedUrl = null;
+        syncSelectedThumb(null);
+        applyBackground(null);
+        closePanel({ restorePersisted: false });
+        this.showSuccessToast("Background cleared.");
+      } catch (err) {
+        this.showErrorToast("Failed to clear background: " + err.message);
+      } finally {
+        if (clearBtn) {
+          clearBtn.disabled = false;
+          clearBtn.textContent = "Clear";
+        }
         if (saveBtn) saveBtn.disabled = false;
         if (cancelBtn) cancelBtn.disabled = false;
       }
@@ -774,6 +952,18 @@ class UserProfilePage extends BasePage {
       ALLOWED_ATTR: ["href", "target", "rel"],
       FORCE_BODY: true,
     });
+  }
+
+  cleanup() {
+    this.localCleanup.forEach((cleanupFn) => {
+      try {
+        cleanupFn();
+      } catch (error) {
+        console.warn("user-profile cleanup listener removal failed", error);
+      }
+    });
+    this.localCleanup = [];
+    super.cleanup();
   }
 }
 

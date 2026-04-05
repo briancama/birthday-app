@@ -146,7 +146,7 @@ class AuthManager extends EventTarget {
   }
 
   redirectToLogin() {
-    window.location.href = "/index.html";
+    window.location.href = "/";
   }
 
   getCurrentUser() {

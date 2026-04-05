@@ -7,6 +7,41 @@ const path = require("path");
 // Shared Supabase client
 const supabase = getSupabase();
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const PROFILE_BACKGROUND_DIRECTORY = path.join(__dirname, "../images/backgrounds");
+const PROFILE_BACKGROUND_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp"]);
+
+function toBackgroundLabel(filename) {
+  const ext = path.extname(filename);
+  const base = path.basename(filename, ext);
+  return (
+    base
+      .replace(/^bg[-_]?/i, "")
+      .replace(/[-_]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/\b\w/g, (letter) => letter.toUpperCase()) || filename
+  );
+}
+
+function getProfileBackgroundOptions() {
+  try {
+    return fs
+      .readdirSync(PROFILE_BACKGROUND_DIRECTORY, { withFileTypes: true })
+      .filter((entry) => entry.isFile())
+      .map((entry) => entry.name)
+      .filter((name) => PROFILE_BACKGROUND_EXTENSIONS.has(path.extname(name).toLowerCase()))
+      .filter((name) => !name.includes("/") && !name.includes("\\"))
+      .sort((a, b) => a.localeCompare(b))
+      .map((filename) => ({
+        filename,
+        src: `/images/backgrounds/${filename}`,
+        label: toBackgroundLabel(filename),
+      }));
+  } catch (error) {
+    console.warn("Unable to read profile backgrounds directory:", error.message || error);
+    return [];
+  }
+}
 
 function normalizeTopNRefs(topN) {
   if (!Array.isArray(topN)) return [];
@@ -204,6 +239,7 @@ router.get("/:identifier", async (req, res) => {
       let isOwnProfile = false;
       let isInTopN = false;
       let isTopNFull = false;
+      const profileBackgroundOptions = getProfileBackgroundOptions();
       const navUserId =
         res.locals && res.locals.navData && res.locals.navData.user && res.locals.navData.user.id;
       const profileId = (user.id || "") + "";
@@ -241,6 +277,7 @@ router.get("/:identifier", async (req, res) => {
         isOwnProfile,
         isInTopN,
         isTopNFull,
+        profileBackgroundOptions,
       });
     } catch (renderErr) {
       // Log a helpful snippet around the reported template line if available

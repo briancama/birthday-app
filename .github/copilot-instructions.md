@@ -124,6 +124,15 @@ Always implement and call `cleanup()` in pages/components to remove event listen
 - GIF stepper markup is shared through a reusable sidebar partial and used as an optional component on homepage and friends sidebars.
 - Keep GIF catalog keys stable across client/server/template usage to preserve saved user selections.
 
+## Profile Background Picker (2026)
+
+- User profile pages support owner-managed background selection using assets from `images/backgrounds`.
+- The picker UI is owner-only and compact by default: a top-right `Pick Background` button opens a small floating panel.
+- Background options are auto-discovered server-side from `images/backgrounds` and passed to `templates/user.ejs`; avoid hardcoding file lists in client JS.
+- Saved values persist via `PATCH /api/users/:id/profile-fields` using `profile_bg_url` and `profile_bg_mode`.
+- `profile_bg_url` must be an app-owned path under `/images/backgrounds/`; API allow-list validation enforces this.
+- Profile background selections are tiled (`profile_bg_mode: 'tile'`) for this feature.
+
 ## Headshot Upload & Event-Driven Avatar Updates (2026)
 
 ### Headshot Upload Pattern

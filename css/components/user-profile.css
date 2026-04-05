@@ -307,6 +307,128 @@ body.is-owner #headshotUploadContainer {
   flex-wrap: wrap;
 }
 
+/* ── Page background picker (owner only) ───────────────────── */
+.profile-bg-picker-shell {
+  display: flex;
+  justify-content: flex-end;
+  position: relative;
+  max-width: 1240px;
+  margin: 0.35rem auto 0;
+  padding: 0 0.75rem;
+  z-index: 20;
+}
+
+.profile-bg-trigger {
+  margin-top: 0;
+}
+
+.profile-bg-panel {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  right: 0.75rem;
+  width: min(420px, calc(100vw - 1.5rem));
+  background: #fff;
+  border: 2px solid var(--myspace-dark-blue, #003399);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.2);
+  padding: 0.55rem;
+}
+
+.profile-bg-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.profile-bg-panel__hint {
+  margin: 0;
+  font-size: 0.72rem;
+  color: #003;
+}
+
+.profile-bg-panel__empty {
+  margin: 0;
+  font-size: 0.72rem;
+  color: #555;
+  font-style: italic;
+}
+
+.profile-bg-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 0.15rem;
+}
+
+.profile-bg-thumb {
+  position: relative;
+  cursor: pointer;
+  border: 2px solid transparent;
+  background: #f5f8ff;
+  transition: border-color 0.12s;
+  overflow: hidden;
+}
+
+.profile-bg-thumb input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.profile-bg-thumb img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+  image-rendering: auto;
+}
+
+.profile-bg-thumb__label {
+  display: block;
+  padding: 2px 4px 3px;
+  font-size: 0.62rem;
+  line-height: 1.2;
+  color: #222;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-bg-thumb:hover {
+  border-color: #88c;
+}
+
+.profile-bg-thumb.is-selected {
+  border-color: #00c;
+  background: rgba(0, 0, 200, 0.08);
+}
+
+.profile-bg-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+@media (max-width: 640px) {
+  .profile-bg-picker-shell {
+    padding: 0 0.5rem;
+  }
+
+  .profile-bg-panel {
+    right: 0.5rem;
+    width: calc(100vw - 1rem);
+  }
+
+  .profile-bg-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .is-hidden {
   display: none !important;
 }

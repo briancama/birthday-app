@@ -35,6 +35,51 @@
   <body class="myspace has-bottom-menu" data-profile-user-id="<%= user.id %>">
     <!-- Server-rendered navigation header -->
     <%- include('partials/navigation-visitor', { navData: navData }) %>
+    <% const PROFILE_BACKGROUND_OPTIONS = Array.isArray(profileBackgroundOptions) ? profileBackgroundOptions : []; %>
+
+    <% if (typeof isOwnProfile !== 'undefined' && isOwnProfile) { %>
+    <div id="profile-bg-picker-shell" class="profile-bg-picker-shell">
+      <button
+        type="button"
+        id="profile-bg-toggle"
+        class="profile-edit-btn profile-edit-btn--static profile-bg-trigger"
+        aria-expanded="false"
+        aria-controls="profile-bg-panel"
+      >
+        Pick Background
+      </button>
+
+      <div id="profile-bg-panel" class="profile-bg-panel is-hidden" role="dialog" aria-label="Pick profile background">
+        <form id="profile-bg-form" class="profile-bg-form" autocomplete="off">
+          <p class="profile-bg-panel__hint">Choose a tiled page background.</p>
+          <div class="profile-bg-grid">
+            <% PROFILE_BACKGROUND_OPTIONS.forEach(function(background) { %>
+            <label class="profile-bg-thumb<% if (user.profile_bg_url === background.src) { %> is-selected<% } %>">
+              <input
+                type="radio"
+                name="profile-bg-url"
+                value="<%= background.src %>"
+                <% if (user.profile_bg_url === background.src) { %>checked<% } %>
+              />
+              <img src="<%= background.src %>" alt="<%= background.label %> background preview" loading="lazy" />
+              <span class="profile-bg-thumb__label"><%= background.label %></span>
+            </label>
+            <% }); %>
+          </div>
+
+          <% if (PROFILE_BACKGROUND_OPTIONS.length === 0) { %>
+          <p class="profile-bg-panel__empty">No backgrounds found in /images/backgrounds.</p>
+          <% } %>
+
+          <div class="profile-bg-actions">
+            <button type="button" id="profile-bg-save" class="profile-edit-btn profile-edit-btn--static">Save</button>
+            <button type="button" id="profile-bg-clear" class="profile-edit-btn profile-edit-btn--static">Clear</button>
+            <button type="button" id="profile-bg-cancel" class="profile-edit-btn profile-edit-btn--static">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <% } %>
 
     <!-- ── Main layout ─────────────────────────────────────────── -->
     <div class="myspace-container full-width-content">
