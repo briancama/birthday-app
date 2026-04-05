@@ -206,7 +206,12 @@ router.post("/login", async (req, res) => {
 
 // POST /auth/logout
 router.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
+  res.clearCookie("user_id", {
+    signed: true,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+  });
   return res.json({ ok: true });
 });
 
