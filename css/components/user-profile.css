@@ -10,15 +10,14 @@
 
 /* ── Editable sections ─────────────────────────────────────── */
 .profile-section {
-  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .profile-edit-btn {
   text-shadow: none;
   text-transform: uppercase;
-  position: absolute;
-  bottom: 0;
-  right: 0.4rem;
+  position: static;
   background: rgba(0, 0, 200, 0.08);
   border: 1px solid #00c;
   color: #00c;
@@ -26,19 +25,19 @@
   padding: 2px 6px;
   cursor: pointer;
   font-family: var(--font-mono, monospace);
-  display: none; /* hidden for non-owners; shown by JS for owner */
-  z-index: 2;
+  display: inline-block;
+  margin: 0.5rem 0 0 auto;
 }
 
 .profile-edit-btn--below {
-  bottom: -32px;
-  right: 0;
+  margin-top: 0.5rem;
 }
 
 .profile-edit-btn--static {
   position: relative;
   margin-top: 0.25rem;
-  right: 0;
+  margin-left: 0;
+  align-self: auto;
 }
 
 .profile-edit-btn:hover {
@@ -46,8 +45,22 @@
   color: #fff;
 }
 
-body.is-owner .profile-edit-btn {
-  display: inline-block;
+.myspace.has-profile-theme .profile-edit-btn {
+  background: var(--profile-theme-detail-bg);
+  border-color: var(--profile-theme-section-border);
+  color: var(--profile-theme-heading-text);
+}
+
+.myspace.has-profile-theme .profile-edit-btn:hover {
+  background: var(--profile-theme-heading-bg);
+  color: var(--profile-theme-heading-text);
+}
+
+.myspace.has-profile-theme .profile-edit-save,
+.myspace.has-profile-theme .profile-edit-cancel {
+  background: var(--profile-theme-heading-bg);
+  border: 1px solid var(--profile-theme-section-border);
+  color: var(--profile-theme-heading-text);
 }
 
 #headshotUploadContainer {
@@ -312,14 +325,19 @@ body.is-owner #headshotUploadContainer {
   display: flex;
   justify-content: flex-end;
   position: relative;
-  max-width: 1240px;
+  max-width: 1000px;
   margin: 0.35rem auto 0;
-  padding: 0 0.75rem;
   z-index: 20;
 }
 
 .profile-bg-trigger {
-  margin-top: 0;
+  margin-top: 0.45rem;
+  margin-bottom: 0.55rem;
+  background: #fff;
+}
+
+.myspace.has-profile-theme .profile-bg-trigger {
+  margin-bottom: 0;
 }
 
 .profile-bg-panel {
@@ -398,6 +416,17 @@ body.is-owner #headshotUploadContainer {
   text-overflow: ellipsis;
 }
 
+.profile-bg-thumb__theme {
+  display: block;
+  padding: 0 4px 4px;
+  font-size: 0.56rem;
+  line-height: 1.1;
+  text-align: center;
+  color: #565f7a;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .profile-bg-thumb:hover {
   border-color: #88c;
 }
@@ -415,10 +444,6 @@ body.is-owner #headshotUploadContainer {
 }
 
 @media (max-width: 640px) {
-  .profile-bg-picker-shell {
-    padding: 0 0.5rem;
-  }
-
   .profile-bg-panel {
     right: 0.5rem;
     width: calc(100vw - 1rem);
@@ -503,6 +528,16 @@ body.is-owner #headshotUploadContainer {
 .top-n-item__image {
   width: 100%;
   object-fit: contain;
+}
+
+.top-n-browse-link {
+  margin: 0.35rem 0 0;
+  text-align: right;
+  font-size: 0.78rem;
+}
+
+.top-n-browse-link a {
+  font-weight: bold;
 }
 
 /* ── Achievements strip ──────────────────────────────────────── */
@@ -631,6 +666,10 @@ body.is-owner .wall-entry__delete,
   color: #666;
   font-size: 0.85rem;
   margin-top: 0.5rem;
+}
+
+.profile-publish-toggle-standalone {
+  margin-top: 1.5rem;
 }
 
 .profile-publish-toggle {
