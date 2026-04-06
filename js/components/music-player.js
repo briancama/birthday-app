@@ -68,8 +68,11 @@ class MusicPlayer extends HTMLElement {
     this.cleanup();
   }
 
-  async setSongs(songs) {
+  // profileUserId: optional — when set, loads the favorite for that user (profile owner)
+  // instead of the logged-in user. _hasFavoriteSong reflects whether any favorite was found.
+  async setSongs(songs, profileUserId = null) {
     this.songs = songs;
+    this._hasFavoriteSong = false;
     // Default to index 12 (13th song) if no favorite, else will update below
     this.currentIndex = songs.length > 11 ? 11 : 0;
     // Expose a promise so callers (e.g. togglePlayPause) can wait for
@@ -79,7 +82,11 @@ class MusicPlayer extends HTMLElement {
     // Resolve the user's saved favorite before the first render
     try {
       const supabase = appState.getSupabase();
-      const userId = appState.getUserId();
+      // When viewing another user's profile, load their favorite; else use logged-in user.
+      const userId = profileUserId || appState.getUserId();
+      // localStorage fallback only applies on own profile (not when browsing others).
+      const isOwnProfile = !profileUserId || profileUserId === appState.getUserId();
+      this._isOwnProfile = isOwnProfile;
       let favUrl = null;
       if (supabase && userId) {
         const { data } = await supabase
@@ -87,11 +94,17 @@ class MusicPlayer extends HTMLElement {
           .select("song_id")
           .eq("user_id", userId)
           .maybeSingle();
-        if (data?.song_id) favUrl = data.song_id;
+        if (data?.song_id) {
+          favUrl = data.song_id;
+          this._hasFavoriteSong = true;
+        }
       }
-      // Fall back to localStorage if Supabase had nothing
-      if (!favUrl) favUrl = localStorage.getItem("musicPlayerFavoriteSongUrl");
-      if (favUrl) localStorage.setItem("musicPlayerFavoriteSongUrl", favUrl);
+      // Fall back to localStorage only for own profile
+      if (!favUrl && isOwnProfile) {
+        favUrl = localStorage.getItem("musicPlayerFavoriteSongUrl");
+        if (favUrl) this._hasFavoriteSong = true;
+      }
+      if (favUrl && isOwnProfile) localStorage.setItem("musicPlayerFavoriteSongUrl", favUrl);
       const favIdx = favUrl ? songs.findIndex((s) => s.url === favUrl) : -1;
       if (favIdx >= 0) {
         this.currentIndex = favIdx;
@@ -328,6 +341,11 @@ class MusicPlayer extends HTMLElement {
       );
       if (error) {
         console.error("[setFavoriteSongIdx] Supabase error:", error);
+      } else {
+        // Award Jukebox Hero on first favorite (idempotent — achievement service guards duplicates)
+        window.dispatchEvent(
+          new CustomEvent("achievement:trigger", { detail: { key: "first_fav_song" } })
+        );
       }
     } catch (err) {
       console.error("[setFavoriteSongIdx] Exception during Supabase update:", err);
@@ -462,11 +480,11 @@ class MusicPlayer extends HTMLElement {
       </div>
     `;
     const current = song
-      ? `<div class="music-current">Now Playing: <b>${song.title}</b>
-        <button class="music-fav-btn" title="Set Favorite" data-song-idx="${this.currentIndex}" style="background:none;border:none;cursor:pointer;font-size:1.2em;vertical-align:middle;margin-left:6px;">
-          ${favIdx === this.currentIndex ? "⭐" : "☆"}
-        </button>
-      </div>`
+      ? `<div class="music-current">Now Playing: <b>${song.title}</b>${
+          this._isOwnProfile !== false
+            ? `<button class="music-fav-btn" title="Set Favorite" data-song-idx="${this.currentIndex}" style="background:none;border:none;cursor:pointer;font-size:1.2em;vertical-align:middle;margin-left:6px;">${favIdx === this.currentIndex ? "⭐" : "☆"}</button>`
+            : ""
+        }</div>`
       : `<div class="music-current">No song selected</div>`;
 
     const songDropdown = this.songs.length

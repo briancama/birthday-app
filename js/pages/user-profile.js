@@ -401,7 +401,7 @@ class UserProfilePage extends BasePage {
 
   // ── Music player ──────────────────────────────────────────────────────────
   setupMusicPlayer() {
-    import("../components/music-player.js").then(({ MusicPlayer }) => {
+    import("../components/music-player.js").then(async ({ MusicPlayer }) => {
       let container = document.getElementById("musicPlayerContainer");
       if (!container) {
         container = document.createElement("div");
@@ -411,22 +411,28 @@ class UserProfilePage extends BasePage {
         else document.body.insertBefore(container, document.body.firstChild);
       }
       const player = document.createElement("music-player");
-      player.setSongs(MUSIC_SONGS);
+      // Pass the profile owner's ID so the player loads their saved favorite,
+      // not the logged-in visitor's. Also populates player._hasFavoriteSong.
+      await player.setSongs(MUSIC_SONGS, this.profileUserId);
       container.innerHTML = "";
       container.appendChild(player);
       player.addEventListener("music:secret-rewind", () => {
         const secretPlayer = new SecretTrackPlayer();
         secretPlayer.open();
       });
-      const startOnGesture = () => {
-        if (!player.isPlaying) player.togglePlayPause();
-        document.removeEventListener("click", startOnGesture);
-        document.removeEventListener("touchend", startOnGesture);
-        document.removeEventListener("keydown", startOnGesture);
-      };
-      document.addEventListener("click", startOnGesture, { once: true });
-      document.addEventListener("touchend", startOnGesture, { once: true });
-      document.addEventListener("keydown", startOnGesture, { once: true });
+      // Only auto-play on first gesture when the profile owner has chosen a favorite song.
+      // This prevents a default song from blaring on every unrelated profile visit.
+      if (player._hasFavoriteSong) {
+        const startOnGesture = () => {
+          if (!player.isPlaying) player.togglePlayPause();
+          document.removeEventListener("click", startOnGesture);
+          document.removeEventListener("touchend", startOnGesture);
+          document.removeEventListener("keydown", startOnGesture);
+        };
+        document.addEventListener("click", startOnGesture, { once: true });
+        document.addEventListener("touchend", startOnGesture, { once: true });
+        document.addEventListener("keydown", startOnGesture, { once: true });
+      }
     });
   }
 
