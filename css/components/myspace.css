@@ -20,6 +20,16 @@
   --section-padding-block: var(--spacing-lg);
   --section-padding-inline: var(--spacing-lg);
   --section-margin: var(--spacing-lg);
+
+  /* Profile theme defaults (overridden per selected profile theme) */
+  --profile-theme-section-bg: rgba(255, 255, 255, 0.92);
+  --profile-theme-section-text: #1b2437;
+  --profile-theme-section-border: #4f7bc8;
+  --profile-theme-heading-bg: #7ba1de;
+  --profile-theme-heading-text: #08152c;
+  --profile-theme-detail-bg: rgba(219, 231, 255, 0.9);
+  --profile-theme-link: #003399;
+  --profile-theme-link-hover: #001f66;
 }
 
 .event-details-card {
@@ -204,6 +214,10 @@ body {
   background: white;
 }
 
+.myspace.has-profile-theme .myspace-layout {
+  background: transparent;
+}
+
 .myspace-sidebar {
   width: 360px;
 }
@@ -232,12 +246,34 @@ body {
   margin-bottom: 2rem;
 }
 
-.myspace-section:has(.profile-edit-btn--below) {
-  margin-bottom: 3.4rem;
-}
-
 .myspace-section:last-child {
   margin-bottom: 0;
+}
+
+.myspace.has-profile-theme .myspace-section {
+  background: var(--profile-theme-section-bg);
+  color: var(--profile-theme-section-text);
+  border: 2px solid var(--profile-theme-section-border);
+  padding: 0.5rem;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.18);
+}
+
+.myspace.has-profile-theme .myspace-section h2,
+.myspace.has-profile-theme .myspace-section h3,
+.myspace.has-profile-theme .myspace-section p,
+.myspace.has-profile-theme .myspace-section span,
+.myspace.has-profile-theme .myspace-section label,
+.myspace.has-profile-theme .myspace-section li,
+.myspace.has-profile-theme .myspace-section strong {
+  color: inherit;
+}
+
+.myspace.has-profile-theme a {
+  color: var(--profile-theme-link);
+}
+
+.myspace.has-profile-theme a:hover {
+  color: var(--profile-theme-link-hover);
 }
 
 .myspace-section--bordered {
@@ -254,6 +290,30 @@ body {
   &.myspace-section-alt-header {
     background: var(--myspace-light-blue);
   }
+}
+
+.myspace.has-profile-theme .myspace-section h3,
+.myspace.has-profile-theme .event-details-header {
+  background: var(--profile-theme-heading-bg);
+  color: var(--profile-theme-heading-text);
+  border: 1px solid var(--profile-theme-section-border);
+}
+
+.myspace.has-profile-theme .event-details-row {
+  background: transparent;
+}
+
+.myspace.has-profile-theme .event-details-label,
+.myspace.has-profile-theme .event-details-value {
+  background: var(--profile-theme-detail-bg);
+  color: var(--profile-theme-section-text);
+}
+
+.myspace.has-profile-theme .music-player-container {
+  background: transparent;
+  border: none;
+  padding: 0;
+  box-shadow: none;
 }
 
 .myspace-about {
@@ -332,6 +392,10 @@ body {
   }
   .myspace-profile-row {
     gap: 1rem;
+  }
+
+  .myspace.has-profile-theme .myspace-layout {
+    background: transparent;
   }
 
   /* Hide gif-stepper images by default until JS reveals them (prevents flash of raw GIF) */

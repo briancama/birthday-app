@@ -8,6 +8,98 @@ import { createCommentCard } from "../components/myspace-comment-card.js";
 import { MUSIC_SONGS } from "../constants/music-songs.js";
 import { SecretTrackPlayer } from "../components/secret-track-player.js";
 
+const PROFILE_THEME_TOKENS = {
+  default: {
+    sectionBg: "rgba(255, 255, 255, 0.92)",
+    sectionText: "#1b2437",
+    sectionBorder: "#4f7bc8",
+    headingBg: "#7ba1de",
+    headingText: "#08152c",
+    detailBg: "rgba(219, 231, 255, 0.9)",
+    link: "#003399",
+    linkHover: "#001f66",
+  },
+  stars: {
+    sectionBg: "rgba(11, 12, 36, 0.88)",
+    sectionText: "#eef4ff",
+    sectionBorder: "#73b6ff",
+    headingBg: "#21406b",
+    headingText: "#f3f8ff",
+    detailBg: "rgba(33, 64, 107, 0.72)",
+    link: "#8fd6ff",
+    linkHover: "#d6eeff",
+  },
+  sunset: {
+    sectionBg: "rgba(57, 23, 48, 0.88)",
+    sectionText: "#ffe9df",
+    sectionBorder: "#ff8e63",
+    headingBg: "#943f4f",
+    headingText: "#fff0e8",
+    detailBg: "rgba(148, 63, 79, 0.72)",
+    link: "#ffd1b5",
+    linkHover: "#fff0df",
+  },
+  matrix: {
+    sectionBg: "rgba(5, 25, 12, 0.9)",
+    sectionText: "#d2ffd8",
+    sectionBorder: "#3fd063",
+    headingBg: "#0b5a26",
+    headingText: "#f0fff3",
+    detailBg: "rgba(11, 90, 38, 0.68)",
+    link: "#7dff98",
+    linkHover: "#d6ffe0",
+  },
+  paper: {
+    sectionBg: "rgba(255, 250, 235, 0.94)",
+    sectionText: "#3b2f1e",
+    sectionBorder: "#b68a45",
+    headingBg: "#e0c17d",
+    headingText: "#3a2813",
+    detailBg: "rgba(242, 224, 180, 0.78)",
+    link: "#5d3f16",
+    linkHover: "#2d1c08",
+  },
+  bubblegum: {
+    sectionBg: "rgba(255, 236, 247, 0.93)",
+    sectionText: "#4b2040",
+    sectionBorder: "#e86db4",
+    headingBg: "#ff9ccc",
+    headingText: "#4a1738",
+    detailBg: "rgba(255, 201, 229, 0.78)",
+    link: "#a11673",
+    linkHover: "#6f0b4b",
+  },
+};
+
+const PROFILE_THEME_STYLE_VARS = [
+  "--profile-theme-section-bg",
+  "--profile-theme-section-text",
+  "--profile-theme-section-border",
+  "--profile-theme-heading-bg",
+  "--profile-theme-heading-text",
+  "--profile-theme-detail-bg",
+  "--profile-theme-link",
+  "--profile-theme-link-hover",
+];
+
+const PROFILE_BACKGROUND_THEME_KEYS = {
+  "/images/backgrounds/bg-butterfly.png": "paper",
+  "/images/backgrounds/bg-cd.jpg": "sunset",
+  "/images/backgrounds/bg-firework.png": "sunset",
+  "/images/backgrounds/bg-heart.gif": "bubblegum",
+  "/images/backgrounds/bg-kitty.jpg": "bubblegum",
+  "/images/backgrounds/bg-mary.gif": "bubblegum",
+  "/images/backgrounds/bg-metal.png": "matrix",
+  "/images/backgrounds/bg-patriot.gif": "stars",
+  "/images/backgrounds/bg-pooh.jpg": "bubblegum",
+  "/images/backgrounds/bg-shoes.gif": "sunset",
+  "/images/backgrounds/bg-skull.png": "matrix",
+  "/images/backgrounds/bg-weird.jpg": "stars",
+  "/images/backgrounds/leaf.gif": "paper",
+  "/images/backgrounds/lightning.jpg": "stars",
+  "/images/backgrounds/purp032.gif": "stars",
+};
+
 class UserProfilePage extends BasePage {
   constructor() {
     // Public page — no forced auth redirect; softInit will load user if signed in.
@@ -24,6 +116,8 @@ class UserProfilePage extends BasePage {
   async onReady() {
     this.isOwner = !!(this.profileUserId && this.userId && this.userId === this.profileUserId);
     if (this.isOwner) document.body.classList.add("is-owner");
+
+    this.applyProfileTheme(document.body.dataset.profileBgUrl || null);
 
     this.setupTopNButtons();
     this.setupHeadshotUpload();
@@ -67,6 +161,89 @@ class UserProfilePage extends BasePage {
     if (!target || typeof target.addEventListener !== "function") return;
     target.addEventListener(type, handler, options);
     this.localCleanup.push(() => target.removeEventListener(type, handler, options));
+  }
+
+  getThemeKeyFromBackgroundUrl(url) {
+    if (!url || typeof url !== "string") return "default";
+    const fileName = url.split("/").pop() || "";
+    return (
+      fileName
+        .replace(/\.[^.]+$/, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "") || "default"
+    );
+  }
+
+  resolveProfileThemeTokens(url) {
+    const key = this.getThemeKeyFromBackgroundUrl(url);
+    if (!url) return { key: "default", tokens: PROFILE_THEME_TOKENS.default };
+
+    const mappedKey = PROFILE_BACKGROUND_THEME_KEYS[url];
+    if (mappedKey && PROFILE_THEME_TOKENS[mappedKey]) {
+      return { key: mappedKey, tokens: PROFILE_THEME_TOKENS[mappedKey] };
+    }
+
+    if (PROFILE_THEME_TOKENS[key]) return { key, tokens: PROFILE_THEME_TOKENS[key] };
+
+    if (/star|space|night|galaxy|moon|nebula|cosmos/.test(key)) {
+      return { key, tokens: PROFILE_THEME_TOKENS.stars };
+    }
+    if (/sun|dusk|retro|neon|city|fire|lava|flame/.test(key)) {
+      return { key, tokens: PROFILE_THEME_TOKENS.sunset };
+    }
+    if (/matrix|hacker|terminal|green|cyber/.test(key)) {
+      return { key, tokens: PROFILE_THEME_TOKENS.matrix };
+    }
+    if (/paper|grid|note|pastel|flower|cloud/.test(key)) {
+      return { key, tokens: PROFILE_THEME_TOKENS.paper };
+    }
+    if (/kitty|heart|pooh|love|cute|pink/.test(key)) {
+      return { key: "bubblegum", tokens: PROFILE_THEME_TOKENS.bubblegum };
+    }
+    return { key, tokens: PROFILE_THEME_TOKENS.default };
+  }
+
+  applyProfileTheme(url) {
+    const body = document.body;
+    if (!body) return;
+    const stripThemeClasses = () => {
+      body.classList.forEach((className) => {
+        if (className.startsWith("theme-")) body.classList.remove(className);
+      });
+    };
+
+    if (!url) {
+      body.classList.remove("has-profile-theme");
+      stripThemeClasses();
+      delete body.dataset.profileThemeKey;
+      body.dataset.profileBgUrl = "";
+
+      body.style.removeProperty("background-image");
+      body.style.removeProperty("background-repeat");
+      body.style.removeProperty("background-size");
+      PROFILE_THEME_STYLE_VARS.forEach((styleVar) => body.style.removeProperty(styleVar));
+      return;
+    }
+
+    const { key, tokens } = this.resolveProfileThemeTokens(url);
+    body.classList.add("has-profile-theme");
+    stripThemeClasses();
+    body.classList.add(`theme-${key}`);
+    body.dataset.profileThemeKey = key;
+    body.dataset.profileBgUrl = url;
+
+    body.style.backgroundImage = `url("${url}")`;
+    body.style.backgroundRepeat = "repeat";
+    body.style.backgroundSize = "auto";
+    body.style.setProperty("--profile-theme-section-bg", tokens.sectionBg);
+    body.style.setProperty("--profile-theme-section-text", tokens.sectionText);
+    body.style.setProperty("--profile-theme-section-border", tokens.sectionBorder);
+    body.style.setProperty("--profile-theme-heading-bg", tokens.headingBg);
+    body.style.setProperty("--profile-theme-heading-text", tokens.headingText);
+    body.style.setProperty("--profile-theme-detail-bg", tokens.detailBg);
+    body.style.setProperty("--profile-theme-link", tokens.link);
+    body.style.setProperty("--profile-theme-link-hover", tokens.linkHover);
   }
 
   setupTopNButtons() {
@@ -224,7 +401,7 @@ class UserProfilePage extends BasePage {
 
   // ── Music player ──────────────────────────────────────────────────────────
   setupMusicPlayer() {
-    import("../components/music-player.js").then(({ MusicPlayer }) => {
+    import("../components/music-player.js").then(async ({ MusicPlayer }) => {
       let container = document.getElementById("musicPlayerContainer");
       if (!container) {
         container = document.createElement("div");
@@ -234,22 +411,28 @@ class UserProfilePage extends BasePage {
         else document.body.insertBefore(container, document.body.firstChild);
       }
       const player = document.createElement("music-player");
-      player.setSongs(MUSIC_SONGS);
+      // Pass the profile owner's ID so the player loads their saved favorite,
+      // not the logged-in visitor's. Also populates player._hasFavoriteSong.
+      await player.setSongs(MUSIC_SONGS, this.profileUserId);
       container.innerHTML = "";
       container.appendChild(player);
       player.addEventListener("music:secret-rewind", () => {
         const secretPlayer = new SecretTrackPlayer();
         secretPlayer.open();
       });
-      const startOnGesture = () => {
-        if (!player.isPlaying) player.togglePlayPause();
-        document.removeEventListener("click", startOnGesture);
-        document.removeEventListener("touchend", startOnGesture);
-        document.removeEventListener("keydown", startOnGesture);
-      };
-      document.addEventListener("click", startOnGesture, { once: true });
-      document.addEventListener("touchend", startOnGesture, { once: true });
-      document.addEventListener("keydown", startOnGesture, { once: true });
+      // Only auto-play on first gesture when the profile owner has chosen a favorite song.
+      // This prevents a default song from blaring on every unrelated profile visit.
+      if (player._hasFavoriteSong) {
+        const startOnGesture = () => {
+          if (!player.isPlaying) player.togglePlayPause();
+          document.removeEventListener("click", startOnGesture);
+          document.removeEventListener("touchend", startOnGesture);
+          document.removeEventListener("keydown", startOnGesture);
+        };
+        document.addEventListener("click", startOnGesture, { once: true });
+        document.addEventListener("touchend", startOnGesture, { once: true });
+        document.addEventListener("keydown", startOnGesture, { once: true });
+      }
     });
   }
 
@@ -392,19 +575,9 @@ class UserProfilePage extends BasePage {
     if (!shell || !toggleBtn || !panel || !form) return;
 
     const getSelectedInput = () => form.querySelector("input[name='profile-bg-url']:checked");
-    this.profileBackgroundPersistedUrl = getSelectedInput()?.value || null;
-
-    const applyBackground = (url) => {
-      if (!url) {
-        document.body.style.removeProperty("background-image");
-        document.body.style.removeProperty("background-repeat");
-        document.body.style.removeProperty("background-size");
-        return;
-      }
-      document.body.style.backgroundImage = `url("${url}")`;
-      document.body.style.backgroundRepeat = "repeat";
-      document.body.style.backgroundSize = "auto";
-    };
+    this.profileBackgroundPersistedUrl =
+      getSelectedInput()?.value || document.body.dataset.profileBgUrl || null;
+    this.applyProfileTheme(this.profileBackgroundPersistedUrl);
 
     const syncSelectedThumb = (selectedUrl) => {
       const thumbs = form.querySelectorAll(".profile-bg-thumb");
@@ -426,14 +599,14 @@ class UserProfilePage extends BasePage {
       toggleBtn.setAttribute("aria-expanded", "false");
       if (restorePersisted) {
         syncSelectedThumb(this.profileBackgroundPersistedUrl);
-        applyBackground(this.profileBackgroundPersistedUrl);
+        this.applyProfileTheme(this.profileBackgroundPersistedUrl);
       }
     };
 
     const applySelectedPreview = () => {
       const selectedUrl = getSelectedInput()?.value || null;
       syncSelectedThumb(selectedUrl);
-      applyBackground(selectedUrl);
+      this.applyProfileTheme(selectedUrl);
     };
 
     this.addLocalListener(toggleBtn, "click", () => {
@@ -496,7 +669,7 @@ class UserProfilePage extends BasePage {
         if (!resp.ok) throw new Error((await resp.json()).error || resp.statusText);
 
         this.profileBackgroundPersistedUrl = selectedUrl;
-        applyBackground(this.profileBackgroundPersistedUrl);
+        this.applyProfileTheme(this.profileBackgroundPersistedUrl);
         closePanel({ restorePersisted: false });
         this.showSuccessToast("Background saved!");
       } catch (err) {
@@ -531,7 +704,7 @@ class UserProfilePage extends BasePage {
 
         this.profileBackgroundPersistedUrl = null;
         syncSelectedThumb(null);
-        applyBackground(null);
+        this.applyProfileTheme(null);
         closePanel({ restorePersisted: false });
         this.showSuccessToast("Background cleared.");
       } catch (err) {

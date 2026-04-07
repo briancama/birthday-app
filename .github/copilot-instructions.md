@@ -133,6 +133,15 @@ Always implement and call `cleanup()` in pages/components to remove event listen
 - `profile_bg_url` must be an app-owned path under `/images/backgrounds/`; API allow-list validation enforces this.
 - Profile background selections are tiled (`profile_bg_mode: 'tile'`) for this feature.
 
+## Profile Theme Tokens From Backgrounds (2026)
+
+- The selected `profile_bg_url` now drives a lightweight theme mode for profile pages (`body.has-profile-theme`) instead of only painting the page background.
+- Theme visuals are tokenized with CSS custom properties: section background, section text, section border (2px), heading background/text, detail row background, and link colors.
+- In themed mode, the white `myspace-layout` shell is removed so background personality remains visible on mobile and desktop.
+- `myspace-section` surfaces receive `padding: 0.5rem` in themed mode to avoid edge-clipped content.
+- Keep template and client token resolution logic aligned so persisted render and picker live preview match.
+- Owner-only edit controls must be gated at template render time (not only CSS-hidden), and edit buttons should be in normal flow at section bottom-right rather than absolutely positioned.
+
 ## Headshot Upload & Event-Driven Avatar Updates (2026)
 
 ### Headshot Upload Pattern
