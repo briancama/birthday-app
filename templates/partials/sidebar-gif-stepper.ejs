@@ -1,25 +1,182 @@
 <div class="myspace-section">
-  <% if (typeof hasSignedInUser !== 'undefined' && hasSignedInUser) { %>
-  <p class="sidebar-advertisement-header">Advertisement <span>▼</span></p>
-  <img
-    class="myspace-section-gif"
-    src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
-    data-src="/images/iron-man.gif"
-    width="347"
-    height="207"
-    data-gif-stepper
-    data-gif-sound="proton-cannon.mp3"
-    data-gif-sound-percent="70"
-    data-steps-per-click="3"
-    alt="Iron Man GIF"
-  />
+  <% if (typeof sidebarMedia !== 'undefined' && sidebarMedia) { %>
+    <% if (typeof isSignedIn !== 'undefined' && isSignedIn && sidebarMedia.type === 'gif-stepper') { %>
+      <!-- Signed-in GIF-stepper item: interactive with data attributes -->
+      <p class="sidebar-advertisement-header">Advertisement <span>▼</span></p>
+      <% const mediaAspectRatio = sidebarMedia.width && sidebarMedia.height ? `${sidebarMedia.width} / ${sidebarMedia.height}` : '347 / 207'; %>
+      <img
+        class="myspace-section-gif"
+        src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+        data-src="<%= sidebarMedia.src %>"
+        width="<%= sidebarMedia.width %>"
+        height="<%= sidebarMedia.height %>"
+        style="--sidebar-media-aspect-ratio: <%= mediaAspectRatio %>;"
+        data-gif-stepper
+        <% if (sidebarMedia.gifSound) { %>
+        data-gif-sound="<%= sidebarMedia.gifSound %>"
+        <% } %>
+        <% if (typeof sidebarMedia.gifSoundPercent !== 'undefined' && sidebarMedia.gifSoundPercent !== null) { %>
+        data-gif-sound-percent="<%= sidebarMedia.gifSoundPercent %>"
+        <% } %>
+        <% if (sidebarMedia.stepsPerClick) { %>
+        data-steps-per-click="<%= sidebarMedia.stepsPerClick %>"
+        <% } %>
+        alt="<%= sidebarMedia.alt %>"
+      />
+    <% } else { %>
+      <!-- Static ad or fallback: render with optional link and audio -->
+      <p class="sidebar-advertisement-header">Advertisement <span>▼</span></p>
+      <% const adKey = sidebarMedia.type === 'ad' ? sidebarMedia.src : ''; %>
+      <div
+        class="sidebar-ad-block"
+        data-sidebar-ad-keys='<%- JSON.stringify(Array.isArray(sidebarAdKeys) ? sidebarAdKeys : []) %>'
+        data-is-signed-in="<%= !!isSignedIn %>"
+      >
+      <% if (sidebarMedia.link && sidebarMedia.link !== '#') { %>
+      <a
+        href="<%= sidebarMedia.link %>"
+        target="_blank"
+        rel="noopener noreferrer"
+        data-ad-key="<%= adKey %>"
+        <% if (sidebarMedia.audio) { %>
+        data-ad-audio="<%= sidebarMedia.audio %>"
+        <% } %>
+        class="sidebar-ad-link"
+      >
+        <div class="sidebar-ad-media-wrapper">
+          <img
+            class="myspace-section-ad"
+            src="<%= sidebarMedia.src %>"
+            <% if (sidebarMedia.width) { %>
+            width="<%= sidebarMedia.width %>"
+            <% } %>
+            <% if (sidebarMedia.height) { %>
+            height="<%= sidebarMedia.height %>"
+            <% } %>
+            alt="<%= sidebarMedia.alt %>"
+          />
+          <% if (sidebarMedia.overlayText) { %>
+          <div class="sidebar-ad-overlay<% if (sidebarMedia.overlayClass) { %> <%= sidebarMedia.overlayClass %><% } %>"><%= sidebarMedia.overlayText %></div>
+          <% } %>
+        </div>
+      </a>
+      <% } else { %>
+      <div class="sidebar-ad-media-wrapper sidebar-ad-static" data-ad-key="<%= adKey %>" <% if (sidebarMedia.audio) { %>data-ad-audio="<%= sidebarMedia.audio %>"<% } %>>
+        <img
+          class="myspace-section-ad"
+          src="<%= sidebarMedia.src %>"
+          <% if (sidebarMedia.width) { %>
+          width="<%= sidebarMedia.width %>"
+          <% } %>
+          <% if (sidebarMedia.height) { %>
+          height="<%= sidebarMedia.height %>"
+          <% } %>
+          alt="<%= sidebarMedia.alt %>"
+        />
+        <% if (sidebarMedia.overlayText) { %>
+        <div class="sidebar-ad-overlay<% if (sidebarMedia.overlayClass) { %> <%= sidebarMedia.overlayClass %><% } %>"><%= sidebarMedia.overlayText %></div>
+        <% } %>
+      </div>
+      <% } %>
+      <% if (sidebarMedia.belowText) { %>
+      <div class="sidebar-ad-caption"><%= sidebarMedia.belowText %></div>
+      <% } %>
+      </div>
+    <% } %>
   <% } else { %>
-  <img
-    class="myspace-section-gif"
-    src="/images/iron-man.gif"
-    width="347"
-    height="207"
-    alt="Iron Man GIF"
-  />
+    <!-- Fallback: error state, render placeholder -->
+    <p class="sidebar-advertisement-header">Advertisement <span>▼</span></p>
+    <img
+      class="myspace-section-gif"
+      src="/images/iron-man.gif"
+      width="347"
+      height="207"
+      alt="Iron Man GIF"
+    />
   <% } %>
 </div>
+
+<script>
+  (() => {
+    const AD_CLICK_STORAGE_KEY = "sidebar-ads-clicked";
+    const adBlock = document.querySelector(".sidebar-ad-block");
+    const ALL_AD_KEYS = (() => {
+      if (!adBlock) return [];
+      try {
+        const raw = adBlock.getAttribute("data-sidebar-ad-keys") || "[]";
+        return JSON.parse(raw);
+      } catch {
+        return [];
+      }
+    })();
+    const IS_SIGNED_IN = !!(adBlock && adBlock.getAttribute("data-is-signed-in") === "true");
+
+    const getClicked = () => {
+      try {
+        return new Set(JSON.parse(localStorage.getItem(AD_CLICK_STORAGE_KEY) || "[]"));
+      } catch {
+        return new Set();
+      }
+    };
+
+    const saveClicked = (set) => {
+      try {
+        localStorage.setItem(AD_CLICK_STORAGE_KEY, JSON.stringify([...set]));
+      } catch {
+        // non-fatal
+      }
+    };
+
+    const maybePlayAdAudio = (el) => {
+      const audioFile = el.getAttribute("data-ad-audio");
+      if (!audioFile) return;
+      try {
+        const audio = new Audio(audioFile);
+        audio.volume = 0.8;
+        audio.play().catch((err) => {
+          console.debug("Ad audio play failed:", err.message);
+        });
+      } catch (err) {
+        console.debug("Failed to create audio element:", err.message);
+      }
+    };
+
+    const maybeTrackAdClick = (el) => {
+      const adKey = el.getAttribute("data-ad-key");
+      if (!adKey) return;
+
+      const clicked = getClicked();
+      if (clicked.has(adKey)) return;
+
+      clicked.add(adKey);
+      saveClicked(clicked);
+
+      if (!IS_SIGNED_IN) return;
+      if (!Array.isArray(ALL_AD_KEYS) || ALL_AD_KEYS.length === 0) return;
+
+      if (clicked.size >= ALL_AD_KEYS.length) {
+        try {
+          window.dispatchEvent(
+            new CustomEvent("achievement:trigger", {
+              detail: {
+                key: "ad_completionist",
+                clicked: clicked.size,
+                total: ALL_AD_KEYS.length,
+              },
+            })
+          );
+        } catch (err) {
+          console.warn("Failed to dispatch ad_completionist trigger:", err);
+        }
+      }
+    };
+
+    const handlers = document.querySelectorAll(".sidebar-ad-link[data-ad-key], .sidebar-ad-static[data-ad-key]");
+    handlers.forEach((el) => {
+      el.addEventListener("click", () => {
+        maybePlayAdAudio(el);
+        maybeTrackAdClick(el);
+      });
+    });
+  })();
+</script>

@@ -104,6 +104,56 @@ Always implement and call `cleanup()` in pages/components to remove event listen
 - Keep participant-only achievements (`all_assigned_completed`, `first_challenge`, `three_challenges`, `the_challenger`) excluded from Brispace ranking unless requirements change.
 - No schema change is required in `user_achievements` for this split; filtering happens via the achievement catalog flag and leaderboard view.
 
+### Sidebar Media Slot (2026 Ads & GIFs)
+
+**Purpose:** Unify sidebar advertising and GIF content across BriSpace home and scoreboard with randomized media selection.
+
+**Behavior:**
+
+- **Signed-in users**: Random selection from a shared pool of both ad images (`ad_*` prefix) and GIF-stepper entries (interactive, frame-by-frame click-through GIFs).
+- **Signed-out users**: Static ad image only; no interaction or stepper logic.
+- **Randomization scope**: Per-request random selection (future enhancement: optional sticky per-session to reduce flicker).
+- **Ad links**: Ad items support a `link` property; ads render as clickable links (target="\_blank") when a valid link is provided.
+- **Ad audio**: Ad items support an optional `audio` property (path to .mp3 file); audio plays when the ad is clicked.
+- **Ad text overlays**: Ad items support optional `overlayText` (text over image near bottom), `belowText` (text in bordered panel below image), `overlayFont` (font key for overlay text), and `overlayFontSize` (CSS font-size value for overlay text).
+
+**Server-side Media Pool (`server.js`):**
+
+- `getSidebarMediaPool()` builds the pool with hardcoded `ad_*` image entries and curated GIF-stepper candidates.
+- Each ad object includes: `type`, `src`, `alt`, optional `link` (URL for click-out navigation), optional `audio` (path to mp3 file for click audio), optional `overlayText`, optional `belowText`, optional `overlayFont`, and optional `overlayFontSize`.
+- `getSidebarMedia(isSignedIn)` picks random from the full pool if signed-in, or picks the first ad if signed-out.
+- **Fallback:** If no media found, defaults to iron-man.gif (safe default).
+
+**Template Integration:**
+
+- Both `templates/brispace.ejs` and `templates/scoreboard.ejs` render `templates/partials/sidebar-gif-stepper.ejs` with `sidebarMedia` and `isSignedIn` variables.
+- The partial renders GIF-stepper HTML (with `data-gif-stepper` attributes) only for signed-in + GIF-stepper media types.
+- Ad media renders as clickable `<a>` wrapping an `<img>` when a valid link is present; otherwise plain `<img>`.
+- Overlay text renders near the bottom of the ad image when `overlayText` is set.
+- Overlay text uses an enlarged first letter for a drop-cap style across all ads.
+- Overlay container uses extra top-weighted padding and a smooth black-to-clear gradient so text sits over the image without a harsh edge.
+- Overlay text font size can be adjusted per ad via `overlayFontSize`.
+- A bordered text panel renders below the ad image when `belowText` is set.
+- Sidebar ad click tracking uses each ad object's `src` as the unique key for `ad_completionist`; keep `src` values stable for existing ads when possible.
+- Signed-out always renders plain ad image.
+
+**Script Loading:**
+
+- `gif-stepper.js` only loads when signed-in AND selected media type is `'gif-stepper'`.
+- Avoids loading unnecessary JS for static ads or signed-out users.
+
+**Global Update Policy:**
+
+- Sidebar media slot must be kept in sync across **both** `templates/brispace.ejs` and `templates/scoreboard.ejs`.
+- Changes to media pool, randomization logic, or rendering rules must be applied to both pages.
+- If updating the partial or server helper functions, verify both pages render correctly and test randomization on both routes.
+- Add or update ad links, audio, overlay text, below text, overlay font, and overlay font size in `server.js` `adCandidates` array; no template changes required.
+
+**Future Enhancements:**
+
+- GIF pool expansion: replace hardcoded curated list with filesystem enumeration (e.g., `gif_*` prefix or dedicated subdirectory).
+- Session-sticky randomization: cache selected media in session storage to reduce visual flicker on repeated page loads.
+
 ---
 
 ### Rules for New Updates

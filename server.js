@@ -220,9 +220,28 @@ app.get("/", async (req, res) => {
     // Get current user if authenticated
     const currentUser =
       res.locals.navData && res.locals.navData.user ? res.locals.navData.user : null;
-    return res.render("brispace", { latestUsers, currentUser });
+    const isSignedIn = !!currentUser;
+    const { media: sidebarMedia, test: sidebarTest } = getSidebarMediaSelection(req, isSignedIn);
+    const sidebarAdKeys = getSidebarAdKeys();
+    return res.render("brispace", {
+      latestUsers,
+      currentUser,
+      sidebarMedia,
+      sidebarAdKeys,
+      sidebarTest,
+      isSignedIn,
+    });
   } catch (err) {
-    return res.render("brispace", { latestUsers: [], currentUser: null });
+    const { media: sidebarMedia, test: sidebarTest } = getSidebarMediaSelection(req, false);
+    const sidebarAdKeys = getSidebarAdKeys();
+    return res.render("brispace", {
+      latestUsers: [],
+      currentUser: null,
+      sidebarMedia,
+      sidebarAdKeys,
+      sidebarTest,
+      isSignedIn: false,
+    });
   }
 });
 
@@ -239,7 +258,13 @@ app.get(["/friends", "/friends.html"], async (req, res) => {
     if (error) throw error;
 
     const allUsers = Array.isArray(users)
-      ? users.map((u) => ({ id: u.user_id, username: u.username, display_name: u.display_name, headshot: u.headshot, created_at: u.created_at }))
+      ? users.map((u) => ({
+          id: u.user_id,
+          username: u.username,
+          display_name: u.display_name,
+          headshot: u.headshot,
+          created_at: u.created_at,
+        }))
       : [];
     const currentUser =
       res.locals.navData && res.locals.navData.user ? res.locals.navData.user : null;
@@ -278,6 +303,250 @@ async function fetchUserAssignments(supabase, user, eventStarted) {
     .replace(/\u2028/g, "\\u2028")
     .replace(/\u2029/g, "\\u2029");
   return { assignments, assignmentsJson };
+}
+
+/**
+ * Build sidebar media pool (ads + GIFs) for randomization
+ * Discovers ad_* images from /images and returns metadata list
+ */
+function getSidebarMediaPool() {
+  const pool = [];
+
+  // Curated GIF-stepper candidates (can be extended with filesystem enumeration later)
+  const gifCandidates = [
+    {
+      type: "gif-stepper",
+      src: "/images/iron-man.gif",
+      alt: "Iron Man GIF",
+      width: 347,
+      height: 207,
+      stepsPerClick: 3,
+      gifSound: "proton-cannon.mp3",
+      gifSoundPercent: 70,
+    },
+    {
+      type: "gif-stepper",
+      src: "/images/stepper-kobe.gif",
+      alt: "Kobe Bryant GIF",
+      width: 240,
+      height: 180,
+      stepsPerClick: 1,
+      gifSound: "kobe.mp3",
+      gifSoundPercent: 70,
+    },
+    {
+      type: "gif-stepper",
+      src: "/images/stepper-vince.gif",
+      alt: "Vince Carter GIF",
+      width: 240,
+      height: 192,
+      stepsPerClick: 2,
+      gifSound: "roundball-rock-basketball.mp3",
+      gifSoundPercent: 70,
+    },
+    {
+      type: "gif-stepper",
+      src: "/images/with-fusion.gif",
+      alt: "Gotenks GIF",
+      width: 139,
+      height: 80,
+      stepsPerClick: 1,
+      gifSound: "dbz-ssj3-gotenks.mp3",
+      gifSoundPercent: 70,
+    },
+    {
+      type: "gif-stepper",
+      src: "/images/stepper-hello-kitty.gif",
+      alt: "Hello Kitty GIF",
+      width: 400,
+      height: 150,
+      stepsPerClick: 1,
+      gifSound: "hello-kitty.mp3",
+      gifSoundPercent: 70,
+    },
+    // Additional GIF candidates can be added here
+  ];
+
+  // Hardcoded ad images
+  const adCandidates = [
+    {
+      type: "ad",
+      src: "/images/ad_att-click-here.png",
+      alt: "ATT Click Here",
+      link: "#",
+      audio: "/audio/woohoo.mp3",
+      overlayText: null,
+      belowText: null,
+      overlayClass: null,
+    },
+    {
+      type: "ad",
+      src: "/images/ad_duke-nukem.gif",
+      alt: "Play Duke Nukem 3D Here",
+      link: "https://playclassic.games/games/first-person-shooter-dos-games-online/play-duke-nukem-3d-online/play/",
+      audio: null,
+      overlayText: null,
+      belowText: null,
+      overlayClass: null,
+    },
+    {
+      type: "ad",
+      src: "/images/ad_babylon-5.gif",
+      alt: "Babylon 5 on TNT",
+      link: "http://www.midwinter.com/lurk/",
+      audio: null,
+      overlayText: null,
+      belowText: null,
+      overlayClass: null,
+    },
+    {
+      type: "ad",
+      src: "/images/ad_tiger-trap.webp",
+      alt: "Tiger Trap",
+      link: "#",
+      audio: "/audio/tiger-monologue.mp3",
+      overlayText: null,
+      belowText: null,
+      overlayClass: null,
+    },
+    {
+      type: "ad",
+      src: "/images/ad_10th_kingdom.gif",
+      alt: "10th Kingdom",
+      link: "#",
+      audio: "/audio/suck-an-elf.mp3",
+      overlayText: null,
+      belowText: null,
+      overlayClass: null,
+    },
+    {
+      type: "ad",
+      src: "/images/ad_connery.gif",
+      alt: "Sean Connery",
+      link: "https://seanconnery.com/",
+      audio: null,
+      overlayText: "Entrapment",
+      belowText: '"Welcome to the Rock"',
+      overlayClass: "ad-connery",
+    },
+    {
+      type: "ad",
+      src: "/images/ad_heavensgate.jpg",
+      alt: "Heaven's Gate",
+      link: "https://www.heavensgate.com/",
+      audio: null,
+      overlayText: "Next gate in 2,359 years",
+      belowText: null,
+      overlayClass: "ad-heavensgate",
+    },
+    {
+      type: "ad",
+      src: "/images/ad_homestar.png",
+      alt: "Homestar Runner",
+      link: "https://homestarrunner.com/main",
+      audio: null,
+      overlayText: null,
+      belowText: null,
+      overlayClass: null,
+    },
+    // {
+    //   type: "ad",
+    //   src: "/images/ad_screensaver.gif",
+    //   alt: "Screensaver",
+    //   link: "#",
+    //   audio: null,
+    // },
+    {
+      type: "ad",
+      src: "/images/ad_space-jam.gif",
+      alt: "Space Jam",
+      link: "https://www.spacejam.com/1996",
+      audio: null,
+      overlayText: null,
+      belowText: null,
+      overlayClass: null,
+    },
+    {
+      type: "ad",
+      src: "/images/ad_toyraygun.gif",
+      alt: "Toy Ray Gun",
+      link: "https://www.toyraygun.com/",
+      audio: null,
+      overlayText: null,
+      belowText: null,
+      overlayClass: null,
+    },
+  ];
+
+  // Add ad candidates to pool
+  pool.push(...adCandidates);
+
+  // Add GIF candidates to pool
+  pool.push(...gifCandidates);
+
+  // Fallback: if no media found, return safe default GIF
+  if (pool.length === 0) {
+    pool.push({
+      type: "gif-stepper",
+      src: "/images/iron-man.gif",
+      alt: "Iron Man GIF",
+      width: 347,
+      height: 207,
+      stepsPerClick: 3,
+      gifSound: "proton-cannon.mp3",
+      gifSoundPercent: 70,
+    });
+  }
+
+  return pool;
+}
+
+/**
+ * Select sidebar media item based on auth status
+ * Signed-in: random from full pool (ads + GIFs)
+ * Signed-out: first ad only (static, no interaction)
+ * Test mode: deterministic index selection via query (?sidebarTest=1&sidebarIndex=N)
+ */
+function getSidebarMediaSelection(req, isSignedIn) {
+  const pool = getSidebarMediaPool();
+  const sidebarTestRaw = String((req && req.query && req.query.sidebarTest) || "").toLowerCase();
+  const isSidebarTestMode = sidebarTestRaw === "1" || sidebarTestRaw === "true";
+
+  if (isSidebarTestMode && pool.length > 0) {
+    const rawIndex = Number.parseInt((req && req.query && req.query.sidebarIndex) || "0", 10);
+    const safeIndex = Number.isFinite(rawIndex)
+      ? Math.max(0, Math.min(rawIndex, pool.length - 1))
+      : 0;
+    const basePath = (req && req.path) || "/";
+    const prevIndex = (safeIndex - 1 + pool.length) % pool.length;
+    const nextIndex = (safeIndex + 1) % pool.length;
+
+    return {
+      media: pool[safeIndex],
+      test: {
+        enabled: true,
+        index: safeIndex,
+        total: pool.length,
+        prevUrl: `${basePath}?sidebarTest=1&sidebarIndex=${prevIndex}`,
+        nextUrl: `${basePath}?sidebarTest=1&sidebarIndex=${nextIndex}`,
+      },
+    };
+  }
+
+  if (!isSignedIn) {
+    const firstAd = pool.find((item) => item.type === "ad");
+    return { media: firstAd || pool[0], test: { enabled: false, total: pool.length } };
+  }
+
+  return {
+    media: pool[Math.floor(Math.random() * pool.length)],
+    test: { enabled: false, total: pool.length },
+  };
+}
+
+function getSidebarAdKeys() {
+  const pool = getSidebarMediaPool();
+  return Array.from(new Set(pool.filter((item) => item.type === "ad").map((item) => item.src)));
 }
 
 // Serve static files from workspace root
@@ -351,21 +620,34 @@ app.get(["/scoreboard", "/scoreboard.html"], async (req, res) => {
 
     const currentUser =
       res.locals.navData && res.locals.navData.user ? res.locals.navData.user : null;
+    const isSignedIn = !!currentUser;
+    const { media: sidebarMedia, test: sidebarTest } = getSidebarMediaSelection(req, isSignedIn);
+    const sidebarAdKeys = getSidebarAdKeys();
 
     return res.render("scoreboard", {
       rankedUsers,
       podiumUsers: rankedUsers.slice(0, 3),
       currentUser,
+      sidebarMedia,
+      sidebarAdKeys,
+      sidebarTest,
+      isSignedIn,
       leaderboardGeneratedAt: new Date().toISOString(),
     });
   } catch (err) {
     console.warn("Brispace scoreboard query failed:", err && err.message ? err.message : err);
     const currentUser =
       res.locals.navData && res.locals.navData.user ? res.locals.navData.user : null;
+    const { media: sidebarMedia, test: sidebarTest } = getSidebarMediaSelection(req, false);
+    const sidebarAdKeys = getSidebarAdKeys();
     return res.render("scoreboard", {
       rankedUsers: [],
       podiumUsers: [],
       currentUser,
+      sidebarMedia,
+      sidebarAdKeys,
+      sidebarTest,
+      isSignedIn: false,
       leaderboardGeneratedAt: new Date().toISOString(),
     });
   }

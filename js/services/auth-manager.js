@@ -116,11 +116,15 @@ class AuthManager extends EventTarget {
     } catch (err) {
       this.emitError("Logout failed. Please refresh the page or try again.");
     }
-    // Clear all localStorage except site-awards-clicked
+    // Clear all localStorage except progress keys used for achievement tracking
     const siteAwardsClicked = localStorage.getItem("site-awards-clicked");
+    const sidebarAdsClicked = localStorage.getItem("sidebar-ads-clicked");
     localStorage.clear();
     if (siteAwardsClicked !== null) {
       localStorage.setItem("site-awards-clicked", siteAwardsClicked);
+    }
+    if (sidebarAdsClicked !== null) {
+      localStorage.setItem("sidebar-ads-clicked", sidebarAdsClicked);
     }
     // Clear cookies (client-side, only those accessible via JS)
     document.cookie.split(";").forEach((cookie) => {

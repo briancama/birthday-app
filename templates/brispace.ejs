@@ -4,13 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BriSpace - A Place for Friends</title>
-    <link rel="icon" type="image/png" href="/images/favicon.jpg" />
+    <link rel="icon" type="image/png" href="/images/brispace_favicon.png" />
     <link rel="stylesheet" href="/css/geocities.css" />
     <link rel="stylesheet" href="/css/components/myspace.css" />
     <link rel="stylesheet" href="/css/components/navigation.css" />
     <link rel="stylesheet" href="/css/components/brispace-home.css" />
     <link rel="stylesheet" href="/css/components/user-display.css" />
     <link rel="stylesheet" href="/css/components/login-signup.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&display=swap"
+      rel="stylesheet"
+    />
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
@@ -66,7 +72,17 @@
             >
           </div>
           <% } %>
-          <%- include('partials/sidebar-gif-stepper', { hasSignedInUser: !!currentUser }) %>
+          <%- include('partials/sidebar-gif-stepper', { sidebarMedia: sidebarMedia, sidebarAdKeys: sidebarAdKeys, isSignedIn: isSignedIn }) %>
+          <% if (sidebarTest && sidebarTest.enabled) { %>
+          <div class="myspace-section" style="margin-top: 8px;">
+            <h3 style="margin-bottom: 6px;">Sidebar Media Test</h3>
+            <p style="margin: 0 0 8px 0; font-size: 11px;">
+              Item <%= sidebarTest.index + 1 %> of <%= sidebarTest.total %>
+            </p>
+            <a class="btn btn--secondary" href="<%= sidebarTest.prevUrl %>">Prev</a>
+            <a class="btn btn--primary" href="<%= sidebarTest.nextUrl %>">Next</a>
+          </div>
+          <% } %>
         </aside>
       </div>
     </main>
@@ -88,7 +104,7 @@
         }
       }
     </script>
-    <% if (currentUser) { %>
+    <% if (typeof isSignedIn !== 'undefined' && isSignedIn && typeof sidebarMedia !== 'undefined' && sidebarMedia && sidebarMedia.type === 'gif-stepper') { %>
     <script src="/js/components/gif-stepper.js"></script>
     <% } %>
   </body>

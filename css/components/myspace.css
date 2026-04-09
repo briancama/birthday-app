@@ -373,6 +373,122 @@ body {
   }
 }
 
+.sidebar-ad-link {
+  width: 100%;
+  display: block;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.myspace-section-ad {
+  max-width: 100%;
+  width: 100%;
+  cursor: pointer;
+  display: block;
+}
+
+.sidebar-ad-link .myspace-section-ad {
+  cursor: pointer;
+}
+
+.sidebar-ad-block {
+  width: 100%;
+}
+
+.sidebar-ad-media-wrapper {
+  position: relative;
+  width: 100%;
+  background: #fff;
+}
+
+.sidebar-ad-static {
+  .myspace-section-ad {
+    object-fit: contain;
+  }
+}
+
+.sidebar-ad-overlay {
+  --sidebar-ad-overlay-font-size: 12px;
+  position: absolute;
+  left: 0px;
+  bottom: 0px;
+  width: 100%;
+  padding: 20% 8px 1rem;
+  background: linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.9) 0%,
+    rgba(0, 0, 0, 0.86) 10%,
+    rgba(0, 0, 0, 0.76) 24%,
+    rgba(0, 0, 0, 0.6) 40%,
+    rgba(0, 0, 0, 0.42) 56%,
+    rgba(0, 0, 0, 0.25) 72%,
+    rgba(0, 0, 0, 0.11) 86%,
+    rgba(0, 0, 0, 0.03) 95%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  color: #fff;
+  text-align: center;
+  font-size: var(--sidebar-ad-overlay-font-size);
+  line-height: 1.2;
+  text-shadow: 1px 1px 0 #000;
+}
+
+.sidebar-ad-overlay::first-letter {
+  font-size: 1.65em;
+  line-height: 1;
+}
+
+.sidebar-ad-caption {
+  margin-top: 0;
+  padding: 6px 8px;
+  background: black;
+  color: white;
+  font-size: 18px;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.sidebar-ad-font-impact {
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+}
+
+.sidebar-ad-font-cinzel {
+  font-family: "Cinzel", Garamond, "Times New Roman", serif;
+}
+
+.sidebar-ad-font-comic {
+  font-family: "Comic Sans MS", "Comic Sans", cursive;
+}
+
+.sidebar-ad-font-courier {
+  font-family: "Courier New", Courier, monospace;
+}
+
+.sidebar-ad-font-garamond {
+  font-family: Garamond, "Adobe Garamond Pro", "Times New Roman", serif;
+}
+
+.sidebar-ad-font-georgia {
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.sidebar-ad-font-verdana {
+  font-family: Verdana, Geneva, sans-serif;
+}
+
+/* Ad-specific styling via overlay classes */
+.sidebar-ad-overlay.ad-connery {
+  font-family: "Cinzel", Garamond, "Times New Roman", serif;
+  font-size: 40px;
+}
+
+.sidebar-ad-overlay.ad-heavensgate {
+  font-family: Verdana, Geneva, sans-serif;
+  font-size: 14px;
+  text-transform: uppercase;
+  text-align: right;
+}
+
 @media (max-width: 768px) {
   .myspace-layout {
     flex-direction: column;
@@ -407,11 +523,16 @@ body {
     display: flex;
     align-items: center;
     flex-direction: column;
-    /* Reserve stable space matching the decoded canvas output size so the
-       layout never shifts whether this holds the placeholder <img> or the
-       gif-stepper canvas wrapper. 347x207 native → 200px max-width → ~119px tall */
+    /* Reserve stable space matching the decoded canvas output size.
+       The ratio can be overridden per-media via --sidebar-media-aspect-ratio. */
     max-width: 200px;
-    aspect-ratio: 347 / 207;
+    aspect-ratio: var(--sidebar-media-aspect-ratio, 347 / 207);
+
+    &:has(canvas) {
+      max-width: none;
+      width: 100%;
+      aspect-ratio: unset;
+    }
   }
 
   .myspace-section-gif canvas {
