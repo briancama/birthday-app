@@ -115,7 +115,8 @@ body.has-bottom-menu {
   margin: 0 auto;
 }
 
-.nav-tab {
+.site-navigation .nav-tab,
+.myspace-header .nav-tab {
   background: linear-gradient(to bottom, var(--accent-magenta), #9400d3);
   color: var(--accent-yellow);
   border: var(--border-width) var(--border-style) var(--border-color);
@@ -134,27 +135,57 @@ body.has-bottom-menu {
   justify-content: center;
 }
 
-.nav-tab:hover {
+.site-navigation .nav-tab:hover,
+.myspace-header .nav-tab:hover {
   background: linear-gradient(to bottom, var(--accent-cyan), var(--accent-blue));
   border: var(--border-width) inset var(--border-color);
   color: var(--text-dark);
   transform: translateY(1px);
 }
 
-.nav-tab.active {
+.site-navigation .nav-tab.active,
+.myspace-header .nav-tab.active {
   background: linear-gradient(to bottom, var(--accent-yellow), #ffd700);
   color: var(--text-dark);
   border: var(--border-width) inset var(--border-color);
   font-weight: bolder;
 }
 
-.nav-tab.logout-btn {
+.site-navigation .nav-tab.logout-btn,
+.myspace-header .nav-tab.logout-btn {
   background: linear-gradient(to bottom, var(--accent-red), #8b0000);
   color: white;
 }
 
-.nav-tab.logout-btn:hover {
+.site-navigation .nav-tab.logout-btn:hover,
+.myspace-header .nav-tab.logout-btn:hover {
   background: linear-gradient(to bottom, #ff6347, var(--accent-red));
+}
+
+.myspace.has-profile-theme .site-navigation .nav-tab,
+.myspace.has-profile-theme .myspace-header .nav-tab {
+  color: var(--accent-yellow);
+}
+
+.myspace.has-profile-theme .site-navigation .nav-tab:hover,
+.myspace.has-profile-theme .site-navigation .nav-tab:focus,
+.myspace.has-profile-theme .myspace-header .nav-tab:hover,
+.myspace.has-profile-theme .myspace-header .nav-tab:focus {
+  color: var(--text-dark);
+}
+
+.myspace.has-profile-theme .site-navigation .nav-tab.active,
+.myspace.has-profile-theme .myspace-header .nav-tab.active {
+  color: var(--text-dark);
+}
+
+.myspace.has-profile-theme .site-navigation .nav-tab.logout-btn,
+.myspace.has-profile-theme .site-navigation .nav-tab.logout-btn:hover,
+.myspace.has-profile-theme .site-navigation .nav-tab.logout-btn:focus,
+.myspace.has-profile-theme .myspace-header .nav-tab.logout-btn,
+.myspace.has-profile-theme .myspace-header .nav-tab.logout-btn:hover,
+.myspace.has-profile-theme .myspace-header .nav-tab.logout-btn:focus {
+  color: white;
 }
 
 .username {
@@ -175,7 +206,8 @@ body.has-bottom-menu {
 .nav-menu.mobile-open .nav-tabs {
   display: flex;
 }
-.nav-tab {
+.site-navigation .nav-tab,
+.myspace-header .nav-tab {
   width: 100%;
   text-align: center;
   padding: var(--spacing-lg);
