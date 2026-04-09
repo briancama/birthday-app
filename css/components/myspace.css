@@ -393,6 +393,7 @@ body {
 
 .sidebar-ad-block {
   width: 100%;
+  min-height: 75px;
 }
 
 .sidebar-ad-media-wrapper {
