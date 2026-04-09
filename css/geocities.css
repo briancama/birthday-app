@@ -1479,8 +1479,9 @@
   }
 }
 
-/* Enable Notifications */
+/* Notifications toggle is intentionally hidden until the feature is ready. */
 .notif-toggle-btn {
+  display: none !important;
   max-width: 300px;
   margin: 0 auto 12px;
   background: linear-gradient(to bottom, var(--accent-green), #00b589);

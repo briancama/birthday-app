@@ -264,8 +264,4 @@ body.has-bottom-menu {
   }
 }
 
-/* Temporary disabling of user-profile until achievements ready */
-.profile-nav-link {
-  visibility: hidden;
-  pointer-events: none;
-}
+
