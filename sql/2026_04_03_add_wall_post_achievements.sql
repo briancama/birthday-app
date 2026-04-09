@@ -10,7 +10,7 @@ VALUES
   (
     'wall_flower',
     'Wall Flower',
-    'Leave your first message on someone''s wall.',
+    'Left your first message on someone''s wall.',
     1,
     '{"trigger":"wall:posted","threshold":1}'::jsonb,
     true
@@ -18,7 +18,7 @@ VALUES
   (
     'social_butterfly',
     'Social Butterfly',
-    'Keep the conversation going — post on 5 walls.',
+    'Kept the conversation going — posted on 5 walls.',
     2,
     '{"trigger":"wall:posted","threshold":5}'::jsonb,
     true
