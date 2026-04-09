@@ -155,6 +155,21 @@
       };
 
       const activeTheme = resolveThemeTokens(user.profile_bg_url);
+      const activeThemeInlineStyle = hasProfileTheme
+        ? [
+            `background-image: url('${user.profile_bg_url}')`,
+            'background-repeat: repeat',
+            'background-size: auto',
+            `--profile-theme-section-bg: ${activeTheme.tokens.sectionBg}`,
+            `--profile-theme-section-text: ${activeTheme.tokens.sectionText}`,
+            `--profile-theme-section-border: ${activeTheme.tokens.sectionBorder}`,
+            `--profile-theme-heading-bg: ${activeTheme.tokens.headingBg}`,
+            `--profile-theme-heading-text: ${activeTheme.tokens.headingText}`,
+            `--profile-theme-detail-bg: ${activeTheme.tokens.detailBg}`,
+            `--profile-theme-link: ${activeTheme.tokens.link}`,
+            `--profile-theme-link-hover: ${activeTheme.tokens.linkHover}`
+          ].join('; ')
+        : '';
     %>
   </head>
 
@@ -163,6 +178,7 @@
     data-profile-user-id="<%= user.id %>"
     data-profile-bg-url="<%= user.profile_bg_url || '' %>"
     data-profile-theme-key="<%= hasProfileTheme ? activeTheme.key : '' %>"
+    <% if (activeThemeInlineStyle) { %>style="<%= activeThemeInlineStyle %>"<% } %>
   >
     <!-- Server-rendered navigation header -->
     <%- include('partials/navigation-visitor', { navData: navData }) %>

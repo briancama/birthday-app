@@ -147,11 +147,22 @@
   min-height: 90px;
 }
 
+.myspace.has-profile-theme .myspace-comment-card {
+  background: var(--profile-theme-detail-bg);
+  border-color: var(--profile-theme-section-border);
+  color: var(--profile-theme-section-text);
+}
+
 .myspace-comment-sidebar {
   width: 180px;
   padding: 12px;
   background: #ffa54f;
   border-right: 2px solid #e67e22;
+}
+
+.myspace.has-profile-theme .myspace-comment-sidebar {
+  background: var(--profile-theme-heading-bg);
+  border-right-color: var(--profile-theme-section-border);
 }
 
 .myspace-comment-content {
@@ -170,6 +181,10 @@
   margin-bottom: 4px;
 }
 
+.myspace.has-profile-theme .myspace-comment-header {
+  color: var(--profile-theme-heading-text);
+}
+
 .myspace-comment-avatar {
   object-fit: contain;
   width: 100%;
@@ -181,9 +196,17 @@
   color: var(--myspace-dark-blue);
 }
 
+.myspace.has-profile-theme .myspace-comment-name {
+  color: var(--profile-theme-heading-text);
+}
+
 .myspace-comment-date {
   font-size: 1em;
   color: #000;
+}
+
+.myspace.has-profile-theme .myspace-comment-date {
+  color: var(--profile-theme-section-text);
 }
 
 .myspace-comment-message {
@@ -191,6 +214,10 @@
   color: #000;
   margin-bottom: 8px;
   margin-top: 2px;
+}
+
+.myspace.has-profile-theme .myspace-comment-message {
+  color: var(--profile-theme-section-text);
 }
 
 .myspace-comment-actions {
@@ -224,4 +251,12 @@
 }
 .myspace-comment-delete:hover {
   color: #f00;
+}
+
+.myspace.has-profile-theme .myspace-comment-delete {
+  color: var(--profile-theme-link);
+}
+
+.myspace.has-profile-theme .myspace-comment-delete:hover {
+  color: var(--profile-theme-link-hover);
 }

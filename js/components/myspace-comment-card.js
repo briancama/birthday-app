@@ -22,7 +22,13 @@ export function createCommentCard({
   canDelete,
   onDelete,
 }) {
-  const dateText = new Date(date).toLocaleString();
+  const dateText = new Date(date).toLocaleString([], {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 
   const card = document.createElement("div");
   card.className = "myspace-comment-card";
