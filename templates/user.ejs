@@ -378,18 +378,38 @@
               ✏ edit
             </button>
             <form id="edit-interests-form" class="profile-edit-form profile-edit-form--modal">
-              <textarea data-field="general_interest" placeholder="Life, Family, Career">
+              <div class="profile-field-edit-block">
+                <textarea data-field="general_interest" placeholder="Life, Family, Career">
 <%= user.general_interest || '' %></textarea
-              >
-              <textarea data-field="fav_movie" placeholder="My Movies">
+                >
+                <div class="profile-field-charcount" data-field-charcount-wrap="general_interest" aria-live="polite">
+                  <span data-field-char-count="general_interest">0</span>/<span>1000</span>
+                </div>
+              </div>
+              <div class="profile-field-edit-block">
+                <textarea data-field="fav_movie" placeholder="My Movies">
 <%= user.fav_movie || '' %></textarea
-              >
-              <textarea data-field="fav_song" placeholder="My Music">
+                >
+                <div class="profile-field-charcount" data-field-charcount-wrap="fav_movie" aria-live="polite">
+                  <span data-field-char-count="fav_movie">0</span>/<span>1000</span>
+                </div>
+              </div>
+              <div class="profile-field-edit-block">
+                <textarea data-field="fav_song" placeholder="My Music">
 <%= user.fav_song || '' %></textarea
-              >
-              <textarea data-field="television" placeholder="My TV Shows">
+                >
+                <div class="profile-field-charcount" data-field-charcount-wrap="fav_song" aria-live="polite">
+                  <span data-field-char-count="fav_song">0</span>/<span>1000</span>
+                </div>
+              </div>
+              <div class="profile-field-edit-block">
+                <textarea data-field="television" placeholder="My TV Shows">
 <%= user.television || '' %></textarea
-              >
+                >
+                <div class="profile-field-charcount" data-field-charcount-wrap="television" aria-live="polite">
+                  <span data-field-char-count="television">0</span>/<span>1000</span>
+                </div>
+              </div>
               <div class="profile-edit-actions">
                 <button type="button" class="profile-edit-save">Save</button>
                 <button type="button" class="profile-edit-cancel">Cancel</button>
@@ -475,6 +495,9 @@
             </button>
             <div class="profile-edit-form" id="edit-bio-form" data-quill-form>
               <div id="bio-quill-editor"></div>
+              <div class="profile-bio-charcount" aria-live="polite">
+                <span data-bio-char-count>0</span>/<span data-bio-char-limit>3000</span>
+              </div>
               <!-- Hidden field read by _saveSection -->
               <textarea data-field="about_html" style="display: none">
 <%= user.about_html || '' %></textarea

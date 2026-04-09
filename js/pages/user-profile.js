@@ -100,6 +100,15 @@ const PROFILE_BACKGROUND_THEME_KEYS = {
   "/images/backgrounds/purp032.gif": "stars",
 };
 
+const ABOUT_HTML_MAX_CHARS = 3000;
+const PROFILE_INTERESTS_MAX_CHARS = 1000;
+const PROFILE_INTERESTS_FIELDS = new Set([
+  "general_interest",
+  "fav_song",
+  "fav_movie",
+  "television",
+]);
+
 class UserProfilePage extends BasePage {
   constructor() {
     // Public page — no forced auth redirect; softInit will load user if signed in.
@@ -741,12 +750,16 @@ class UserProfilePage extends BasePage {
     const isQuillForm = form.hasAttribute("data-quill-form");
     let backdrop = null;
     let quill = null;
+    let interestsLimitNotified = false;
 
     const initQuill = () => {
       if (quill) return;
       const editorEl = form.querySelector("[id$='-quill-editor']");
       if (!editorEl) return;
       const hiddenTextarea = form.querySelector("[data-field='about_html']");
+      const charCountEl = form.querySelector("[data-bio-char-count]");
+      const charCountWrap = form.querySelector(".profile-bio-charcount");
+      let bioLimitNotified = false;
       quill = new Quill(editorEl, {
         theme: "snow",
         placeholder: "Tell people about yourself...",
@@ -759,13 +772,39 @@ class UserProfilePage extends BasePage {
           ],
         },
       });
+
+      const updateBioCounter = () => {
+        const count = this._getQuillTextLength(quill);
+        if (charCountEl) charCountEl.textContent = String(count);
+        if (charCountWrap) {
+          charCountWrap.classList.toggle("is-at-limit", count >= ABOUT_HTML_MAX_CHARS);
+        }
+      };
+
       // Seed with existing content
       if (hiddenTextarea?.value) {
         quill.clipboard.dangerouslyPasteHTML(hiddenTextarea.value);
       }
+
+      if (hiddenTextarea) hiddenTextarea.value = this._normalizeAboutHtml(quill.getSemanticHTML());
+      updateBioCounter();
+
       // Keep hidden textarea in sync so _saveSection can read it normally
-      quill.on("text-change", () => {
-        if (hiddenTextarea) hiddenTextarea.value = quill.getSemanticHTML();
+      quill.on("text-change", (_delta, _oldDelta, source) => {
+        const count = this._getQuillTextLength(quill);
+        if (count > ABOUT_HTML_MAX_CHARS) {
+          quill.history.undo();
+          if (source === "user" && !bioLimitNotified) {
+            this.showErrorToast(`About Me is limited to ${ABOUT_HTML_MAX_CHARS} characters.`);
+            bioLimitNotified = true;
+          }
+          updateBioCounter();
+          return;
+        }
+        bioLimitNotified = false;
+        if (hiddenTextarea)
+          hiddenTextarea.value = this._normalizeAboutHtml(quill.getSemanticHTML());
+        updateBioCounter();
       });
     };
 
@@ -774,6 +813,16 @@ class UserProfilePage extends BasePage {
       btn.style.display = "none";
       if (display) display.style.display = "none";
       if (isQuillForm) initQuill();
+      if (section === "interests") {
+        this._initInterestsFieldCounters(form, PROFILE_INTERESTS_MAX_CHARS, () => {
+          if (!interestsLimitNotified) {
+            this.showErrorToast(
+              `Interests fields are limited to ${PROFILE_INTERESTS_MAX_CHARS} characters each.`
+            );
+            interestsLimitNotified = true;
+          }
+        });
+      }
       if (isModal) {
         backdrop = document.createElement("div");
         backdrop.className = "profile-modal-backdrop";
@@ -786,6 +835,7 @@ class UserProfilePage extends BasePage {
       form.classList.remove("active");
       btn.style.display = "";
       if (display) display.style.display = "";
+      interestsLimitNotified = false;
       if (backdrop) {
         backdrop.remove();
         backdrop = null;
@@ -815,6 +865,27 @@ class UserProfilePage extends BasePage {
       form.querySelectorAll("[data-field]").forEach((el) => {
         payload[el.dataset.field] = el.value;
       });
+
+      if (typeof payload.about_html === "string") {
+        payload.about_html = this._normalizeAboutHtml(payload.about_html);
+        if (
+          section === "bio" &&
+          this._getAboutTextLength(payload.about_html) > ABOUT_HTML_MAX_CHARS
+        ) {
+          throw new Error(`About Me is limited to ${ABOUT_HTML_MAX_CHARS} characters.`);
+        }
+      }
+
+      if (section === "interests") {
+        for (const fieldName of PROFILE_INTERESTS_FIELDS) {
+          if (!(fieldName in payload) || typeof payload[fieldName] !== "string") continue;
+          if (payload[fieldName].length > PROFILE_INTERESTS_MAX_CHARS) {
+            throw new Error(
+              `Interests fields are limited to ${PROFILE_INTERESTS_MAX_CHARS} characters each.`
+            );
+          }
+        }
+      }
 
       const resp = await fetch(`/api/users/${this.profileUserId}/profile-fields`, {
         method: "PATCH",
@@ -954,8 +1025,11 @@ class UserProfilePage extends BasePage {
     try {
       const { data, error } = await this.supabase
         .from("user_achievements")
-        .select("achievement_id, awarded_at, achievements(name, image_url)")
+        .select(
+          "achievement_id, awarded_at, achievements!inner(name, image_url, is_visitor_eligible)"
+        )
         .eq("user_id", this.profileUserId)
+        .eq("achievements.is_visitor_eligible", true)
         .order("awarded_at", { ascending: false });
 
       if (error) throw error;
@@ -1098,6 +1172,65 @@ class UserProfilePage extends BasePage {
   }
 
   // Sanitizes HTML using DOMPurify with a restricted tag allowlist.
+  _normalizeAboutHtml(html) {
+    if (!html) return "";
+    return String(html)
+      .replace(/&nbsp;/gi, " ")
+      .replace(/\u00a0/g, " ");
+  }
+
+  _getQuillTextLength(quill) {
+    if (!quill) return 0;
+    const text = quill.getText() || "";
+    return text.endsWith("\n") ? Math.max(0, text.length - 1) : text.length;
+  }
+
+  _getAboutTextLength(html) {
+    if (!html) return 0;
+    const el = document.createElement("div");
+    el.innerHTML = this._sanitizeHtml(this._normalizeAboutHtml(html));
+    return (el.textContent || "").length;
+  }
+
+  _initInterestsFieldCounters(form, maxChars, onLimitReached) {
+    if (!form) return;
+    const textareas = form.querySelectorAll("textarea[data-field]");
+    textareas.forEach((textarea) => {
+      const fieldName = textarea.dataset.field || "";
+      if (!PROFILE_INTERESTS_FIELDS.has(fieldName)) return;
+
+      const countEl = form.querySelector(`[data-field-char-count="${fieldName}"]`);
+      const countWrap = form.querySelector(`[data-field-charcount-wrap="${fieldName}"]`);
+
+      const updateCounter = () => {
+        const count = textarea.value.length;
+        if (countEl) countEl.textContent = String(count);
+        if (countWrap) countWrap.classList.toggle("is-at-limit", count >= maxChars);
+      };
+
+      if (textarea.value.length > maxChars) {
+        textarea.value = textarea.value.slice(0, maxChars);
+      }
+      textarea.maxLength = maxChars;
+      updateCounter();
+
+      if (textarea.dataset.counterBound === "1") return;
+
+      textarea.addEventListener("input", () => {
+        if (textarea.value.length > maxChars) {
+          textarea.value = textarea.value.slice(0, maxChars);
+          if (typeof onLimitReached === "function") onLimitReached();
+        } else if (textarea.value.length === maxChars) {
+          if (typeof onLimitReached === "function") onLimitReached();
+        }
+        updateCounter();
+      });
+
+      textarea.dataset.counterBound = "1";
+    });
+  }
+
+  // Sanitizes HTML using DOMPurify with a restricted tag allowlist.
   _sanitizeHtml(
     html,
     {
@@ -1120,7 +1253,8 @@ class UserProfilePage extends BasePage {
     } = {}
   ) {
     if (!html) return "";
-    return DOMPurify.sanitize(html, {
+    const normalizedHtml = this._normalizeAboutHtml(html);
+    return DOMPurify.sanitize(normalizedHtml, {
       ALLOWED_TAGS: allowedTags,
       ALLOWED_ATTR: ["href", "target", "rel"],
       FORCE_BODY: true,

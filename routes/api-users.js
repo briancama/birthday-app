@@ -512,6 +512,24 @@ const ALLOWED_PROFILE_FIELDS = [
   "profile_bg_mode",
 ];
 
+const PROFILE_FIELD_MAX_CHARS = 300;
+const PROFILE_ABOUT_MAX_CHARS = 3000;
+const PROFILE_INTERESTS_MAX_CHARS = 1000;
+const PROFILE_INTERESTS_FIELDS = new Set([
+  "general_interest",
+  "fav_song",
+  "fav_movie",
+  "television",
+]);
+
+function getAboutTextLength(html) {
+  if (!html) return 0;
+  return String(html)
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\u00a0/g, " ").length;
+}
+
 // Note: looking_for was removed — column does not exist in user_profile table.
 
 router.patch("/users/:id/profile-fields", async (req, res) => {
@@ -545,8 +563,26 @@ router.patch("/users/:id/profile-fields", async (req, res) => {
             const normalizedUrl = val.trim();
             updates[field] = PROFILE_BACKGROUND_URLS.has(normalizedUrl) ? normalizedUrl : null;
           }
+        } else if (field === "about_html") {
+          if (typeof val !== "string") {
+            updates[field] = null;
+          } else {
+            const normalizedAbout = val
+              .replace(/&nbsp;/gi, " ")
+              .replace(/\u00a0/g, " ")
+              .trim();
+            if (getAboutTextLength(normalizedAbout) > PROFILE_ABOUT_MAX_CHARS) {
+              return res.status(400).json({
+                error: `About Me is limited to ${PROFILE_ABOUT_MAX_CHARS} characters`,
+              });
+            }
+            updates[field] = normalizedAbout;
+          }
         } else {
-          updates[field] = typeof val === "string" ? val.trim().slice(0, 300) : null;
+          const fieldMaxChars = PROFILE_INTERESTS_FIELDS.has(field)
+            ? PROFILE_INTERESTS_MAX_CHARS
+            : PROFILE_FIELD_MAX_CHARS;
+          updates[field] = typeof val === "string" ? val.trim().slice(0, fieldMaxChars) : null;
         }
       }
     }
