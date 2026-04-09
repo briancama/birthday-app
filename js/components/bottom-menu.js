@@ -28,7 +28,7 @@ export class BottomMenu extends HTMLElement {
     const currentUser = appState.getCurrentUser();
     const profileLink = currentUser
       ? `<a href="/users/${encodeURIComponent(currentUser.username)}" class="bottom-menu-item" data-page="profile" title="My Profile">
-          <span class="bottom-menu-icon"><img src="/images/home.gif" alt="Profile Icon"></span>
+          <span class="bottom-menu-icon"><img src="/images/pencil.gif" alt="Edit ProfileIcon"></span>
           <span class="bottom-menu-label">Profile</span>
         </a>`
       : "";
@@ -41,7 +41,7 @@ export class BottomMenu extends HTMLElement {
         </a>
 
         <a href="/friends" class="bottom-menu-item" data-page="friends" title="Friends">
-          <span class="bottom-menu-icon"><img src="/images/info.gif" alt="Friends Icon"></span>
+          <span class="bottom-menu-icon"><img src="/images/friends.gif" alt="Friends Icon"></span>
           <span class="bottom-menu-label">Friends</span>
         </a>
 
