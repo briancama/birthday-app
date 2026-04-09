@@ -91,7 +91,14 @@ class ChallengesPage extends BasePage {
       // ignore — selector will show all players as available
     }
 
-    const selector = createCharacterSelect({ characters, size: 180, columns: 4, gap: 12, activeCounts, incompleteCounts });
+    const selector = createCharacterSelect({
+      characters,
+      size: 180,
+      columns: 4,
+      gap: 12,
+      activeCounts,
+      incompleteCounts,
+    });
 
     // Track selection on the page and show confirmation overlay
     this.selectedCharacter = null;
@@ -196,7 +203,9 @@ class ChallengesPage extends BasePage {
         element.classList.remove("unrevealed");
         element.classList.add("revealed");
 
-          const actionsContainer = element.querySelector(".challenge-actions, .reveal-actions, .reveal");
+        const actionsContainer = element.querySelector(
+          ".challenge-actions, .reveal-actions, .reveal"
+        );
         if (actionsContainer) {
           const challengeId = element.dataset.challengeId;
           const brianMode = element.dataset.brianMode || "";

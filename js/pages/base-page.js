@@ -127,10 +127,17 @@ class BasePage {
 
   async initAuth() {
     // Authentication and user event setup
-    const isAuthenticated = await appState.init();
-    if (!isAuthenticated) {
-      return;
+    const navState = window.__NAV_STATE__ || {};
+    const serverUser = navState.user && navState.user.id ? navState.user : null;
+
+    // If server already identified a signed-in user, avoid client init redirects.
+    if (!serverUser) {
+      const isAuthenticated = await appState.init();
+      if (!isAuthenticated) {
+        return;
+      }
     }
+
     // Modern event-based subscription to app state changes
     const userLoadedCleanup = appState.on("user:loaded", (e) => {
       this.handleStateChange("user-loaded", e.detail);
@@ -149,8 +156,10 @@ class BasePage {
     });
     this.eventCleanup.push(userLoadedCleanup, userErrorCleanup, userLogoutCleanup);
     this.supabase = appState.getSupabase();
-    this.userId = appState.getUserId();
-    this.currentUser = appState.getCurrentUser();
+
+    // Prefer client auth state when available, otherwise use server nav state.
+    this.userId = appState.getUserId() || serverUser?.id || null;
+    this.currentUser = appState.getCurrentUser() || serverUser || null;
   }
 
   async initAudio() {
@@ -625,7 +634,7 @@ class BasePage {
     const voteLabel = document.createElement("div");
     voteLabel.textContent = "Vote for Me!";
     voteLabel.style.cssText =
-      'text-align:center;font-weight: 600; font-size:1rem;font-family: "Comic Sans", "Comic Sans MS", "Chalkboard", "ChalkboardSE-Regular", cursive, sans-serif;color: #000000;text-shadow: rgba(255, 255, 255, 0.9) 2px 1px 1px;margin-top:4px;cursor:pointer;user-select:none;';
+      'text-align:center;font-weight: 600; font-size:1rem;font-family: "Comic Sans", "Comic Sans MS", "Chalkboard", "ChalkboardSE-Regular", cursive, sans-serif;color: limegreen;text-shadow: rgba(0, 0, 0, 0.9) 2px 1px 1px;margin-top:4px;cursor:pointer;user-select:none;';
 
     // Wrap image + label in a container
     const awardContainer = document.createElement("div");

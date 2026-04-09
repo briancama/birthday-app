@@ -3,40 +3,36 @@
  * Fixed sticky navigation menu at bottom of screen on mobile
  */
 import { appState } from "../app.js";
-import { featureFlags } from "../utils/feature-flags.js";
 
 export class BottomMenu extends HTMLElement {
   constructor() {
     super();
-    this.cocktailCompetitionActive = false;
     this.cleanupFunctions = [];
   }
 
-  async connectedCallback() {
+  connectedCallback() {
     this.render();
     this.setupEventListeners();
     this.showMenu();
-    this.checkCocktailCompetition().then((active) => {
-      if (active) this.showCocktailMenu();
-    });
-    // Hide submit challenge if challenges are disabled
-    const supabase = appState.getSupabase();
-    const enabled = await featureFlags.isChallengesEnabled(supabase);
-    if (!enabled) {
-      const submit = this.querySelector('[data-page="challenges-submit"]');
-      if (submit) submit.style.display = "none";
-    }
     document.body.classList.add("has-bottom-menu");
-    appState.on("user:loaded", () => this.updateMenuState());
+    const cleanup = appState.on("user:loaded", () => this.render());
+    if (cleanup) this.cleanupFunctions.push(cleanup);
   }
 
   disconnectedCallback() {
     this.cleanupFunctions.forEach((cleanup) => cleanup());
-    // Remove bottom padding from body
     document.body.classList.remove("has-bottom-menu");
   }
 
   render() {
+    const currentUser = appState.getCurrentUser();
+    const profileLink = currentUser
+      ? `<a href="/users/${encodeURIComponent(currentUser.username)}" class="bottom-menu-item" data-page="profile" title="My Profile">
+          <span class="bottom-menu-icon"><img src="/images/home.gif" alt="Profile Icon"></span>
+          <span class="bottom-menu-label">Profile</span>
+        </a>`
+      : "";
+
     this.innerHTML = `
       <nav class="bottom-menu" role="navigation" aria-label="Bottom navigation">
         <a href="/dashboard.html" class="bottom-menu-item" data-page="dashboard" title="Home">
@@ -44,34 +40,30 @@ export class BottomMenu extends HTMLElement {
           <span class="bottom-menu-label">Home</span>
         </a>
 
-        <a href="/event-info.html" class="bottom-menu-item" data-page="event-info" title="Event Info">
-          <span class="bottom-menu-icon"><img src="/images/info.gif" alt="Info Icon"></span>
-          <span class="bottom-menu-label">Info</span>
+        <a href="/friends" class="bottom-menu-item" data-page="friends" title="Friends">
+          <span class="bottom-menu-icon"><img src="/images/info.gif" alt="Friends Icon"></span>
+          <span class="bottom-menu-label">Friends</span>
         </a>
 
-        <a href="/challenges-submit.html" class="bottom-menu-item" data-page="challenges-submit" title="Submit Challenge">
-          <span class="bottom-menu-icon"><img src="/images/plus.gif" alt="Challenge Icon"></span>
-          <span class="bottom-menu-label">Submit</span>
+        <a href="/scoreboard" class="bottom-menu-item" data-page="scoreboard" title="Scoreboard">
+          <span class="bottom-menu-icon"><img src="/images/leaderboard.gif" alt="Scoreboard Icon"></span>
+          <span class="bottom-menu-label">Scoreboard</span>
         </a>
 
-        <a href="/cocktail-judging.html" class="bottom-menu-item" data-page="cocktail-judging" title="Judge Cocktails" style="display: none;" id="bottomMenuCocktail">
-          <span class="bottom-menu-icon"><img src="/images/cocktail_coke.gif" alt="Cocktail Icon"></span>
-          <span class="bottom-menu-label">Judge</span>
-        </a>
-
-        <a href="/leaderboard.html" class="bottom-menu-item" data-page="leaderboard" title="Leaderboard">
-          <span class="bottom-menu-icon"><img src="/images/leaderboard.gif" alt="Leaderboard Icon"></span>
-          <span class="bottom-menu-label">Leaderboard</span>
-        </a>
+        ${profileLink}
       </nav>
     `;
+
+    this.updateActivePage();
+    this.attachClickListeners();
+    this.showMenu();
   }
 
   setupEventListeners() {
-    // Set active page
-    this.updateActivePage();
+    this.attachClickListeners();
+  }
 
-    // Audio for menu clicks
+  attachClickListeners() {
     this.querySelectorAll(".bottom-menu-item").forEach((link) => {
       link.addEventListener("click", () => {
         if (link.getAttribute("data-sound") === undefined) {
@@ -96,48 +88,10 @@ export class BottomMenu extends HTMLElement {
   getCurrentPage() {
     const path = window.location.pathname;
     if (path.includes("dashboard")) return "dashboard";
-    if (path.includes("leaderboard")) return "leaderboard";
-    if (path.includes("challenges-submit")) return "challenges-submit";
-    if (path.includes("cocktail-judging")) return "cocktail-judging";
+    if (path.includes("scoreboard")) return "scoreboard";
+    if (path.includes("friends")) return "friends";
+    if (path.includes("/users/")) return "profile";
     return null;
-  }
-
-  async checkCocktailCompetition() {
-    try {
-      const supabase = appState.getSupabase();
-      const { data: competitions, error } = await supabase
-        .from("cocktail_competitions")
-        .select("*")
-        .eq("voting_open", true)
-        .order("created_at", { ascending: false })
-        .limit(1);
-
-      if (error) throw error;
-
-      if (competitions && competitions.length > 0) {
-        this.cocktailCompetitionActive = true;
-        this.showCocktailMenu();
-        return true;
-      }
-      // No competitions found
-      this.cocktailCompetitionActive = false;
-      return false;
-    } catch (err) {
-      console.error("Error checking cocktail competition:", err);
-      this.cocktailCompetitionActive = false;
-      return false;
-    }
-  }
-
-  showCocktailMenu() {
-    const cocktailItem = document.getElementById("bottomMenuCocktail");
-    if (cocktailItem) {
-      cocktailItem.style.display = "flex";
-    }
-  }
-
-  updateMenuState() {
-    this.updateActivePage();
   }
 
   showMenu() {

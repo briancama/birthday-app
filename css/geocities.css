@@ -1363,14 +1363,14 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 70px;
+  height: calc(70px + env(safe-area-inset-bottom, 0px));
   background: linear-gradient(180deg, #ff00ff, #0000ff);
   border-top: 3px solid #ffff00;
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
   z-index: 100;
 
   /* Respect browser UI and safe areas */
-  padding-bottom: max(0px, env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   justify-content: space-around;
   align-items: center;
   gap: 0;
@@ -1423,7 +1423,7 @@
 
   /* Adjust body to account for fixed menu */
   body {
-    padding-bottom: 60px;
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -1464,6 +1464,30 @@
   transform: scale(0.95);
 }
 
+/* Keep bottom menu text colors stable even when profile theme sets global link colors. */
+.myspace.has-profile-theme .bottom-menu .bottom-menu-item,
+.myspace.has-profile-theme .bottom-menu .bottom-menu-item:visited {
+  color: #fff;
+}
+
+.myspace.has-profile-theme .bottom-menu .bottom-menu-item:hover,
+.myspace.has-profile-theme .bottom-menu .bottom-menu-item:focus,
+.myspace.has-profile-theme .bottom-menu .bottom-menu-item:active,
+.myspace.has-profile-theme .bottom-menu .bottom-menu-item.active {
+  color: #fff;
+}
+
+.myspace .bottom-menu-label {
+  color: #fff;
+}
+
+.myspace.has-profile-theme .bottom-menu .bottom-menu-item:hover .bottom-menu-label,
+.myspace.has-profile-theme .bottom-menu .bottom-menu-item:focus .bottom-menu-label,
+.myspace.has-profile-theme .bottom-menu .bottom-menu-item:active .bottom-menu-label,
+.myspace.has-profile-theme .bottom-menu .bottom-menu-item.active .bottom-menu-label {
+  color: #fff;
+}
+
 .bottom-menu-icon {
   display: flex;
   align-items: center;
@@ -1487,12 +1511,6 @@
 }
 
 /* Respect notches and safe areas on modern phones */
-@supports (padding: max(0px)) {
-  .bottom-menu {
-    padding-bottom: max(0px, env(safe-area-inset-bottom));
-  }
-}
-
 /* Notifications toggle is intentionally hidden until the feature is ready. */
 .notif-toggle-btn {
   display: none !important;
