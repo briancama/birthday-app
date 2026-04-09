@@ -203,6 +203,18 @@
   position: absolute;
 }
 
+@media screen and (max-width: 768px) {
+  .win98-content input[type="text"],
+  .win98-content input[type="tel"],
+  .win98-content input[type="email"],
+  .win98-content input[type="password"],
+  .win98-content input[type="number"],
+  .win98-content textarea,
+  .win98-content select {
+    font-size: 16px;
+  }
+}
+
 /* Wrap inputs in a relative context so pseudo focus ring can be positioned */
 .win98-content .win98-field {
   position: relative;

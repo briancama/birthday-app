@@ -120,6 +120,14 @@ body.is-owner #headshotUploadContainer {
   resize: vertical;
 }
 
+@media screen and (max-width: 768px) {
+  .profile-edit-form input,
+  .profile-edit-form textarea,
+  .wall-post-form textarea {
+    font-size: 16px;
+  }
+}
+
 /* ── Quill editor overrides ─────────────────────────────────── */
 #bio-quill-editor {
   min-height: 120px;
