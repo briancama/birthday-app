@@ -196,6 +196,20 @@
   color: var(--myspace-dark-blue);
 }
 
+.myspace-comment-profile-link {
+  color: inherit;
+  text-decoration: none;
+  display: block;
+}
+
+.myspace-comment-profile-link:visited,
+.myspace-comment-profile-link:hover,
+.myspace-comment-profile-link:focus,
+.myspace-comment-profile-link:active {
+  color: inherit;
+  text-decoration: none;
+}
+
 .myspace.has-profile-theme .myspace-comment-name {
   color: var(--profile-theme-heading-text);
 }

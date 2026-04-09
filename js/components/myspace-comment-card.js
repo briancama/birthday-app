@@ -8,6 +8,7 @@
  * @param {string}   opts.date          — ISO date string or Date
  * @param {string}   opts.avatarSrc     — URL for the avatar image
  * @param {string}   opts.dataHeadshot  — value for data-headshot attribute
+ * @param {string}   [opts.profileHref] — optional href to commenter profile
  * @param {string}   [opts.entryId]     — entry id (enables delete button)
  * @param {boolean}  [opts.canDelete]   — whether to show delete button
  * @param {function} [opts.onDelete]    — called with entryId when deleted
@@ -18,6 +19,7 @@ export function createCommentCard({
   date,
   avatarSrc,
   dataHeadshot,
+  profileHref,
   entryId,
   canDelete,
   onDelete,
@@ -48,8 +50,21 @@ export function createCommentCard({
   img.src = avatarSrc || "/images/headshot.jpg";
   img.setAttribute("data-headshot", dataHeadshot || "user-default");
 
-  sidebar.appendChild(nameDiv);
-  sidebar.appendChild(img);
+  if (profileHref) {
+    const profileLink = document.createElement("a");
+    profileLink.className = "myspace-comment-profile-link";
+    profileLink.href = profileHref;
+    profileLink.setAttribute(
+      "aria-label",
+      `View ${(name || "Anonymous").trim() || "Anonymous"} profile`
+    );
+    profileLink.appendChild(nameDiv);
+    profileLink.appendChild(img);
+    sidebar.appendChild(profileLink);
+  } else {
+    sidebar.appendChild(nameDiv);
+    sidebar.appendChild(img);
+  }
 
   // ── Content: date + message ──────────────────────────────────────────
   const content = document.createElement("div");

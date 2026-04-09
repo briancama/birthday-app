@@ -1061,25 +1061,27 @@ class UserProfilePage extends BasePage {
 
       // Fetch headshots for all known authors in one query
       const userHeadshots = {};
+      const userProfileKeys = {};
       const authorIds = [...new Set((entries || []).map((e) => e.author_user_id).filter(Boolean))];
       if (authorIds.length && this.supabase) {
         const { data: users } = await this.supabase
           .from("users")
-          .select("id, headshot")
+          .select("id, username, headshot")
           .in("id", authorIds);
         if (users)
           users.forEach((u) => {
             if (u.headshot) userHeadshots[u.id] = u.headshot;
+            userProfileKeys[u.id] = u.username || u.id;
           });
       }
 
-      this._renderWall(entries || [], userHeadshots);
+      this._renderWall(entries || [], userHeadshots, userProfileKeys);
     } catch {
       container.innerHTML = `<p class="text-center">Could not load wall.</p>`;
     }
   }
 
-  _renderWall(entries, userHeadshots = {}) {
+  _renderWall(entries, userHeadshots = {}, userProfileKeys = {}) {
     const container = document.getElementById("wall-entries");
     if (!container) return;
     if (entries.length === 0) {
@@ -1103,6 +1105,9 @@ class UserProfilePage extends BasePage {
           date: e.created_at,
           avatarSrc,
           dataHeadshot,
+          profileHref: e.author_user_id
+            ? `/users/${encodeURIComponent(userProfileKeys[e.author_user_id] || e.author_user_id)}`
+            : "",
           entryId: e.id,
           canDelete,
           onDelete: (id) => this._deleteWallEntry(id),

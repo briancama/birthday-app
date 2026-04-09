@@ -420,6 +420,7 @@ class EventInfoPage extends BasePage {
               date: (inserted && inserted.created_at) || new Date().toISOString(),
               avatarSrc: headshot,
               dataHeadshot: user ? `user-${user.id}` : "user-default",
+              profileHref: user ? `/users/${encodeURIComponent(user.username || user.id)}` : "",
             });
 
             // Prepend to myspace comments (newest first) and update counts
@@ -482,10 +483,12 @@ class EventInfoPage extends BasePage {
       let fallbackIdx = 0;
       // Build userId->headshot map from all users using existing supabase client
       const userHeadshots = {};
-      const { data: users } = await supabase.from("users").select("id, headshot");
+      const userProfileKeys = {};
+      const { data: users } = await supabase.from("users").select("id, username, headshot");
       if (users) {
         users.forEach((u) => {
           if (u.headshot) userHeadshots[u.id] = u.headshot;
+          userProfileKeys[u.id] = u.username || u.id;
         });
       }
       // Separate legacy and user_id comments
@@ -520,6 +523,9 @@ class EventInfoPage extends BasePage {
             date: entry.created_at,
             avatarSrc,
             dataHeadshot,
+            profileHref: entry.user_id
+              ? `/users/${encodeURIComponent(userProfileKeys[entry.user_id] || entry.user_id)}`
+              : "",
           })
         );
       });
