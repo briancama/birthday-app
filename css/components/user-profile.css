@@ -105,6 +105,28 @@ body.is-owner #headshotUploadContainer {
   margin: 0;
 }
 
+.identity-modal-title {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+  color: #0f2d67;
+  font-family: var(--font-mono, monospace);
+}
+
+.identity-modal-help {
+  margin: 0 0 0.65rem;
+  font-size: 0.78rem;
+  color: #333;
+  line-height: 1.35;
+}
+
+.profile-modal-backdrop--locked {
+  cursor: not-allowed;
+}
+
+body.is-identity-setup-required {
+  overflow: hidden;
+}
+
 .profile-edit-form input,
 .profile-edit-form textarea {
   font-family: Arial, Helvetica, sans-serif;

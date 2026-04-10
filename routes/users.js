@@ -71,6 +71,11 @@ function normalizeTopNRefs(topN) {
     .filter(Boolean);
 }
 
+function isPlaceholderUsername(username) {
+  if (!username || typeof username !== "string") return false;
+  return /^visitor_[a-z0-9]+$/i.test(username.trim());
+}
+
 // GET /users/:id
 // Renders the user profile page using templates/user.ejs
 router.get("/:identifier", async (req, res) => {
@@ -245,6 +250,13 @@ router.get("/:identifier", async (req, res) => {
       const profileId = (user.id || "") + "";
       if (navUserId && navUserId === profileId) isOwnProfile = true;
 
+      // First-time identity setup: users created with a temp visitor username and no display name
+      // must choose both fields before continuing profile editing.
+      const needsIdentitySetup =
+        isOwnProfile &&
+        isPlaceholderUsername(user.username) &&
+        !String(user.display_name || "").trim();
+
       // For Add-to-Top-8 button: compute whether viewed profile is already in VIEWER's Top N,
       // and whether viewer's Top N is at capacity.
       if (navUserId && !isOwnProfile) {
@@ -275,6 +287,7 @@ router.get("/:identifier", async (req, res) => {
         topNUsers: topNUsers || [],
         userAchievements: userAchievements || [],
         isOwnProfile,
+        needsIdentitySetup,
         isInTopN,
         isTopNFull,
         profileBackgroundOptions,

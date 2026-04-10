@@ -492,6 +492,85 @@ router.post("/users/:id/register", async (req, res) => {
   }
 });
 
+// ── Identity fields (username & display_name) ──────────────────────────────
+// PATCH /api/users/:id/identity
+// Body: { username, display_name }
+// Updates the users table (not user_profile).
+router.patch("/users/:id/identity", async (req, res) => {
+  try {
+    const targetId = req.params.id;
+    const signedUserId = requireSignedUser(req);
+    if (!signedUserId) return res.status(401).json({ error: "Not authenticated" });
+    if (signedUserId !== targetId) return res.status(403).json({ error: "Forbidden" });
+
+    const { username, display_name } = req.body || {};
+    const updates = {};
+
+    // Validate and clean display_name
+    if (display_name !== undefined) {
+      if (typeof display_name !== "string") {
+        return res.status(400).json({ error: "display_name must be a string" });
+      }
+      const cleanName = display_name.trim().slice(0, 60);
+      if (!cleanName) {
+        return res.status(400).json({ error: "display_name cannot be empty" });
+      }
+      updates.display_name = cleanName;
+    }
+
+    // Validate and check uniqueness for username
+    if (username !== undefined) {
+      if (typeof username !== "string") {
+        return res.status(400).json({ error: "username must be a string" });
+      }
+      const cleanUsername = username.trim().toLowerCase();
+      if (!cleanUsername) {
+        return res.status(400).json({ error: "username cannot be empty" });
+      }
+      // Username must be alphanumeric + underscores/hyphens, 3-32 chars
+      if (!/^[a-z0-9_-]{3,32}$/.test(cleanUsername)) {
+        return res.status(400).json({
+          error: "Username must be 3-32 characters, alphanumeric with underscores/hyphens only",
+        });
+      }
+      // Check for uniqueness (excluding current user)
+      const { data: existing } = await supabase
+        .from("users")
+        .select("id")
+        .eq("username", cleanUsername)
+        .neq("id", targetId)
+        .maybeSingle();
+
+      if (existing) {
+        return res.status(409).json({ error: "Username is already taken" });
+      }
+      updates.username = cleanUsername;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: "No valid fields provided" });
+    }
+
+    // Update users row
+    const { data: updated, error: updateErr } = await supabase
+      .from("users")
+      .update(updates)
+      .eq("id", targetId)
+      .select("username, display_name")
+      .single();
+
+    if (updateErr) {
+      console.error("identity update error:", updateErr.message);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    return res.json({ ok: true, user: updated });
+  } catch (err) {
+    console.error("Error in PATCH /api/users/:id/identity", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // ── Profile fields ─────────────────────────────────────────────────────────
 // PATCH /api/users/:id/profile-fields
 // Body: any subset of allowed profile fields. We've removed `fav_food` and added

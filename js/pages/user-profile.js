@@ -115,6 +115,8 @@ class UserProfilePage extends BasePage {
     // Do not disable `siteAward` here so BasePage can display the random site award.
     super({ requiresAuth: false });
     this.profileUserId = document.body.dataset.profileUserId || null;
+    this.currentUsername = document.body.dataset.profileUsername || null;
+    this.needsIdentitySetup = document.body.dataset.needsIdentitySetup === "true";
     this.isOwner = false;
     this.profileBackgroundPersistedUrl = null;
     this.localCleanup = [];
@@ -170,6 +172,29 @@ class UserProfilePage extends BasePage {
     if (!target || typeof target.addEventListener !== "function") return;
     target.addEventListener(type, handler, options);
     this.localCleanup.push(() => target.removeEventListener(type, handler, options));
+  }
+
+  async _readResponseError(response, fallbackMessage) {
+    if (!response) return fallbackMessage || "Request failed";
+
+    const contentType = (response.headers.get("content-type") || "").toLowerCase();
+    if (contentType.includes("application/json")) {
+      const data = await response.json().catch(() => null);
+      const apiMessage = data && typeof data.error === "string" ? data.error.trim() : "";
+      if (apiMessage) return apiMessage;
+    }
+
+    const text = await response.text().catch(() => "");
+    if (text) {
+      const cleaned = text
+        .replace(/<[^>]*>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      if (cleaned) return cleaned.slice(0, 200);
+    }
+
+    const statusPart = response.status ? ` (${response.status} ${response.statusText || ""})` : "";
+    return `${fallbackMessage || "Request failed"}${statusPart}`.trim();
   }
 
   getThemeKeyFromBackgroundUrl(url) {
@@ -732,6 +757,7 @@ class UserProfilePage extends BasePage {
   // ── Inline edit buttons ────────────────────────────────────────────────────
   setupInlineEdits() {
     if (!this.isOwner) return;
+    this._wireEdit("identity");
     this._wireEdit("profile");
     this._wireEdit("bio");
     this._wireEdit("details");
@@ -748,6 +774,8 @@ class UserProfilePage extends BasePage {
 
     const isModal = form.classList.contains("profile-edit-form--modal");
     const isQuillForm = form.hasAttribute("data-quill-form");
+    const isIdentitySection = section === "identity";
+    const forceIdentitySetup = isIdentitySection && this.needsIdentitySetup;
     let backdrop = null;
     let quill = null;
     let interestsLimitNotified = false;
@@ -826,16 +854,28 @@ class UserProfilePage extends BasePage {
       if (isModal) {
         backdrop = document.createElement("div");
         backdrop.className = "profile-modal-backdrop";
-        backdrop.addEventListener("click", closeForm);
+        if (!forceIdentitySetup) {
+          backdrop.addEventListener("click", closeForm);
+        } else {
+          backdrop.classList.add("profile-modal-backdrop--locked");
+        }
         document.body.appendChild(backdrop);
+      }
+
+      if (forceIdentitySetup) {
+        document.body.classList.add("is-identity-setup-required");
       }
     };
 
     const closeForm = () => {
+      if (forceIdentitySetup && this.needsIdentitySetup) return;
       form.classList.remove("active");
       btn.style.display = "";
       if (display) display.style.display = "";
       interestsLimitNotified = false;
+      if (isIdentitySection) {
+        document.body.classList.remove("is-identity-setup-required");
+      }
       if (backdrop) {
         backdrop.remove();
         backdrop = null;
@@ -849,10 +889,18 @@ class UserProfilePage extends BasePage {
       form.classList.contains("active") ? closeForm() : openForm();
     });
 
-    form.querySelector(".profile-edit-cancel")?.addEventListener("click", closeForm);
+    const cancelBtn = form.querySelector(".profile-edit-cancel");
+    if (forceIdentitySetup && cancelBtn) {
+      cancelBtn.style.display = "none";
+    }
+    cancelBtn?.addEventListener("click", closeForm);
     form
       .querySelector(".profile-edit-save")
       ?.addEventListener("click", () => this._saveSection(section, form, display, btn));
+
+    if (forceIdentitySetup) {
+      openForm();
+    }
   }
 
   async _saveSection(section, form, display, btn) {
@@ -862,9 +910,71 @@ class UserProfilePage extends BasePage {
 
     try {
       const payload = {};
+      const identityPayload = {};
+      const identityFields = new Set(["username", "display_name"]);
+
       form.querySelectorAll("[data-field]").forEach((el) => {
-        payload[el.dataset.field] = el.value;
+        if (identityFields.has(el.dataset.field)) {
+          identityPayload[el.dataset.field] = el.value;
+        } else {
+          payload[el.dataset.field] = el.value;
+        }
       });
+
+      // Handle identity fields (username and display_name) separately
+      let newUsername = null;
+      if (Object.keys(identityPayload).length > 0) {
+        // Validate username format if provided
+        if (identityPayload.username) {
+          const username = identityPayload.username.trim().toLowerCase();
+          if (!/^[a-z0-9_-]{3,32}$/.test(username)) {
+            throw new Error(
+              "Username must be 3-32 characters, alphanumeric with underscores/hyphens only"
+            );
+          }
+          if (this.needsIdentitySetup && /^visitor_[a-z0-9]+$/i.test(username)) {
+            throw new Error("Please choose a custom username before continuing.");
+          }
+          identityPayload.username = username;
+          newUsername = username;
+        }
+
+        // Validate display_name if provided
+        if (identityPayload.display_name) {
+          const cleanName = identityPayload.display_name.trim();
+          if (!cleanName || cleanName.length > 60) {
+            throw new Error("Display name must be 1-60 characters");
+          }
+          identityPayload.display_name = cleanName;
+        }
+
+        // Send identity update to separate endpoint
+        const identityResp = await fetch(`/api/users/${this.profileUserId}/identity`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(identityPayload),
+        });
+        if (!identityResp.ok) {
+          throw new Error(await this._readResponseError(identityResp, "Failed to update identity"));
+        }
+
+        if (identityPayload.username) {
+          this.currentUsername = identityPayload.username;
+          document.body.dataset.profileUsername = identityPayload.username;
+        }
+
+        if (identityPayload.display_name) {
+          const heading = document.querySelector(".myspace-name");
+          if (heading) heading.textContent = `${identityPayload.display_name}'s BriSpace`;
+        }
+
+        if (this.needsIdentitySetup) {
+          this.needsIdentitySetup = false;
+          document.body.dataset.needsIdentitySetup = "false";
+          document.body.classList.remove("is-identity-setup-required");
+        }
+      }
 
       if (typeof payload.about_html === "string") {
         payload.about_html = this._normalizeAboutHtml(payload.about_html);
@@ -887,43 +997,63 @@ class UserProfilePage extends BasePage {
         }
       }
 
-      const resp = await fetch(`/api/users/${this.profileUserId}/profile-fields`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
-      if (!resp.ok) throw new Error((await resp.json()).error || resp.statusText);
+      // Only send profile-fields request if there are non-identity fields
+      if (Object.keys(payload).length > 0) {
+        const resp = await fetch(`/api/users/${this.profileUserId}/profile-fields`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload),
+        });
+        if (!resp.ok)
+          throw new Error(await this._readResponseError(resp, "Failed to save profile"));
 
-      // Update display values in-place (skip fields with custom formatting)
-      const SKIP_FIELDS = new Set(["about_html", "status", "age"]);
-      form.querySelectorAll("[data-field]").forEach((el) => {
-        if (SKIP_FIELDS.has(el.dataset.field)) return;
-        const displayEl = document.querySelector(`[data-display="${el.dataset.field}"]`);
-        if (displayEl) displayEl.textContent = el.value || "—";
-      });
+        // Update display values in-place (skip fields with custom formatting)
+        const SKIP_FIELDS = new Set(["about_html", "status", "age"]);
+        form.querySelectorAll("[data-field]").forEach((el) => {
+          if (SKIP_FIELDS.has(el.dataset.field)) return;
+          const displayEl = document.querySelector(`[data-display="${el.dataset.field}"]`);
+          if (displayEl) displayEl.textContent = el.value || "—";
+        });
 
-      // Special case: status — display with quotes
-      if (section === "profile") {
-        const statusInput = form.querySelector("[data-field='status']");
-        const statusEl = document.querySelector("[data-display='status']");
-        if (statusEl && statusInput)
-          statusEl.textContent = statusInput.value ? `"${statusInput.value}"` : "—";
+        // Special case: status — display with quotes
+        if (section === "profile") {
+          const statusInput = form.querySelector("[data-field='status']");
+          const statusEl = document.querySelector("[data-display='status']");
+          if (statusEl && statusInput)
+            statusEl.textContent = statusInput.value ? `"${statusInput.value}"` : "—";
 
-        const ageInput = form.querySelector("[data-field='age']");
-        const ageEl = document.querySelector("[data-display='age']");
-        if (ageEl && ageInput)
-          ageEl.textContent = ageInput.value ? `${ageInput.value} yrs old` : "—";
+          const ageInput = form.querySelector("[data-field='age']");
+          const ageEl = document.querySelector("[data-display='age']");
+          if (ageEl && ageInput)
+            ageEl.textContent = ageInput.value ? `${ageInput.value} yrs old` : "—";
+        }
+
+        // Special case: about_html display (rendered as HTML, not escaped text)
+        if (section === "bio") {
+          const aboutEl = document.getElementById("bio-display");
+          const aboutInput = form.querySelector("[data-field='about_html']");
+          if (aboutEl && aboutInput)
+            aboutEl.innerHTML =
+              this._sanitizeHtml(aboutInput.value) ||
+              '<p class="profile-status-text">Nothing here yet.</p>';
+        }
       }
 
-      // Special case: about_html display (rendered as HTML, not escaped text)
-      if (section === "bio") {
-        const aboutEl = document.getElementById("bio-display");
-        const aboutInput = form.querySelector("[data-field='about_html']");
-        if (aboutEl && aboutInput)
-          aboutEl.innerHTML =
-            this._sanitizeHtml(aboutInput.value) ||
-            '<p class="profile-status-text">Nothing here yet.</p>';
+      // If username changed, redirect to new profile URL
+      if (newUsername && newUsername !== this.currentUsername) {
+        if (typeof form._closeForm === "function") {
+          form._closeForm();
+        } else {
+          form.classList.remove("active");
+          btn.textContent = "✏ edit";
+          if (display) display.style.display = "";
+        }
+        this.showSuccessToast("Saved! Redirecting to your new profile...");
+        setTimeout(() => {
+          window.location.href = `/users/${newUsername}`;
+        }, 500);
+        return;
       }
 
       if (typeof form._closeForm === "function") {

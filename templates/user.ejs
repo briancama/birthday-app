@@ -176,6 +176,8 @@
   <body
     class="myspace has-bottom-menu<% if (hasProfileTheme) { %> has-profile-theme theme-<%= activeTheme.key %><% } %>"
     data-profile-user-id="<%= user.id %>"
+    data-profile-username="<%= user.username %>"
+    data-needs-identity-setup="<%= needsIdentitySetup ? 'true' : 'false' %>"
     data-profile-bg-url="<%= user.profile_bg_url || '' %>"
     data-profile-theme-key="<%= hasProfileTheme ? activeTheme.key : '' %>"
     <% if (activeThemeInlineStyle) { %>style="<%= activeThemeInlineStyle %>"<% } %>
@@ -268,6 +270,11 @@
               <%= profile_title || (user.display_name ? user.display_name + "'s BriSpace" :
               "BriSpace") %>
             </h2>
+            <% if (isOwnerProfile) { %>
+            <button id="edit-identity-btn" class="profile-edit-btn profile-edit-btn--below" style="margin-top: 0.75rem;">
+              ✏ edit identity
+            </button>
+            <% } %>
             <div class="myspace-profile-row">
               <div class="myspace-headshot-container">
                 <img
@@ -314,6 +321,36 @@
               </div>
             </div>
             <% if (isOwnerProfile) { %>
+            <form id="edit-identity-form" class="profile-edit-form profile-edit-form--modal">
+              <h3 class="identity-modal-title">Set Your Identity</h3>
+              <p class="identity-modal-help">
+                Pick a display name and username for your profile.
+              </p>
+              <label
+                >Display Name<input
+                  type="text"
+                  data-field="display_name"
+                  placeholder="Your name"
+                  value="<%= user.display_name || '' %>"
+                  maxlength="60"
+                  required
+              /></label>
+              <label
+                >Username<input
+                  type="text"
+                  data-field="username"
+                  placeholder="username (3-32 chars, a-z 0-9 _ -)"
+                  value="<%= user.username || '' %>"
+                  maxlength="32"
+                  pattern="[a-z0-9_-]{3,32}"
+                  required
+              /></label>
+              <div class="profile-edit-actions">
+                <button type="button" class="profile-edit-save">Save</button>
+                <button type="button" class="profile-edit-cancel">Cancel</button>
+              </div>
+            </form>
+
             <form id="edit-profile-form" class="profile-edit-form profile-edit-form--modal">
               <label
                 >Status<input
