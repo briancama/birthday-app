@@ -107,17 +107,6 @@
   cursor: pointer;
   z-index: 1002;
 }
-
-@media (max-width: 600px) {
-  .myspace-add-comment-modal {
-    width: 98vw;
-    min-width: 0;
-    padding: 16px 4vw 12px 4vw;
-  }
-  .add-comment-title {
-    font-size: 1.3em;
-  }
-}
 /* MySpace Comments - Retro Style */
 .myspace-comments-header {
   font-family: "Verdana", Arial, sans-serif;
@@ -273,4 +262,19 @@
 
 .myspace.has-profile-theme .myspace-comment-delete:hover {
   color: var(--profile-theme-link-hover);
+}
+
+@media (max-width: 600px) {
+  .myspace-comment-sidebar {
+    width: 120px;
+  }
+
+  .myspace-add-comment-modal {
+    width: 98vw;
+    min-width: 0;
+    padding: 16px 4vw 12px 4vw;
+  }
+  .add-comment-title {
+    font-size: 1.3em;
+  }
 }
