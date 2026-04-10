@@ -41,6 +41,10 @@ source ~/.bashrc
 # Then just run:
 restart-app
 
+# Sync songs folder to the Droplet (run from local machine)
+
+rsync -avz --progress songs/ birthday@<your-droplet-ip>:/var/www/birthday-app/songs/
+
 # Quick HTTP tests (use cookie jar if testing auth cookie)
 
 curl -I https://birthday.briancama.com/

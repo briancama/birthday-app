@@ -5,6 +5,15 @@ export const MUSIC_SONGS = [
   { title: "3 Doors Down - Kryptonite", url: "/songs/3DoorsDown-Kryptonite.mp3" },
   { title: "50 Cent - In Da Club", url: "/songs/50_cent-in_da_club.mp3" },
   {
+    title: "Arctic Monkeys - I Bet You Look Good On The Dancefloor",
+    url: "/songs/Arctic Monkeys - Whatever People Say I Am, That's What I'm Not - 01-02 I Bet You Look Good On The Dancefloor.mp3",
+  },
+  {
+    title: "Ashanti - Foolish",
+    url: "/songs/Ashanti - Ashanti - 01-02 Foolish.mp3",
+  },
+  { title: "Avril Lavigne - Sk8er Boi", url: "/songs/Avril Lavigne - Sk8er Boi.mp3" },
+  {
     title: "Avenged Sevenfold - Bat Country",
     url: "/songs/Avenged Sevenfold - Bat Country [Official Music Video].mp3",
   },
@@ -35,6 +44,7 @@ export const MUSIC_SONGS = [
     title: "Fall Out Boy - Sugar, We're Goin Down",
     url: "/songs/Fall Out Boy - Sugar, We're Goin Down (Official Music Video).mp3",
   },
+  { title: "Franz Ferdinand - Take Me Out", url: "/songs/Franz Ferdinand - Take Me Out.mp3" },
   {
     title: "Gavin DeGraw - I Don't Want To Be",
     url: "/songs/Gavin DeGraw - I Don't Want To Be (Official Video).mp3",
@@ -47,6 +57,8 @@ export const MUSIC_SONGS = [
     title: "Hinder - Lips Of An Angel",
     url: "/songs/Hinder - Lips Of An Angel (Official Music Video).mp3",
   },
+  { title: "JET - Are You Gonna Be My Girl", url: "/songs/JET - Are You Gonna Be My Girl.mp3" },
+  { title: "James Blunt - You're Beautiful", url: "/songs/James Blunt - You're Beautiful.mp3" },
   {
     title: "Juvenile - Slow Motion ft. Soulja Slim",
     url: "/songs/Juvenile - Slow Motion ft. Soulja Slim.mp3",
@@ -77,6 +89,7 @@ export const MUSIC_SONGS = [
     title: "Sean Kingston - Beautiful Girls",
     url: "/songs/Sean Kingston - Beautiful Girls (Official HD Video).mp3",
   },
+  { title: "Sean Paul - Temperature", url: "/songs/Sean Paul - Temperature.mp3" },
   {
     title: "Soulja Boy Tell'em - Crank That",
     url: "/songs/Soulja Boy Tell'em - Crank That (Soulja Boy) (Official Music Video).mp3",
@@ -90,5 +103,15 @@ export const MUSIC_SONGS = [
     title: "The Darkness - I Believe In A Thing Called Love",
     url: "/songs/The Darkness - I Believe In A Thing Called Love (Official Music Video) [HD]-trim.mp3",
   },
+  {
+    title: "The Knife - Heartbeats",
+    url: "/songs/The Knife - Deep Cuts - 01-01 Heartbeats.mp3",
+  },
+  {
+    title: "The Roots & Cody ChestnuTT - The Seed (2.0)",
+    url: "/songs/The Roots & Cody ChestnuTT - The Seed (2.0).mp3",
+  },
   { title: "Tom Tom Club - Genius of Love", url: "/songs/Tom Tom Club - Genius of Love.mp3" },
+  { title: "Wilco - Jesus, Etc.", url: "/songs/Wilco - Jesus, Etc..mp3" },
+  { title: "Yeah Yeah Yeahs - Maps", url: "/songs/Yeah Yeah Yeahs - Maps.mp3" },
 ];
