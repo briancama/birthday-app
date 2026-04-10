@@ -192,7 +192,7 @@
   .secret-arnold {
     display: block;
     width: auto;
-    font-size: var(--text-md);
+    font-size: var(--text-lg);
     color: #fcfcfc;
     cursor:
       url("data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%3Csvg%20id%3D%22uuid-691d8548-0515-4795-b1ce-a8b86fd611db%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2012%2021%22%20width%3D%228%22%20height%3D%2214%22%3E%3Cdefs%3E%3Cstyle%3E.uuid-ec3db316-eef2-4c54-b6fb-5e03e04ca20e%7Bfill%3A%23fff%3B%7D%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cpath%20d%3D%22M11%2C10h-1v-1h-1v-1h-1v-1h-1v-.96s-.03-.03-.04-.04h-.96v-1h-1v-1h-1v-1h-1v-1h-1v-1h-1V0H0v17h2v-1h1v-1h1v-1h1v2h1v2h1v1h2v-1h1v-2h-1v-2h-1v-1h4v-2h-1v-1Z%22%2F%3E%3Cpath%20class%3D%22uuid-ec3db316-eef2-4c54-b6fb-5e03e04ca20e%22%20d%3D%22M1%2C2h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h-4v2h1v2h1v2h-2v-2h-1v-2h-1v-1h-1v1h-1v1h-1v1h-1%22%2F%3E%3C%2Fsvg%3E"),

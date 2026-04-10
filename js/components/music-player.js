@@ -22,8 +22,9 @@ class MusicPlayer extends HTMLElement {
     this.render();
     // Attach event listeners only once
     this.shadowRoot.addEventListener("click", (e) => {
-      if (e.target.closest(".music-fav-btn")) {
-        const idx = parseInt(e.target.dataset.songIdx, 10);
+      const favoriteButton = e.target.closest(".music-fav-btn");
+      if (favoriteButton) {
+        const idx = parseInt(favoriteButton.dataset.songIdx, 10);
         if (!isNaN(idx)) {
           this.setFavoriteSongIdx(idx);
           this.render();
