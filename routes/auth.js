@@ -6,6 +6,34 @@ const { ensureFirebaseAdmin, getSupabase, requireSignedUser } = require("../js/u
 // Ensure firebase-admin is initialized and use shared Supabase client
 const admin = ensureFirebaseAdmin();
 const supabase = getSupabase();
+const SESSION_COOKIE_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 2;
+
+async function generateBrianFanDisplayName() {
+  const { count, error: countErr } = await supabase
+    .from("users")
+    .select("id", { count: "exact", head: true });
+
+  if (countErr) throw countErr;
+
+  let nextNumber = Math.max(1, Number(count) || 1);
+
+  // Keep incrementing if the candidate is already taken.
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    const candidate = `Brian Fan #${nextNumber}`;
+    const { data, error } = await supabase
+      .from("users")
+      .select("id")
+      .eq("display_name", candidate)
+      .maybeSingle();
+
+    if (error && error.code !== "PGRST116") throw error;
+    if (!data) return candidate;
+
+    nextNumber += 1;
+  }
+
+  return `Brian Fan #${Date.now()}`;
+}
 
 // POST /auth/login
 // Supports two flows:
@@ -36,7 +64,7 @@ router.post("/login", async (req, res) => {
           httpOnly: true,
           secure: false,
           sameSite: "lax",
-          maxAge: 1000 * 60 * 60 * 24 * 7,
+          maxAge: SESSION_COOKIE_MAX_AGE_MS,
         });
 
         // If developer wants to simulate production, also set a production-like cookie.
@@ -48,7 +76,7 @@ router.post("/login", async (req, res) => {
             httpOnly: true,
             secure: true,
             sameSite: "lax",
-            maxAge: 1000 * 60 * 60 * 24 * 7,
+            maxAge: SESSION_COOKIE_MAX_AGE_MS,
           });
 
           // Also expose a readable dev cookie for client-side simulation/testing.
@@ -58,7 +86,7 @@ router.post("/login", async (req, res) => {
             httpOnly: false,
             secure: false,
             sameSite: "lax",
-            maxAge: 1000 * 60 * 60 * 24 * 7,
+            maxAge: SESSION_COOKIE_MAX_AGE_MS,
           });
         }
 
@@ -165,15 +193,39 @@ router.post("/login", async (req, res) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
-        maxAge: 1000 * 60 * 60 * 24 * 7,
+        maxAge: SESSION_COOKIE_MAX_AGE_MS,
       });
 
       // Fetch user details to determine onboarding state and user type
-      const { data: resolvedUser } = await supabase
+      let { data: resolvedUser } = await supabase
         .from("users")
         .select("username, user_type, display_name")
         .eq("id", userId)
         .maybeSingle();
+
+      // Auto-assign a default display name for accounts that don't have one yet.
+      if (!resolvedUser?.display_name) {
+        try {
+          const autoDisplayName = await generateBrianFanDisplayName();
+          const { data: updatedUser, error: updateNameErr } = await supabase
+            .from("users")
+            .update({ display_name: autoDisplayName })
+            .eq("id", userId)
+            .select("username, user_type, display_name")
+            .maybeSingle();
+
+          if (updateNameErr) {
+            console.error("Supabase update error (set default display_name):", updateNameErr);
+          } else if (updatedUser) {
+            resolvedUser = updatedUser;
+          }
+        } catch (nameErr) {
+          console.error(
+            "Failed to generate default display_name:",
+            nameErr && nameErr.message ? nameErr.message : nameErr
+          );
+        }
+      }
 
       // needsOnboarding = user hasn't completed registration (no display_name set yet).
       // We use display_name rather than username because new visitors get a temp username
