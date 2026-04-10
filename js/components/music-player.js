@@ -15,6 +15,7 @@ class MusicPlayer extends HTMLElement {
     // Respect persisted music-muted setting
     this.isMuted = localStorage.getItem("music-muted") === "true";
     this.onSongSelect = null;
+    this.favoriteSongUrl = null;
   }
 
   connectedCallback() {
@@ -73,6 +74,7 @@ class MusicPlayer extends HTMLElement {
   async setSongs(songs, profileUserId = null) {
     this.songs = songs;
     this._hasFavoriteSong = false;
+    this.favoriteSongUrl = null;
     // Default to index 12 (13th song) if no favorite, else will update below
     this.currentIndex = songs.length > 11 ? 11 : 0;
     // Expose a promise so callers (e.g. togglePlayPause) can wait for
@@ -104,6 +106,7 @@ class MusicPlayer extends HTMLElement {
         favUrl = localStorage.getItem("musicPlayerFavoriteSongUrl");
         if (favUrl) this._hasFavoriteSong = true;
       }
+      this.favoriteSongUrl = favUrl || null;
       if (favUrl && isOwnProfile) localStorage.setItem("musicPlayerFavoriteSongUrl", favUrl);
       const favIdx = favUrl ? songs.findIndex((s) => s.url === favUrl) : -1;
       if (favIdx >= 0) {
@@ -312,7 +315,7 @@ class MusicPlayer extends HTMLElement {
   }
 
   getFavoriteSongIdx() {
-    const favUrl = localStorage.getItem("musicPlayerFavoriteSongUrl");
+    const favUrl = this.favoriteSongUrl || localStorage.getItem("musicPlayerFavoriteSongUrl");
     if (!favUrl || !this.songs.length) return null;
     const idx = this.songs.findIndex((s) => s.url === favUrl);
     return idx >= 0 ? idx : null;
@@ -325,6 +328,7 @@ class MusicPlayer extends HTMLElement {
       return;
     }
     localStorage.setItem("musicPlayerFavoriteSongUrl", song.url);
+    this.favoriteSongUrl = song.url;
     // Supabase update
     try {
       const supabase = appState.getSupabase();
@@ -444,15 +448,22 @@ class MusicPlayer extends HTMLElement {
         .music-song-select:focus {
         outline: 2px solid #ffec00;
         }
-            .music-fav-btn {
-      color: #ffec00;
-      font-size: 1.2em;
-      margin-left: 4px;
-      transition: filter 0.2s;
-    }
-    .music-fav-btn:hover {
-      filter: brightness(1.2);
-    }
+        .music-fav-indicator {
+          color: #ffec00;
+          font-size: 1.1em;
+          margin-left: 6px;
+          vertical-align: middle;
+          text-shadow: 0 0 6px #ffec00aa;
+        }
+        .music-fav-btn {
+          color: #ffec00;
+          font-size: 1.2em;
+          margin-left: 4px;
+          transition: filter 0.2s;
+        }
+        .music-fav-btn:hover {
+          filter: brightness(1.2);
+        }
       </style>
     `;
     let song = this.songs[this.currentIndex];
@@ -483,7 +494,9 @@ class MusicPlayer extends HTMLElement {
       ? `<div class="music-current">Now Playing: <b>${song.title}</b>${
           this._isOwnProfile !== false
             ? `<button class="music-fav-btn" title="Set Favorite" data-song-idx="${this.currentIndex}" style="background:none;border:none;cursor:pointer;font-size:1.2em;vertical-align:middle;margin-left:6px;">${favIdx === this.currentIndex ? "⭐" : "☆"}</button>`
-            : ""
+            : favIdx === this.currentIndex
+              ? '<span class="music-fav-indicator" title="Favorite song" aria-label="Favorite song">⭐</span>'
+              : ""
         }</div>`
       : `<div class="music-current">No song selected</div>`;
 
