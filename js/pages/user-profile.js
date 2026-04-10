@@ -7,69 +7,10 @@ import { featureFlags } from "../utils/feature-flags.js";
 import { createCommentCard } from "../components/myspace-comment-card.js";
 import { MUSIC_SONGS } from "../constants/music-songs.js";
 import { SecretTrackPlayer } from "../components/secret-track-player.js";
+import profileThemes from "../constants/profile-themes.json" with { type: "json" };
 
-const PROFILE_THEME_TOKENS = {
-  default: {
-    sectionBg: "rgba(255, 255, 255, 0.92)",
-    sectionText: "#1b2437",
-    sectionBorder: "#4f7bc8",
-    headingBg: "#7ba1de",
-    headingText: "#08152c",
-    detailBg: "rgba(219, 231, 255, 0.9)",
-    link: "#003399",
-    linkHover: "#001f66",
-  },
-  stars: {
-    sectionBg: "rgba(11, 12, 36, 0.88)",
-    sectionText: "#eef4ff",
-    sectionBorder: "#73b6ff",
-    headingBg: "#21406b",
-    headingText: "#f3f8ff",
-    detailBg: "rgba(33, 64, 107, 0.72)",
-    link: "#8fd6ff",
-    linkHover: "#d6eeff",
-  },
-  sunset: {
-    sectionBg: "rgba(57, 23, 48, 0.88)",
-    sectionText: "#ffe9df",
-    sectionBorder: "#ff8e63",
-    headingBg: "#943f4f",
-    headingText: "#fff0e8",
-    detailBg: "rgba(148, 63, 79, 0.72)",
-    link: "#ffd1b5",
-    linkHover: "#fff0df",
-  },
-  matrix: {
-    sectionBg: "rgba(5, 25, 12, 0.9)",
-    sectionText: "#d2ffd8",
-    sectionBorder: "#3fd063",
-    headingBg: "#0b5a26",
-    headingText: "#f0fff3",
-    detailBg: "rgba(11, 90, 38, 0.68)",
-    link: "#7dff98",
-    linkHover: "#d6ffe0",
-  },
-  paper: {
-    sectionBg: "rgba(255, 250, 235, 0.94)",
-    sectionText: "#3b2f1e",
-    sectionBorder: "#b68a45",
-    headingBg: "#e0c17d",
-    headingText: "#3a2813",
-    detailBg: "rgba(242, 224, 180, 0.78)",
-    link: "#5d3f16",
-    linkHover: "#2d1c08",
-  },
-  bubblegum: {
-    sectionBg: "rgba(255, 236, 247, 0.93)",
-    sectionText: "#4b2040",
-    sectionBorder: "#e86db4",
-    headingBg: "#ff9ccc",
-    headingText: "#4a1738",
-    detailBg: "rgba(255, 201, 229, 0.78)",
-    link: "#a11673",
-    linkHover: "#6f0b4b",
-  },
-};
+const PROFILE_THEME_TOKENS = profileThemes.tokens;
+const PROFILE_BACKGROUND_THEME_KEYS = profileThemes.backgroundKeys;
 
 const PROFILE_THEME_STYLE_VARS = [
   "--profile-theme-section-bg",
@@ -81,24 +22,6 @@ const PROFILE_THEME_STYLE_VARS = [
   "--profile-theme-link",
   "--profile-theme-link-hover",
 ];
-
-const PROFILE_BACKGROUND_THEME_KEYS = {
-  "/images/backgrounds/bg-butterfly.png": "paper",
-  "/images/backgrounds/bg-cd.jpg": "sunset",
-  "/images/backgrounds/bg-firework.png": "sunset",
-  "/images/backgrounds/bg-heart.gif": "bubblegum",
-  "/images/backgrounds/bg-kitty.jpg": "bubblegum",
-  "/images/backgrounds/bg-mary.gif": "bubblegum",
-  "/images/backgrounds/bg-metal.png": "matrix",
-  "/images/backgrounds/bg-patriot.gif": "stars",
-  "/images/backgrounds/bg-pooh.jpg": "bubblegum",
-  "/images/backgrounds/bg-shoes.gif": "sunset",
-  "/images/backgrounds/bg-skull.png": "matrix",
-  "/images/backgrounds/bg-weird.jpg": "stars",
-  "/images/backgrounds/leaf.gif": "paper",
-  "/images/backgrounds/lightning.jpg": "stars",
-  "/images/backgrounds/purp032.gif": "stars",
-};
 
 const ABOUT_HTML_MAX_CHARS = 3000;
 const PROFILE_INTERESTS_MAX_CHARS = 1000;

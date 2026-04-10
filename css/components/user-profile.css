@@ -675,14 +675,14 @@ body.is-identity-setup-required {
   align-items: center;
   font-size: 0.65rem;
   text-align: center;
-  width: 56px;
+  width: 72px;
   gap: 2px;
   opacity: 0.95;
 }
 
 .achievement-badge img {
-  width: 40px;
-  height: 40px;
+  width: 60px;
+  height: 60px;
   object-fit: cover;
   border: 2px solid #99c;
 }

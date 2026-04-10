@@ -3,6 +3,38 @@ const router = express.Router();
 const { getSupabase } = require("../js/utils/server-utils");
 const fs = require("fs");
 const path = require("path");
+const profileThemes = require("../js/constants/profile-themes.json");
+
+function _getThemeKeyFromUrl(url) {
+  if (!url || typeof url !== "string") return "default";
+  const fileName = url.split("/").pop() || "";
+  return (
+    fileName
+      .replace(/\.[^.]+$/, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "default"
+  );
+}
+
+function resolveProfileTheme(url) {
+  const { tokens, backgroundKeys } = profileThemes;
+  const key = _getThemeKeyFromUrl(url);
+  if (!url) return { key: "default", tokens: tokens.default };
+
+  const mappedKey = backgroundKeys[url];
+  if (mappedKey && tokens[mappedKey]) return { key: mappedKey, tokens: tokens[mappedKey] };
+  if (tokens[key]) return { key, tokens: tokens[key] };
+
+  if (/star|space|night|galaxy|moon|nebula|cosmos/.test(key)) return { key, tokens: tokens.stars };
+  if (/sun|dusk|retro|neon|city|fire|lava|flame/.test(key)) return { key, tokens: tokens.sunset };
+  if (/matrix|hacker|terminal|green|cyber/.test(key)) return { key, tokens: tokens.matrix };
+  if (/paper|grid|note|pastel|flower|cloud/.test(key)) return { key, tokens: tokens.paper };
+  if (/kitty|heart|pooh|love|cute|pink/.test(key))
+    return { key: "bubblegum", tokens: tokens.bubblegum };
+
+  return { key, tokens: tokens.default };
+}
 
 // Shared Supabase client
 const supabase = getSupabase();
@@ -244,7 +276,27 @@ router.get("/:identifier", async (req, res) => {
       let isOwnProfile = false;
       let isInTopN = false;
       let isTopNFull = false;
-      const profileBackgroundOptions = getProfileBackgroundOptions();
+      const profileBackgroundOptions = getProfileBackgroundOptions().map((bg) => ({
+        ...bg,
+        themeName: profileThemes.names[resolveProfileTheme(bg.src).key] || "Classic",
+      }));
+      const activeTheme = resolveProfileTheme(user.profile_bg_url);
+      const hasProfileTheme = !!user.profile_bg_url;
+      const activeThemeInlineStyle = hasProfileTheme
+        ? [
+            `background-image: url('${user.profile_bg_url}')`,
+            "background-repeat: repeat",
+            "background-size: auto",
+            `--profile-theme-section-bg: ${activeTheme.tokens.sectionBg}`,
+            `--profile-theme-section-text: ${activeTheme.tokens.sectionText}`,
+            `--profile-theme-section-border: ${activeTheme.tokens.sectionBorder}`,
+            `--profile-theme-heading-bg: ${activeTheme.tokens.headingBg}`,
+            `--profile-theme-heading-text: ${activeTheme.tokens.headingText}`,
+            `--profile-theme-detail-bg: ${activeTheme.tokens.detailBg}`,
+            `--profile-theme-link: ${activeTheme.tokens.link}`,
+            `--profile-theme-link-hover: ${activeTheme.tokens.linkHover}`,
+          ].join("; ")
+        : "";
       const navUserId =
         res.locals && res.locals.navData && res.locals.navData.user && res.locals.navData.user.id;
       const profileId = (user.id || "") + "";
@@ -291,6 +343,9 @@ router.get("/:identifier", async (req, res) => {
         isInTopN,
         isTopNFull,
         profileBackgroundOptions,
+        activeTheme,
+        hasProfileTheme,
+        activeThemeInlineStyle,
       });
     } catch (renderErr) {
       // Log a helpful snippet around the reported template line if available

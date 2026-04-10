@@ -33,6 +33,14 @@ sudo systemctl daemon-reload
 sudo systemctl restart birthday-app
 sudo journalctl -u birthday-app -f
 
+# Shortcut alias (add once to ~/.bashrc or ~/.zshrc on the server)
+
+echo "alias restart-app='sudo systemctl daemon-reload && sudo systemctl restart birthday-app'" >> ~/.bashrc
+source ~/.bashrc
+
+# Then just run:
+restart-app
+
 # Quick HTTP tests (use cookie jar if testing auth cookie)
 
 curl -I https://birthday.briancama.com/
