@@ -135,6 +135,8 @@ body.is-identity-setup-required {
   border: 1px solid #999;
   width: 100%;
   box-sizing: border-box;
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 .profile-edit-form textarea {

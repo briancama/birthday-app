@@ -266,15 +266,15 @@
           <% const selectedProfileGif = PROFILE_GIF_OPTIONS.find((gif) => gif.key === user.profile_gif_key) || null; %>
           <!-- Name + headshot -->
           <div class="myspace-section profile-section">
-            <h2 class="myspace-name">
-              <%= profile_title || (user.display_name ? user.display_name + "'s BriSpace" :
-              "BriSpace") %>
-            </h2>
             <% if (isOwnerProfile) { %>
             <button id="edit-identity-btn" class="profile-edit-btn profile-edit-btn--below" style="margin-top: 0.75rem;">
               ✏ edit identity
             </button>
             <% } %>
+            <h2 class="myspace-name">
+              <%= profile_title || (user.display_name ? user.display_name + "'s BriSpace" :
+              "BriSpace") %>
+            </h2>
             <div class="myspace-profile-row">
               <div class="myspace-headshot-container">
                 <img
@@ -321,6 +321,7 @@
               </div>
             </div>
             <% if (isOwnerProfile) { %>
+            <% const canEditUsername = /^visitor_[a-z0-9]+$/i.test(String(user.username || '')); %>
             <form id="edit-identity-form" class="profile-edit-form profile-edit-form--modal">
               <h3 class="identity-modal-title">Set Your Identity</h3>
               <p class="identity-modal-help">
@@ -344,7 +345,11 @@
                   maxlength="32"
                   pattern="[a-z0-9_-]{3,32}"
                   required
+                  <% if (!canEditUsername) { %>disabled aria-disabled="true"<% } %>
               /></label>
+              <% if (!canEditUsername) { %>
+              <p class="identity-modal-help">Username is locked after initial setup.</p>
+              <% } %>
               <div class="profile-edit-actions">
                 <button type="button" class="profile-edit-save">Save</button>
                 <button type="button" class="profile-edit-cancel">Cancel</button>

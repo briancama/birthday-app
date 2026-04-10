@@ -912,8 +912,10 @@ class UserProfilePage extends BasePage {
       const payload = {};
       const identityPayload = {};
       const identityFields = new Set(["username", "display_name"]);
+      const previousUsername = this.currentUsername;
 
       form.querySelectorAll("[data-field]").forEach((el) => {
+        if (el.disabled) return;
         if (identityFields.has(el.dataset.field)) {
           identityPayload[el.dataset.field] = el.value;
         } else {
@@ -1041,7 +1043,7 @@ class UserProfilePage extends BasePage {
       }
 
       // If username changed, redirect to new profile URL
-      if (newUsername && newUsername !== this.currentUsername) {
+      if (newUsername && newUsername !== previousUsername) {
         if (typeof form._closeForm === "function") {
           form._closeForm();
         } else {

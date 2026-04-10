@@ -520,31 +520,61 @@ router.patch("/users/:id/identity", async (req, res) => {
 
     // Validate and check uniqueness for username
     if (username !== undefined) {
+      const { data: currentUser, error: currentUserErr } = await supabase
+        .from("users")
+        .select("username")
+        .eq("id", targetId)
+        .maybeSingle();
+
+      if (currentUserErr) {
+        console.error("identity current user lookup error:", currentUserErr.message);
+        return res.status(500).json({ error: "Database error" });
+      }
+      if (!currentUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
       if (typeof username !== "string") {
         return res.status(400).json({ error: "username must be a string" });
       }
+
+      const currentUsername = String(currentUser.username || "")
+        .trim()
+        .toLowerCase();
+      const isVisitorPlaceholder = /^visitor_[a-z0-9]+$/i.test(currentUsername);
       const cleanUsername = username.trim().toLowerCase();
       if (!cleanUsername) {
         return res.status(400).json({ error: "username cannot be empty" });
       }
-      // Username must be alphanumeric + underscores/hyphens, 3-32 chars
-      if (!/^[a-z0-9_-]{3,32}$/.test(cleanUsername)) {
-        return res.status(400).json({
-          error: "Username must be 3-32 characters, alphanumeric with underscores/hyphens only",
-        });
-      }
-      // Check for uniqueness (excluding current user)
-      const { data: existing } = await supabase
-        .from("users")
-        .select("id")
-        .eq("username", cleanUsername)
-        .neq("id", targetId)
-        .maybeSingle();
 
-      if (existing) {
-        return res.status(409).json({ error: "Username is already taken" });
+      // Username can only be changed while account is still using the placeholder visitor_* username.
+      if (!isVisitorPlaceholder && cleanUsername !== currentUsername) {
+        return res.status(403).json({ error: "Username can only be changed during initial setup" });
       }
-      updates.username = cleanUsername;
+
+      // Ignore no-op submissions when username is unchanged.
+      if (cleanUsername === currentUsername) {
+        // no-op
+      } else {
+        // Username must be alphanumeric + underscores/hyphens, 3-32 chars
+        if (!/^[a-z0-9_-]{3,32}$/.test(cleanUsername)) {
+          return res.status(400).json({
+            error: "Username must be 3-32 characters, alphanumeric with underscores/hyphens only",
+          });
+        }
+        // Check for uniqueness (excluding current user)
+        const { data: existing } = await supabase
+          .from("users")
+          .select("id")
+          .eq("username", cleanUsername)
+          .neq("id", targetId)
+          .maybeSingle();
+
+        if (existing) {
+          return res.status(409).json({ error: "Username is already taken" });
+        }
+        updates.username = cleanUsername;
+      }
     }
 
     if (Object.keys(updates).length === 0) {
