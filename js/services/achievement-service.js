@@ -284,30 +284,48 @@ class AchievementService {
       if (achErr) throw achErr;
       if (!ach) return null;
 
-      // Check existing award
-      const { data: existing, error: exErr } = await supabase
-        .from("user_achievements")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("achievement_id", ach.id)
-        .limit(1)
-        .maybeSingle();
-      if (exErr) throw exErr;
-      if (existing) return null; // already awarded
+      let inserted = null;
+      let awarded = false;
 
-      // Insert award
-      const { data: inserted, error: insertErr } = await supabase
-        .from("user_achievements")
-        .insert([
-          {
-            user_id: userId,
-            achievement_id: ach.id,
-            details: details || {},
-          },
-        ])
-        .select()
-        .maybeSingle();
-      if (insertErr) throw insertErr;
+      // Preferred path: RPC is atomic and runs as SECURITY DEFINER.
+      const { data: rpcData, error: rpcErr } = await supabase.rpc("rpc_award_achievement_by_key", {
+        p_user_id: userId,
+        p_key: key,
+        p_details: details || {},
+      });
+
+      if (!rpcErr) {
+        const rpcRow = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+        awarded = !!rpcRow?.awarded;
+      } else {
+        // Backward-compatible fallback for environments that don't have the RPC yet.
+        const { data: existing, error: exErr } = await supabase
+          .from("user_achievements")
+          .select("id")
+          .eq("user_id", userId)
+          .eq("achievement_id", ach.id)
+          .limit(1)
+          .maybeSingle();
+        if (exErr) throw exErr;
+        if (existing) return null;
+
+        const { data: legacyInserted, error: insertErr } = await supabase
+          .from("user_achievements")
+          .insert([
+            {
+              user_id: userId,
+              achievement_id: ach.id,
+              details: details || {},
+            },
+          ])
+          .select()
+          .maybeSingle();
+        if (insertErr) throw insertErr;
+        inserted = legacyInserted;
+        awarded = true;
+      }
+
+      if (!awarded) return null;
 
       // Emit UI event via EventBus (single canonical channel; BasePage listens here)
       EventBus.instance.emit("achievement:awarded", {
@@ -318,7 +336,7 @@ class AchievementService {
         details,
       });
 
-      return inserted;
+      return inserted || { user_id: userId, achievement_id: ach.id };
     } catch (err) {
       console.error("AchievementService awardByKey error", err);
       return null;

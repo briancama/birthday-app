@@ -140,7 +140,14 @@ export class YTMNDEasterEgg {
     box.innerHTML = `
       <div class="ytmnd-modal__inner">
         <div class="ytmnd-modal__header">
-          <marquee class="ytmnd-modal__marquee" behavior="scroll" direction="left">YOU'RE THE MAN NOW DOG &nbsp;&nbsp;&bull;&nbsp;&nbsp; YOU'RE THE MAN NOW DOG &nbsp;&nbsp;&bull;&nbsp;&nbsp;</marquee>
+          <div class="ytmnd-modal__marquee" aria-hidden="true">
+            <span class="ytmnd-modal__marquee-track">
+              YOU'RE THE MAN NOW DOG &nbsp;&nbsp;&bull;&nbsp;&nbsp; YOU'RE THE MAN NOW DOG &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+            </span>
+            <span class="ytmnd-modal__marquee-track">
+              YOU'RE THE MAN NOW DOG &nbsp;&nbsp;&bull;&nbsp;&nbsp; YOU'RE THE MAN NOW DOG &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+            </span>
+          </div>
         </div>
         <div class="ytmnd-modal__body">
           <h2 class="ytmnd-modal__title">You just found Forrester</h2>

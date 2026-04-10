@@ -1725,6 +1725,30 @@ body.logged-in [data-ytmnd].ytmnd-letter--miss {
   text-transform: uppercase;
   letter-spacing: 2px;
 }
+
+.ytmnd-modal__marquee {
+  display: flex;
+  overflow: hidden;
+  width: 100%;
+  white-space: nowrap;
+}
+
+.ytmnd-modal__marquee-track {
+  flex: 0 0 auto;
+  min-width: 100%;
+  padding-right: 24px;
+  animation: ytmnd-marquee-scroll 9s linear infinite;
+}
+
+@keyframes ytmnd-marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
 .ytmnd-modal__close {
   background: none;
   border: none;
