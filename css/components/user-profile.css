@@ -629,7 +629,6 @@ body.is-identity-setup-required {
   background: rgba(255, 255, 255, 0.2);
   font-size: 0.75rem;
   gap: 4px;
-  padding: 0.3rem 0.35rem 0.6rem;
 }
 
 /* Remove underline from label, even inside a link */

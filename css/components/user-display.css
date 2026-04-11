@@ -1,30 +1,53 @@
 .user-display-card {
-  display: inline-block;
-  text-align: center;
-  vertical-align: top;
+  width: 100%;
+  overflow: hidden; /* prevent avatar bleed when grid tracks are constrained */
 }
-.user-display-link {
-  text-decoration: none;
-  color: #003399;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-}
-.user-display-avatar {
-  width: 76px;
-  object-fit: contain;
-  background: #fff;
-  margin-bottom: 4px;
 
-  @media screen and (min-width: 768px) {
-    width: 88px;
-  }
+/* Layout for the link: image should visually appear above the name even
+   though the markup places the name before the image. Using column-reverse
+   keeps markup semantics while showing the avatar on top. */
+.user-display-link {
+  display: flex;
+  flex-direction: column; /* name on top */
+  text-decoration: none;
+  color: inherit;
+  align-items: stretch;
 }
+
+/* Allow flex/grid children to shrink inside constrained grid rows */
+.user-display-card,
+.user-display-link {
+  min-height: 0;
+}
+
+/* Avatar fills available space and covers the area */
+.user-display-avatar {
+  width: 100%;
+  height: auto; /* preserve image aspect ratio */
+  display: block;
+  background: #fff;
+  object-position: center center;
+  max-width: 100%;
+  max-height: 100%; /* don't allow image to exceed its grid row */
+}
+
 .user-display-name {
+  padding: 0.45rem 0.5rem;
+  text-align: center;
   font-size: 12px;
   font-weight: bold;
   color: #003399;
+  white-space: normal;
+  overflow-wrap: anywhere;
   text-shadow: 0 1px 0 #fff;
-  margin-top: 2px;
+}
+
+/* Small-screen compact avatar fallback when not in a grid context */
+@media screen and (max-width: 420px) {
+  .user-display-avatar {
+    object-fit: contain;
+    height: auto;
+    margin: 0 auto 4px;
+    flex: none;
+  }
 }
