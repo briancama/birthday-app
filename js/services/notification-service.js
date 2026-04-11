@@ -5,6 +5,18 @@
  */
 
 const listeners = new Set();
+const pushFlowLog = [];
+let cachedServerPublicKey = null;
+
+function logPushEvent(action, detail = {}) {
+  const entry = {
+    timestamp: new Date().toISOString(),
+    action,
+    detail,
+  };
+  pushFlowLog.push(entry);
+  console.log(`[push] ${action}`, detail);
+}
 
 /**
  * Initialize the notification service (e.g. set VAPID key or perform setup).
@@ -17,7 +29,47 @@ export async function init(vapidPublicKey = null) {
   if (vapidPublicKey) {
     window.APP_VAPID_PUBLIC_KEY = vapidPublicKey;
   }
+  try {
+    const serverKey = await fetchServerVapidPublicKey();
+    if (serverKey) {
+      window.APP_VAPID_PUBLIC_KEY = serverKey;
+    }
+  } catch (err) {
+    logPushEvent("init-server-vapid-fetch-failed", {
+      message: err && err.message ? err.message : String(err),
+    });
+  }
   return Promise.resolve({ supported: "serviceWorker" in navigator && "PushManager" in window });
+}
+
+async function fetchServerVapidPublicKey(force = false) {
+  if (cachedServerPublicKey && !force) return cachedServerPublicKey;
+
+  try {
+    const resp = await fetch("/notifications/config", {
+      credentials: "include",
+    });
+    if (!resp.ok) {
+      logPushEvent("server-vapid-fetch-non-ok", { status: resp.status });
+      return null;
+    }
+
+    const data = await resp.json().catch(() => null);
+    const publicKey = data && typeof data.publicKey === "string" ? data.publicKey.trim() : "";
+    if (!publicKey) {
+      logPushEvent("server-vapid-missing", {});
+      return null;
+    }
+
+    cachedServerPublicKey = publicKey;
+    logPushEvent("server-vapid-loaded", {});
+    return publicKey;
+  } catch (err) {
+    logPushEvent("server-vapid-fetch-error", {
+      message: err && err.message ? err.message : String(err),
+    });
+    return null;
+  }
 }
 
 /**
@@ -28,8 +80,12 @@ export async function registerServiceWorker(scriptPath = "/sw-notifications.js")
   if (!("serviceWorker" in navigator)) return null;
   try {
     const reg = await navigator.serviceWorker.register(scriptPath);
+    logPushEvent("service-worker-registered", { scriptPath });
     return reg;
   } catch (err) {
+    logPushEvent("service-worker-registration-failed", {
+      message: err && err.message ? err.message : String(err),
+    });
     console.warn("Service worker registration failed", err);
     return null;
   }
@@ -43,6 +99,7 @@ export async function subscribe(subscription) {
   // If a subscription object is provided, send it. Otherwise attempt to
   // create one from the service worker pushManager.
   try {
+    logPushEvent("subscribe-start", { hasProvidedSubscription: !!subscription });
     let sub = subscription;
     if (!sub) {
       // Basic capability checks
@@ -63,6 +120,7 @@ export async function subscribe(subscription) {
       let reg;
       try {
         reg = await navigator.serviceWorker.ready;
+        logPushEvent("service-worker-ready", {});
       } catch (e) {
         return {
           ok: false,
@@ -73,6 +131,7 @@ export async function subscribe(subscription) {
 
       // Respect existing permission state
       const currentPerm = Notification.permission;
+      logPushEvent("permission-check", { permission: currentPerm });
       if (currentPerm === "denied") {
         return {
           ok: false,
@@ -85,6 +144,7 @@ export async function subscribe(subscription) {
       if (currentPerm === "default") {
         try {
           const permission = await Notification.requestPermission();
+          logPushEvent("permission-request", { permission });
           if (permission !== "granted") {
             return { ok: false, error: "permission-denied", message: "Permission was not granted" };
           }
@@ -94,7 +154,14 @@ export async function subscribe(subscription) {
       }
 
       // Ensure VAPID public key is available (recommended)
+      const serverPublicKey = await fetchServerVapidPublicKey();
+      const effectivePublicKey = serverPublicKey || window.APP_VAPID_PUBLIC_KEY;
+      if (effectivePublicKey) {
+        window.APP_VAPID_PUBLIC_KEY = effectivePublicKey;
+      }
+
       if (!window.APP_VAPID_PUBLIC_KEY) {
+        logPushEvent("missing-vapid-key", {});
         return {
           ok: false,
           error: "missing-vapid",
@@ -105,6 +172,7 @@ export async function subscribe(subscription) {
 
       try {
         sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey });
+        logPushEvent("push-manager-subscribed", { endpoint: sub && sub.endpoint });
       } catch (subErr) {
         // Common reasons: permission revoked, invalid key, or browser-specific errors
         return { ok: false, error: "subscribe-failed", message: subErr && subErr.message };
@@ -118,8 +186,10 @@ export async function subscribe(subscription) {
       body: JSON.stringify({ subscription: sub }),
     });
     const data = await resp.json().catch(() => null);
+    logPushEvent("subscribe-response", { ok: resp.ok, status: resp.status });
     return { ok: resp.ok, data };
   } catch (err) {
+    logPushEvent("subscribe-error", { message: err && err.message ? err.message : String(err) });
     console.warn("subscribe error", err);
     return { ok: false, error: err && err.message };
   }
@@ -131,6 +201,7 @@ export async function subscribe(subscription) {
  */
 export async function unsubscribe(endpoint) {
   try {
+    logPushEvent("unsubscribe-start", { endpoint });
     // Attempt to unsubscribe locally if service worker has it
     try {
       const reg = await navigator.serviceWorker.ready;
@@ -163,9 +234,20 @@ export async function unsubscribe(endpoint) {
 
     return { ok: resp.ok, status: resp.status, statusText: resp.statusText, data, text };
   } catch (err) {
+    logPushEvent("unsubscribe-error", { message: err && err.message ? err.message : String(err) });
     console.warn("unsubscribe error", err);
     return { ok: false, error: err && err.message };
   }
+}
+
+export async function getCurrentSubscription() {
+  if (!("serviceWorker" in navigator)) return null;
+  const reg = await navigator.serviceWorker.ready;
+  return reg.pushManager.getSubscription();
+}
+
+export function getPushFlowLog() {
+  return [...pushFlowLog];
 }
 
 /**

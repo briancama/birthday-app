@@ -1,3 +1,5 @@
+<% const unreadCount = Number((navData && navData.unreadNotificationCount) || 0); %>
+<% const unreadBadgeLabel = unreadCount > 99 ? '99+' : String(unreadCount); %>
 <% if (navData && navData.pageTitle) { %>
 <nav class="site-navigation site-navigation--old mobile-menu-default">
   <button class="mobile-menu-toggle" data-sound="menu" aria-label="Toggle navigation menu">
@@ -9,8 +11,20 @@
       <img src="/images/star_icon.gif" alt="star" class="icon-gif" />
       <span id="secretArnold" class="secret-arnold">RICKTER</span>
       <% if (navData && navData.user) { %>
-      <a href="/users/<%= navData.user.username %>" class="profile-nav-link">
+      <a href="/users/<%= navData.user.username %>" class="profile-nav-link" aria-label="Profile">
         <img src="/images/profile.gif" alt="profile" class="icon-gif user-profile-button" />
+      </a>
+      <a href="/account" class="notification-nav-link" aria-label="Account Center">
+        <img
+          src="/images/notification-bell.gif"
+          alt="notifications"
+          class="icon-gif user-profile-button"
+        />
+        <% if (unreadCount > 0) { %>
+        <span class="nav-unread-badge" aria-label="<%= unreadCount %> unread notifications">
+          <%= unreadBadgeLabel %>
+        </span>
+        <% } %>
       </a>
       <% } %>
     </div>
@@ -26,8 +40,20 @@
     <span id="secretArnold" class="secret-arnold">RICKTER</span>
     <div class="nav-content-right">
       <% if (navData && navData.user) { %>
-      <a href="/users/<%= navData.user.username %>" class="profile-nav-link">
+      <a href="/users/<%= navData.user.username %>" class="profile-nav-link" aria-label="Profile">
         <img src="/images/profile.gif" alt="profile" class="icon-gif user-profile-button" />
+      </a>
+      <a href="/account" class="notification-nav-link" aria-label="Account Center">
+        <img
+          src="/images/notification-bell.gif"
+          alt="notifications"
+          class="icon-gif user-profile-button"
+        />
+        <% if (unreadCount > 0) { %>
+        <span class="nav-unread-badge" aria-label="<%= unreadCount %> unread notifications">
+          <%= unreadBadgeLabel %>
+        </span>
+        <% } %>
       </a>
       <% } %>
       <button class="mobile-menu-toggle" data-sound="menu" aria-label="Toggle navigation menu">

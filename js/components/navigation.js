@@ -131,6 +131,7 @@ class NavigationController {
     if (path.includes("dashboard")) return "dashboard";
     if (path.includes("leaderboard")) return "leaderboard";
     if (path.includes("event-info")) return "event-info";
+    if (path.includes("account")) return "account";
     if (path.includes("cocktail-judging")) return "cocktail-judging";
     if (path.includes("cocktail-rubric")) return "rubric";
     if (path.includes("challenges-submit")) return "challenges-submit";
@@ -146,6 +147,7 @@ class NavigationController {
       dashboard: "Dashboard",
       leaderboard: "Leaderboard",
       "event-info": "Event Info",
+      account: "Account Center",
       "cocktail-judging": "40 Proof",
       rubric: "Rubric",
       "challenges-submit": "Workshop",

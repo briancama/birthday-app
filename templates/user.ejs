@@ -139,11 +139,12 @@
                   <% if (hasSignedInUser) { %>
                   <button
                     id="add-to-topn-btn"
-                    class="btn btn--primary"
-                    <% if ((typeof isInTopN !== 'undefined' && isInTopN) || (typeof isTopNFull !== 'undefined' && isTopNFull)) { %>disabled<% } %>
+                    class="btn btn--primary topn-toggle-btn <% if (typeof isInTopN !== 'undefined' && isInTopN) { %>topn-toggle-btn--remove<% } else { %>topn-toggle-btn--add<% } %>"
+                    data-in-topn="<%= (typeof isInTopN !== 'undefined' && isInTopN) ? 'true' : 'false' %>"
+                    <% if ((typeof isTopNFull !== 'undefined' && isTopNFull) && !(typeof isInTopN !== 'undefined' && isInTopN)) { %>disabled<% } %>
                   >
                     <% if (typeof isInTopN !== 'undefined' && isInTopN) { %>
-                      Already in Top 8
+                      Remove from Top 8
                     <% } else if (typeof isTopNFull !== 'undefined' && isTopNFull) { %>
                       Top 8 Full
                     <% } else { %>

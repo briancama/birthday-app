@@ -212,29 +212,57 @@ class UserProfilePage extends BasePage {
     const btn = document.getElementById("add-to-topn-btn");
     if (!btn || !this.userId || !this.profileUserId || this.isOwner) return;
 
+    const syncTopNButton = ({ inTopN, disabled = false }) => {
+      btn.dataset.inTopn = inTopN ? "true" : "false";
+      btn.disabled = disabled;
+      btn.classList.toggle("topn-toggle-btn--remove", inTopN);
+      btn.classList.toggle("topn-toggle-btn--add", !inTopN);
+      btn.textContent = disabled ? "Top 8 Full" : inTopN ? "Remove from Top 8" : "Add to my Top 8";
+    };
+
     btn.addEventListener("click", async () => {
       if (btn.disabled) return;
       const original = btn.textContent;
       btn.disabled = true;
-      btn.textContent = "Adding...";
+      const isInTopN = btn.dataset.inTopn === "true";
+      btn.textContent = isInTopN ? "Removing..." : "Adding...";
+
       try {
-        const resp = await fetch(`/api/users/${this.userId}/top-n/add`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ targetUserId: this.profileUserId }),
-        });
+        const resp = isInTopN
+          ? await fetch(`/api/users/${this.userId}/top-n/${this.profileUserId}`, {
+              method: "DELETE",
+              credentials: "include",
+            })
+          : await fetch(`/api/users/${this.userId}/top-n/add`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({ targetUserId: this.profileUserId }),
+            });
+
         const body = await resp.json().catch(() => ({}));
         if (!resp.ok) throw new Error(body.error || resp.statusText);
 
-        btn.textContent = "Added to Top 8";
+        if (isInTopN) {
+          syncTopNButton({ inTopN: false, disabled: false });
+          this.showSuccessToast("Removed from your Top 8.");
+          return;
+        }
+
+        syncTopNButton({ inTopN: true, disabled: false });
         this.showSuccessToast(
           body.already_added ? "Already in your Top 8." : "Added to your Top 8!"
         );
       } catch (err) {
+        if (!isInTopN && /full/i.test(String(err.message || ""))) {
+          syncTopNButton({ inTopN: false, disabled: true });
+          this.showErrorToast("Top 8 is full.");
+          return;
+        }
+
         btn.disabled = false;
         btn.textContent = original;
-        this.showErrorToast("Failed to add: " + err.message);
+        this.showErrorToast(`Failed to ${isInTopN ? "remove" : "add"}: ` + err.message);
       }
     });
   }

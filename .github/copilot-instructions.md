@@ -98,6 +98,35 @@ Always implement and call `cleanup()` in pages/components to remove event listen
 - The visitor partial intentionally keeps visitor-first menu items with reduced participant-specific branching.
 - If global navigation shell/markup changes (logo/header/toggle structure), update both partials to avoid drift unless the divergence is intentional.
 
+### Account Center + Notification Badge (2026)
+
+- The top-right `profile-nav-link` now routes to `/account` (Account Center) instead of directly to `/users/:username`.
+- `/account` is the signed-in hub for notification inbox + account-facing surfaces (including the dashboard-style achievements section).
+- Unread notification state is represented in navigation via `navData.unreadNotificationCount` and rendered as a small badge on the profile icon.
+- Any changes to profile icon destination, unread badge markup, or unread count hydration must be applied to both:
+  - `templates/partials/navigation-visitor.ejs`
+  - `templates/partials/navigation.ejs`
+- Keep server-side nav hydration in `server.js` aligned with badge rendering expectations.
+
+### Notification Action Destinations (2026)
+
+- Notification payloads should include a context-specific `url` whenever possible so both Account Center links and Web Push clicks land on the relevant surface.
+- Use section anchors for profile-context notifications:
+  - Wall post notifications should target the recipient profile wall (`#wall-entries`).
+  - Top 8 notifications should target the actor profile Top 8 section (`#topn-display`).
+- Use optional `action_label` in notification payload data for per-type CTA text in Account Center (fallback remains generic).
+- Keep producer routes (`routes/api-users.js`) and Account rendering (`js/pages/account.js`) aligned so action labels and destinations stay consistent.
+
+### Account Notification Center Grouping (2026)
+
+- The Account Center notification feed is compact and grouped by notification type using `<details>` sections.
+- The feed shows a rolling 7-day window of notifications (newest-first within each type group).
+- Group summaries show unread/total counts and items remain newest-first within each group.
+- Read behavior is group-open based: opening a type group marks unread notifications in that group as read.
+- Notification cards are full-row clickable (mouse + keyboard) and should navigate to the contextual destination URL.
+- The Account feed no longer uses an Unread/All toggle; recent history remains visible after read state changes.
+- Keep this behavior aligned between `templates/account.ejs`, `css/components/account.css`, and `js/pages/account.js`.
+
 ### Brispace Achievement Leaderboard Scope (2026)
 
 - `achievements.is_visitor_eligible` controls whether an achievement counts toward Brispace rank.

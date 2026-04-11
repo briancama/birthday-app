@@ -1,5 +1,7 @@
 <% const visitorNavData = typeof navData !== 'undefined' && navData ? navData : {}; %>
 <% const isLoggedIn = !!visitorNavData.user; %>
+<% const unreadCount = Number(visitorNavData.unreadNotificationCount || 0); %>
+<% const unreadBadgeLabel = unreadCount > 99 ? '99+' : String(unreadCount); %>
 
 <div class="myspace-header full-width-content">
   <div class="myspace-header__logo">
@@ -9,7 +11,23 @@
     <span id="secretArnold" class="secret-arnold">RICKTER</span>
     <div class="nav-content-right">
       <% if (isLoggedIn) { %>
-      <a href="/users/<%= visitorNavData.user.username %>" class="profile-nav-link">
+      <a href="/account" class="notification-nav-link" aria-label="Account Center">
+        <img
+          src="/images/notification-bell.gif"
+          alt="notifications"
+          class="icon-gif user-profile-button"
+        />
+        <% if (unreadCount > 0) { %>
+        <span class="nav-unread-badge" aria-label="<%= unreadCount %> unread notifications">
+          <%= unreadBadgeLabel %>
+        </span>
+        <% } %>
+      </a>
+      <a
+        href="/users/<%= visitorNavData.user.username %>"
+        class="profile-nav-link"
+        aria-label="Profile"
+      >
         <img src="/images/profile.gif" alt="profile" class="icon-gif user-profile-button" />
       </a>
       <% } %>

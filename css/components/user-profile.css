@@ -71,6 +71,32 @@ body.is-owner #headshotUploadContainer {
   display: block;
 }
 
+.topn-toggle-btn {
+  width: 100%;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.topn-toggle-btn.topn-toggle-btn--add {
+  background: #0a45c7;
+  border-color: #072f89;
+  color: #fff;
+}
+
+.topn-toggle-btn.topn-toggle-btn--add:hover {
+  background: #0838a3;
+}
+
+.topn-toggle-btn.topn-toggle-btn--remove {
+  background: #b51f1f;
+  border-color: #7e1313;
+  color: #fff;
+}
+
+.topn-toggle-btn.topn-toggle-btn--remove:hover {
+  background: #931818;
+}
+
 .profile-edit-form {
   display: none;
   flex-direction: column;

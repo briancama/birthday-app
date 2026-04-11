@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { getSupabase, createSanitizer, requireSignedUser } = require("../js/utils/server-utils");
+const { createAndDeliverNotification } = require("../js/utils/notification-delivery");
 const fs = require("fs");
 const path = require("path");
 
@@ -109,6 +110,35 @@ async function normalizeTopNEntries(items, maxItems = 8) {
   return normalized;
 }
 
+async function maybeAwardTop8Achievement(userId, topNItems) {
+  try {
+    if (!userId || !Array.isArray(topNItems) || topNItems.length < 8) return null;
+
+    const { data: rpcData, error: rpcErr } = await supabase.rpc("rpc_award_achievement_by_key", {
+      p_user_id: userId,
+      p_key: "top_8_complete",
+      p_details: { top_n_count: topNItems.length },
+    });
+
+    if (rpcErr) throw rpcErr;
+
+    const rpcRow = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+    if (!rpcRow?.awarded) return null;
+
+    const { data: ach, error: achErr } = await supabase
+      .from("achievements")
+      .select("key, name, points")
+      .eq("id", rpcRow.achievement_id)
+      .maybeSingle();
+    if (achErr) throw achErr;
+
+    return ach || null;
+  } catch (err) {
+    console.warn("Failed to award Top 8 achievement:", err.message || err);
+    return null;
+  }
+}
+
 // POST /api/users/:id/challenge
 // Triggers assignment of the next available challenge to the target user and
 // creates a notification for them. Requires the caller to be authenticated.
@@ -203,20 +233,27 @@ router.post("/users/:id/challenge", async (req, res) => {
     // 4. Create a notification for the target
     let notif = null;
     try {
-      const { data: notifData, error: notifErr } = await supabase
-        .from("notifications")
-        .insert({
-          user_id: targetUserId,
-          payload: {
-            type: "challenge_triggered",
-            from_user: signedUserId,
-            assignment_id: dormant.id,
-          },
-          read: false,
-        })
-        .select()
-        .single();
-      if (!notifErr) notif = notifData;
+      const { data: challenger } = await supabase
+        .from("users")
+        .select("username, display_name")
+        .eq("id", signedUserId)
+        .maybeSingle();
+
+      const delivered = await createAndDeliverNotification({
+        userId: targetUserId,
+        type: "challenge_triggered",
+        fromUserId: signedUserId,
+        title: "New challenge unlocked",
+        body: `${challenger?.display_name || challenger?.username || "Someone"} triggered one of your challenges.`,
+        url: "/challenges",
+        data: {
+          from_username: challenger?.username || null,
+          from_display_name: challenger?.display_name || challenger?.username || null,
+          assignment_id: dormant.id,
+          action_label: "View challenge",
+        },
+      });
+      notif = delivered.notification;
     } catch (notifyErr) {
       // Non-fatal — assignment was triggered successfully
       console.warn("Failed to create challenge notification:", notifyErr.message || notifyErr);
@@ -749,7 +786,9 @@ router.patch("/users/:id/top-n", async (req, res) => {
       console.error("top-n upsert error:", error.message);
       return res.status(500).json({ error: "Database error" });
     }
-    return res.json({ ok: true, top_n: clean });
+
+    const achievement = await maybeAwardTop8Achievement(ownerId, clean);
+    return res.json({ ok: true, top_n: clean, achievement });
   } catch (err) {
     console.error("Error in PATCH /api/users/:id/top-n", err);
     return res.status(500).json({ error: "Internal server error" });
@@ -813,7 +852,33 @@ router.post("/users/:id/top-n/add", async (req, res) => {
       );
     if (upsertErr) throw upsertErr;
 
-    return res.json({ ok: true, top_n: next, is_full: next.length >= 8 });
+    try {
+      const { data: ownerUser } = await supabase
+        .from("users")
+        .select("username, display_name")
+        .eq("id", ownerId)
+        .maybeSingle();
+
+      await createAndDeliverNotification({
+        userId: targetUserId,
+        type: "top8_added",
+        fromUserId: ownerId,
+        title: "Top 8 update",
+        body: `${ownerUser?.display_name || ownerUser?.username || "Someone"} added you to their Top 8.`,
+        url: ownerUser?.username ? `/users/${ownerUser.username}#topn-display` : "/friends",
+        data: {
+          from_username: ownerUser?.username || null,
+          from_display_name: ownerUser?.display_name || ownerUser?.username || null,
+          action_label: "View Top 8",
+        },
+      });
+    } catch (notifErr) {
+      console.warn("Failed to create Top 8 add notification:", notifErr.message || notifErr);
+    }
+
+    const achievement = await maybeAwardTop8Achievement(ownerId, next);
+
+    return res.json({ ok: true, top_n: next, is_full: next.length >= 8, achievement });
   } catch (err) {
     console.error("Error in POST /api/users/:id/top-n/add", err);
     return res.status(500).json({ error: "Internal server error" });
@@ -841,6 +906,7 @@ router.delete("/users/:id/top-n/:targetUserId", async (req, res) => {
     if (profileErr) throw profileErr;
 
     const current = await normalizeTopNEntries(profile?.top_n || [], 8);
+    const wasPresent = current.some((entry) => entry.user_id === targetUserId);
     const next = current.filter((entry) => entry.user_id !== targetUserId);
 
     const { error: upsertErr } = await supabase
@@ -850,6 +916,32 @@ router.delete("/users/:id/top-n/:targetUserId", async (req, res) => {
         { onConflict: "user_id" }
       );
     if (upsertErr) throw upsertErr;
+
+    if (wasPresent) {
+      try {
+        const { data: ownerUser } = await supabase
+          .from("users")
+          .select("username, display_name")
+          .eq("id", ownerId)
+          .maybeSingle();
+
+        await createAndDeliverNotification({
+          userId: targetUserId,
+          type: "top8_removed",
+          fromUserId: ownerId,
+          title: "Top 8 update",
+          body: `${ownerUser?.display_name || ownerUser?.username || "Someone"} removed you from their Top 8.`,
+          url: ownerUser?.username ? `/users/${ownerUser.username}#topn-display` : "/friends",
+          data: {
+            from_username: ownerUser?.username || null,
+            from_display_name: ownerUser?.display_name || ownerUser?.username || null,
+            action_label: "View Top 8",
+          },
+        });
+      } catch (notifErr) {
+        console.warn("Failed to create Top 8 remove notification:", notifErr.message || notifErr);
+      }
+    }
 
     return res.json({ ok: true, top_n: next, is_full: next.length >= 8 });
   } catch (err) {
@@ -914,6 +1006,35 @@ router.post("/users/:id/wall", async (req, res) => {
       console.error("wall insert error:", error.message);
       return res.status(500).json({ error: "Database error" });
     }
+
+    if (targetId !== signedUserId) {
+      try {
+        const targetLooksLikeUuid = UUID_REGEX.test(targetId);
+        const { data: targetUser } = await supabase
+          .from("users")
+          .select("username")
+          .eq(targetLooksLikeUuid ? "id" : "username", targetId)
+          .maybeSingle();
+
+        await createAndDeliverNotification({
+          userId: targetId,
+          type: "wall_post_received",
+          fromUserId: signedUserId,
+          title: "New wall post",
+          body: `${author?.display_name || author?.username || "Someone"} posted on your wall.`,
+          url: targetUser?.username ? `/users/${targetUser.username}#wall-entries` : "/account",
+          data: {
+            from_username: author?.username || null,
+            from_display_name: author?.display_name || author?.username || null,
+            wall_entry_id: data?.id || null,
+            action_label: "View wall post",
+          },
+        });
+      } catch (notifErr) {
+        console.warn("Failed to create wall-post notification:", notifErr.message || notifErr);
+      }
+    }
+
     return res.json({ ok: true, entry: data });
   } catch (err) {
     console.error("Error in POST /api/users/:id/wall", err);

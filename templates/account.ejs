@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Account Center - BriSpace</title>
+    <link rel="icon" type="image/png" href="/images/brispace_favicon.png" />
+    <link rel="stylesheet" href="/css/geocities.css" />
+    <link rel="stylesheet" href="/css/components/navigation.css" />
+    <link rel="stylesheet" href="/css/components/achievements.css" />
+    <link rel="stylesheet" href="/css/components/account.css" />
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
+  </head>
+  <body class="logged-in" data-auth="<%= !!currentUser %>">
+    <%- include('partials/navigation-visitor', { navData: (typeof navData !== 'undefined' ? navData
+    : {}) }) %>
+
+    <div class="container account-container">
+      <div class="section">
+        <h2 class="text-shadow-light">ACCOUNT CENTER</h2>
+        <div class="account-intro-row">
+          <p class="account-intro-text">
+            Keep tabs on your BriSpace activity here. Notifications are grouped by type and kept in
+            a rolling 7-day history.
+          </p>
+          <a class="account-edit-profile-link" href="/users/<%= currentUser.username %>">
+            Edit Profile
+          </a>
+        </div>
+      </div>
+
+      <div class="section" id="accountNotificationsSection">
+        <div class="account-section-header">
+          <h2 class="text-shadow-light" style="margin-bottom: 0">NOTIFICATIONS</h2>
+        </div>
+        <div id="accountNotificationsMeta" class="account-notification-meta"></div>
+        <ul id="accountNotificationsList" class="account-notification-list"></ul>
+      </div>
+
+      <% if (currentUser.isAdmin) { %>
+      <div class="section account-admin-test-card" id="adminPushTestCard">
+        <h2 class="text-shadow-light" style="margin-bottom: 0">ADMIN PUSH TEST</h2>
+        <p class="account-admin-test-note">
+          Send a notification + push attempt to any user id for verification.
+        </p>
+        <form id="adminPushTestForm" class="account-admin-test-form" autocomplete="off">
+          <label>
+            Choose User
+            <select id="adminPushUserSelect" name="selected_user">
+              <option value="">Loading users...</option>
+            </select>
+          </label>
+          <label>
+            Target User ID
+            <input
+              id="adminPushTargetUserId"
+              name="user_id"
+              type="text"
+              value="<%= currentUser.id %>"
+              required
+            />
+          </label>
+          <label>
+            Type
+            <input id="adminPushType" name="type" type="text" value="manual_test" required />
+          </label>
+          <label>
+            Title
+            <input id="adminPushTitle" name="title" type="text" value="Admin push test" required />
+          </label>
+          <label>
+            Body
+            <textarea id="adminPushBody" name="body" rows="3" required>
+Push test from Account Center admin panel.
+            </textarea>
+          </label>
+          <label>
+            URL
+            <input id="adminPushUrl" name="url" type="text" value="/account" required />
+          </label>
+          <button id="adminPushSubmit" type="submit" class="account-admin-test-submit">
+            Send Test Notification
+          </button>
+        </form>
+        <pre id="adminPushResult" class="account-admin-test-result" aria-live="polite"></pre>
+      </div>
+      <% } %>
+
+      <div class="section" id="achievementsSection">
+        <div class="account-section-header achievements-header">
+          <h2 class="text-shadow-light" style="margin-bottom: 0">ACHIEVEMENTS</h2>
+          <div
+            class="achievements-counter"
+            id="achievementsCounter"
+            style="font-size: 12px; font-weight: bold; color: var(--accent-color)"
+          ></div>
+        </div>
+        <div class="account-achievement-legend-wrap">
+          <div id="achievementsLegend" class="hide-desktop" style="font-size: 10px; color: #666">
+            Click for details
+          </div>
+        </div>
+        <div id="achievementsList" class="achievements-grid" style="padding-top: 8px"></div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { AccountPage } from "/js/pages/account.js";
+
+      const page = new AccountPage();
+      await page.init();
+    </script>
+  </body>
+</html>

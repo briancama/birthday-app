@@ -102,20 +102,32 @@ app.use(async (req, res, next) => {
 
     if (!user) return next();
 
-    // Run push subscription check, event_started, and challenges_enabled in parallel
-    const [pushResult, eventFlagResult, challengesFlagResult] = await Promise.allSettled([
-      supabase.from("push_subscriptions").select("id").eq("user_id", user.id).limit(1),
-      supabase
-        .from("app_settings")
-        .select("setting_value")
-        .eq("setting_key", "event_started")
-        .maybeSingle(),
-      supabase
-        .from("app_settings")
-        .select("setting_value")
-        .eq("setting_key", "challenges_enabled")
-        .maybeSingle(),
-    ]);
+    const unreadWindowDays = 7;
+    const unreadCutoffIso = new Date(
+      Date.now() - unreadWindowDays * 24 * 60 * 60 * 1000
+    ).toISOString();
+
+    // Run independent nav-state lookups in parallel for faster TTFB on SSR pages.
+    const [pushResult, eventFlagResult, challengesFlagResult, unreadResult] =
+      await Promise.allSettled([
+        supabase.from("push_subscriptions").select("id").eq("user_id", user.id).limit(1),
+        supabase
+          .from("app_settings")
+          .select("setting_value")
+          .eq("setting_key", "event_started")
+          .maybeSingle(),
+        supabase
+          .from("app_settings")
+          .select("setting_value")
+          .eq("setting_key", "challenges_enabled")
+          .maybeSingle(),
+        supabase
+          .from("notifications")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("read", false)
+          .gte("created_at", unreadCutoffIso),
+      ]);
 
     const hasPush = !!(
       pushResult.status === "fulfilled" &&
@@ -140,6 +152,11 @@ app.use(async (req, res, next) => {
       challengesFlagResult.value.data.setting_value.enabled === false
     );
 
+    const unreadNotificationCount =
+      unreadResult.status === "fulfilled" && !unreadResult.value.error
+        ? unreadResult.value.count || 0
+        : 0;
+
     // Simple admin check: username matches known admins (keep existing client-side conventions)
     const isAdmin = !!(user && (user.username === "brianc" || user.username === "admin"));
 
@@ -154,6 +171,7 @@ app.use(async (req, res, next) => {
       },
       isAuthenticated: true,
       hasPushSubscription: hasPush,
+      unreadNotificationCount,
       eventStarted,
       challengesEnabled,
     };
@@ -182,7 +200,10 @@ app.use((req, res, next) => {
   const isRoot = req.path === "/";
   const hasExtension = req.path.includes(".");
   const isApiLike =
-    req.path.startsWith("/api") || req.path.startsWith("/auth") || req.path.startsWith("/users");
+    req.path.startsWith("/api") ||
+    req.path.startsWith("/auth") ||
+    req.path.startsWith("/users") ||
+    req.path.startsWith("/notifications");
 
   if (isGet && !hasExtension && !isRoot && !isApiLike) {
     req.url += ".html";
@@ -275,6 +296,18 @@ app.get(["/friends", "/friends.html"], async (req, res) => {
       res.locals.navData && res.locals.navData.user ? res.locals.navData.user : null;
     return res.render("friends", { allUsers: [], currentUser });
   }
+});
+
+// Account Center: server-rendered notifications and achievements hub
+app.get(["/account", "/account.html"], (req, res) => {
+  const currentUser =
+    res.locals.navData && res.locals.navData.user ? res.locals.navData.user : null;
+
+  if (!currentUser) {
+    return res.redirect("/");
+  }
+
+  return res.render("account", { currentUser });
 });
 
 // Shared helper to fetch assignments for SSR

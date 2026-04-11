@@ -23,6 +23,10 @@ body.has-bottom-menu {
 }
 
 .site-navigation--old .profile-nav-link {
+  margin-right: 8px;
+}
+
+.site-navigation--old .notification-nav-link {
   margin-right: 58px;
 }
 
@@ -51,17 +55,41 @@ body.has-bottom-menu {
   align-items: center;
 }
 
-.profile-nav-link {
+.profile-nav-link,
+.notification-nav-link {
   margin-right: 12px;
   display: inline-flex;
   align-items: center;
+  position: relative;
 }
 
-.profile-nav-link .user-profile-button {
+.profile-nav-link .user-profile-button,
+.notification-nav-link .user-profile-button {
   opacity: 1;
   pointer-events: auto;
   animation: fadeInUp 0.35s ease both;
   margin-left: auto;
+}
+
+.nav-unread-badge {
+  position: absolute;
+  top: -8px;
+  left: -4px;
+  padding: 1px 3px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: monospace;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--accent-red);
+  border: 2px solid var(--border-color);
+  color: #fff;
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 14px;
+  text-align: center;
 }
 
 /* Mobile Menu Toggle - always visible */
@@ -280,7 +308,7 @@ body.has-bottom-menu {
   }
 
   .myspace-header__logo img {
-    height: 40px;
+    height: 35px;
   }
 
   .mobile-menu-toggle {
@@ -293,5 +321,10 @@ body.has-bottom-menu {
   .secret-arnold {
     font-size: 12px;
     line-height: 2.2;
+  }
+
+  .profile-nav-link,
+  .notification-nav-link {
+    margin-right: 8px;
   }
 }

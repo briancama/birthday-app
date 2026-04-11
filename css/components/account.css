@@ -1,0 +1,373 @@
+.account-container {
+  margin-top: 2rem;
+}
+.account-intro {
+  border: 1px solid #000;
+  background: #fbfff8;
+  padding: 0.65rem 0.7rem;
+}
+
+.account-profile-link-row {
+  margin: 0.4rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.82rem;
+}
+
+.account-intro-row {
+  margin-top: 0.35rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.9rem;
+}
+
+.account-intro-text {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.35;
+  flex: 1 1 auto;
+}
+
+.account-edit-profile-link {
+  flex: 0 0 auto;
+  align-self: center;
+  border: 2px solid #000;
+  background: linear-gradient(to bottom, #fff3aa, #ffd45f);
+  color: #141414;
+  padding: 0.32rem 0.62rem;
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  text-decoration: none;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  box-shadow: 2px 2px 0 #000;
+}
+
+.account-edit-profile-link:hover,
+.account-edit-profile-link:focus-visible {
+  background: linear-gradient(to bottom, #ffe6a0, #ffc946);
+}
+
+.account-edit-profile-link:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
+
+.account-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.45rem;
+}
+
+.account-notification-filters {
+  display: inline-flex;
+  gap: 0.3rem;
+}
+
+.account-filter-btn {
+  border: 2px solid #000;
+  background: #fff;
+  color: #000;
+  font-size: 0.68rem;
+  font-weight: bold;
+  padding: 0.15rem 0.45rem;
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+.account-filter-btn.active {
+  background: #bdf7f3;
+}
+
+.account-notification-meta {
+  font-size: 0.7rem;
+  color: #474747;
+  margin-bottom: 0.45rem;
+}
+
+.account-notification-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.account-notification-group {
+  border: 1px solid #000;
+  background: #fff;
+}
+
+.account-notification-group[open] {
+  background: #fcfcfc;
+}
+
+.account-notification-group--has-unread {
+  background: #f3fff6;
+}
+
+.account-notification-group--has-unread .account-notification-summary {
+  background: linear-gradient(to bottom, #f8fffb, #e6f8ea);
+}
+
+.account-notification-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  list-style: none;
+  cursor: pointer;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: bold;
+  background: linear-gradient(to bottom, #fff, #f3f3f3);
+}
+
+.account-notification-summary::-webkit-details-marker {
+  display: none;
+}
+
+.account-notification-summary::after {
+  content: "▾";
+  margin-left: 0.4rem;
+  color: #333;
+  font-size: 0.76rem;
+  line-height: 1;
+  transform: rotate(-90deg);
+  transition: transform 0.15s ease;
+}
+
+.account-notification-group[open] .account-notification-summary::after {
+  transform: rotate(0deg);
+}
+
+.account-notification-summary:hover,
+.account-notification-summary:focus-visible {
+  background: linear-gradient(to bottom, #fff7d8, #ffeeb5);
+}
+
+.account-group-meta {
+  color: #444;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin-left: auto;
+}
+
+.account-group-meta--has-unread {
+  color: #168d2f;
+  font-weight: bold;
+}
+
+.account-group-body {
+  margin: 0;
+  padding: 0 0.25rem 0.25rem;
+  list-style: none;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.account-notification-item {
+  border: 1px solid #000;
+  border-left: 4px solid transparent;
+  background: #fff;
+  padding: 0 0 0 0.28rem;
+  display: block;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: stretch;
+  gap: 0;
+}
+
+.account-notification-card {
+  padding: 0.32rem 0.4rem;
+  display: grid;
+  gap: 0.16rem;
+  cursor: pointer;
+}
+
+.account-notification-item:hover .account-notification-card {
+  background: #fff7d8;
+}
+
+.account-notification-card:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 1px;
+}
+
+.account-notification-item[data-read="false"] {
+  border-left-color: #168d2f;
+}
+
+.account-notification-item[data-read="true"] {
+  border-left-color: transparent;
+  opacity: 0.86;
+}
+
+.account-notification-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.account-notification-type {
+  font-size: 0.6rem;
+  font-weight: bold;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.account-notification-time {
+  font-size: 0.62rem;
+  color: #555;
+}
+
+.account-notification-text {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.2;
+}
+
+.account-notification-target {
+  color: #3b0f6f;
+  font-size: 0.64rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  border-left: 1px solid transparent;
+  padding: 0.35rem 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 86px;
+  background: linear-gradient(to bottom, #efe9ff, #dccdff);
+}
+
+.account-notification-item[data-read="false"] .account-notification-target {
+  border-left-color: #000;
+}
+
+.account-notification-item[data-read="true"] .account-notification-target {
+  border-left-color: #7b7b7b;
+}
+
+.account-notification-target:hover,
+.account-notification-target:focus-visible {
+  background: linear-gradient(to bottom, #e5d8ff, #cab5ff);
+}
+
+.account-notification-empty {
+  margin: 0;
+  border: 1px dashed #000;
+  background: #fffbe2;
+  padding: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.account-admin-test-card h3 {
+  margin-top: 0;
+  margin-bottom: 0.4rem;
+}
+
+.account-admin-test-note {
+  margin-top: 0.3rem;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: #444;
+}
+
+.account-admin-test-form {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.45rem;
+}
+
+.account-admin-test-form label {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.68rem;
+  font-weight: bold;
+}
+
+.account-admin-test-form input,
+.account-admin-test-form select,
+.account-admin-test-form textarea {
+  width: 100%;
+  border: 2px solid #000;
+  background: #fff;
+  color: #111;
+  padding: 0.22rem 0.32rem;
+  font-size: 0.72rem;
+  font-family: "Courier New", monospace;
+}
+
+.account-admin-test-submit {
+  border: 2px solid #000;
+  background: linear-gradient(to bottom, var(--accent-magenta), #9400d3);
+  color: var(--accent-yellow);
+  font-size: 0.72rem;
+  font-weight: bold;
+  padding: 0.32rem 0.5rem;
+  cursor: pointer;
+}
+
+.account-admin-test-submit:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.account-admin-test-result {
+  margin-top: 0.45rem;
+  border: 1px dashed #000;
+  background: #f7f7f7;
+  min-height: 44px;
+  padding: 0.35rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.66rem;
+  line-height: 1.35;
+}
+
+.account-achievement-legend-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+@media (min-width: 900px) {
+  .account-notification-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+@media (max-width: 880px) {
+  .account-intro-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .account-edit-profile-link {
+    align-self: flex-start;
+  }
+
+  .account-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .account-notification-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.08rem;
+  }
+}
