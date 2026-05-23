@@ -310,6 +310,13 @@ app.get(["/account", "/account.html"], (req, res) => {
   return res.render("account", { currentUser });
 });
 
+// RecipeClash preview: render the standalone recipe EJS template
+app.get(["/recipes", "/recipes/preview", "/recipes.html"], (req, res) => {
+  const currentUser = res.locals.navData && res.locals.navData.user ? res.locals.navData.user : null;
+  // Render the recipe page (mostly static for now). Keep currentUser available for later client-side hooks.
+  return res.render("recipe", { currentUser });
+});
+
 // Shared helper to fetch assignments for SSR
 async function fetchUserAssignments(supabase, user, eventStarted) {
   const assignments = [];

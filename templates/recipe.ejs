@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RecipeClash — Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Trebuchet+MS&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/recipe.css">
+  <style>
+    /* Demo-only: toggle between homepage and recipe detail */
+    .demo-switcher {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      z-index: 100;
+      display: flex;
+      gap: 0.5rem;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+    .demo-switcher button {
+      font-family: 'Trebuchet MS', Arial, sans-serif;
+      font-size: 0.75rem;
+      font-weight: bold;
+      background: #663333;
+      color: white;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      cursor: pointer;
+      opacity: 0.85;
+    }
+    .demo-switcher button:hover { opacity: 1; }
+    .page-section { display: none; }
+    .page-section.active { display: block; }
+  </style>
+</head>
+<body>
+
+  <!-- ══ HEADER ══ -->
+  <header class="site-header">
+    <div class="site-wrapper">
+      <div class="site-header__inner">
+        <a href="#" class="site-header__logo">
+          Recipe<span>Clash</span>
+          <div class="site-header__tagline">Where friends settle it in the kitchen</div>
+        </a>
+        <div class="site-header__search">
+          <div class="search-bar">
+            <input type="search" placeholder="Search recipes…" autocomplete="off">
+            <button type="submit">Go!</button>
+          </div>
+        </div>
+        <nav style="margin-left: 1rem;">
+          <a href="/" style="font-weight:bold; color:var(--maroon)">Back to Brispace →</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══ NAV ══ -->
+  <nav class="site-nav" aria-label="Main navigation">
+    <div class="site-wrapper">
+      <ul class="site-nav__list" role="list">
+        <li class="site-nav__item"><a href="#" aria-current="page">Home</a></li>
+        <li class="site-nav__item"><a href="#">All Recipes</a></li>
+        <li class="site-nav__item"><a href="#">Competitions</a></li>
+        <li class="site-nav__item"><a href="#">Categories</a></li>
+        <li class="site-nav__item"><a href="#">Submit Recipe</a></li>
+        <li class="site-nav__item"><a href="#">About</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main id="main-content">
+  <div class="page-section active" id="view-home">
+    <div class="site-wrapper">
+      <nav class="breadcrumb" aria-label="Breadcrumb"><span>Home</span></nav>
+      <div class="page-layout">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+          <div class="sidebar-block">
+            <div class="sidebar-block__heading">⭐ Recipes of the Day</div>
+            <div class="sidebar-block__body">
+              <div class="rotd-list__date">Friday, May 22, 2026</div>
+              <ul class="rotd-list">
+                <li class="rotd-list__item"><a href="#">Coconut Lime Bars</a></li>
+                <li class="rotd-list__item"><a href="#">Smoked Brisket Tacos</a></li>
+                <li class="rotd-list__item"><a href="#">Miso Roasted Carrots</a></li>
+                <li class="rotd-list__item"><a href="#">Angel Biscuits</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="sidebar-block">
+            <div class="sidebar-block__heading">📂 Browse Categories</div>
+            <div class="sidebar-block__body">
+              <ul class="sidebar-block__list">
+                <li><a href="#">Appetizers</a></li>
+                <li><a href="#">Main Dishes</a></li>
+                <li><a href="#">Sides &amp; Salads</a></li>
+                <li><a href="#">Desserts</a></li>
+                <li><a href="#">Baking &amp; Breads</a></li>
+                <li><a href="#">Drinks</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="sidebar-block">
+            <div class="sidebar-block__heading">🏆 Latest Competition</div>
+            <div class="sidebar-block__body">
+              <p><strong>The Great Chili Throwdown</strong></p>
+              <p class="text-muted" style="font-size: var(--text-xs); margin-top: var(--space-2)">December 2024 · 6 entries</p>
+              <a class="btn btn--primary btn--sm" href="#" style="margin-top: var(--space-3); display: inline-flex">See Results</a>
+            </div>
+          </div>
+        </aside>
+
+        <div class="page-layout__divider" aria-hidden="true"></div>
+
+        <!-- Main -->
+        <section>
+          <div class="feature-box">
+            <div class="feature-box__eyebrow">This Week's Feature</div>
+            <h2 class="feature-box__title">Welcome to RecipeClash!</h2>
+            <div class="feature-box__body">
+              <p>
+                RecipeClash is where our crew comes to settle the age-old question:
+                <em>whose recipe is actually the best?</em> Submit your signature dish,
+                vote in competitions, and build your culinary legacy one potluck at a time.
+              </p>
+              <p style="margin-top: var(--space-3)">
+                Browse the archives, steal some inspiration, and
+                <a href="#">submit your own recipe</a> before the next throwdown.
+              </p>
+            </div>
+          </div>
+
+          <h2 class="section-heading">Recently Added</h2>
+
+          <div style="display: flex; flex-direction: column; gap: var(--space-4); margin-bottom: var(--space-8)">
+            <article class="recipe-card">
+              <div class="recipe-card__img-placeholder" aria-hidden="true">🌶️</div>
+              <h3 class="recipe-card__title"><a href="#" onclick="showPage('view-recipe');return false;">Championship Green Chili</a></h3>
+              <div class="recipe-card__meta">
+                <span>By <strong>Marcus T.</strong></span>
+                <span>· Mains</span>
+                <span>· 25 min prep</span>
+              </div>
+              <p class="recipe-card__desc">The one that took home gold at the Chili Throwdown. Roasted Hatch chiles, pork shoulder, tomatillos, and a secret spice blend Marcus refuses to fully disclose.</p>
+            </article>
+
+            <article class="recipe-card">
+              <div class="recipe-card__img-placeholder" aria-hidden="true">🍰</div>
+              <h3 class="recipe-card__title"><a href="#">Brown Butter Cardamom Cake</a></h3>
+              <div class="recipe-card__meta">
+                <span>By <strong>Priya K.</strong></span>
+                <span>· Desserts</span>
+                <span>· 40 min prep</span>
+              </div>
+              <p class="recipe-card__desc">Layers of brown butter sponge perfumed with cardamom, filled with whipped mascarpone and poached pears. Won the Dessert Duel two years running.</p>
+            </article>
+
+            <article class="recipe-card">
+              <div class="recipe-card__img-placeholder" aria-hidden="true">🥗</div>
+              <h3 class="recipe-card__title"><a href="#">Fattoush with Pomegranate Dressing</a></h3>
+              <div class="recipe-card__meta">
+                <span>By <strong>Sam W.</strong></span>
+                <span>· Sides &amp; Salads</span>
+                <span>· 15 min prep</span>
+              </div>
+              <p class="recipe-card__desc">Crispy fried flatbread, cucumber, tomatoes, purslane, sumac onions, and a pomegranate molasses vinaigrette that converts everyone who tries it.</p>
+            </article>
+          </div>
+
+          <div class="text-center">
+            <a href="#" class="btn btn--secondary">View All Recipes →</a>
+          </div>
+
+          <!-- Category grid demo -->
+          <h2 class="section-heading" style="margin-top: var(--space-10)">Browse by Category</h2>
+          <div class="category-grid">
+            <a href="#" class="category-tile"><span class="category-tile__icon">🍖</span>Mains</a>
+            <a href="#" class="category-tile"><span class="category-tile__icon">🥗</span>Salads</a>
+            <a href="#" class="category-tile"><span class="category-tile__icon">🍞</span>Baking</a>
+            <a href="#" class="category-tile"><span class="category-tile__icon">🍰</span>Desserts</a>
+            <a href="#" class="category-tile"><span class="category-tile__icon">🥘</span>Soups</a>
+            <a href="#" class="category-tile"><span class="category-tile__icon">🍹</span>Drinks</a>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-section" id="view-recipe">
+    <div class="site-wrapper">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="#" onclick="showPage('view-home');return false;">Home</a>
+        <span class="breadcrumb__sep" aria-hidden="true">›</span>
+        <a href="#">Recipes</a>
+        <span class="breadcrumb__sep" aria-hidden="true">›</span>
+        <a href="#">Mains</a>
+        <span class="breadcrumb__sep" aria-hidden="true">›</span>
+        <span aria-current="page">Championship Green Chili</span>
+      </nav>
+
+      <div class="page-layout">
+        <aside class="sidebar">
+          <div class="sidebar-block">
+            <div class="sidebar-block__heading">🏆 Competition Result</div>
+            <div class="sidebar-block__body" style="text-align: center">
+              <div class="competition-badge competition-badge--gold" style="display: inline-flex; margin-bottom: var(--space-3)">
+                🥇 1st Place
+              </div>
+              <p style="font-size: var(--text-xs); color: var(--text-muted)">The Great Chili Throwdown, 2024</p>
+            </div>
+          </div>
+
+          <div class="sidebar-block">
+            <div class="sidebar-block__heading">👤 Submitted By</div>
+            <div class="sidebar-block__body">
+              <p><strong>Marcus T.</strong></p>
+              <p style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1)">Added December 2024</p>
+              <a href="#" style="font-size: var(--text-xs); display: inline-block; margin-top: var(--space-2)">See all their recipes →</a>
+            </div>
+          </div>
+
+          <div class="sidebar-block">
+            <div class="sidebar-block__heading">📋 Quick Links</div>
+            <div class="sidebar-block__body">
+              <ul class="sidebar-block__list">
+                <li><a href="#ingredients">Jump to Ingredients</a></li>
+                <li><a href="#instructions">Jump to Instructions</a></li>
+                <li><a href="#notes">Notes &amp; Tips</a></li>
+                <li><a href="#">Print this Recipe</a></li>
+              </ul>
+            </div>
+          </div>
+        </aside>
+
+        <div class="page-layout__divider" aria-hidden="true"></div>
+
+        <article>
+          <header class="recipe-detail__header">
+            <h1 class="recipe-detail__title">Championship Green Chili</h1>
+            <p class="recipe-detail__byline">
+              Submitted by <strong>Marcus T.</strong> · <a href="#">Mains</a>
+            </p>
+            <p style="margin-top: var(--space-3); font-style: italic; color: var(--text-muted)">
+              The one that took home gold at the Chili Throwdown. Roasted Hatch chiles,
+              pork shoulder, tomatillos, and a secret spice blend Marcus refuses to fully disclose.
+            </p>
+          </header>
+
+          <div class="recipe-stats" role="list">
+            <div class="recipe-stats__item" role="listitem">
+              <span class="recipe-stats__label">Prep</span>
+              <span class="recipe-stats__value">25 min</span>
+            </div>
+            <div class="recipe-stats__item" role="listitem">
+              <span class="recipe-stats__label">Cook</span>
+              <span class="recipe-stats__value">2 hrs</span>
+            </div>
+            <div class="recipe-stats__item" role="listitem">
+              <span class="recipe-stats__label">Total</span>
+              <span class="recipe-stats__value">2 hrs 25 min</span>
+            </div>
+            <div class="recipe-stats__item" role="listitem">
+              <span class="recipe-stats__label">Serves</span>
+              <span class="recipe-stats__value">6–8</span>
+            </div>
+            <div class="recipe-stats__item" role="listitem">
+              <span class="recipe-stats__label">Difficulty</span>
+              <span class="recipe-stats__value">Medium</span>
+            </div>
+          </div>
+
+          <section class="recipe-ingredients" id="ingredients">
+            <h2 class="section-heading section-heading--sm">Ingredients</h2>
+            <ul class="recipe-ingredients__list">
+              <li>2 lbs pork shoulder, cut into ½-inch cubes</li>
+              <li>1 lb Hatch green chiles, roasted &amp; peeled (or 2 × 7 oz cans)</li>
+              <li>1 lb tomatillos, husked and quartered</li>
+              <li>1 large white onion, diced</li>
+              <li>6 cloves garlic, minced</li>
+              <li>2 cups chicken stock</li>
+              <li>1 tsp cumin</li>
+              <li>1 tsp dried oregano</li>
+              <li>Salt and pepper to taste</li>
+              <li>2 tbsp neutral oil</li>
+              <li>Fresh cilantro and lime wedges to serve</li>
+            </ul>
+          </section>
+
+          <section class="recipe-steps" id="instructions">
+            <h2 class="section-heading section-heading--sm">Instructions</h2>
+            <ol class="recipe-steps__list">
+              <li>Season the pork cubes generously with salt and pepper. Heat oil in a large Dutch oven over high heat and brown the pork in batches until deep golden. Remove and set aside.</li>
+              <li>Reduce heat to medium and cook the onion in the same pot until softened and translucent, about 6 minutes. Add garlic and cook 1 minute more.</li>
+              <li>Add tomatillos and cook until they begin to break down, about 5 minutes. Stir in cumin and oregano.</li>
+              <li>Return the pork to the pot with the roasted chiles and chicken stock. Bring to a boil, then reduce heat to a gentle simmer.</li>
+              <li>Cook uncovered for 1 hour 45 minutes, stirring occasionally, until the pork is tender and the sauce has thickened. Taste and adjust seasoning.</li>
+              <li>Serve in bowls topped with fresh cilantro and a squeeze of lime. Goes great over rice or with warm flour tortillas.</li>
+            </ol>
+          </section>
+
+          <section id="notes">
+            <h2 class="section-heading section-heading--sm">Notes &amp; Tips</h2>
+            <div class="callout callout--tip">
+              <strong>Marcus's tip:</strong> Use fresh Hatch chiles when in season (August–September)
+              and roast them yourself over a gas flame for the best flavor. Frozen roasted chiles
+              are the next best option. The stew is even better the next day once the flavors meld.
+            </div>
+          </section>
+
+          <div style="display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--border)">
+            <a href="#" class="btn btn--secondary">🖨️ Print Recipe</a>
+            <a href="#" onclick="showPage('view-home');return false;" class="btn btn--secondary">← Back to Recipes</a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+  </main>
+
+  <!-- ══ FOOTER ══ -->
+  <footer class="site-footer">
+    <div class="site-wrapper">
+      <nav class="site-footer__links" aria-label="Footer navigation">
+        <a href="#">Home</a>
+        <a href="#">Recipes</a>
+        <a href="#">Competitions</a>
+        <a href="#">Submit</a>
+        <a href="#">About</a>
+      </nav>
+      <hr>
+      <p>
+        &copy; 2026 RecipeClash &mdash; A private recipe collection for friends and competitors.<br>
+        <small>Built with EJS &amp; Supabase · Designed in the spirit of <em>AllRecipes.com, circa 1998</em></small>
+      </p>
+    </div>
+  </footer>
+
+  <!-- Demo page switcher -->
+  <div class="demo-switcher">
+    <small style="color: #999; font-size: 0.65rem; font-family: 'Trebuchet MS', sans-serif">PREVIEW</small>
+    <button onclick="showPage('view-home')">🏠 Homepage</button>
+    <button onclick="showPage('view-recipe')">📄 Recipe Detail</button>
+  </div>
+
+  <script>
+    function showPage(id) {
+      document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      window.scrollTo(0, 0);
+    }
+  </script>
+</body>
+</html>
+<!-- views/recipe.ejs -->
+<div class="site-wrapper">
+
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="/">Home</a>
+    <span class="breadcrumb__sep" aria-hidden="true">›</span>
+    <a href="/recipes">Recipes</a>
+    <% if (typeof recipe !== 'undefined' && recipe.category) { %>
+      <span class="breadcrumb__sep" aria-hidden="true">›</span>
+      <a href="/categories/<%= recipe.category_slug %>"><%= recipe.category %></a>
+    <% } %>
+    <span class="breadcrumb__sep" aria-hidden="true">›</span>
+    <span aria-current="page"><%= typeof recipe !== 'undefined' ? recipe.title : 'Recipe' %></span>
+  </nav>
+
+  <div class="page-layout">
+
+    <!-- ══════════════════════════════
+         SIDEBAR
+    ═══════════════════════════════ -->
+    <aside class="sidebar" aria-label="Sidebar">
+
+      <!-- Competition result if this recipe placed -->
+      <% if (typeof recipe !== 'undefined' && recipe.competition_result) { %>
+        <div class="sidebar-block">
+          <div class="sidebar-block__heading">🏆 Competition Result</div>
+          <div class="sidebar-block__body" style="text-align: center">
+            <div class="competition-badge competition-badge--<%= recipe.competition_result.medal %>"
+                 style="display: inline-flex; margin-bottom: var(--space-3)">
+              <%= recipe.competition_result.medal === 'gold' ? '🥇' : recipe.competition_result.medal === 'silver' ? '🥈' : '🥉' %>
+              <%= recipe.competition_result.place %>
+            </div>
+            <p style="font-size: var(--text-xs); color: var(--text-muted)">
+              <%= recipe.competition_result.competition_name %>
+            </p>
+          </div>
+        </div>
+      <% } else if (typeof recipe === 'undefined') { %>
+        <!-- placeholder -->
+        <div class="sidebar-block">
+          <div class="sidebar-block__heading">🏆 Competition Result</div>
+          <div class="sidebar-block__body" style="text-align: center">
+            <div class="competition-badge competition-badge--gold"
+                 style="display: inline-flex; margin-bottom: var(--space-3)">🥇 1st Place</div>
+            <p style="font-size: var(--text-xs); color: var(--text-muted)">
+              The Great Chili Throwdown, 2024
+            </p>
+          </div>
+        </div>
+      <% } %>
+
+      <!-- Submitted by -->
+      <div class="sidebar-block">
+        <div class="sidebar-block__heading">👤 Submitted By</div>
+        <div class="sidebar-block__body">
+          <p><strong><%= typeof recipe !== 'undefined' ? recipe.author : 'Marcus T.' %></strong></p>
+          <p style="font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1)">
+            Added <%= typeof recipe !== 'undefined' ? recipe.created_at : 'December 2024' %>
+          </p>
+          <a href="/recipes?author=<%= typeof recipe !== 'undefined' ? recipe.author_slug : 'marcus' %>"
+             style="font-size: var(--text-xs); display: inline-block; margin-top: var(--space-2)">
+            See all their recipes →
+          </a>
+        </div>
+      </div>
+
+      <!-- Quick links -->
+      <div class="sidebar-block">
+        <div class="sidebar-block__heading">📋 Quick Links</div>
+        <div class="sidebar-block__body">
+          <ul class="sidebar-block__list">
+            <li><a href="#ingredients">Jump to Ingredients</a></li>
+            <li><a href="#instructions">Jump to Instructions</a></li>
+            <li><a href="#notes">Notes &amp; Tips</a></li>
+            <li><a href="/recipes/print/<%= typeof recipe !== 'undefined' ? recipe.slug : '#' %>">Print this Recipe</a></li>
+          </ul>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Column divider -->
+    <div class="page-layout__divider" aria-hidden="true"></div>
+
+    <!-- ══════════════════════════════
+         RECIPE DETAIL
+    ═══════════════════════════════ -->
+    <article>
+
+      <header class="recipe-detail__header">
+        <h1 class="recipe-detail__title">
+          <%= typeof recipe !== 'undefined' ? recipe.title : 'Championship Green Chili' %>
+        </h1>
+        <p class="recipe-detail__byline">
+          Submitted by <strong><%= typeof recipe !== 'undefined' ? recipe.author : 'Marcus T.' %></strong>
+          <% if (typeof recipe !== 'undefined' && recipe.category) { %>
+            &bull; <a href="/categories/<%= recipe.category_slug %>"><%= recipe.category %></a>
+          <% } %>
+        </p>
+        <% if (typeof recipe !== 'undefined' && recipe.description) { %>
+          <p style="margin-top: var(--space-3); font-style: italic; color: var(--text-muted)">
+            <%= recipe.description %>
+          </p>
+        <% } else { %>
+          <p style="margin-top: var(--space-3); font-style: italic; color: var(--text-muted)">
+            The one that took home gold at the Chili Throwdown. Roasted Hatch chiles,
+            pork shoulder, tomatillos, and a secret spice blend Marcus refuses to fully disclose.
+          </p>
+        <% } %>
+      </header>
+
+      <!-- Stats row -->
+      <div class="recipe-stats" role="list" aria-label="Recipe times and yield">
+        <div class="recipe-stats__item" role="listitem">
+          <span class="recipe-stats__label">Prep</span>
+          <span class="recipe-stats__value"><%= typeof recipe !== 'undefined' ? (recipe.prep_time || '—') : '25 min' %></span>
+        </div>
+        <div class="recipe-stats__item" role="listitem">
+          <span class="recipe-stats__label">Cook</span>
+          <span class="recipe-stats__value"><%= typeof recipe !== 'undefined' ? (recipe.cook_time || '—') : '2 hrs' %></span>
+        </div>
+        <div class="recipe-stats__item" role="listitem">
+          <span class="recipe-stats__label">Total</span>
+          <span class="recipe-stats__value"><%= typeof recipe !== 'undefined' ? (recipe.total_time || '—') : '2 hrs 25 min' %></span>
+        </div>
+        <div class="recipe-stats__item" role="listitem">
+          <span class="recipe-stats__label">Serves</span>
+          <span class="recipe-stats__value"><%= typeof recipe !== 'undefined' ? (recipe.servings || '—') : '6–8' %></span>
+        </div>
+        <div class="recipe-stats__item" role="listitem">
+          <span class="recipe-stats__label">Difficulty</span>
+          <span class="recipe-stats__value"><%= typeof recipe !== 'undefined' ? (recipe.difficulty || '—') : 'Medium' %></span>
+        </div>
+      </div>
+
+      <!-- Image (optional) -->
+      <% if (typeof recipe !== 'undefined' && recipe.image_url) { %>
+        <figure style="margin-bottom: var(--space-6)">
+          <img src="<%= recipe.image_url %>" alt="<%= recipe.title %>"
+               style="width: 100%; max-height: 400px; object-fit: cover; border: 1px solid var(--border)">
+        </figure>
+      <% } %>
+
+      <!-- Ingredients -->
+      <section class="recipe-ingredients" id="ingredients">
+        <h2 class="section-heading section-heading--sm">Ingredients</h2>
+        <ul class="recipe-ingredients__list" aria-label="Ingredient list">
+          <% if (typeof recipe !== 'undefined' && recipe.ingredients && recipe.ingredients.length > 0) { %>
+            <% recipe.ingredients.forEach(ing => { %>
+              <li><%= ing %></li>
+            <% }) %>
+          <% } else { %>
+            <!-- placeholder -->
+            <li>2 lbs pork shoulder, cut into ½-inch cubes</li>
+            <li>1 lb Hatch green chiles, roasted &amp; peeled (or 2 × 7 oz cans)</li>
+            <li>1 lb tomatillos, husked and quartered</li>
+            <li>1 large white onion, diced</li>
+            <li>6 cloves garlic, minced</li>
+            <li>2 cups chicken stock</li>
+            <li>1 tsp cumin</li>
+            <li>1 tsp dried oregano</li>
+            <li>Salt and pepper to taste</li>
+            <li>2 tbsp neutral oil</li>
+            <li>Fresh cilantro and lime wedges to serve</li>
+          <% } %>
+        </ul>
+      </section>
+
+      <!-- Instructions -->
+      <section class="recipe-steps" id="instructions">
+        <h2 class="section-heading section-heading--sm">Instructions</h2>
+        <ol class="recipe-steps__list" aria-label="Cooking instructions">
+          <% if (typeof recipe !== 'undefined' && recipe.steps && recipe.steps.length > 0) { %>
+            <% recipe.steps.forEach(step => { %>
+              <li><%= step %></li>
+            <% }) %>
+          <% } else { %>
+            <!-- placeholder steps -->
+            <li>Season the pork cubes generously with salt and pepper. Heat oil in a large Dutch oven over high heat and brown the pork in batches until deep golden. Remove and set aside.</li>
+            <li>Reduce heat to medium and cook the onion in the same pot until softened and translucent, about 6 minutes. Add garlic and cook 1 minute more.</li>
+            <li>Add tomatillos and cook until they begin to break down, about 5 minutes. Stir in cumin and oregano.</li>
+            <li>Return the pork to the pot with the roasted chiles and chicken stock. Bring to a boil, then reduce heat to a gentle simmer.</li>
+            <li>Cook uncovered for 1 hour 45 minutes, stirring occasionally, until the pork is tender and the sauce has thickened. Taste and adjust seasoning.</li>
+            <li>Serve in bowls topped with fresh cilantro and a squeeze of lime. Goes great over rice or with warm flour tortillas.</li>
+          <% } %>
+        </ol>
+      </section>
+
+      <!-- Notes -->
+      <% if (typeof recipe === 'undefined' || (recipe.notes && recipe.notes.length > 0)) { %>
+        <section id="notes">
+          <h2 class="section-heading section-heading--sm">Notes &amp; Tips</h2>
+          <div class="callout callout--tip">
+            <% if (typeof recipe !== 'undefined' && recipe.notes) { %>
+              <%= recipe.notes %>
+            <% } else { %>
+              <strong>Marcus's tip:</strong> Use fresh Hatch chiles when in season (August–September)
+              and roast them yourself over a gas flame for the best flavor. Frozen roasted chiles
+              are the next best option. The stew is even better the next day once the flavors meld.
+            <% } %>
+          </div>
+        </section>
+      <% } %>
+
+      <!-- Action bar -->
+      <div style="display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--border)">
+        <a href="/recipes/print/<%= typeof recipe !== 'undefined' ? recipe.slug : '#' %>"
+           class="btn btn--secondary">🖨️ Print Recipe</a>
+        <a href="/recipes"
+           class="btn btn--secondary">← Back to Recipes</a>
+      </div>
+
+    </article>
+  </div>
+</div>

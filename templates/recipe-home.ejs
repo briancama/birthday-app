@@ -1,0 +1,175 @@
+<!-- views/index.ejs -->
+<div class="site-wrapper">
+
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <span>Home</span>
+  </nav>
+
+  <div class="page-layout">
+
+    <!-- ══════════════════════════════
+         LEFT SIDEBAR
+    ═══════════════════════════════ -->
+    <aside class="sidebar" aria-label="Sidebar">
+
+      <!-- Recipe of the Day -->
+      <div class="sidebar-block">
+        <div class="sidebar-block__heading">⭐ Recipes of the Day</div>
+        <div class="sidebar-block__body">
+          <div class="rotd-list__date"><%= new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></div>
+          <ul class="rotd-list">
+            <% if (typeof recipesOfDay !== 'undefined') { %>
+              <% recipesOfDay.forEach(recipe => { %>
+                <li class="rotd-list__item">
+                  <a href="/recipes/<%= recipe.slug %>"><%= recipe.title %></a>
+                </li>
+              <% }) %>
+            <% } else { %>
+              <!-- placeholder content -->
+              <li class="rotd-list__item"><a href="#">Coconut Washboards</a></li>
+              <li class="rotd-list__item"><a href="#">Rocky Road Cheesecake</a></li>
+              <li class="rotd-list__item"><a href="#">Spinach &amp; Cheese Pie</a></li>
+              <li class="rotd-list__item"><a href="#">Angel Biscuits</a></li>
+            <% } %>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Browse by Category -->
+      <div class="sidebar-block">
+        <div class="sidebar-block__heading">📂 Browse Categories</div>
+        <div class="sidebar-block__body">
+          <ul class="sidebar-block__list">
+            <li><a href="/categories/appetizers">Appetizers</a></li>
+            <li><a href="/categories/mains">Main Dishes</a></li>
+            <li><a href="/categories/sides">Sides &amp; Salads</a></li>
+            <li><a href="/categories/desserts">Desserts</a></li>
+            <li><a href="/categories/baking">Baking &amp; Breads</a></li>
+            <li><a href="/categories/drinks">Drinks</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Latest Competition -->
+      <div class="sidebar-block">
+        <div class="sidebar-block__heading">🏆 Latest Competition</div>
+        <div class="sidebar-block__body">
+          <% if (typeof latestCompetition !== 'undefined') { %>
+            <p><strong><%= latestCompetition.name %></strong></p>
+            <p class="text-muted" style="font-size: var(--text-xs); margin-top: var(--space-2)"><%= latestCompetition.date %></p>
+            <a class="btn btn--primary btn--sm" href="/competitions/<%= latestCompetition.slug %>" style="margin-top: var(--space-3); display: inline-flex">See Results</a>
+          <% } else { %>
+            <p><strong>The Great Chili Throwdown</strong></p>
+            <p class="text-muted" style="font-size: var(--text-xs); margin-top: var(--space-2)">December 2024 &bull; 6 entries</p>
+            <a class="btn btn--primary btn--sm" href="#" style="margin-top: var(--space-3); display: inline-flex">See Results</a>
+          <% } %>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Column divider (the classic AllRecipes 1px rule) -->
+    <div class="page-layout__divider" aria-hidden="true"></div>
+
+    <!-- ══════════════════════════════
+         MAIN CONTENT
+    ═══════════════════════════════ -->
+    <section>
+
+      <!-- Feature box -->
+      <div class="feature-box">
+        <div class="feature-box__eyebrow">This Week's Feature</div>
+        <h2 class="feature-box__title">
+          <% if (typeof featuredTitle !== 'undefined') { %>
+            <%= featuredTitle %>
+          <% } else { %>
+            Welcome to RecipeClash!
+          <% } %>
+        </h2>
+        <div class="feature-box__body">
+          <% if (typeof featuredBody !== 'undefined') { %>
+            <%- featuredBody %>
+          <% } else { %>
+            <p>
+              RecipeClash is where our crew comes to settle the age-old question:
+              <em>whose recipe is actually the best?</em> Submit your signature dish,
+              vote in competitions, and build your culinary legacy one potluck at a time.
+            </p>
+            <p>
+              Browse the archives, steal some inspiration, and
+              <a href="/submit">submit your own recipe</a> before the next throwdown.
+            </p>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Recent recipes grid -->
+      <h2 class="section-heading">Recently Added</h2>
+
+      <% if (typeof recentRecipes !== 'undefined' && recentRecipes.length > 0) { %>
+        <div style="display: flex; flex-direction: column; gap: var(--space-4); margin-bottom: var(--space-8)">
+          <% recentRecipes.forEach(recipe => { %>
+            <article class="recipe-card">
+              <% if (recipe.image_url) { %>
+                <img class="recipe-card__img" src="<%= recipe.image_url %>" alt="<%= recipe.title %>" loading="lazy">
+              <% } else { %>
+                <div class="recipe-card__img-placeholder" aria-hidden="true">🍽️</div>
+              <% } %>
+              <h3 class="recipe-card__title">
+                <a href="/recipes/<%= recipe.slug %>"><%= recipe.title %></a>
+              </h3>
+              <div class="recipe-card__meta">
+                <span>By <strong><%= recipe.author %></strong></span>
+                <% if (recipe.category) { %><span>· <%= recipe.category %></span><% } %>
+                <% if (recipe.prep_time) { %><span>· <%= recipe.prep_time %> prep</span><% } %>
+              </div>
+              <% if (recipe.description) { %>
+                <p class="recipe-card__desc"><%= recipe.description %></p>
+              <% } %>
+            </article>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <!-- Placeholder cards -->
+        <div style="display: flex; flex-direction: column; gap: var(--space-4); margin-bottom: var(--space-8)">
+          <article class="recipe-card">
+            <div class="recipe-card__img-placeholder" aria-hidden="true">🌶️</div>
+            <h3 class="recipe-card__title"><a href="#">Championship Green Chili</a></h3>
+            <div class="recipe-card__meta">
+              <span>By <strong>Marcus T.</strong></span>
+              <span>· Mains</span>
+              <span>· 25 min prep</span>
+            </div>
+            <p class="recipe-card__desc">The one that took home gold at the Chili Throwdown. Roasted Hatch chiles, pork shoulder, tomatillos, and a secret spice blend Marcus refuses to fully disclose.</p>
+          </article>
+          <article class="recipe-card">
+            <div class="recipe-card__img-placeholder" aria-hidden="true">🍰</div>
+            <h3 class="recipe-card__title"><a href="#">Brown Butter Cardamom Cake</a></h3>
+            <div class="recipe-card__meta">
+              <span>By <strong>Priya K.</strong></span>
+              <span>· Desserts</span>
+              <span>· 40 min prep</span>
+            </div>
+            <p class="recipe-card__desc">Layers of brown butter sponge perfumed with cardamom, filled with whipped mascarpone and poached pears. Won the Dessert Duel two years running.</p>
+          </article>
+          <article class="recipe-card">
+            <div class="recipe-card__img-placeholder" aria-hidden="true">🥗</div>
+            <h3 class="recipe-card__title"><a href="#">Fattoush with Pomegranate Dressing</a></h3>
+            <div class="recipe-card__meta">
+              <span>By <strong>Sam W.</strong></span>
+              <span>· Sides &amp; Salads</span>
+              <span>· 15 min prep</span>
+            </div>
+            <p class="recipe-card__desc">Crispy fried flatbread, cucumber, tomatoes, purslane, sumac onions, and a pomegranate molasses vinaigrette that converts everyone who tries it.</p>
+          </article>
+        </div>
+      <% } %>
+
+      <div class="text-center">
+        <a href="/recipes" class="btn btn--secondary">View All Recipes →</a>
+      </div>
+
+    </section>
+  </div>
+</div>
