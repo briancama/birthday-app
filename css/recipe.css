@@ -1,80 +1,81 @@
 /* ============================================================
-   RETRO RECIPES — stylesheet.css
-   Aesthetic: Late-90s AllRecipes (1998 archive) rebuilt with
-   modern CSS: custom properties, layers, grid, fluid type,
-   scroll-driven animations, container queries.
+   A FEW RECIPES — stylesheet
+   Aesthetic: typographic hierarchy through spacing and weight.
+   Trebuchet MS primary, Fira Sans backup, Arial fallback.
+   No decorative borders between elements.
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Trebuchet+MS&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,400;0,700;1,400&display=swap");
 
 /* ── 0. LAYER ORDER ───────────────────────────────────────── */
 @layer reset, tokens, base, layout, components, utilities;
 
 /* ── 1. RESET ─────────────────────────────────────────────── */
 @layer reset {
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  img, video { max-width: 100%; display: block; }
-  a { color: inherit; }
-  ul, ol { list-style: none; }
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  img,
+  video {
+    max-width: 100%;
+    display: block;
+  }
+  a {
+    color: inherit;
+  }
+  ul,
+  ol {
+    list-style: none;
+  }
 }
 
 /* ── 2. DESIGN TOKENS ─────────────────────────────────────── */
 @layer tokens {
   :root {
-    /* Colors — lifted straight from the 1998 HTML */
-    --maroon:        #663333;   /* the AllRecipes heading red */
-    --maroon-dark:   #4a1f1f;
-    --maroon-light:  #8b4444;
-    --cream:         #fdf8f2;   /* warm off-white background */
-    --cream-dark:    #f0e8d8;
-    --rule-gray:     #c8b89a;   /* horizontal rule color */
-    --text:          #111111;
-    --text-muted:    #555555;
-    --link:          #663333;
-    --link-hover:    #cc3300;
-    --link-visited:  #884455;
-    --white:         #ffffff;
-    --border:        #c8b89a;
-    --shadow-color:  200deg 30% 30%;
+    /* Palette — restrained; ink on paper */
+    --maroon: #6b2b2b;
+    --maroon-dark: #4a1a1a;
+    --cream: #faf7f2;
+    --rule: #bfb5a5; /* all border/hr lines */
+    --text: #1a1a1a;
+    --text-muted: #5a5449;
+    --link: #6b2b2b;
+    --link-hover: #b53030;
+    --link-visited: #7a4455;
 
-    /* Fonts — Trebuchet MS is the entire vibe */
-    --font-display:  'Trebuchet MS', 'Arial Narrow', Arial, sans-serif;
-    --font-body:     'Trebuchet MS', Arial, sans-serif;
-    --font-mono:     'Courier New', Courier, monospace;
+    /* Fonts — Trebuchet MS first, Fira Sans (web) backup, Arial fallback */
+    --font-body: "Trebuchet MS", "Fira Sans", Arial, sans-serif;
+    --font-mono: "Courier New", Courier, monospace;
 
-    /* Fluid type scale (clamp: min, preferred, max) */
-    --text-xs:   clamp(0.65rem,  0.6rem  + 0.25vw, 0.75rem);
-    --text-sm:   clamp(0.78rem,  0.75rem + 0.3vw,  0.875rem);
-    --text-base: clamp(0.875rem, 0.85rem + 0.35vw, 1rem);
-    --text-md:   clamp(1rem,     0.95rem + 0.5vw,  1.15rem);
-    --text-lg:   clamp(1.15rem,  1rem    + 0.9vw,  1.4rem);
-    --text-xl:   clamp(1.4rem,   1.1rem  + 1.5vw,  1.9rem);
-    --text-2xl:  clamp(1.75rem,  1.3rem  + 2vw,    2.5rem);
-    --text-3xl:  clamp(2.2rem,   1.6rem  + 2.5vw,  3rem);
+    /* Fluid type scale */
+    --text-xs: clamp(0.65rem, 0.6rem + 0.2vw, 0.75rem);
+    --text-sm: clamp(0.8rem, 0.75rem + 0.25vw, 0.9rem);
+    --text-base: clamp(0.9rem, 0.85rem + 0.3vw, 1rem);
+    --text-md: clamp(1rem, 0.95rem + 0.45vw, 1.125rem);
+    --text-lg: clamp(1.15rem, 1rem + 0.8vw, 1.375rem);
+    --text-xl: clamp(1.35rem, 1.1rem + 1.2vw, 1.75rem);
+    --text-2xl: clamp(1.65rem, 1.25rem + 1.8vw, 2.25rem);
+    --text-3xl: clamp(2rem, 1.5rem + 2.2vw, 2.75rem);
 
     /* Spacing */
-    --space-1:  0.25rem;
-    --space-2:  0.5rem;
-    --space-3:  0.75rem;
-    --space-4:  1rem;
-    --space-5:  1.25rem;
-    --space-6:  1.5rem;
-    --space-8:  2rem;
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
     --space-10: 2.5rem;
     --space-12: 3rem;
     --space-16: 4rem;
 
     /* Layout */
-    --site-max:    960px;
-    --sidebar-w:   220px;
-    --col-gap:     1px;           /* the classic black line divider */
-    --radius-sm:   2px;
-    --radius:      4px;
-
-    /* Shadows — subtle, period-appropriate */
-    --shadow-sm:   1px 1px 0 hsl(var(--shadow-color) / .15);
-    --shadow:      2px 2px 0 hsl(var(--shadow-color) / .25);
-    --shadow-lg:   3px 3px 8px hsl(var(--shadow-color) / .3);
+    --site-max: 960px;
+    --sidebar-w: 210px;
   }
 }
 
@@ -91,44 +92,62 @@
     font-size: var(--text-base);
     color: var(--text);
     background-color: var(--cream);
-    /* Subtle noise texture for that slightly-degraded early web feel */
-    background-image:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
-    line-height: 1.5;
+    line-height: 1.6;
   }
 
-  /* ── Headings ── */
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-display);
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-body);
     font-weight: bold;
     color: var(--maroon);
     line-height: 1.2;
   }
-  h1 { font-size: var(--text-3xl); }
-  h2 { font-size: var(--text-2xl); }
-  h3 { font-size: var(--text-xl); }
-  h4 { font-size: var(--text-lg); }
-  h5 { font-size: var(--text-md); }
-  h6 { font-size: var(--text-base); }
+  h1 {
+    font-size: var(--text-3xl);
+  }
+  h2 {
+    font-size: var(--text-2xl);
+  }
+  h3 {
+    font-size: var(--text-xl);
+  }
+  h4 {
+    font-size: var(--text-lg);
+  }
+  h5 {
+    font-size: var(--text-md);
+  }
+  h6 {
+    font-size: var(--text-base);
+  }
 
-  /* ── Links ── */
   a {
     color: var(--link);
     text-decoration: underline;
     text-underline-offset: 2px;
-    transition: color 0.15s ease;
+    transition: color 0.12s ease;
   }
-  a:hover  { color: var(--link-hover); }
-  a:visited { color: var(--link-visited); }
+  a:hover {
+    color: var(--link-hover);
+  }
+  a:visited {
+    color: var(--link-visited);
+  }
 
-  /* ── Paragraphs ── */
-  p { line-height: 1.65; }
-  p + p { margin-top: var(--space-4); }
+  p {
+    line-height: 1.7;
+  }
+  p + p {
+    margin-top: var(--space-4);
+  }
 
-  /* ── Horizontal rules — the classic single-pixel divider ── */
   hr {
     border: none;
-    border-top: 1px solid var(--rule-gray);
+    border-top: 1px solid var(--rule);
     margin-block: var(--space-6);
   }
   hr.thick {
@@ -138,85 +157,71 @@
     border-top: 3px double var(--maroon);
   }
 
-  /* ── Lists ── */
-  ul.styled, ol.styled {
+  ul.styled,
+  ol.styled {
     padding-left: var(--space-6);
-    line-height: 1.7;
+    line-height: 1.75;
   }
-  ul.styled { list-style: disc; }
-  ol.styled { list-style: decimal; }
+  ul.styled {
+    list-style: disc;
+  }
+  ol.styled {
+    list-style: decimal;
+  }
 
-  /* ── Strong / em ── */
-  strong { font-weight: bold; color: var(--maroon-dark); }
-  em     { font-style: italic; }
+  strong {
+    font-weight: bold;
+  }
+  em {
+    font-style: italic;
+  }
 
-  /* ── Small / caption text ── */
-  small, .text-sm { font-size: var(--text-sm); color: var(--text-muted); }
+  small,
+  .text-sm {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+  }
 
-  /* ── Keyboard / code ── */
-  code, kbd {
+  code,
+  kbd {
     font-family: var(--font-mono);
     font-size: var(--text-sm);
-    background: var(--cream-dark);
-    border: 1px solid var(--border);
-    padding: 0.1em 0.35em;
-    border-radius: var(--radius-sm);
+    padding: 0 0.2em;
   }
 }
 
 /* ── 4. LAYOUT ────────────────────────────────────────────── */
 @layer layout {
-
-  /* ── Site wrapper ── */
   .site-wrapper {
     max-width: var(--site-max);
     margin-inline: auto;
-    padding-inline: var(--space-4);
+    padding-inline: var(--space-5);
   }
 
-  /* ── Header ── */
   .site-header {
-    background: var(--white);
-    border-bottom: 3px solid var(--maroon);
-    padding-block: var(--space-3);
-    box-shadow: var(--shadow);
+    padding-block: var(--space-4);
+    margin-bottom: var(--space-2);
   }
   .site-header__inner {
     display: flex;
     align-items: center;
-    gap: var(--space-6);
+    gap: var(--space-5);
     flex-wrap: wrap;
   }
   .site-header__logo {
-    font-size: var(--text-2xl);
-    font-weight: bold;
-    font-family: var(--font-display);
-    color: var(--maroon);
     text-decoration: none;
-    letter-spacing: -0.02em;
-    line-height: 1;
-  }
-  .site-header__logo span {
-    color: var(--text);
-    font-weight: normal;
-  }
-  .site-header__tagline {
-    font-size: var(--text-xs);
-    color: var(--text-muted);
-    font-style: italic;
+    display: block;
   }
   .site-header__search {
     margin-left: auto;
     display: flex;
-    gap: var(--space-2);
     align-items: center;
+    gap: var(--space-2);
     flex-wrap: wrap;
   }
 
-  /* ── Primary nav (horizontal link bar) ── */
   .site-nav {
-    background: var(--maroon);
-    border-bottom: 2px solid var(--maroon-dark);
+    margin-bottom: var(--space-4);
   }
   .site-nav__list {
     display: flex;
@@ -227,65 +232,67 @@
     display: block;
     padding: var(--space-2) var(--space-4);
     font-size: var(--text-sm);
-    font-weight: bold;
-    color: var(--cream);
+    font-style: italic;
+    color: var(--text);
     text-decoration: none;
-    border-right: 1px solid var(--maroon-light);
-    transition: background 0.15s;
+    transition: color 0.12s;
+  }
+  .site-nav__item:first-child a {
+    padding-left: 0;
   }
   .site-nav__item a:hover,
   .site-nav__item a[aria-current="page"] {
-    background: var(--maroon-dark);
-    color: var(--white);
+    color: var(--maroon);
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
 
-  /* ── Breadcrumb ── */
   .breadcrumb {
-    padding-block: var(--space-3);
+    padding-block: var(--space-2);
     font-size: var(--text-xs);
+    font-style: italic;
     color: var(--text-muted);
     display: flex;
     gap: var(--space-2);
     flex-wrap: wrap;
     align-items: center;
+    margin-bottom: var(--space-3);
   }
-  .breadcrumb__sep { color: var(--rule-gray); }
+  .breadcrumb__sep {
+    color: var(--text-muted);
+  }
 
-  /* ── Two-column page layout (sidebar + main) ── */
+  /* Two-column layout: sidebar | thin rule | main */
   .page-layout {
     display: grid;
     grid-template-columns: var(--sidebar-w) 1px 1fr;
-    gap: 0 var(--space-6);
+    gap: 0 var(--space-8);
     align-items: start;
     padding-block: var(--space-6);
   }
-  /* The classic AllRecipes black-line column divider */
   .page-layout__divider {
-    background: var(--maroon);
+    /* no visible divider — spacing carries the separation */
+    background: transparent;
     align-self: stretch;
-    opacity: 0.3;
     min-height: 100%;
   }
 
-  /* Collapse to single column on narrow viewports */
   @media (max-width: 640px) {
     .page-layout {
       grid-template-columns: 1fr;
     }
-    .page-layout__divider { display: none; }
+    .page-layout__divider {
+      display: none;
+    }
   }
 
-  /* ── Footer ── */
   .site-footer {
-    border-top: 3px double var(--maroon);
     margin-top: var(--space-12);
     padding-block: var(--space-6);
     font-size: var(--text-xs);
     color: var(--text-muted);
     text-align: center;
-    background: var(--cream-dark);
   }
-  .site-footer a { color: var(--maroon); }
   .site-footer__links {
     display: flex;
     justify-content: center;
@@ -295,33 +302,28 @@
   }
   .site-footer__links a {
     text-decoration: none;
-    font-weight: bold;
+    font-family: var(--font-body);
   }
-  .site-footer__links a:hover { text-decoration: underline; }
+  .site-footer__links a:hover {
+    text-decoration: underline;
+  }
 }
 
 /* ── 5. COMPONENTS ────────────────────────────────────────── */
 @layer components {
-
   /* ─────────────────────────────────────────────────────────
-     5.1 SECTION HEADING  (the "Recipes of the Day:" style)
+     5.1 SECTION HEADING — flush left, space below carries structure
   ───────────────────────────────────────────────────────── */
   .section-heading {
-    font-family: var(--font-display);
     font-size: var(--text-xl);
     font-weight: bold;
     color: var(--maroon);
-    text-align: center;
-    padding-bottom: var(--space-2);
-    border-bottom: 2px solid var(--maroon);
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--space-3);
   }
   .section-heading--sm {
     font-size: var(--text-md);
-    border-bottom: 1px solid var(--rule-gray);
   }
   .section-subheading {
-    text-align: center;
     font-size: var(--text-sm);
     color: var(--text-muted);
     font-style: italic;
@@ -330,56 +332,51 @@
   }
 
   /* ─────────────────────────────────────────────────────────
-     5.2 RECIPE CARD  (listing / index view)
+     5.2 RECIPE CARD — spaced rows, no borders
   ───────────────────────────────────────────────────────── */
   .recipe-card {
     container-type: inline-size;
-    border: 1px solid var(--border);
-    background: var(--white);
-    box-shadow: var(--shadow-sm);
-    padding: var(--space-4);
+    padding-block: var(--space-5);
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: var(--space-3) var(--space-4);
+    gap: var(--space-2) var(--space-4);
     align-items: start;
-    transition: box-shadow 0.15s ease, transform 0.15s ease;
   }
-  .recipe-card:hover {
-    box-shadow: var(--shadow-lg);
-    transform: translateY(-1px);
-  }
+
   .recipe-card__img {
     width: 90px;
     height: 70px;
     object-fit: cover;
-    border: 1px solid var(--border);
-    background: var(--cream-dark);
     grid-row: 1 / 3;
   }
-  /* Placeholder for cards without an image */
   .recipe-card__img-placeholder {
     width: 90px;
     height: 70px;
-    background: var(--cream-dark);
-    border: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.6rem;
     grid-row: 1 / 3;
+    color: var(--text-muted);
+    background: #ece8e0;
   }
   .recipe-card__title {
     font-size: var(--text-md);
     font-weight: bold;
     color: var(--maroon);
     margin: 0;
-    line-height: 1.25;
+    line-height: 1.3;
   }
-  .recipe-card__title a { text-decoration: none; }
-  .recipe-card__title a:hover { text-decoration: underline; }
+  .recipe-card__title a {
+    text-decoration: none;
+  }
+  .recipe-card__title a:hover {
+    text-decoration: underline;
+  }
   .recipe-card__meta {
     font-size: var(--text-xs);
     color: var(--text-muted);
+    font-style: italic;
     display: flex;
     gap: var(--space-3);
     flex-wrap: wrap;
@@ -388,9 +385,10 @@
     grid-column: 1 / -1;
     font-size: var(--text-sm);
     color: var(--text-muted);
-    line-height: 1.55;
+    line-height: 1.6;
+    padding-left: var(--space-5);
   }
-  /* Narrow container: stack to single column */
+
   @container (max-width: 360px) {
     .recipe-card {
       grid-template-columns: 1fr;
@@ -398,16 +396,15 @@
     .recipe-card__img,
     .recipe-card__img-placeholder {
       width: 100%;
-      height: 120px;
+      height: 100px;
       grid-row: auto;
     }
   }
 
   /* ─────────────────────────────────────────────────────────
-     5.3 RECIPE DETAIL PAGE
+     5.3 RECIPE DETAIL
   ───────────────────────────────────────────────────────── */
   .recipe-detail__header {
-    border-bottom: 3px double var(--maroon);
     padding-bottom: var(--space-4);
     margin-bottom: var(--space-6);
   }
@@ -418,33 +415,25 @@
   }
   .recipe-detail__byline {
     font-size: var(--text-sm);
+    font-style: italic;
     color: var(--text-muted);
   }
-  .recipe-detail__byline strong { color: var(--text); }
 
-  /* Stats row (serves / prep / cook / total) */
   .recipe-stats {
     display: flex;
-    gap: 0;
-    border: 1px solid var(--border);
-    background: var(--cream-dark);
-    margin-block: var(--space-5);
     flex-wrap: wrap;
+    margin-block: var(--space-5);
+    gap: var(--space-4);
   }
   .recipe-stats__item {
-    flex: 1;
-    min-width: 80px;
-    text-align: center;
-    padding: var(--space-3) var(--space-4);
-    border-right: 1px solid var(--border);
+    text-align: left;
+    min-width: 70px;
   }
-  .recipe-stats__item:last-child { border-right: none; }
   .recipe-stats__label {
     font-size: var(--text-xs);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--text-muted);
-    font-weight: bold;
     display: block;
     margin-bottom: var(--space-1);
   }
@@ -455,83 +444,66 @@
     display: block;
   }
 
-  /* Ingredients */
   .recipe-ingredients {
     margin-bottom: var(--space-6);
   }
   .recipe-ingredients__list {
-    padding-left: var(--space-5);
+    padding-left: var(--space-8);
   }
   .recipe-ingredients__list li {
     list-style: disc;
     padding-block: var(--space-1);
     font-size: var(--text-base);
-    border-bottom: 1px dotted var(--rule-gray);
-    line-height: 1.5;
+    line-height: 1.6;
   }
-  .recipe-ingredients__list li:last-child { border-bottom: none; }
 
-  /* Steps */
-  .recipe-steps { margin-bottom: var(--space-6); }
-  .recipe-steps__list { counter-reset: step-counter; padding-left: 0; }
+  .recipe-steps {
+    margin-bottom: var(--space-6);
+  }
+  .recipe-steps__list {
+    counter-reset: step-counter;
+    padding-left: var(--space-5);
+  }
   .recipe-steps__list li {
     counter-increment: step-counter;
-    display: grid;
-    grid-template-columns: 2rem 1fr;
-    gap: var(--space-3);
     padding-block: var(--space-3);
-    border-bottom: 1px solid var(--cream-dark);
     font-size: var(--text-base);
-    line-height: 1.65;
+    line-height: 1.7;
+    padding-left: var(--space-3);
+    position: relative;
   }
-  .recipe-steps__list li:last-child { border-bottom: none; }
   .recipe-steps__list li::before {
-    content: counter(step-counter);
+    content: counter(step-counter) ".";
     font-weight: bold;
-    color: var(--white);
-    background: var(--maroon);
-    width: 1.6rem;
-    height: 1.6rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: var(--text-sm);
-    flex-shrink: 0;
-    margin-top: 0.1em;
-    box-shadow: var(--shadow-sm);
+    color: var(--maroon);
+    position: absolute;
+    left: calc(-1 * var(--space-5));
+    width: var(--space-5);
+    text-align: right;
   }
 
   /* ─────────────────────────────────────────────────────────
-     5.4 SIDEBAR BLOCKS
+     5.4 SIDEBAR
   ───────────────────────────────────────────────────────── */
   .sidebar-block {
-    border: 1px solid var(--border);
-    background: var(--white);
-    margin-bottom: var(--space-5);
-    overflow: hidden;
+    margin-bottom: var(--space-3);
   }
   .sidebar-block__heading {
-    background: var(--maroon);
-    color: var(--white);
     font-size: var(--text-sm);
-    font-weight: bold;
-    padding: var(--space-2) var(--space-3);
-    font-family: var(--font-display);
-    letter-spacing: 0.03em;
-  }
-  .sidebar-block__body {
-    padding: var(--space-3);
-    font-size: var(--text-sm);
-  }
-  /* Link list inside sidebar */
-  .sidebar-block__list li {
-    padding-block: var(--space-1);
-    border-bottom: 1px dotted var(--rule-gray);
-  }
-  .sidebar-block__list li:last-child { border-bottom: none; }
-  .sidebar-block__list a {
     font-weight: bold;
     color: var(--maroon);
+    margin-bottom: var(--space-1);
+    letter-spacing: 0.02em;
+  }
+  .sidebar-block__body {
+    font-size: var(--text-sm);
+    padding-left: var(--space-2);
+  }
+  .sidebar-block__list li {
+    padding-block: 0;
+  }
+  .sidebar-block__list a {
+    color: var(--link);
     text-decoration: none;
   }
   .sidebar-block__list a:hover {
@@ -540,21 +512,16 @@
   }
 
   /* ─────────────────────────────────────────────────────────
-     5.5 FEATURE BOX  (the "This Week's Feature" editorial box)
+     5.5 FEATURE BOX — headline flush, body indented
   ───────────────────────────────────────────────────────── */
   .feature-box {
-    border: 1px solid var(--border);
-    background: var(--white);
-    padding: var(--space-5) var(--space-6);
-    box-shadow: var(--shadow);
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-8);
   }
   .feature-box__eyebrow {
     font-size: var(--text-xs);
-    font-weight: bold;
+    font-style: italic;
     color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.06em;
     margin-bottom: var(--space-2);
   }
   .feature-box__title {
@@ -565,42 +532,43 @@
   .feature-box__img {
     float: right;
     margin: 0 0 var(--space-3) var(--space-4);
-    border: 1px solid var(--border);
     max-width: 140px;
   }
   .feature-box__body {
     font-size: var(--text-sm);
-    line-height: 1.7;
+    line-height: 1.75;
     color: var(--text);
+    padding-left: var(--space-5);
   }
-  .feature-box__body::after { content: ''; display: table; clear: both; }
+  .feature-box__body::after {
+    content: "";
+    display: table;
+    clear: both;
+  }
 
   /* ─────────────────────────────────────────────────────────
      5.6 RECIPE-OF-THE-DAY LIST
   ───────────────────────────────────────────────────────── */
-  .rotd-list {
-    text-align: center;
-  }
   .rotd-list__date {
-    font-size: var(--text-sm);
+    font-size: var(--text-xs);
+    font-style: italic;
     color: var(--text-muted);
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-1);
   }
   .rotd-list__item {
-    padding-block: var(--space-2);
-    border-bottom: 1px dotted var(--rule-gray);
+    padding-block: var(--space-1);
   }
-  .rotd-list__item:last-child { border-bottom: none; }
   .rotd-list__item a {
-    font-size: var(--text-md);
-    font-weight: bold;
-    color: var(--maroon);
+    font-size: var(--text-base);
+    color: var(--link);
     text-decoration: none;
   }
-  .rotd-list__item a:hover { text-decoration: underline; }
+  .rotd-list__item a:hover {
+    text-decoration: underline;
+  }
 
   /* ─────────────────────────────────────────────────────────
-     5.7 CATEGORY GRID  (browse page)
+     5.7 CATEGORY GRID
   ───────────────────────────────────────────────────────── */
   .category-grid {
     display: grid;
@@ -608,27 +576,24 @@
     gap: var(--space-3);
   }
   .category-tile {
-    border: 1px solid var(--border);
-    background: var(--cream-dark);
     padding: var(--space-3);
     text-align: center;
-    font-weight: bold;
     font-size: var(--text-sm);
-    color: var(--maroon);
+    color: var(--link);
     text-decoration: none;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: var(--space-2);
-    transition: background 0.15s, box-shadow 0.15s;
-    box-shadow: var(--shadow-sm);
+    transition: color 0.12s;
   }
   .category-tile:hover {
-    background: var(--maroon);
-    color: var(--white);
-    box-shadow: var(--shadow);
+    color: var(--link-hover);
+    text-decoration: underline;
   }
-  .category-tile__icon { font-size: 1.8rem; }
+  .category-tile__icon {
+    font-size: 1.5rem;
+  }
 
   /* ─────────────────────────────────────────────────────────
      5.8 FORMS & INPUTS
@@ -641,101 +606,95 @@
   }
   .form-field label {
     font-size: var(--text-sm);
-    font-weight: bold;
-    color: var(--maroon-dark);
+    font-style: italic;
+    color: var(--text-muted);
   }
   .form-field input,
   .form-field textarea,
   .form-field select {
     font-family: var(--font-body);
     font-size: var(--text-sm);
-    border: 1px solid var(--border);
-    background: var(--white);
-    padding: var(--space-2) var(--space-3);
+    border: none;
+    background: transparent;
+    padding: var(--space-2) 0;
     color: var(--text);
-    border-radius: var(--radius-sm);
-    transition: border-color 0.15s, box-shadow 0.15s;
     width: 100%;
   }
   .form-field input:focus,
   .form-field textarea:focus,
   .form-field select:focus {
-    outline: none;
-    border-color: var(--maroon);
-    box-shadow: 0 0 0 2px hsl(0deg 33% 30% / 0.2);
+    outline: 2px solid var(--maroon);
+    outline-offset: 2px;
   }
-  .form-field textarea { min-height: 120px; resize: vertical; }
+  .form-field textarea {
+    min-height: 120px;
+    resize: vertical;
+  }
 
   /* ─────────────────────────────────────────────────────────
-     5.9 BUTTONS
+     5.9 BUTTONS — text-weight links styled as inline actions
   ───────────────────────────────────────────────────────── */
   .btn {
-    font-family: var(--font-display);
+    font-family: var(--font-body);
     font-size: var(--text-sm);
-    font-weight: bold;
-    padding: var(--space-2) var(--space-5);
-    border: 1px solid transparent;
+    padding: var(--space-2) 0;
+    border: none;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-    text-decoration: none;
-    transition: background 0.15s, color 0.15s, box-shadow 0.15s;
-    border-radius: var(--radius-sm);
-    box-shadow: var(--shadow-sm);
-    letter-spacing: 0.02em;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    color: var(--link);
+    background: transparent;
+    transition: color 0.12s;
+  }
+  .btn:hover {
+    color: var(--link-hover);
   }
   .btn--primary {
-    background: var(--maroon);
-    color: var(--white);
-    border-color: var(--maroon-dark);
-  }
-  .btn--primary:hover {
-    background: var(--maroon-dark);
-    box-shadow: var(--shadow);
-    color: var(--white);
+    font-weight: bold;
+    text-decoration: none;
   }
   .btn--secondary {
-    background: var(--cream-dark);
-    color: var(--maroon);
-    border-color: var(--border);
+    color: var(--text-muted);
   }
-  .btn--secondary:hover {
-    background: var(--cream);
-    border-color: var(--maroon);
+  .btn--sm {
+    font-size: var(--text-xs);
   }
-  .btn--sm { font-size: var(--text-xs); padding: var(--space-1) var(--space-3); }
 
-  /* Inline search bar (header) */
   .search-bar {
     display: flex;
-    border: 1px solid var(--border);
-    background: var(--white);
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
+    gap: var(--space-2);
   }
   .search-bar input {
     font-family: var(--font-body);
     font-size: var(--text-sm);
+    font-style: italic;
     border: none;
-    padding: var(--space-2) var(--space-3);
-    color: var(--text);
+    padding: var(--space-1) 0;
     background: transparent;
+    color: var(--text);
     min-width: 0;
     flex: 1;
   }
-  .search-bar input:focus { outline: none; }
-  .search-bar button {
-    font-family: var(--font-display);
-    font-size: var(--text-sm);
-    font-weight: bold;
-    background: var(--maroon);
-    color: var(--white);
-    border: none;
-    padding: var(--space-2) var(--space-4);
-    cursor: pointer;
+  .search-bar input:focus {
+    outline: none;
   }
-  .search-bar button:hover { background: var(--maroon-dark); }
+  .search-bar button {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    color: var(--maroon);
+    background: transparent;
+    border: none;
+    padding: var(--space-1) 0;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .search-bar button:hover {
+    color: var(--link-hover);
+  }
 
   /* ─────────────────────────────────────────────────────────
      5.10 RATING STARS
@@ -746,21 +705,19 @@
     color: var(--maroon);
     font-size: var(--text-sm);
   }
-  .stars__empty { color: var(--rule-gray); }
-
-  /* ─────────────────────────────────────────────────────────
-     5.11 NOTICES / CALLOUTS
-  ───────────────────────────────────────────────────────── */
-  .callout {
-    border-left: 4px solid var(--maroon);
-    background: var(--cream-dark);
-    padding: var(--space-3) var(--space-4);
-    font-size: var(--text-sm);
-    line-height: 1.6;
-    margin-block: var(--space-4);
+  .stars__empty {
+    color: var(--rule);
   }
-  .callout--tip   { border-color: #556b44; background: #f0f4ec; }
-  .callout--warn  { border-color: #8b6300; background: #fdf6dc; }
+
+  .callout {
+    padding: var(--space-3) var(--space-4);
+    padding-left: var(--space-5);
+    font-size: var(--text-sm);
+    font-style: italic;
+    line-height: 1.7;
+    margin-block: var(--space-5);
+    color: var(--text-muted);
+  }
 
   /* ─────────────────────────────────────────────────────────
      5.12 PAGINATION
@@ -769,50 +726,50 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: var(--space-1);
-    padding-block: var(--space-4);
+    gap: var(--space-2);
+    padding-block: var(--space-5);
     font-size: var(--text-sm);
-    font-family: var(--font-display);
+    font-style: italic;
     flex-wrap: wrap;
   }
   .pagination a,
   .pagination span {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 1.8rem;
-    height: 1.8rem;
-    border: 1px solid var(--border);
     text-decoration: none;
-    color: var(--maroon);
-    font-weight: bold;
-    transition: background 0.1s, color 0.1s;
-    padding-inline: var(--space-2);
+    color: var(--link);
+    padding: var(--space-1) var(--space-2);
+    transition: color 0.1s;
   }
-  .pagination a:hover { background: var(--maroon); color: var(--white); border-color: var(--maroon); }
-  .pagination .current { background: var(--maroon); color: var(--white); border-color: var(--maroon-dark); }
+  .pagination a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+  }
+  .pagination .current {
+    font-weight: bold;
+    color: var(--maroon);
+    font-style: normal;
+  }
 
   /* ─────────────────────────────────────────────────────────
-     5.13 COMPETITION BADGE / WINNER CALLOUT
-         (unique to the friends-competition use case)
+     5.13 COMPETITION BADGE
   ───────────────────────────────────────────────────────── */
   .competition-badge {
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-    background: var(--maroon);
-    color: var(--white);
-    font-size: var(--text-xs);
+    font-size: var(--text-sm);
     font-weight: bold;
-    font-family: var(--font-display);
-    padding: var(--space-1) var(--space-3);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    box-shadow: var(--shadow-sm);
+    color: var(--maroon);
+    letter-spacing: 0.02em;
   }
-  .competition-badge--gold   { background: #8b7300; }
-  .competition-badge--silver { background: #555566; }
-  .competition-badge--bronze { background: #6b3b00; }
+  .competition-badge--gold {
+    color: #8b7300;
+  }
+  .competition-badge--silver {
+    color: #555566;
+  }
+  .competition-badge--bronze {
+    color: #6b3b00;
+  }
 
   /* ─────────────────────────────────────────────────────────
      5.14 PRINT STYLES
@@ -822,30 +779,65 @@
     .site-header__search,
     .sidebar,
     .pagination,
-    .btn { display: none !important; }
-    body { background: white; color: black; }
-    .page-layout { grid-template-columns: 1fr; }
-    .page-layout__divider { display: none; }
-    h1, h2, h3 { color: black; }
+    .btn {
+      display: none !important;
+    }
+    body {
+      background: white;
+      color: black;
+    }
+    .page-layout {
+      grid-template-columns: 1fr;
+    }
+    .page-layout__divider {
+      display: none;
+    }
   }
 }
 
 /* ── 6. UTILITIES ─────────────────────────────────────────── */
 @layer utilities {
-  .text-center  { text-align: center; }
-  .text-right   { text-align: right; }
-  .text-maroon  { color: var(--maroon); }
-  .text-muted   { color: var(--text-muted); }
-  .font-bold    { font-weight: bold; }
-  .font-italic  { font-style: italic; }
-  .mt-auto      { margin-top: auto; }
-  .mb-4         { margin-bottom: var(--space-4); }
-  .mb-6         { margin-bottom: var(--space-6); }
-  .mt-4         { margin-top: var(--space-4); }
-  .mt-6         { margin-top: var(--space-6); }
+  .text-center {
+    text-align: center;
+  }
+  .text-right {
+    text-align: right;
+  }
+  .text-maroon {
+    color: var(--maroon);
+  }
+  .text-muted {
+    color: var(--text-muted);
+  }
+  .font-bold {
+    font-weight: bold;
+  }
+  .font-italic {
+    font-style: italic;
+  }
+  .mt-auto {
+    margin-top: auto;
+  }
+  .mb-4 {
+    margin-bottom: var(--space-4);
+  }
+  .mb-6 {
+    margin-bottom: var(--space-6);
+  }
+  .mt-4 {
+    margin-top: var(--space-4);
+  }
+  .mt-6 {
+    margin-top: var(--space-6);
+  }
   .visually-hidden {
-    position: absolute; width: 1px; height: 1px;
-    padding: 0; margin: -1px; overflow: hidden;
-    clip: rect(0,0,0,0); border: 0;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
   }
 }
