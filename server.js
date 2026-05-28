@@ -9,8 +9,11 @@ if (process.env.NODE_ENV !== "production") {
 }
 const path = require("path");
 const cookieParser = require("cookie-parser");
-const { getSupabase } = require("./js/utils/server-utils");
+const { getSupabase, createSanitizer } = require("./js/utils/server-utils");
+const _sanitizer = createSanitizer();
+const sanitizeHtml = (str) => _sanitizer.sanitize(str || "");
 const app = express();
+app.locals.sanitizeHtml = sanitizeHtml;
 // Shared challenge state logic for SSR
 const { computeChallengeState, getChallengeCardOptions } = require("./js/utils/challenge-state.js");
 const port = process.env.PORT || 8000;
@@ -205,7 +208,10 @@ app.use((req, res, next) => {
     req.path.startsWith("/users") ||
     req.path.startsWith("/notifications");
 
-  if (isGet && !hasExtension && !isRoot && !isApiLike) {
+  // Only rewrite single-segment paths (e.g. /dashboard → /dashboard.html)
+  // Do NOT rewrite deep paths like /recipes/tasty-garbage — those are dynamic routes
+  const isSingleSegment = !req.path.slice(1).includes("/");
+  if (isGet && !hasExtension && !isRoot && !isApiLike && isSingleSegment) {
     req.url += ".html";
   }
   next();
@@ -310,11 +316,192 @@ app.get(["/account", "/account.html"], (req, res) => {
   return res.render("account", { currentUser });
 });
 
-// RecipeClash preview: render the standalone recipe EJS template
-app.get(["/recipes", "/recipes/preview", "/recipes.html"], (req, res) => {
-  const currentUser = res.locals.navData && res.locals.navData.user ? res.locals.navData.user : null;
-  // Render the recipe page (mostly static for now). Keep currentUser available for later client-side hooks.
-  return res.render("recipe", { currentUser });
+// A Few Recipes — homepage: recently added recipes + sidebar data
+app.get(["/recipes", "/recipes.html"], async (req, res) => {
+  const currentUser =
+    res.locals.navData && res.locals.navData.user ? res.locals.navData.user : null;
+  try {
+    const supabase = getSupabase();
+    const cols =
+      "id, slug, title, description, author, author_slug, category, prep_time, image_url, competition_name, competition_medal, avg_score, created_at";
+
+    const [{ data: recentRecipes, error: recentError }, { data: topRated, error: topError }] =
+      await Promise.all([
+        supabase
+          .from("recipe_detail_view")
+          .select(cols)
+          .order("created_at", { ascending: false })
+          .limit(5),
+        supabase
+          .from("recipe_detail_view")
+          .select(cols)
+          .order("avg_score", { ascending: false, nullsFirst: false })
+          .order("created_at", { ascending: false })
+          .limit(10),
+      ]);
+    if (recentError) throw recentError;
+    if (topError) throw topError;
+
+    // All competitions for the homepage grid (most recent first)
+    const { data: allCompetitions, error: compError } = await supabase
+      .from("recipe_competitions")
+      .select("id, name, event_date")
+      .order("event_date", { ascending: false });
+    if (compError) console.warn("recipe_competitions query error:", compError.message);
+
+    const latestComp = (allCompetitions && allCompetitions[0]) || null;
+
+    return res.render("recipe", {
+      currentUser,
+      recentRecipes: recentRecipes || [],
+      topRated: topRated || [],
+      latestCompetition: latestComp,
+      allCompetitions: allCompetitions || [],
+      sanitizeHtml,
+    });
+  } catch (err) {
+    console.warn("Recipes homepage query failed:", err && err.message ? err.message : err);
+    return res.render("recipe", {
+      currentUser,
+      recentRecipes: [],
+      topRated: [],
+      latestCompetition: null,
+      allCompetitions: [],
+      sanitizeHtml,
+    });
+  }
+});
+
+// A Few Recipes — all recipes index: filterable by category / competition
+app.get(["/recipes/all", "/recipes/all.html"], async (req, res) => {
+  const currentUser =
+    res.locals.navData && res.locals.navData.user ? res.locals.navData.user : null;
+  const { category, competition, author } = req.query;
+
+  try {
+    const supabase = getSupabase();
+    const cols =
+      "id, slug, title, description, author, author_slug, category, prep_time, image_url, competition_name, competition_medal, avg_score, created_at";
+
+    let query = supabase
+      .from("recipe_detail_view")
+      .select(cols)
+      .order("avg_score", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false });
+
+    if (category) query = query.eq("category", category);
+    if (competition) query = query.eq("competition_name", competition);
+    if (author) query = query.eq("author_slug", author);
+
+    const [{ data: allRecipes, error: recipesError }, { data: filterData }] = await Promise.all([
+      query,
+      supabase.from("recipe_detail_view").select("category, competition_name"),
+    ]);
+
+    if (recipesError) throw recipesError;
+
+    const tagRe = /<[^>]+>/g;
+    const processed = (allRecipes || []).map((r) => ({
+      ...r,
+      plainDesc: (r.description || "")
+        .replace(tagRe, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 200),
+    }));
+
+    const categories = [
+      ...new Set((filterData || []).map((r) => r.category).filter(Boolean)),
+    ].sort();
+    const competitions = [
+      ...new Set((filterData || []).map((r) => r.competition_name).filter(Boolean)),
+    ].sort();
+
+    return res.render("recipe", {
+      currentUser,
+      allRecipes: processed,
+      categories,
+      competitions,
+      activeCategory: category || null,
+      activeCompetition: competition || null,
+      activeAuthor: author || null,
+      recipe: null,
+      recentRecipes: [],
+      topRated: [],
+      latestCompetition: null,
+      sanitizeHtml,
+    });
+  } catch (err) {
+    console.warn("Recipes all page query failed:", err && err.message ? err.message : err);
+    return res.render("recipe", {
+      currentUser,
+      allRecipes: [],
+      categories: [],
+      competitions: [],
+      activeCategory: null,
+      activeCompetition: competition || null,
+      recipe: null,
+      recentRecipes: [],
+      topRated: [],
+      latestCompetition: null,
+      sanitizeHtml,
+    });
+  }
+});
+
+// A Few Recipes — detail page: single recipe by slug
+app.get("/recipes/:slug", async (req, res) => {
+  const currentUser =
+    res.locals.navData && res.locals.navData.user ? res.locals.navData.user : null;
+  const { slug } = req.params;
+
+  // Reject obviously invalid slugs (too long or containing path separators/null bytes)
+  if (!slug || slug.length > 200 || slug.includes("/") || slug.includes("\0")) {
+    return res.redirect("/recipes");
+  }
+
+  try {
+    const supabase = getSupabase();
+    const { data: recipe, error } = await supabase
+      .from("recipe_detail_view")
+      .select("*")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!recipe) return res.redirect("/recipes");
+
+    // Shape competition_result for the template
+    const competition_result = recipe.competition_rank
+      ? {
+          medal: recipe.competition_medal,
+          place:
+            recipe.competition_rank === 1
+              ? "1st Place"
+              : recipe.competition_rank === 2
+                ? "2nd Place"
+                : "3rd Place",
+          competition_name: recipe.competition_name,
+        }
+      : null;
+
+    return res.render("recipe", {
+      currentUser,
+      recipe: { ...recipe, competition_result },
+      recentRecipes: [],
+      latestCompetition: null,
+      sanitizeHtml,
+    });
+  } catch (err) {
+    console.warn("Recipe detail query failed:", err && err.message ? err.message : err);
+    return res.status(500).render("recipe", {
+      currentUser,
+      recipe: null,
+      recentRecipes: [],
+      topRated: [],
+      latestCompetition: null,
+    });
+  }
 });
 
 // Shared helper to fetch assignments for SSR
