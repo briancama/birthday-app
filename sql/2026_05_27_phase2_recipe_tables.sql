@@ -258,8 +258,12 @@ WITH scores AS (
     rce.id                                                     AS entry_id,
     ROUND(
       AVG(
-        (rcj.taste_score + rcj.presentation_score
-         + rcj.workmanship_score + rcj.creativity_score)::numeric / 4
+        (
+          rcj.taste_score * 11
+          + rcj.presentation_score * 3
+          + rcj.workmanship_score * 3
+          + rcj.creativity_score * 3
+        )::numeric / 20
       )::numeric,
       3
     )                                                          AS avg_score,

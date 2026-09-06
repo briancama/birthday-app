@@ -146,7 +146,13 @@
                 ><% } else { %><span><%= r.title %></span
                 ><% } %>
               </div>
-              <div class="recipe-entry__author"><%= r.author %></div>
+              <div class="recipe-entry__author">
+                <% if (r.author_slug) { %>
+                <a href="/users/<%= encodeURIComponent(r.author_slug) %>"><%= r.author %></a>
+                <% } else { %>
+                <%= r.author %>
+                <% } %>
+              </div>
               <div class="recipe-entry__category">
                 <% if (r.category) { %><a
                   href="/recipes/all?category=<%= encodeURIComponent(r.category) %>"
@@ -280,9 +286,16 @@
                   ><% } %>
                 </h3>
                 <div class="recipe-card__meta">
-                  <span
-                    >By <strong><%= r.author %></strong></span
-                  >
+                  <span>
+                    By
+                    <strong>
+                      <% if (r.author_slug) { %>
+                      <a href="/users/<%= encodeURIComponent(r.author_slug) %>"><%= r.author %></a>
+                      <% } else { %>
+                      <%= r.author %>
+                      <% } %>
+                    </strong>
+                  </span>
                   <% if (r.category) { %><span
                     >&middot;
                     <%= r.category %></span
@@ -381,7 +394,15 @@
               <div class="sidebar-block__heading">Submitted By</div>
               <div class="sidebar-block__body">
                 <p>
-                  <strong><%= recipe.author %></strong>
+                  <strong>
+                    <% if (recipe.author_slug) { %>
+                    <a href="/users/<%= encodeURIComponent(recipe.author_slug) %>"
+                      ><%= recipe.author %></a
+                    >
+                    <% } else { %>
+                    <%= recipe.author %>
+                    <% } %>
+                  </strong>
                 </p>
                 <p
                   style="
@@ -417,6 +438,9 @@
                   <% if (recipe.notes) { %>
                   <li><a href="#notes">Notes &amp; Tips</a></li>
                   <% } %>
+                  <% if (locals.recipeComments && recipeComments.length > 0) { %>
+                  <li><a href="#recipe-comments">Comments</a></li>
+                  <% } %>
                   <!--Future capability to export/print recipes
                   <li><a href="/recipes/print/<%= recipe.slug %>">Print this Recipe</a></li>
                   -->
@@ -431,7 +455,16 @@
             <header class="recipe-detail__header">
               <h1 class="recipe-detail__title"><%= recipe.title %></h1>
               <p class="recipe-detail__byline">
-                Submitted by <strong><%= recipe.author %></strong>
+                Submitted by
+                <strong>
+                  <% if (recipe.author_slug) { %>
+                  <a href="/users/<%= encodeURIComponent(recipe.author_slug) %>"
+                    ><%= recipe.author %></a
+                  >
+                  <% } else { %>
+                  <%= recipe.author %>
+                  <% } %>
+                </strong>
                 <% if (recipe.category) { %>
                 &bull;
                 <a
@@ -515,6 +548,28 @@
             <section id="notes">
               <h2 class="section-heading section-heading--sm">Notes &amp; Tips</h2>
               <div class="callout callout--tip"><%- sanitizeHtml(recipe.notes) %></div>
+            </section>
+            <% } %>
+
+            <% if (locals.recipeComments && recipeComments.length > 0) { %>
+            <section id="recipe-comments" class="recipe-comments">
+              <h2 class="section-heading section-heading--sm">Comments</h2>
+              <ul class="recipe-comments__list" aria-label="Recipe comments">
+                <% recipeComments.forEach(function(comment) { %>
+                <li class="recipe-comments__item">
+                  <p class="recipe-comments__meta">
+                    <% if (comment.author_slug) { %>
+                    <a href="/users/<%= encodeURIComponent(comment.author_slug) %>"
+                      ><%= comment.author %></a
+                    >
+                    <% } else { %>
+                    <%= comment.author %>
+                    <% } %>
+                  </p>
+                  <p class="recipe-comments__body"><%- sanitizeHtml(comment.body) %></p>
+                </li>
+                <% }); %>
+              </ul>
             </section>
             <% } %>
 

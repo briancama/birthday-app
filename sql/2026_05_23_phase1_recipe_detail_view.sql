@@ -22,7 +22,12 @@ WITH scores AS (
     cj.entry_id,
     ROUND(
       AVG(
-        (cj.taste_score + cj.presentation_score + cj.workmanship_score + cj.creativity_score)::numeric / 4
+        (
+          cj.taste_score * 11
+          + cj.presentation_score * 3
+          + cj.workmanship_score * 3
+          + cj.creativity_score * 3
+        )::numeric / 20
       )::numeric,
       3
     ) AS avg_score,

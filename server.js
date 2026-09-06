@@ -217,6 +217,16 @@ app.use((req, res, next) => {
   next();
 });
 
+// Backward-compatible aliases for the singular recipe paths.
+// Canonical routes use /recipes, so redirect old/bookmarked links there.
+app.get(["/recipe", "/recipe.html"], (req, res) => {
+  return res.redirect("/recipes");
+});
+
+app.get(["/recipe/all", "/recipe/all.html"], (req, res) => {
+  return res.redirect("/recipes/all");
+});
+
 // GET / — Brispace homepage
 app.get("/", async (req, res) => {
   try {
@@ -450,6 +460,10 @@ app.get(["/recipes/all", "/recipes/all.html"], async (req, res) => {
 });
 
 // A Few Recipes — detail page: single recipe by slug
+app.get("/recipe/:slug", (req, res) => {
+  return res.redirect(`/recipes/${encodeURIComponent(req.params.slug)}`);
+});
+
 app.get("/recipes/:slug", async (req, res) => {
   const currentUser =
     res.locals.navData && res.locals.navData.user ? res.locals.navData.user : null;
@@ -485,9 +499,59 @@ app.get("/recipes/:slug", async (req, res) => {
         }
       : null;
 
+    // Keep recipe comments independent from competition judging data.
+    // If the table has not been migrated yet, skip comments gracefully.
+    let recipeComments = [];
+    const { data: commentsData, error: commentsError } = await supabase
+      .from("recipe_comments")
+      .select("id, user_id, guest_name, comment, created_at, updated_at")
+      .eq("recipe_id", recipe.id)
+      .order("created_at", { ascending: false });
+
+    if (commentsError) {
+      if (commentsError.code !== "42P01") {
+        console.warn("recipe_comments query failed:", commentsError.message || commentsError);
+      }
+    } else if (Array.isArray(commentsData) && commentsData.length > 0) {
+      const userIds = [...new Set(commentsData.map((c) => c.user_id).filter(Boolean))];
+      const { data: commentUsers, error: usersError } = userIds.length
+        ? await supabase.from("users").select("id, username, display_name").in("id", userIds)
+        : { data: [], error: null };
+
+      if (usersError) {
+        console.warn("recipe_comments user lookup failed:", usersError.message || usersError);
+      }
+
+      const userMap = new Map(
+        Array.isArray(commentUsers)
+          ? commentUsers.map((u) => [
+              u.id,
+              {
+                name: u.display_name || u.username || "User",
+                username: u.username || null,
+              },
+            ])
+          : []
+      );
+
+      recipeComments = commentsData
+        .filter((c) => typeof c.comment === "string" && c.comment.trim().length > 0)
+        .map((c) => {
+          const user = c.user_id ? userMap.get(c.user_id) : null;
+          return {
+            id: c.id,
+            body: c.comment,
+            author: user ? user.name : c.guest_name || "Guest",
+            author_slug: user ? user.username : null,
+            created_at: c.updated_at || c.created_at,
+          };
+        });
+    }
+
     return res.render("recipe", {
       currentUser,
       recipe: { ...recipe, competition_result },
+      recipeComments,
       recentRecipes: [],
       latestCompetition: null,
       sanitizeHtml,
