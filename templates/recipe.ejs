@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      <% if (locals.recipe) { %><%= recipe.title %> — AFewRecipes.com<% } else if (locals.allRecipes
+      !== undefined) { %><% if (locals.activeCategory || locals.activeCompetition) { %><%=
+      locals.activeCategory || locals.activeCompetition %> — <% } %>All Recipes — AFewRecipes.com<%
+      } else { %>AFewRecipes.com<% } %>
+    </title>
+    <link rel="stylesheet" href="/css/recipe.css" />
+  </head>
+  <body>
+    <!-- ══ HEADER ══ -->
+    <header class="site-header">
+      <div class="site-wrapper">
+        <div class="site-header__inner">
+          <a href="/recipes" class="site-header__logo">
+            <img
+              src="/images/afewrecipes_logo.svg"
+              alt="A Few Recipes"
+              style="height: 48px; width: auto; display: block"
+            />
+          </a>
+          <% if (locals.currentUser) { %>
+          <span class="site-header__welcome"
+            >Welcome back,
+            <%= (currentUser.display_name || currentUser.username).split(' ')[0]
+            %>!</span
+          >
+          <% } %>
+        </div>
+      </div>
+    </header>
+
+    <!-- ══ NAV ══ -->
+    <nav class="site-nav" aria-label="Main navigation">
+      <div class="site-wrapper">
+        <ul class="site-nav__list" role="list">
+          <li class="site-nav__item"><a href="/recipes">Home</a></li>
+          <li class="site-nav__item"><a href="/recipes/all">All Recipes</a></li>
+          <li class="site-nav__item"><a href="#">Competition Results</a></li>
+          <% if (locals.currentUser) { %>
+          <li class="site-nav__item">
+            <a href="/recipes/all?author=<%= encodeURIComponent(currentUser.username) %>"
+              >My Recipes</a
+            >
+          </li>
+          <% } %>
+        </ul>
+      </div>
+    </nav>
+
+    <main id="main-content">
+      <% if (locals.allRecipes !== undefined) { %>
+      <!-- ══ ALL RECIPES INDEX ══ -->
+      <div class="site-wrapper">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="/recipes">Home</a>
+          <span class="breadcrumb__sep" aria-hidden="true">›</span>
+          <% if (locals.activeCategory || locals.activeCompetition || locals.activeAuthor) { %>
+          <a href="/recipes/all">All Recipes</a>
+          <span class="breadcrumb__sep" aria-hidden="true">›</span>
+          <% if (locals.activeAuthor) { %>
+          <span aria-current="page"
+            ><% if (locals.currentUser && currentUser.username === activeAuthor) { %>My Recipes<% }
+            else { %><%= activeAuthor %>'s Recipes<% } %></span
+          >
+          <% } else { %>
+          <span aria-current="page"><%= locals.activeCategory || locals.activeCompetition %></span>
+          <% } %>
+          <% } else { %>
+          <span aria-current="page">All Recipes</span>
+          <% } %>
+        </nav>
+
+        <div class="recipes-index">
+          <% if ((locals.categories && categories.length > 0) || (locals.competitions &&
+          competitions.length > 0)) { %>
+          <div class="filter-bar">
+            <% if (categories.length > 0) { %>
+            <div class="filter-bar__group">
+              <span class="filter-bar__label">Category</span>
+              <div class="filter-bar__chips">
+                <a
+                  href="/recipes/all"
+                  class="filter-chip<% if (!activeCategory && !activeCompetition && !locals.activeAuthor) { %> filter-chip--active<% } %>"
+                  >All</a
+                >
+                <% categories.forEach(function(cat) { %>
+                <a
+                  href="/recipes/all?category=<%= encodeURIComponent(cat) %>"
+                  class="filter-chip<% if (activeCategory === cat) { %> filter-chip--active<% } %>"
+                  ><%= cat %></a
+                >
+                <% }); %>
+              </div>
+            </div>
+            <% } %>
+            <% if (competitions.length > 0) { %>
+            <div class="filter-bar__group">
+              <span class="filter-bar__label">Competition</span>
+              <div class="filter-bar__chips">
+                <% competitions.forEach(function(comp) { %>
+                <a
+                  href="/recipes/all?competition=<%= encodeURIComponent(comp) %>"
+                  class="filter-chip<% if (activeCompetition === comp) { %> filter-chip--active<% } %>"
+                  ><%= comp %></a
+                >
+                <% }); %>
+              </div>
+            </div>
+            <% } %>
+          </div>
+          <% } %>
+
+          <p class="recipes-index__count">
+            <strong><%= allRecipes.length %></strong>
+            recipe<%= allRecipes.length !== 1 ? 's' : '' %><% if (activeCategory) { %>
+            in <em><%= activeCategory %></em
+            ><% } %><% if (activeCompetition) { %>
+            from <em><%= activeCompetition %></em
+            ><% } %><% if (locals.activeAuthor) { %>
+            by
+            <em
+              ><% if (locals.currentUser && currentUser.username === activeAuthor) { %>me<% } else { %><%= activeAuthor %><% } %></em
+            ><% } %><% if (activeCategory || activeCompetition || locals.activeAuthor) { %>
+            &mdash; <a href="/recipes/all">clear filter</a
+            ><% } %>
+          </p>
+
+          <% if (allRecipes.length > 0) { %>
+          <div class="recipe-table">
+            <div class="recipe-table__header">
+              <span>Recipe</span>
+              <span>Author</span>
+              <span>Category</span>
+              <span>Rating</span>
+            </div>
+            <% allRecipes.forEach(function(r) { %>
+            <% var desc = r.plainDesc || ''; %>
+            <div class="recipe-entry">
+              <div class="recipe-entry__title">
+                <% if (r.slug) { %><a href="/recipes/<%= r.slug %>"><%= r.title %></a
+                ><% } else { %><span><%= r.title %></span
+                ><% } %>
+              </div>
+              <div class="recipe-entry__author"><%= r.author %></div>
+              <div class="recipe-entry__category">
+                <% if (r.category) { %><a
+                  href="/recipes/all?category=<%= encodeURIComponent(r.category) %>"
+                  ><%= r.category %></a
+                ><% } else { %>&mdash;<% } %>
+              </div>
+              <div class="recipe-entry__rating">
+                <% if (r.avg_score) { %>&#9733; <%= Number(r.avg_score).toFixed(1) %><% } else {
+                %>&mdash;<% } %>
+              </div>
+              <% if (desc) { %>
+              <div class="recipe-entry__desc"><%= desc %></div>
+              <% } %>
+            </div>
+            <% }); %>
+          </div>
+          <% } else { %>
+          <p style="color: var(--text-muted); margin-top: var(--space-6)">
+            No recipes found<% if (activeCategory || activeCompetition) { %> &mdash;
+            <a href="/recipes/all">clear filter</a
+            ><% } %>.
+          </p>
+          <% } %>
+        </div>
+      </div>
+      <% } else if (!locals.recipe) { %>
+      <div class="site-wrapper">
+        <div class="page-layout">
+          <!-- Sidebar -->
+          <aside class="sidebar">
+            <% if (locals.recentRecipes && recentRecipes.length > 0) { %>
+            <div class="sidebar-block">
+              <div class="sidebar-block__heading">Recently Added</div>
+              <div class="sidebar-block__body">
+                <ul class="sidebar-block__list">
+                  <% recentRecipes.slice(0, 5).forEach(function(r) { %>
+                  <li>
+                    <% if (r.slug) { %><a href="/recipes/<%= r.slug %>"><%= r.title %></a
+                    ><% } else { %><span><%= r.title %></span
+                    ><% } %>
+                  </li>
+                  <% }); %>
+                </ul>
+              </div>
+            </div>
+            <% } %>
+
+            <div class="sidebar-block">
+              <div class="sidebar-block__heading">Browse Categories</div>
+              <div class="sidebar-block__body">
+                <ul class="sidebar-block__list">
+                  <li><a href="/recipes/all?category=Appetizers">Appetizers</a></li>
+                  <li><a href="/recipes/all?category=Main+Dishes">Main Dishes</a></li>
+                  <li><a href="/recipes/all?category=Sides+%26+Salads">Sides &amp; Salads</a></li>
+                  <li><a href="/recipes/all?category=Desserts">Desserts</a></li>
+                  <li><a href="/recipes/all?category=Baking+%26+Breads">Baking &amp; Breads</a></li>
+                  <li><a href="/recipes/all?category=drinks">Drinks</a></li>
+                </ul>
+              </div>
+            </div>
+
+            <% if (locals.latestCompetition) { %>
+            <div class="sidebar-block">
+              <div class="sidebar-block__heading">Latest Competition</div>
+              <div class="sidebar-block__body">
+                <p>
+                  <strong><%= latestCompetition.name %></strong>
+                </p>
+                <% if (latestCompetition.event_date) { %>
+                <p class="text-muted" style="font-size: var(--text-xs); margin-top: var(--space-2)">
+                  <%= new Date(latestCompetition.event_date).toLocaleDateString('en-US', { month:
+                  'long', year: 'numeric' }) %>
+                </p>
+                <% } %>
+                <a
+                  class="btn btn--primary btn--sm"
+                  href="/recipes/all?competition=<%= encodeURIComponent(latestCompetition.name) %>"
+                  style="margin-top: var(--space-3); display: inline-flex"
+                  >See Results</a
+                >
+              </div>
+            </div>
+            <% } %>
+          </aside>
+
+          <div class="page-layout__divider" aria-hidden="true"></div>
+
+          <!-- Main -->
+          <section>
+            <div class="feature-box">
+              <div class="feature-box__eyebrow">Latest News</div>
+              <h2 class="feature-box__title">Welcome to AFewRecipes.com!</h2>
+              <div class="feature-box__body">
+                <p>
+                  AFewRecipes.com is a place where we can gather all those delicious recipes that
+                  get passed around during various cooking competitions and potlucks. It's a private
+                  collection just for us, so we can attempt to recreate and enjoy each other's
+                  culinary masterpieces and sometimes give those disasters another shot. So whether
+                  you want to recreate that delicious soup, share that insane seattle dog cocktail
+                  with the world, or have another go at Ben's cookie cake, this is the place to do
+                  it!
+                </p>
+                <p style="margin-top: var(--space-3)">
+                  Am I missing any recipes from past competitions? Did you forget some key steps? Or
+                  maybe you have a recipe you've been dying to share?
+                  <a href="#">Submit your own recipe</a> and let's get it in the collection!
+                </p>
+              </div>
+            </div>
+
+            <h2 class="section-heading">Top Rated</h2>
+
+            <% if (locals.topRated && topRated.length > 0) { %>
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                gap: var(--space-4);
+                margin-bottom: var(--space-8);
+                padding-left: var(--space-5);
+              "
+            >
+              <% topRated.forEach(function(r) { %>
+              <article class="recipe-card<% if (r.image_url) { %> recipe-card--with-image<% } %>">
+                <% if (r.image_url) { %>
+                <img class="recipe-card__img" src="<%= r.image_url %>" alt="<%= r.title %>" />
+                <% } %>
+                <h3 class="recipe-card__title">
+                  <% if (r.slug) { %><a href="/recipes/<%= r.slug %>"><%= r.title %></a
+                  ><% } else { %><span><%= r.title %></span
+                  ><% } %>
+                </h3>
+                <div class="recipe-card__meta">
+                  <span
+                    >By <strong><%= r.author %></strong></span
+                  >
+                  <% if (r.category) { %><span
+                    >&middot;
+                    <%= r.category %></span
+                  ><% } %>
+                  <% if (r.prep_time) { %><span
+                    >&middot;
+                    <%= r.prep_time %>
+                    prep</span
+                  ><% } %>
+                  <% if (r.avg_score) { %><span
+                    >&middot; &#9733;
+                    <%= Number(r.avg_score).toFixed(1) %></span
+                  ><% } %>
+                </div>
+                <% if (r.description) { %>
+                <p class="recipe-card__desc"><%- sanitizeHtml(r.description) %></p>
+                <% } %>
+              </article>
+              <% }); %>
+            </div>
+            <% } else { %>
+            <p style="color: var(--text-muted); margin-bottom: var(--space-8)">
+              No recipes yet — check back soon!
+            </p>
+            <% } /* topRated */ %>
+
+            <div class="text-center">
+              <a href="/recipes/all" class="btn btn--secondary">View All Recipes →</a>
+            </div>
+
+            <h2 class="section-heading" style="margin-top: var(--space-10)">
+              Browse by Competition
+            </h2>
+            <% if (locals.allCompetitions && allCompetitions.length > 0) { %>
+            <div class="competition-grid">
+              <% allCompetitions.forEach(function(comp) { %>
+              <a
+                href="/recipes/all?competition=<%= encodeURIComponent(comp.name) %>"
+                class="competition-tile"
+              >
+                <span class="competition-tile__name"><%= comp.name %></span>
+                <% if (comp.event_date) { %>
+                <span class="competition-tile__date"
+                  ><%= new Date(comp.event_date).toLocaleDateString('en-US', { month: 'long', year:
+                  'numeric' }) %></span
+                >
+                <% } %>
+              </a>
+              <% }); %>
+            </div>
+            <% } else { %>
+            <p style="color: var(--text-muted); margin-bottom: var(--space-8)">
+              No competitions yet — check back soon!
+            </p>
+            <% } %>
+          </section>
+        </div>
+      </div>
+      <% } else { %>
+      <!-- ══ RECIPE DETAIL ══ -->
+      <div class="site-wrapper">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="/recipes">Home</a>
+          <span class="breadcrumb__sep" aria-hidden="true">›</span>
+          <a href="/recipes">Recipes</a>
+          <% if (recipe.category) { %>
+          <span class="breadcrumb__sep" aria-hidden="true">›</span>
+          <a href="/recipes?category=<%= recipe.category.toLowerCase().replace(/\s+/g, '-') %>"
+            ><%= recipe.category %></a
+          >
+          <% } %>
+          <span class="breadcrumb__sep" aria-hidden="true">›</span>
+          <span aria-current="page"><%= recipe.title %></span>
+        </nav>
+
+        <div class="page-layout">
+          <aside class="sidebar" aria-label="Sidebar">
+            <% if (recipe.competition_result) { %>
+            <div class="sidebar-block">
+              <div class="sidebar-block__heading">Competition Result</div>
+              <div class="sidebar-block__body">
+                <div
+                  class="competition-badge competition-badge--<%= recipe.competition_result.medal %>"
+                  style="display: inline-flex; margin-bottom: var(--space-3)"
+                >
+                  <%= recipe.competition_result.place %>
+                </div>
+                <p style="font-size: var(--text-xs); color: var(--text-muted)">
+                  <%= recipe.competition_result.competition_name %>
+                </p>
+              </div>
+            </div>
+            <% } %>
+
+            <div class="sidebar-block">
+              <div class="sidebar-block__heading">Submitted By</div>
+              <div class="sidebar-block__body">
+                <p>
+                  <strong><%= recipe.author %></strong>
+                </p>
+                <p
+                  style="
+                    font-size: var(--text-xs);
+                    color: var(--text-muted);
+                    margin-top: var(--space-1);
+                  "
+                >
+                  Added
+                  <%= new Date(recipe.created_at).toLocaleDateString('en-US', { month: 'long',
+                  year: 'numeric' }) %>
+                </p>
+                <!--Disable this link for now
+                <a
+                  href="/recipes?author=<%= recipe.author_slug %>"
+                  style="
+                    font-size: var(--text-xs);
+                    display: inline-block;
+                    margin-top: var(--space-2);
+                  "
+                  >See all their recipes →</a
+                >
+                -->
+              </div>
+            </div>
+
+            <div class="sidebar-block">
+              <div class="sidebar-block__heading">Quick Links</div>
+              <div class="sidebar-block__body">
+                <ul class="sidebar-block__list">
+                  <li><a href="#ingredients">Jump to Ingredients</a></li>
+                  <li><a href="#instructions">Jump to Instructions</a></li>
+                  <% if (recipe.notes) { %>
+                  <li><a href="#notes">Notes &amp; Tips</a></li>
+                  <% } %>
+                  <!--Future capability to export/print recipes
+                  <li><a href="/recipes/print/<%= recipe.slug %>">Print this Recipe</a></li>
+                  -->
+                </ul>
+              </div>
+            </div>
+          </aside>
+
+          <div class="page-layout__divider" aria-hidden="true"></div>
+
+          <article>
+            <header class="recipe-detail__header">
+              <h1 class="recipe-detail__title"><%= recipe.title %></h1>
+              <p class="recipe-detail__byline">
+                Submitted by <strong><%= recipe.author %></strong>
+                <% if (recipe.category) { %>
+                &bull;
+                <a
+                  href="/recipes?category=<%= recipe.category.toLowerCase().replace(/\s+/g, '-') %>"
+                  ><%= recipe.category %></a
+                >
+                <% } %>
+              </p>
+              <% if (recipe.description) { %>
+              <p style="margin-top: var(--space-3); font-style: italic; color: var(--text-muted)">
+                <%- sanitizeHtml(recipe.description) %>
+              </p>
+              <% } %>
+            </header>
+
+            <div class="recipe-stats" role="list" aria-label="Recipe times and yield">
+              <div class="recipe-stats__item" role="listitem">
+                <span class="recipe-stats__label">Prep</span>
+                <span class="recipe-stats__value"><%= recipe.prep_time || '—' %></span>
+              </div>
+              <div class="recipe-stats__item" role="listitem">
+                <span class="recipe-stats__label">Cook</span>
+                <span class="recipe-stats__value"><%= recipe.cook_time || '—' %></span>
+              </div>
+              <div class="recipe-stats__item" role="listitem">
+                <span class="recipe-stats__label">Total</span>
+                <span class="recipe-stats__value"><%= recipe.total_time || '—' %></span>
+              </div>
+              <div class="recipe-stats__item" role="listitem">
+                <span class="recipe-stats__label">Serves</span>
+                <span class="recipe-stats__value"><%= recipe.servings || '—' %></span>
+              </div>
+              <div class="recipe-stats__item" role="listitem">
+                <span class="recipe-stats__label">Difficulty</span>
+                <span class="recipe-stats__value"><%= recipe.difficulty || '—' %></span>
+              </div>
+            </div>
+
+            <% if (recipe.image_url) { %>
+            <figure style="margin-bottom: var(--space-6)">
+              <img
+                src="<%= recipe.image_url %>"
+                alt="<%= recipe.title %>"
+                style="
+                  width: 100%;
+                  max-height: 400px;
+                  object-fit: cover;
+                  border: 1px solid var(--border);
+                "
+              />
+            </figure>
+            <% } %>
+
+            <section class="recipe-ingredients" id="ingredients">
+              <h2 class="section-heading section-heading--sm">Ingredients</h2>
+              <ul class="recipe-ingredients__list" aria-label="Ingredient list">
+                <% if (recipe.ingredients && recipe.ingredients.length > 0) { %>
+                <% recipe.ingredients.forEach(function(ing) { %>
+                <li><%= ing %></li>
+                <% }); %>
+                <% } else { %>
+                <li><em>No ingredients listed yet.</em></li>
+                <% } %>
+              </ul>
+            </section>
+
+            <section class="recipe-steps" id="instructions">
+              <h2 class="section-heading section-heading--sm">Instructions</h2>
+              <ol class="recipe-steps__list" aria-label="Cooking instructions">
+                <% if (recipe.steps && recipe.steps.length > 0) { %>
+                <% recipe.steps.forEach(function(step) { %>
+                <li><%= step %></li>
+                <% }); %>
+                <% } else { %>
+                <li><em>No instructions listed yet.</em></li>
+                <% } %>
+              </ol>
+            </section>
+
+            <% if (recipe.notes) { %>
+            <section id="notes">
+              <h2 class="section-heading section-heading--sm">Notes &amp; Tips</h2>
+              <div class="callout callout--tip"><%- sanitizeHtml(recipe.notes) %></div>
+            </section>
+            <% } %>
+
+            <div
+              style="
+                display: flex;
+                gap: var(--space-3);
+                flex-wrap: wrap;
+                margin-top: var(--space-6);
+                padding-top: var(--space-4);
+                border-top: 1px solid var(--border);
+              "
+            >
+              <!-- Future capability to export/print recipes
+              <a href="/recipes/print/<%= recipe.slug %>" class="btn btn--secondary"
+                >Print Recipe</a
+              >
+              -->
+              <a href="/recipes" class="btn btn--secondary">Back to Recipes</a>
+            </div>
+          </article>
+        </div>
+      </div>
+      <% } %>
+    </main>
+
+    <!-- ══ FOOTER ══ -->
+    <footer class="site-footer">
+      <div class="site-wrapper">
+        <nav class="site-footer__links" aria-label="Footer navigation">
+          <a href="#">Home</a>
+          <a href="#">Recipes</a>
+          <a href="#">Competitions</a>
+          <a href="#">Submit</a>
+          <a href="#">About</a>
+        </nav>
+        <hr />
+        <p>
+          &copy; 2026 A Few Recipes &mdash; A private recipe collection for friends and
+          competitors.<br />
+          <small
+            >Built with EJS &amp; Supabase · Designed in the spirit of
+            <em>AllRecipes.com, circa 1998</em></small
+          >
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
