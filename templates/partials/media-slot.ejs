@@ -1,0 +1,231 @@
+<% const slotItems = mediaSlot && Array.isArray(mediaSlot.items) ? mediaSlot.items : []; %>
+<% const slotTitle = mediaSlot && mediaSlot.title ? mediaSlot.title : 'Advertisement'; %>
+<% if (slotItems.length > 0) { %>
+  <% slotItems.forEach(function(item, index) { %>
+    <div class="myspace-section">
+      <% if (index === 0) { %>
+        <p class="sidebar-advertisement-header"><%= slotTitle %> <span>▼</span></p>
+      <% } %>
+      <% if (typeof isSignedIn !== 'undefined' && isSignedIn && item.type === 'gif-stepper') { %>
+        <% const mediaAspectRatio = item.width && item.height ? `${item.width} / ${item.height}` : '347 / 207'; %>
+        <img
+          class="myspace-section-gif"
+          src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+          data-src="<%= item.src %>"
+          width="<%= item.width %>"
+          height="<%= item.height %>"
+          style="--sidebar-media-aspect-ratio: <%= mediaAspectRatio %>;"
+          data-gif-stepper
+          <% if (item.gifSound) { %>
+          data-gif-sound="<%= item.gifSound %>"
+          <% } %>
+          <% if (typeof item.gifSoundPercent !== 'undefined' && item.gifSoundPercent !== null) { %>
+          data-gif-sound-percent="<%= item.gifSoundPercent %>"
+          <% } %>
+          <% if (item.stepsPerClick) { %>
+          data-steps-per-click="<%= item.stepsPerClick %>"
+          <% } %>
+          alt="<%= item.alt %>"
+        />
+      <% } else { %>
+        <% const adKey = item.type === 'ad' ? (item.id || item.src || '') : ''; %>
+        <% const hasImageMaxWidth = !!item.imageMaxWidth; %>
+        <div
+          class="sidebar-ad-block media-ad-block"
+          data-sidebar-ad-keys='<%- JSON.stringify(Array.isArray(adCatalogKeys) ? adCatalogKeys : []) %>'
+          data-is-signed-in="<%= !!isSignedIn %>"
+        >
+          <% if (item.link && item.link !== '#') { %>
+          <a
+            href="<%= item.link %>"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-ad-key="<%= adKey %>"
+            <% if (item.audio) { %>
+            data-ad-audio="<%= item.audio %>"
+            <% } %>
+            class="sidebar-ad-link media-ad-link"
+          >
+            <div
+              class="sidebar-ad-media-wrapper"
+              <% if (hasImageMaxWidth) { %>
+              style="max-width: <%= item.imageMaxWidth %>; margin-left: auto; margin-right: auto;"
+              <% } %>
+            >
+              <img
+                class="myspace-section-ad"
+                src="<%= item.src %>"
+                <% if (item.width) { %>
+                width="<%= item.width %>"
+                <% } %>
+                <% if (item.height) { %>
+                height="<%= item.height %>"
+                <% } %>
+                alt="<%= item.alt %>"
+              />
+              <% if (item.overlayText) { %>
+              <div class="sidebar-ad-overlay<% if (item.overlayClass) { %> <%= item.overlayClass %><% } %>"><%= item.overlayText %></div>
+              <% } %>
+            </div>
+          </a>
+          <% } else { %>
+          <div
+            class="sidebar-ad-media-wrapper sidebar-ad-static media-ad-static"
+            data-ad-key="<%= adKey %>"
+            <% if (item.audio) { %>data-ad-audio="<%= item.audio %>"<% } %>
+            <% if (hasImageMaxWidth) { %>
+            style="max-width: <%= item.imageMaxWidth %>; margin-left: auto; margin-right: auto;"
+            <% } %>
+          >
+            <img
+              class="myspace-section-ad"
+              src="<%= item.src %>"
+              <% if (item.width) { %>
+              width="<%= item.width %>"
+              <% } %>
+              <% if (item.height) { %>
+              height="<%= item.height %>"
+              <% } %>
+              alt="<%= item.alt %>"
+            />
+            <% if (item.overlayText) { %>
+            <div class="sidebar-ad-overlay<% if (item.overlayClass) { %> <%= item.overlayClass %><% } %>"><%= item.overlayText %></div>
+            <% } %>
+          </div>
+          <% } %>
+          <% if (item.belowText) { %>
+          <div class="sidebar-ad-caption"><%= item.belowText %></div>
+          <% } %>
+        </div>
+      <% } %>
+    </div>
+  <% }); %>
+<% } %>
+
+<script>
+  (() => {
+    const AD_CLICK_STORAGE_KEY = "sidebar-ads-clicked";
+    const audioCache = (window.__mediaAdAudioCache = window.__mediaAdAudioCache || new Map());
+
+    const getAllAdKeys = () => {
+      const blocks = document.querySelectorAll(".media-ad-block[data-sidebar-ad-keys]");
+      const merged = new Set();
+      blocks.forEach((block) => {
+        try {
+          const raw = block.getAttribute("data-sidebar-ad-keys") || "[]";
+          const keys = JSON.parse(raw);
+          if (Array.isArray(keys)) {
+            keys.forEach((key) => key && merged.add(key));
+          }
+        } catch {
+          // non-fatal
+        }
+      });
+      return [...merged];
+    };
+
+    const isSignedIn = (() => {
+      const block = document.querySelector(".media-ad-block[data-is-signed-in]");
+      return !!(block && block.getAttribute("data-is-signed-in") === "true");
+    })();
+
+    const getClicked = () => {
+      try {
+        return new Set(JSON.parse(localStorage.getItem(AD_CLICK_STORAGE_KEY) || "[]"));
+      } catch {
+        return new Set();
+      }
+    };
+
+    const saveClicked = (set) => {
+      try {
+        localStorage.setItem(AD_CLICK_STORAGE_KEY, JSON.stringify([...set]));
+      } catch {
+        // non-fatal
+      }
+    };
+
+    const getCachedAudio = (audioFile) => {
+      if (!audioFile) return null;
+      if (!audioCache.has(audioFile)) {
+        try {
+          const audio = new Audio(audioFile);
+          audio.preload = "auto";
+          audio.volume = 0.8;
+          audio.load();
+          audioCache.set(audioFile, audio);
+        } catch (err) {
+          console.debug("Failed to preload ad audio:", err.message);
+          return null;
+        }
+      }
+      return audioCache.get(audioFile) || null;
+    };
+
+    const maybePlayAdAudio = (el) => {
+      const audioFile = el.getAttribute("data-ad-audio");
+      if (!audioFile) return;
+      try {
+        const baseAudio = getCachedAudio(audioFile);
+        if (!baseAudio) return;
+        const clone = baseAudio.cloneNode();
+        clone.volume = baseAudio.volume;
+        clone.currentTime = 0;
+        clone.play().catch((err) => {
+          console.debug("Ad audio play failed:", err.message);
+        });
+      } catch (err) {
+        console.debug("Failed to create audio element:", err.message);
+      }
+    };
+
+    const maybeTrackAdClick = (el) => {
+      const adKey = el.getAttribute("data-ad-key");
+      if (!adKey) return;
+
+      const clicked = getClicked();
+      if (clicked.has(adKey)) return;
+
+      clicked.add(adKey);
+      saveClicked(clicked);
+
+      const allAdKeys = getAllAdKeys();
+      if (!isSignedIn || allAdKeys.length === 0) return;
+
+      if (clicked.size >= allAdKeys.length) {
+        try {
+          window.dispatchEvent(
+            new CustomEvent("achievement:trigger", {
+              detail: {
+                key: "ad_completionist",
+                clicked: clicked.size,
+                total: allAdKeys.length,
+              },
+            })
+          );
+        } catch (err) {
+          console.warn("Failed to dispatch ad_completionist trigger:", err);
+        }
+      }
+    };
+
+    const handlers = document.querySelectorAll(
+      ".media-ad-link[data-ad-key], .media-ad-static[data-ad-key]"
+    );
+
+    // Warm the audio cache up front so first click avoids fetch/decode delay.
+    handlers.forEach((el) => {
+      const audioFile = el.getAttribute("data-ad-audio");
+      if (audioFile) getCachedAudio(audioFile);
+    });
+
+    handlers.forEach((el) => {
+      if (el.dataset.mediaAdBound === "true") return;
+      el.dataset.mediaAdBound = "true";
+      el.addEventListener("click", () => {
+        maybePlayAdAudio(el);
+        maybeTrackAdClick(el);
+      });
+    });
+  })();
+</script>
