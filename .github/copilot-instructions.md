@@ -133,55 +133,48 @@ Always implement and call `cleanup()` in pages/components to remove event listen
 - Keep participant-only achievements (`all_assigned_completed`, `first_challenge`, `three_challenges`, `the_challenger`) excluded from Brispace ranking unless requirements change.
 - No schema change is required in `user_achievements` for this split; filtering happens via the achievement catalog flag and leaderboard view.
 
-### Sidebar Media Slot (2026 Ads & GIFs)
+### Slot-Based Media System (2026 Ads & GIFs)
 
-**Purpose:** Unify sidebar advertising and GIF content across BriSpace home and scoreboard with randomized media selection.
+**Purpose:** Keep ad/GIF catalog and placement logic out of `server.js`, and allow routes/templates to choose where media appears via slot plans.
 
 **Behavior:**
 
-- **Signed-in users**: Random selection from a shared pool of both ad images (`ad_*` prefix) and GIF-stepper entries (interactive, frame-by-frame click-through GIFs).
-- **Signed-out users**: Static ad image only; no interaction or stepper logic.
-- **Randomization scope**: Per-request random selection (future enhancement: optional sticky per-session to reduce flicker).
-- **Ad links**: Ad items support a `link` property; ads render as clickable links (target="\_blank") when a valid link is provided.
-- **Ad audio**: Ad items support an optional `audio` property (path to .mp3 file); audio plays when the ad is clicked.
-- **Ad text overlays**: Ad items support optional `overlayText` (text over image near bottom), `belowText` (text in bordered panel below image), `overlayFont` (font key for overlay text), and `overlayFontSize` (CSS font-size value for overlay text).
+- Media catalog lives in `js/utils/sidebar-media.js`.
+- Catalog metadata is **area-based** (for sizing/placement) via `allowedAreas` such as `sidebar` or `main`.
+- Catalog metadata is **not page-targeted**; routes decide slot layout per page.
+- Slot selection is done by `buildMediaSlots({ req, isSignedIn, slotPlan })`.
+- A slot can request any count (example: 2 sidebar ads) and supports route-level forced content.
+- Selection is de-duplicated across the full page render so the same media item does not appear in multiple slots.
 
-**Server-side Media Pool (`server.js`):**
+**Server Integration:**
 
-- `getSidebarMediaPool()` builds the pool with hardcoded `ad_*` image entries and curated GIF-stepper candidates.
-- Each ad object includes: `type`, `src`, `alt`, optional `link` (URL for click-out navigation), optional `audio` (path to mp3 file for click audio), optional `overlayText`, optional `belowText`, optional `overlayFont`, and optional `overlayFontSize`.
-- `getSidebarMedia(isSignedIn)` picks random from the full pool if signed-in, or picks the first ad if signed-out.
-- **Fallback:** If no media found, defaults to iron-man.gif (safe default).
+- Routes pass a slot plan (for example `mainPromo` and `sidebar`) and receive:
+  - `slots` (selected media by slot key)
+  - `adKeys` (trackable ad IDs for completion logic)
+  - `anyGifStepper` (whether `gif-stepper.js` is needed)
+  - `test` (debug test pagination info)
+- Keep route files focused on content/query logic; avoid embedding media-catalog arrays in `server.js`.
 
 **Template Integration:**
 
-- Both `templates/brispace.ejs` and `templates/scoreboard.ejs` render `templates/partials/sidebar-gif-stepper.ejs` with `sidebarMedia` and `isSignedIn` variables.
-- The partial renders GIF-stepper HTML (with `data-gif-stepper` attributes) only for signed-in + GIF-stepper media types.
-- Ad media renders as clickable `<a>` wrapping an `<img>` when a valid link is present; otherwise plain `<img>`.
-- Overlay text renders near the bottom of the ad image when `overlayText` is set.
-- Overlay text uses an enlarged first letter for a drop-cap style across all ads.
-- Overlay container uses extra top-weighted padding and a smooth black-to-clear gradient so text sits over the image without a harsh edge.
-- Overlay text font size can be adjusted per ad via `overlayFontSize`.
-- A bordered text panel renders below the ad image when `belowText` is set.
-- Sidebar ad click tracking uses each ad object's `src` as the unique key for `ad_completionist`; keep `src` values stable for existing ads when possible.
-- Signed-out always renders plain ad image.
+- Shared slot rendering lives in `templates/partials/media-slot.ejs`.
+- `templates/brispace.ejs` and `templates/scoreboard.ejs` each render:
+  - one `mainPromo` slot in `myspace-main`
+  - one `sidebar` slot configured for two ads
+- `templates/friends.ejs` keeps the scam creative explicitly in the page layout (not via catalog metadata), and uses slot-based ads in the sidebar.
 
-**Script Loading:**
+**Tracking + Achievement:**
 
-- `gif-stepper.js` only loads when signed-in AND selected media type is `'gif-stepper'`.
-- Avoids loading unnecessary JS for static ads or signed-out users.
+- Click tracking uses media/ad IDs with localStorage key `sidebar-ads-clicked`.
+- `ad_completionist` is triggered when all catalog ad keys in `adKeys` have been clicked.
+- Tracking is initialized once per page and applies across all rendered slots.
 
 **Global Update Policy:**
 
-- Sidebar media slot must be kept in sync across **both** `templates/brispace.ejs` and `templates/scoreboard.ejs`.
-- Changes to media pool, randomization logic, or rendering rules must be applied to both pages.
-- If updating the partial or server helper functions, verify both pages render correctly and test randomization on both routes.
-- Add or update ad links, audio, overlay text, below text, overlay font, and overlay font size in `server.js` `adCandidates` array; no template changes required.
-
-**Future Enhancements:**
-
-- GIF pool expansion: replace hardcoded curated list with filesystem enumeration (e.g., `gif_*` prefix or dedicated subdirectory).
-- Session-sticky randomization: cache selected media in session storage to reduce visual flicker on repeated page loads.
+- Keep shared slot behavior aligned across `templates/brispace.ejs`, `templates/scoreboard.ejs`, and `templates/friends.ejs`.
+- If slot rendering, catalog metadata, or selection behavior changes, verify no-duplicate behavior across all slots on a page.
+- For ad additions/edits, update `js/utils/sidebar-media.js` catalog entries with `id`, `allowedAreas`, and any overlay/audio metadata.
+- Ad creatives can optionally include `imageMaxWidth` (for example `"320px"`); when set, slot rendering constrains and centers the media block in the container.
 
 ---
 

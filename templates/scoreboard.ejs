@@ -66,6 +66,12 @@
             <% } %>
           </section>
 
+          <%- include('partials/media-slot', {
+            mediaSlot: adSlots && adSlots.mainPromo ? adSlots.mainPromo : null,
+            adCatalogKeys: adCatalogKeys,
+            isSignedIn: isSignedIn
+          }) %>
+
           <section class="myspace-section">
             <h3 style="margin-bottom: 0">Full rankings</h3>
 
@@ -117,7 +123,11 @@
             <a href="/users/<%= currentUser.username %>">Go to your profile</a>
           </div>
           <% } %>
-          <%- include('partials/sidebar-gif-stepper', { sidebarMedia: sidebarMedia, sidebarAdKeys: sidebarAdKeys, isSignedIn: isSignedIn }) %>
+          <%- include('partials/media-slot', {
+            mediaSlot: adSlots && adSlots.sidebar ? adSlots.sidebar : null,
+            adCatalogKeys: adCatalogKeys,
+            isSignedIn: isSignedIn
+          }) %>
           <% if (sidebarTest && sidebarTest.enabled) { %>
           <div class="myspace-section" style="margin-top: 8px">
             <h3 style="margin-bottom: 6px">Sidebar Media Test</h3>
@@ -153,7 +163,7 @@
       }
     </script>
 
-    <% if (typeof isSignedIn !== 'undefined' && isSignedIn && typeof sidebarMedia !== 'undefined' && sidebarMedia && sidebarMedia.type === 'gif-stepper') { %>
+    <% if (typeof hasGifStepper !== 'undefined' && hasGifStepper) { %>
     <script src="/js/components/gif-stepper.js"></script>
     <% } %>
   </body>

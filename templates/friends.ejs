@@ -34,6 +34,8 @@
             </div>
           </section>
 
+          <%- include('partials/sidebar-scam-container', { hasSignedInUser: !!currentUser }) %>
+
           <section class="myspace-section brispace-new-friends">
             <h3 style="margin-bottom: 0">Published profiles</h3>
             <% if (allUsers && allUsers.length > 0) { %>
@@ -59,7 +61,21 @@
             <a href="/users/<%= currentUser.username %>">Go to your profile</a>
           </div>
           <% } %>
-          <%- include('partials/sidebar-scam-container', { hasSignedInUser: !!currentUser }) %>
+          <%- include('partials/media-slot', {
+            mediaSlot: adSlots && adSlots.sidebar ? adSlots.sidebar : null,
+            adCatalogKeys: adCatalogKeys,
+            isSignedIn: isSignedIn
+          }) %>
+          <% if (sidebarTest && sidebarTest.enabled) { %>
+          <div class="myspace-section" style="margin-top: 8px">
+            <h3 style="margin-bottom: 6px">Sidebar Media Test</h3>
+            <p style="margin: 0 0 8px 0; font-size: 11px">
+              Item <%= sidebarTest.index + 1 %> of <%= sidebarTest.total %>
+            </p>
+            <a class="btn btn--secondary" href="<%= sidebarTest.prevUrl %>">Prev</a>
+            <a class="btn btn--primary" href="<%= sidebarTest.nextUrl %>">Next</a>
+          </div>
+          <% } %>
         </aside>
       </div>
     </main>
@@ -105,5 +121,8 @@
         }
       }
     </script>
+    <% if (typeof hasGifStepper !== 'undefined' && hasGifStepper) { %>
+    <script src="/js/components/gif-stepper.js"></script>
+    <% } %>
   </body>
 </html>
