@@ -1,174 +1,36 @@
-# Birthday App 🎉
+# Docs Index
 
-A weekend event challenge app with progressive reveals, Brian-mode challenges, and live scoreboard.
+Birthday Challenge Zone ("Brispace") — a retro GeoCities-style event app: progressive challenge unlocking, MySpace-style user profiles, competitions, achievements, and live scoreboards. Vanilla HTML/CSS/JS frontend, Node.js/Express + EJS server, Supabase (Postgres) backend, Firebase phone-OTP auth.
 
-## Features
+Last full docs refresh: **2026-09-28**.
 
-- 🔓 **Username-only auth** (no passwords needed)
-- 🎯 **Progressive challenge reveals** (unlock one at a time)
-- ⚔️ **Brian vs mode** (competitive challenges)
-- 🤝 **Brian with mode** (collaborative challenges)
-- 🏆 **Live scoreboard** with rankings
-- 📊 **Personal stats dashboard**
+## Doc Map
 
-## Quick Start
+| Doc                                                                                 | What it covers                                                                       |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| [GETTING-STARTED.md](GETTING-STARTED.md)                                            | Local setup, env vars, `js/config.js`, dev auto-login, test helpers                  |
+| [ARCHITECTURE.md](ARCHITECTURE.md)                                                  | Express/EJS/static hybrid, auth flow, appState/BasePage/EventBus patterns            |
+| [API.md](API.md)                                                                    | Every server route: pages, auth, users API, notifications API                        |
+| [DATABASE.md](DATABASE.md)                                                          | Ground-truth schema (tables, views, RPCs), `/sql` folder conventions and known drift |
+| [DEPLOYMENT.md](DEPLOYMENT.md)                                                      | Production: DigitalOcean droplet, systemd, nginx, TLS, env vars, ops commands        |
+| [DEVELOPMENT-GUIDELINES.md](DEVELOPMENT-GUIDELINES.md)                              | Code standards, GeoCities aesthetic rules, feature flags                             |
+| [site-inventory.md](site-inventory.md) / [site-inventory.json](site-inventory.json) | Page → script/CSS dependency map (JSON is machine-parseable)                         |
 
-### Local Development
+## Feature Docs
 
-See [LOCAL_SERVER_SETUP.md](./LOCAL_SERVER_SETUP.md) for full instructions.
+| Feature                                                                          | Doc                                                                          |
+| -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Challenges (progressive unlock, trigger/swap, Brian mode, submissions/approvals) | [features/challenges.md](features/challenges.md)                             |
+| Scoring, leaderboards & achievements                                             | [features/scoring-and-achievements.md](features/scoring-and-achievements.md) |
+| Recipes & cocktail competitions (judging, favorites, comments)                   | [features/recipes-and-cocktails.md](features/recipes-and-cocktails.md)       |
+| Notifications (web push + Account Center feed)                                   | [features/notifications.md](features/notifications.md)                       |
+| User profiles / Brispace (wall, Top 8, themes, backgrounds, GIFs, headshots)     | [features/profiles.md](features/profiles.md)                                 |
+| Sidebar media & ads (slot system)                                                | [features/media-slots.md](features/media-slots.md)                           |
+| Easter eggs (YTMND, scam simulator, secret tracks, goblin king)                  | [features/easter-eggs.md](features/easter-eggs.md)                           |
+| Audio & music (SFX, music player, mute)                                          | [features/audio.md](features/audio.md)                                       |
 
-**Quick Steps:**
+## Other References
 
-1. Clone the repo:
-   ```bash
-   git clone https://github.com/yourusername/birthday-app.git
-   cd birthday-app
-   ```
-
-2. Install Node.js (https://nodejs.org/) if you haven't already.
-
-3. Install dependencies and start the server:
-   ```bash
-   npm install express
-   node server.js
-   ```
-   Then open `http://localhost:8000` in your browser.
-
-   - The Node.js server supports extensionless URLs (e.g., `/dashboard` → `/dashboard.html`).
-   - For troubleshooting and advanced setup, see [LOCAL_SERVER_SETUP.md](./LOCAL_SERVER_SETUP.md).
-
-4. Create a Supabase project at [supabase.com](https://supabase.com)
-
-5. Run the SQL migration in Supabase SQL Editor:
-   ```bash
-   # Copy contents of supabase/sql/init.sql
-   # Paste and run in Supabase dashboard → SQL Editor
-   ```
-
-4. Update Supabase credentials in all HTML files:
-   - `index.html`
-   - `dashboard.html`
-   - `leaderboard.html`
-   
-   Replace:
-   ```javascript
-   const SUPABASE_URL = 'https://your-project.supabase.co'
-   const SUPABASE_KEY = 'your-anon-key'
-   ```
-
-5. Open `index.html` in your browser
-
-### Production Deployment (DigitalOcean)
-
-1. SSH to your droplet:
-   ```bash
-   ssh root@your-droplet-ip
-   ```
-
-2. Install nginx:
-   ```bash
-   apt update && apt install nginx -y
-   ```
-
-3. Clone repo to web directory:
-   ```bash
-   mkdir -p /var/www/birthday-app
-   cd /var/www/birthday-app
-   git clone https://github.com/yourusername/birthday-app.git .
-   ```
-
-4. Configure nginx:
-   ```bash
-   nano /etc/nginx/sites-available/birthday-app
-   ```
-   
-   Paste:
-   ```nginx
-   server {
-       listen 80;
-       server_name your-domain.com;
-       root /var/www/birthday-app;
-       index index.html;
-       location / {
-           try_files $uri $uri/ =404;
-       }
-   }
-   ```
-
-5. Enable site:
-   ```bash
-   ln -s /etc/nginx/sites-available/birthday-app /etc/nginx/sites-enabled/
-   nginx -t
-   systemctl restart nginx
-   ```
-
-6. Optional - Setup SSL:
-   ```bash
-   apt install certbot python3-certbot-nginx -y
-   certbot --nginx -d your-domain.com
-   ```
-
-## Admin Guide
-
-### Setup Users
-```sql
-INSERT INTO users (username, display_name) VALUES 
-  ('alice', 'Alice'),
-  ('bob', 'Bob');
-```
-
-### Create Challenges
-```sql
--- Regular challenge
-INSERT INTO challenges (id, title, description, type) VALUES
-  ('c1', 'First Challenge', 'Complete this task', 'assigned');
-
--- Brian vs challenge
-INSERT INTO challenges (id, title, description, type, brian_mode) VALUES
-  ('c2', 'Beat Brian', 'Compete against Brian', 'assigned', 'vs');
-
--- Brian with challenge
-INSERT INTO challenges (id, title, description, type, brian_mode) VALUES
-  ('c3', 'Team Up', 'Work with Brian', 'assigned', 'with');
-
--- Competition challenge
-INSERT INTO challenges (id, title, description, type) VALUES
-  ('comp1', 'Competition 1', 'First competition', 'competition');
-```
-
-### Assign Challenges
-```sql
-INSERT INTO assignments (user_id, challenge_id)
-SELECT u.id, 'c1' FROM users u WHERE u.username = 'alice';
-```
-
-### Add Competition Results
-```sql
-INSERT INTO competition_placements (user_id, challenge_id, place, points)
-SELECT u.id, 'comp1', 1, 20 FROM users u WHERE u.username = 'alice';
-```
-
-## Database Schema
-
-- **users**: User accounts (username, display_name)
-- **challenges**: Challenge definitions (title, description, type, brian_mode)
-- **assignments**: User-challenge links with outcomes
-- **competition_placements**: Competition results with points
-- **scoreboard**: View aggregating all points
-
-## Points System
-
-- **Assigned challenges**: 5 points per successful completion
-- **Brian challenges**: 5 points to winner/collaborators, 0 to loser/failed
-- **Competition challenges**: Custom points per placement
-
-## Tech Stack
-
-- Frontend: Vanilla HTML/CSS/JavaScript (ES modules)
-- Backend: Supabase (Postgres + RLS)
-- Auth: Username-based (no passwords)
-- Hosting: Static nginx on DigitalOcean
-
-## License
-
-MIT
+- `.github/copilot-instructions.md` — AI-agent conventions and implementation patterns (overlaps intentionally with these docs).
+- [archive/](archive/) — historical one-off implementation notes and superseded setup guides. Do not follow these; see [archive/README.md](archive/README.md).
+- `/sql/` — SQL migration history (append-only; see [DATABASE.md](DATABASE.md) for caveats about drift).

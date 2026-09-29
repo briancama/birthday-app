@@ -16,6 +16,11 @@
     "prettier-plugin-ejs": "^1.0.3"
   },
   "scripts": {
-    "lint:ejs": "ejslint \"templates/**/*.ejs\""
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "lint:ejs": "ejslint \"templates/**/*.ejs\"",
+    "inventory": "node scripts/generate-site-inventory.js",
+    "db:pull": "node scripts/db-pull.js",
+    "seed": "node scripts/seed-dev.js"
   }
 }

@@ -24,6 +24,8 @@ class AuthManager extends EventTarget {
     let firebaseUid =
       localStorage.getItem("firebase_uid") || firebaseAuth.getCurrentUser()?.uid || null;
     if (!firebaseUid) {
+      // No Firebase state, but a server session cookie may exist (e.g. dev auto-login)
+      if (await this._loadFromServerSession()) return true;
       this.emitError("missing_firebase_uid");
       this.redirectToLogin();
       return false;
@@ -66,7 +68,7 @@ class AuthManager extends EventTarget {
       });
       const firebaseUid =
         localStorage.getItem("firebase_uid") || firebaseAuth.getCurrentUser()?.uid || null;
-      if (!firebaseUid) return false;
+      if (!firebaseUid) return this._loadFromServerSession();
       const { data } = await this.supabase
         .from("users")
         .select("*")
@@ -82,6 +84,25 @@ class AuthManager extends EventTarget {
         this._syncServerCookie().catch(() => {});
       }
       return !!this.userId;
+    } catch {
+      return false;
+    }
+  }
+
+  // Cookie-only session: hydrate from GET /auth/me when Firebase client state is absent.
+  async _loadFromServerSession() {
+    try {
+      const resp = await fetch("/auth/me", { credentials: "include" });
+      if (!resp.ok) return false;
+      const payload = await resp.json();
+      const u = payload && payload.user;
+      if (!u || !u.user_id) return false;
+      // user_profile_view uses user_id; normalize to the users-table shape (id)
+      this.currentUser = { id: u.user_id, ...u };
+      this.userId = u.user_id;
+      this.userType = u.user_type || "visitor";
+      this.emit("user:loaded", this.currentUser);
+      return true;
     } catch {
       return false;
     }

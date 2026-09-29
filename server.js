@@ -37,16 +37,32 @@ app.use(cookieParser(process.env.COOKIE_SECRET || "dev-secret"));
 // so developers don't need to call /auth/login to work on UI pages.
 // Activated only when NODE_ENV !== 'production'. Optionally override ID with
 // query `?devUserId=...` or env `DEV_LOCAL_USER_ID`.
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
   if (process.env.NODE_ENV !== "production" && !process.env.DEV_DISABLE_AUTOLOGIN) {
     try {
       const signed = req.signedCookies && req.signedCookies.user_id;
-      if (!signed) {
-        const devId =
-          req.query && req.query.devUserId
-            ? req.query.devUserId
-            : process.env.DEV_LOCAL_USER_ID || "local-dev-user";
-        if (devId) {
+      const override = req.query && req.query.devUserId;
+      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      // Re-resolve when: no cookie, explicit switch, or a stale username-valued cookie
+      if (!signed || override || !UUID_RE.test(signed)) {
+        let devId =
+          override ||
+          (signed && !UUID_RE.test(signed) ? signed : null) ||
+          process.env.DEV_LOCAL_USER_ID ||
+          "local-dev-user";
+        // API ownership checks compare the cookie to UUIDs, so resolve usernames up front
+        if (!UUID_RE.test(devId)) {
+          const supabase = getSupabase();
+          if (supabase) {
+            const { data: byName } = await supabase
+              .from("users")
+              .select("id")
+              .eq("username", devId)
+              .maybeSingle();
+            if (byName) devId = byName.id;
+          }
+        }
+        if (devId && devId !== signed) {
           res.cookie("user_id", devId, {
             signed: true,
             httpOnly: true,
@@ -62,6 +78,8 @@ app.use((req, res, next) => {
             sameSite: "lax",
             maxAge: 1000 * 60 * 60 * 24 * 7,
           });
+          // Make the new identity visible to downstream middleware on this same request
+          req.signedCookies.user_id = devId;
         }
       }
     } catch (e) {

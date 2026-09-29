@@ -1,13 +1,116 @@
 {
-  "generated": "2026-03-12T00:00:00Z",
-  "pages": {
-    "index.html": {
-      "path": "index.html",
-      "css": ["css/geocities.css"],
-      "scripts": ["firebase SDK (phone auth)"]
+  "generated": "2026-09-29",
+  "staticPages": {
+    "admin-approvals.html": {
+      "css": [
+        "css/geocities.css",
+        "css/components/navigation.css",
+        "css/components/forms.css",
+        "css/components/submissions.css",
+        "css/components/contest-placements.css"
+      ],
+      "pageScripts": [
+        "./js/pages/admin-approvals.js"
+      ],
+      "components": [
+        "components/contest-placement-form.js",
+        "components/contest-placement-table.js",
+        "components/navigation.js"
+      ],
+      "partials": [],
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js",
+        "./js/app.js"
+      ]
+    },
+    "challenges-submit.html": {
+      "css": [
+        "css/geocities.css",
+        "css/components/navigation.css",
+        "css/components/leaderboard.css",
+        "css/components/submissions.css",
+        "css/components/forms.css"
+      ],
+      "pageScripts": [
+        "./js/pages/challenges-submit.js"
+      ],
+      "components": [
+        "components/navigation.js",
+        "components/bottom-menu.js"
+      ],
+      "partials": [],
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js",
+        "./js/app.js"
+      ]
+    },
+    "challenges.html": {
+      "css": [
+        "css/geocities.css",
+        "css/components/navigation.css",
+        "css/components/submissions.css",
+        "css/components/event-card.css",
+        "css/components/character-select.css"
+      ],
+      "pageScripts": [
+        "/js/pages/challenges.js"
+      ],
+      "components": [
+        "components/navigation.js",
+        "components/bottom-menu.js"
+      ],
+      "partials": [],
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"
+      ]
+    },
+    "cocktail-judging.html": {
+      "css": [
+        "css/geocities.css",
+        "css/components/navigation.css",
+        "css/components/submissions.css"
+      ],
+      "pageScripts": [
+        "./js/pages/cocktail-judging.js"
+      ],
+      "components": [
+        "components/navigation.js",
+        "components/bottom-menu.js"
+      ],
+      "partials": [],
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js",
+        "./js/app.js"
+      ]
+    },
+    "cocktail-leaderboard.html": {
+      "css": [
+        "css/geocities.css",
+        "css/components/leaderboard.css"
+      ],
+      "pageScripts": [
+        "js/pages/cocktail-leaderboard.js"
+      ],
+      "components": [],
+      "partials": [],
+      "otherScripts": []
+    },
+    "cocktail-rubric.html": {
+      "css": [
+        "css/geocities.css",
+        "css/components/navigation.css",
+        "css/rubric.css"
+      ],
+      "pageScripts": [],
+      "components": [],
+      "partials": [],
+      "otherScripts": []
     },
     "dashboard.html": {
-      "path": "dashboard.html",
       "css": [
         "css/geocities.css",
         "css/components/navigation.css",
@@ -15,17 +118,19 @@
         "css/components/event-card.css",
         "css/components/achievements.css"
       ],
-      "scripts": ["firebase SDK (auth)"],
-      "page_js": "js/pages/dashboard.js",
-      "components_used": [
-        "js/components/navigation.js",
-        "js/components/challenge-card.js",
-        "js/components/cocktail-entry-modal.js",
-        "js/components/user-events-section.js"
+      "pageScripts": [
+        "./js/pages/dashboard.js"
+      ],
+      "components": [
+        "components/bottom-menu.js"
+      ],
+      "partials": [],
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"
       ]
     },
     "event-info.html": {
-      "path": "event-info.html",
       "css": [
         "css/geocities.css",
         "css/components/navigation.css",
@@ -36,110 +141,441 @@
         "css/components/event-card.css",
         "css/components/submissions.css"
       ],
-      "scripts": ["firebase SDK (auth)"],
-      "page_js": "js/pages/event-info.js",
-      "components_used": [
-        "js/components/guestbook.js",
-        "js/components/myspace-comment-card.js",
-        "js/components/event-card.js",
-        "js/components/cocktail-entry-modal.js",
-        "js/components/ytmnd-easter-egg.js"
+      "pageScripts": [
+        "./js/pages/event-info.js"
+      ],
+      "components": [
+        "components/gif-stepper.js",
+        "components/navigation.js",
+        "components/cocktail-entry-modal.js",
+        "components/bottom-menu.js"
+      ],
+      "partials": [],
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js",
+        "./js/app.js",
+        "./js/services/firebase-auth.js"
       ]
     },
-    "challenges-submit.html": {
-      "path": "challenges-submit.html",
+    "hello.html": {
+      "css": [],
+      "pageScripts": [],
+      "components": [],
+      "partials": [],
+      "otherScripts": []
+    },
+    "hub.html": {
       "css": [
         "css/geocities.css",
-        "css/components/navigation.css",
-        "css/components/leaderboard.css",
-        "css/components/submissions.css",
-        "css/components/forms.css"
+        "css/components/hub.css"
       ],
-      "scripts": ["firebase SDK (auth)"],
-      "components_used": [
-        "js/components/submission.js",
-        "js/components/gif-stepper.js",
-        "js/components/navigation.js"
+      "pageScripts": [],
+      "components": [],
+      "partials": [],
+      "otherScripts": [
+        "./js/config.js"
       ]
     },
-    "leaderboard.html": {
-      "path": "leaderboard.html",
+    "index.html": {
       "css": [
         "css/geocities.css",
-        "css/components/navigation.css",
-        "css/components/leaderboard.css",
-        "css/components/forms.css"
+        "css/components/navigation.css"
       ],
-      "scripts": [
-        "firebase SDK (auth)",
-        "inline module that imports js/app.js, js/components/navigation.js, js/pages/leaderboard.js"
+      "pageScripts": [
+        "./js/pages/login.js"
       ],
-      "page_js": "js/pages/leaderboard.js",
-      "components_used": ["js/components/navigation.js"]
+      "components": [],
+      "partials": [],
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"
+      ]
     },
-    "admin-approvals.html": {
-      "path": "admin-approvals.html",
+    "invitation.html": {
       "css": [
         "css/geocities.css",
         "css/components/navigation.css",
         "css/components/forms.css",
-        "css/components/submissions.css",
-        "css/components/contest-placements.css"
+        "css/invitation.css"
       ],
-      "scripts": [
-        "firebase SDK (auth)",
-        "inline module imports initNavigation from js/components/navigation.js"
-      ],
-      "components_used": [
-        "js/components/navigation.js",
-        "js/components/contest-placement-table.js",
-        "js/components/contest-placement-form.js"
+      "pageScripts": [],
+      "components": [],
+      "partials": [],
+      "otherScripts": [
+        "./js/config.js"
       ]
     },
-    "cocktail-judging.html": {
-      "path": "cocktail-judging.html",
+    "leaderboard.html": {
       "css": [
         "css/geocities.css",
         "css/components/navigation.css",
-        "css/components/submissions.css"
+        "css/components/leaderboard.css",
+        "css/components/forms.css"
       ],
-      "scripts": ["firebase SDK (auth)"],
-      "components_used": ["js/components/navigation.js", "js/components/cocktail-entry-modal.js"]
+      "pageScripts": [
+        "./js/pages/leaderboard.js"
+      ],
+      "components": [
+        "components/navigation.js",
+        "components/bottom-menu.js"
+      ],
+      "partials": [],
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js",
+        "./js/app.js"
+      ]
     },
     "register.html": {
-      "path": "register.html",
-      "css": ["css/geocities.css", "css/components/forms.css"],
-      "scripts": ["firebase SDK (auth)"]
+      "css": [
+        "css/geocities.css",
+        "css/components/navigation.css",
+        "css/components/forms.css"
+      ],
+      "pageScripts": [
+        "js/pages/register.js"
+      ],
+      "components": [],
+      "partials": [],
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"
+      ]
     },
-    "invitation.html": {
-      "path": "invitation.html",
-      "css": ["css/geocities.css", "css/components/forms.css", "css/invitation.css"],
-      "components_used": ["js/components/guestbook.js (styles present in invitation.css)"]
-    },
-    "templates/user.ejs": {
-      "path": "templates/user.ejs",
-      "css": ["/css/geocities.css", "/css/components/navigation.css"],
-      "notes": "Server-side user profile template; maps to user pages (legacy EJS template)."
+    "ytmnd.html": {
+      "css": [
+        "css/geocities.css"
+      ],
+      "pageScripts": [
+        "./js/pages/base-page.js"
+      ],
+      "components": [],
+      "partials": [],
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"
+      ]
     }
   },
-  "components_index": [
-    "js/components/favorite-button.js",
-    "js/components/contest-placement-form.js",
-    "js/components/contest-placement-table.js",
-    "js/components/myspace-comment-card.js",
-    "js/components/submission.js",
-    "js/components/cocktail-entry-modal.js",
-    "js/components/headshot-upload.js",
-    "js/components/gif-stepper.js",
-    "js/components/user-events-section.js",
-    "js/components/music-player.js",
-    "js/components/bottom-menu.js",
-    "js/components/mute-button.js",
-    "js/components/ytmnd-easter-egg.js",
-    "js/components/challenge-card.js",
-    "js/components/challenge-assignment.js",
-    "js/components/guestbook.js",
-    "js/components/navigation.js",
-    "js/components/event-card.js"
-  ]
+  "templates": {
+    "templates/account.ejs": {
+      "css": [
+        "/css/geocities.css",
+        "/css/components/navigation.css",
+        "/css/components/achievements.css",
+        "/css/components/account.css"
+      ],
+      "pageScripts": [
+        "/js/pages/account.js"
+      ],
+      "components": [],
+      "partials": [
+        "partials/navigation-visitor"
+      ],
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"
+      ]
+    },
+    "templates/admin-approvals.ejs": {
+      "css": [
+        "/css/geocities.css",
+        "/css/components/navigation.css",
+        "/css/components/forms.css",
+        "/css/components/submissions.css",
+        "/css/components/contest-placements.css"
+      ],
+      "pageScripts": [
+        "/js/pages/admin-approvals.js"
+      ],
+      "components": [
+        "components/contest-placement-form.js",
+        "components/contest-placement-table.js"
+      ],
+      "partials": [
+        "partials/navigation"
+      ],
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js",
+        "/js/app.js"
+      ]
+    },
+    "templates/admin.ejs": {
+      "css": [
+        "/css/geocities.css",
+        "/css/components/myspace.css",
+        "/css/components/navigation.css",
+        "/css/components/login-signup.css",
+        "/css/components/admin.css"
+      ],
+      "pageScripts": [
+        "/js/pages/admin.js"
+      ],
+      "components": [
+        "components/login-signup.js"
+      ],
+      "partials": [
+        "partials/navigation"
+      ],
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"
+      ]
+    },
+    "templates/brispace.ejs": {
+      "css": [
+        "/css/geocities.css",
+        "/css/components/myspace.css",
+        "/css/components/navigation.css",
+        "/css/components/brispace-home.css",
+        "/css/components/user-display.css",
+        "/css/components/login-signup.css"
+      ],
+      "pageScripts": [
+        "/js/pages/brispace.js"
+      ],
+      "components": [
+        "components/login-signup.js",
+        "components/gif-stepper.js"
+      ],
+      "partials": [
+        "partials/navigation-visitor",
+        "partials/user-display",
+        "partials/media-slot"
+      ],
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"
+      ]
+    },
+    "templates/challenges-submit.ejs": {
+      "css": [
+        "/css/geocities.css",
+        "/css/components/navigation.css",
+        "/css/components/leaderboard.css",
+        "/css/components/submissions.css",
+        "/css/components/forms.css"
+      ],
+      "pageScripts": [
+        "/js/pages/challenges-submit.js"
+      ],
+      "components": [
+        "components/bottom-menu.js"
+      ],
+      "partials": [
+        "partials/navigation"
+      ],
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js",
+        "/js/app.js"
+      ]
+    },
+    "templates/challenges.ejs": {
+      "css": [
+        "/css/geocities.css",
+        "/css/components/navigation.css",
+        "/css/components/submissions.css",
+        "/css/components/event-card.css",
+        "/css/components/character-select.css"
+      ],
+      "pageScripts": [
+        "/js/pages/challenges.js"
+      ],
+      "components": [
+        "components/bottom-menu.js"
+      ],
+      "partials": [
+        "partials/navigation",
+        "partials/challenge-list"
+      ],
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"
+      ]
+    },
+    "templates/cocktail-judging.ejs": {
+      "css": [
+        "/css/geocities.css",
+        "/css/components/navigation.css",
+        "/css/components/submissions.css"
+      ],
+      "pageScripts": [
+        "/js/pages/cocktail-judging.js"
+      ],
+      "components": [
+        "components/bottom-menu.js"
+      ],
+      "partials": [
+        "partials/navigation"
+      ],
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"
+      ]
+    },
+    "templates/dashboard.ejs": {
+      "css": [
+        "/css/geocities.css",
+        "/css/components/navigation.css",
+        "/css/components/submissions.css",
+        "/css/components/event-card.css",
+        "/css/components/achievements.css"
+      ],
+      "pageScripts": [
+        "/js/pages/dashboard.js"
+      ],
+      "components": [
+        "components/bottom-menu.js"
+      ],
+      "partials": [
+        "partials/navigation",
+        "partials/challenge-list"
+      ],
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"
+      ]
+    },
+    "templates/event-info.ejs": {
+      "css": [
+        "/css/geocities.css",
+        "/css/components/navigation.css",
+        "/css/components/leaderboard.css",
+        "/css/components/forms.css",
+        "/css/components/myspace.css",
+        "/css/components/myspace-comments.css",
+        "/css/components/event-card.css",
+        "/css/components/submissions.css",
+        "/css/components/secret-player.css"
+      ],
+      "pageScripts": [
+        "/js/pages/event-info.js"
+      ],
+      "components": [
+        "components/gif-stepper.js",
+        "components/bottom-menu.js"
+      ],
+      "partials": [
+        "partials/navigation"
+      ],
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"
+      ]
+    },
+    "templates/friends.ejs": {
+      "css": [
+        "/css/geocities.css",
+        "/css/components/myspace.css",
+        "/css/components/navigation.css",
+        "/css/components/brispace-home.css",
+        "/css/components/user-display.css",
+        "/css/components/login-signup.css",
+        "/css/components/submissions.css"
+      ],
+      "pageScripts": [
+        "/js/pages/brispace.js"
+      ],
+      "components": [
+        "components/login-signup.js",
+        "components/DialogChain.js",
+        "components/dialog-chains.js",
+        "components/gif-stepper.js"
+      ],
+      "partials": [
+        "partials/navigation-visitor",
+        "partials/sidebar-scam-container",
+        "partials/user-display",
+        "partials/media-slot"
+      ],
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"
+      ]
+    },
+    "templates/leaderboard.ejs": {
+      "css": [
+        "/css/geocities.css",
+        "/css/components/navigation.css",
+        "/css/components/leaderboard.css",
+        "/css/components/forms.css"
+      ],
+      "pageScripts": [
+        "/js/pages/leaderboard.js"
+      ],
+      "components": [
+        "components/bottom-menu.js"
+      ],
+      "partials": [
+        "partials/navigation"
+      ],
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"
+      ]
+    },
+    "templates/recipe.ejs": {
+      "css": [
+        "/css/recipe.css"
+      ],
+      "pageScripts": [],
+      "components": [],
+      "partials": [],
+      "otherScripts": []
+    },
+    "templates/scoreboard.ejs": {
+      "css": [
+        "/css/geocities.css",
+        "/css/components/myspace.css",
+        "/css/components/navigation.css",
+        "/css/components/brispace-home.css",
+        "/css/components/login-signup.css",
+        "/css/components/brispace-leaderboard.css"
+      ],
+      "pageScripts": [
+        "/js/pages/brispace.js"
+      ],
+      "components": [
+        "components/login-signup.js",
+        "components/gif-stepper.js"
+      ],
+      "partials": [
+        "partials/navigation-visitor",
+        "partials/media-slot"
+      ],
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"
+      ]
+    },
+    "templates/user.ejs": {
+      "css": [
+        "/css/geocities.css",
+        "/css/components/navigation.css",
+        "/css/components/myspace.css",
+        "/css/components/myspace-comments.css",
+        "/css/components/user-profile.css",
+        "/css/components/secret-player.css",
+        "https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css"
+      ],
+      "pageScripts": [
+        "/js/pages/user-profile.js"
+      ],
+      "components": [
+        "components/bottom-menu.js"
+      ],
+      "partials": [
+        "partials/navigation-visitor"
+      ],
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js",
+        "https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js",
+        "https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"
+      ]
+    }
+  }
 }
