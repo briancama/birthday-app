@@ -1,0 +1,717 @@
+/* ON A STICK — standalone stylesheet. Palette lifted from Hot Dog on a Stick:
+   red #e03a3e / blue #0076c0 / yellow #fff200 / white, chunky black outlines.
+   Mobile-first. Belongs to on-a-stick.html + on-a-stick-rubric.html only. */
+
+:root {
+  --stick-red: #e03a3e;
+  --stick-blue: #0076c0;
+  --stick-yellow: #fff200;
+  --stick-cream: #fffdf5;
+  --stick-ink: #16130f;
+  --stick-batter: #e8a33d;
+  --stick-wood: #c9a06a;
+  --stick-stripes: repeating-linear-gradient(
+    90deg,
+    var(--stick-red) 0 24px,
+    var(--stick-yellow) 24px 48px,
+    var(--stick-blue) 48px 72px
+  );
+  --stick-font: "Cooper Black", "Arial Rounded MT Bold", Verdana, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--stick-cream);
+  color: var(--stick-ink);
+  font-family: var(--stick-font);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- shared bits ---------- */
+
+.stripe-band {
+  height: 14px;
+  background: var(--stick-stripes);
+  border-top: 3px solid var(--stick-ink);
+  border-bottom: 3px solid var(--stick-ink);
+}
+
+.wrap {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.05;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+.btn-stick {
+  display: inline-block;
+  background: var(--stick-yellow);
+  color: var(--stick-ink);
+  text-decoration: none;
+  font-size: 1rem;
+  padding: 0.7rem 1.3rem;
+  border: 3px solid var(--stick-ink);
+  border-radius: 999px;
+  box-shadow: 4px 4px 0 var(--stick-ink);
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
+}
+
+.btn-stick:active,
+.btn-stick:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--stick-ink);
+}
+
+/* ---------- hero: sticky corndog scroll scene ---------- */
+
+.hero {
+  /* runway: extra height creates the scroll distance that drives the animation */
+  height: 240svh;
+  position: relative;
+  background: var(--stick-red);
+}
+
+.hero-stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 4svh;
+}
+
+.hero-title {
+  text-align: center;
+  color: #fff;
+  z-index: 2;
+}
+
+.hero-title h1 {
+  font-size: clamp(3rem, 14vw, 6rem);
+  color: var(--stick-yellow);
+  text-shadow: 4px 4px 0 var(--stick-ink);
+}
+
+.hero-when {
+  margin: 0.5rem 0 0;
+  font-size: clamp(1rem, 4.5vw, 1.4rem);
+  background: #fff;
+  color: var(--stick-ink);
+  display: inline-block;
+  padding: 0.35rem 1rem;
+  border: 3px solid var(--stick-ink);
+  border-radius: 999px;
+  transform: rotate(-2deg);
+}
+
+.hero-art {
+  /* live-tuning knobs — select div.hero-art in the inspector and adjust these */
+  --art-tilt: 7deg; /* initial angle of the whole corndog */
+  --art-width: min(40vw, 200px); /* overall corndog size */
+  --art-right: 7vw; /* absorbs tilt overhang so the corner isn't clipped */
+  --food-y: 25px; /* food height on the stick */
+  --food-tilt: -10deg; /* food angle relative to the stick */
+  --food-scale: 1.1; /* food size relative to the stick */
+
+  position: absolute;
+  z-index: 1;
+  /* top tuned so the stick reads vertically centered on phone viewports */
+  top: 20svh;
+  right: var(--art-right);
+  width: var(--art-width);
+  transform: rotate(var(--art-tilt));
+}
+
+.hero-art svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* food layer slides up + off as you scroll (driven by JS via --food-shift) */
+#corndog-food {
+  transform: translateY(calc(var(--food-shift, 0) * -130%))
+    rotate(calc(var(--food-shift, 0) * -14deg));
+  transform-origin: 50% 20%;
+}
+
+/* static food placement, driven by the --food-* knobs on .hero-art */
+.food-knob {
+  transform: translate(0, var(--food-y, 25px)) rotate(var(--food-tilt, 0deg))
+    scale(var(--food-scale, 1));
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+/* copy fills the open column beside the off-center corndog */
+.hero-reveal {
+  position: absolute;
+  left: 1.25rem;
+  right: calc(min(40vw, 200px) + 2vw);
+  top: 32svh;
+  z-index: 2;
+  text-align: left;
+  opacity: var(--reveal, 0);
+  transform: translateY(calc((1 - var(--reveal, 0)) * 24px));
+  color: #fff;
+}
+
+.hero-reveal p {
+  margin: 0 0 1.6rem;
+  max-width: 28ch;
+  font-size: clamp(1rem, 4.2vw, 1.2rem);
+}
+
+.hero-reveal .event-meta {
+  background: var(--stick-blue);
+  border: 3px solid var(--stick-ink);
+  box-shadow: 4px 4px 0 var(--stick-ink);
+  display: inline-block;
+  padding: 0.6rem 1.1rem;
+  border-radius: 12px;
+  transform: rotate(-1.5deg);
+  /* meta reads as the fine print: smaller + lighter face than the intro copy */
+  font-family: Verdana, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+.event-meta .meta-date {
+  display: block;
+  font-family: var(--stick-font);
+  font-size: 0.95rem;
+  margin-bottom: 0.35rem;
+}
+
+.event-meta .meta-time {
+  display: block;
+  line-height: 1.6;
+}
+
+.event-meta .meta-time em {
+  font-style: normal;
+  color: var(--stick-yellow);
+  font-weight: 700;
+}
+
+.event-meta .meta-map {
+  display: block;
+  margin-top: 0.45rem;
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--stick-yellow);
+  text-decoration-thickness: 2px;
+}
+
+.event-meta .meta-map::after {
+  content: " \2192";
+  color: var(--stick-yellow);
+}
+
+.scroll-hint {
+  position: absolute;
+  bottom: 2svh;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  opacity: calc(1 - var(--food-shift, 0) * 2);
+}
+
+.scroll-hint::after {
+  content: "";
+  display: block;
+  margin: 0.3rem auto 0;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 10px solid var(--stick-yellow);
+}
+
+/* ---------- rules ---------- */
+
+.rules {
+  background: var(--stick-cream);
+  padding: 3rem 0 0;
+  position: relative;
+  --skewer-w: min(20vw, 94px); /* skewer width; the flat bar height derives from it */
+  /* scene phase windows (fractions of scroll through the section) — tune freely */
+  --skewer-flat: clamp(0, calc(var(--rules-p, 0) / 0.28), 1); /* heading slide + lay flat */
+  /* X-travel completes early so the swinging tip clears the left edge mid-rotation */
+  --skewer-flat-x: clamp(0, calc(var(--rules-p, 0) / 0.18), 1);
+  --piece-red: clamp(0, calc((var(--rules-p, 0) - 0.34) / 0.2), 1);
+  --piece-yellow: clamp(0, calc((var(--rules-p, 0) - 0.5) / 0.2), 1);
+  --piece-blue: clamp(0, calc((var(--rules-p, 0) - 0.66) / 0.2), 1);
+}
+
+.rules .wrap {
+  padding-bottom: 3.5rem;
+}
+
+/* sticky scene bar: full-width solid background so section content scrolls underneath it.
+   Bar paint fades in with the lay-flat phase so it's invisible while the skewer is vertical. */
+.skewer-scene {
+  position: sticky;
+  top: 0;
+  height: calc(var(--skewer-w) + 1.5rem);
+  background: rgb(255 253 245 / var(--skewer-flat, 0));
+  border-bottom: 3px solid
+    color-mix(in srgb, var(--stick-ink) calc(var(--skewer-flat, 0) * 100%), transparent);
+  z-index: 3;
+  pointer-events: none;
+}
+
+.rules-skewer {
+  /* flat-state offsets: drift right so the rotated tip stays on screen; vertical-center in bar */
+  --flat-x: calc(var(--skewer-w) * 0.8);
+  --flat-y: calc(var(--skewer-w) * -0.8);
+  display: block;
+  width: var(--skewer-w);
+  height: auto;
+  margin-top: 0.75rem;
+  overflow: visible;
+  transform: translate(
+      calc(var(--skewer-flat-x, 0) * var(--flat-x)),
+      calc(var(--skewer-flat, 0) * var(--flat-y))
+    )
+    rotate(calc(var(--skewer-flat, 0) * -90deg));
+  transform-origin: 50% 50%;
+}
+
+/* pieces slide off toward the point; a little spin sells it */
+.skewer-piece {
+  transform: translateY(calc(var(--piece-p, 0) * -620px)) rotate(calc(var(--piece-p, 0) * -20deg));
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+.skewer-piece--red {
+  --piece-p: var(--piece-red);
+}
+
+.skewer-piece--yellow {
+  --piece-p: var(--piece-yellow);
+}
+
+.skewer-piece--blue {
+  --piece-p: var(--piece-blue);
+}
+
+.rules-head {
+  /* pinned inside the sticky bar; starts tight to the skewer, pushed right by the spacer */
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: calc(var(--skewer-w) + 1.5rem);
+  height: calc(var(--skewer-w) + 1.5rem);
+  /* preserves the rest-state room beside the vertical skewer */
+  margin-bottom: calc(clamp(150px, 48vw, 250px) - var(--skewer-w));
+}
+
+.rules-head .head-spacer {
+  flex-grow: var(--skewer-flat, 0);
+}
+
+.rules-head h2 {
+  font-size: clamp(2.2rem, 10vw, 3.2rem);
+  color: var(--stick-red);
+  text-shadow: 3px 3px 0 var(--stick-ink);
+}
+
+.rules-intro {
+  margin: 0 0 1.75rem;
+  font-size: 1.05rem;
+  max-width: 44ch;
+}
+
+.stick-checklist {
+  list-style: none;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  font-size: clamp(1.25rem, 5.5vw, 1.6rem);
+}
+
+.stick-checklist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin: 0.4rem 0;
+}
+
+.stick-checklist img {
+  width: 1.5em;
+  height: auto;
+  flex-shrink: 0;
+}
+
+.category-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  list-style: none;
+  margin: 0 0 2rem;
+  padding: 0;
+  counter-reset: cat;
+}
+
+.category-cards li {
+  counter-increment: cat;
+  border: 3px solid var(--stick-ink);
+  border-radius: 14px;
+  padding: 1rem;
+  position: relative;
+  background: #fff;
+  box-shadow: 5px 5px 0 var(--stick-ink);
+}
+
+.category-cards li::before {
+  content: counter(cat);
+  position: absolute;
+  left: 0.9rem;
+  top: 1rem;
+  width: 1.8rem;
+  height: 1.8rem;
+  display: grid;
+  place-items: center;
+  border: 3px solid var(--stick-ink);
+  border-radius: 50%;
+  font-size: 1rem;
+  background: var(--stick-yellow);
+}
+
+.category-cards li:nth-child(2)::before {
+  background: var(--stick-red);
+  color: #fff;
+}
+
+.category-cards li:nth-child(3)::before {
+  background: var(--stick-blue);
+  color: #fff;
+}
+
+.category-cards h3 {
+  /* badge + heading lockup: h3 centers against the 1.8rem circle + its 3px borders */
+  padding-left: 2.5rem;
+  min-height: calc(1.8rem + 6px);
+  display: flex;
+  align-items: center;
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.category-cards p {
+  /* copy runs full card width as its own block */
+  margin: 0;
+  font-size: 0.95rem;
+  font-family: Verdana, sans-serif;
+}
+
+/* ---------- signup / registration placeholder ---------- */
+
+.signup {
+  background: var(--stick-yellow);
+  padding: 3rem 0 3.5rem;
+}
+
+.signup h2 {
+  font-size: clamp(1.8rem, 8vw, 2.6rem);
+  color: var(--stick-red);
+  text-shadow: 3px 3px 0 var(--stick-ink);
+  margin-bottom: 0.75rem;
+}
+
+.signup p {
+  max-width: 44ch;
+  margin: 0 0 1.5rem;
+}
+
+/* empty shell where the registration button will live */
+.signup-slot {
+  border: 3px dashed var(--stick-ink);
+  border-radius: 14px;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  font-size: 1.05rem;
+  letter-spacing: 0.08em;
+  background: rgb(255 255 255 / 0.35);
+}
+
+/* ---------- outro / brispace plug ---------- */
+
+.outro {
+  background: var(--stick-blue);
+  color: #fff;
+  padding: 3rem 0 4rem;
+}
+
+.outro h2 {
+  font-size: clamp(1.8rem, 8vw, 2.6rem);
+  color: var(--stick-yellow);
+  text-shadow: 3px 3px 0 var(--stick-ink);
+  margin-bottom: 0.75rem;
+}
+
+.outro p {
+  max-width: 44ch;
+  margin: 0 0 1.5rem;
+}
+
+.outro-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+}
+
+/* ---------- rubric page ---------- */
+
+.rubric-hero {
+  background: var(--stick-red);
+  color: #fff;
+  text-align: center;
+  padding: 2.5rem 1.25rem 2rem;
+}
+
+.rubric-hero h1 {
+  font-size: clamp(2.2rem, 10vw, 3.4rem);
+  color: var(--stick-yellow);
+  text-shadow: 4px 4px 0 var(--stick-ink);
+}
+
+.rubric-hero p {
+  margin: 0.75rem auto 0;
+  max-width: 40ch;
+}
+
+.rubric-main {
+  padding: 2.5rem 0 3.5rem;
+}
+
+.weight-card {
+  border: 3px solid var(--stick-ink);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 5px 5px 0 var(--stick-ink);
+  margin: 0 0 1.5rem;
+  overflow: hidden;
+}
+
+.weight-card header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1rem;
+  border-bottom: 3px solid var(--stick-ink);
+  background: var(--stick-yellow);
+}
+
+.weight-card:nth-of-type(2) header {
+  background: var(--stick-red);
+  color: #fff;
+}
+
+.weight-card:nth-of-type(3) header {
+  background: var(--stick-blue);
+  color: #fff;
+}
+
+.weight-card h2 {
+  font-size: 1.2rem;
+}
+
+.weight-card .weight {
+  font-size: 0.95rem;
+  white-space: nowrap;
+  background: #fff;
+  color: var(--stick-ink);
+  border: 2px solid var(--stick-ink);
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+}
+
+.weight-card ul {
+  list-style: none;
+  margin: 0;
+  padding: 0.9rem 1rem;
+  font-family: Verdana, sans-serif;
+  font-size: 0.92rem;
+}
+
+.weight-card li {
+  margin: 0.4rem 0;
+}
+
+.weight-card li strong {
+  font-family: var(--stick-font);
+}
+
+.stickiness-def {
+  padding: 0.9rem 1rem;
+  font-family: Verdana, sans-serif;
+  font-size: 0.92rem;
+}
+
+.stickiness-def a {
+  color: var(--stick-blue);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+}
+
+.stickiness-def ul {
+  list-style: none;
+  margin: 0.75rem 0;
+  padding: 0;
+}
+
+.stickiness-def li {
+  margin: 0.4rem 0;
+}
+
+.stickiness-def li strong,
+.stickiness-lede strong {
+  font-family: var(--stick-font);
+}
+
+.stickiness-lede,
+.stickiness-verdict {
+  margin: 0;
+}
+
+.stickiness-verdict {
+  margin-top: 0.75rem;
+  border-top: 2px dashed var(--stick-ink);
+  padding-top: 0.6rem;
+}
+
+.math-box {
+  border: 3px dashed var(--stick-ink);
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  background: var(--stick-cream);
+  font-family: Verdana, sans-serif;
+  font-size: 0.95rem;
+  margin: 2rem 0;
+}
+
+.math-box h2 {
+  font-family: var(--stick-font);
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+}
+
+.back-link {
+  display: inline-block;
+  margin-top: 1rem;
+}
+
+/* ---------- motion & larger screens ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .hero {
+    height: auto;
+  }
+
+  .hero-stage {
+    position: static;
+    height: auto;
+    padding-bottom: 3rem;
+  }
+
+  #corndog-food {
+    transform: none;
+  }
+
+  .hero-art {
+    position: static;
+    margin: 1.5rem auto 0;
+    transform: none;
+  }
+
+  /* static rules scene: skewer stays vertical beside the heading */
+  .skewer-scene {
+    position: static;
+    height: auto;
+    background: none;
+    border-bottom: none;
+    float: left;
+  }
+
+  .rules-skewer,
+  .skewer-piece {
+    transform: none;
+  }
+
+  .rules-head {
+    position: static;
+    height: auto;
+    margin-bottom: 1.5rem;
+    justify-content: flex-start;
+    opacity: 1;
+    transform: none;
+  }
+
+  .hero-reveal {
+    position: static;
+    opacity: 1;
+    transform: none;
+    margin-top: 1.5rem;
+    padding: 0 1.5rem;
+  }
+
+  .scroll-hint {
+    display: none;
+  }
+}
+
+@media (min-width: 720px) {
+  .wrap {
+    max-width: 760px;
+  }
+
+  .hero-art {
+    --art-right: 8vw;
+    --art-width: 240px;
+  }
+
+  .hero-reveal {
+    left: max(1.25rem, calc(50vw - 380px));
+    right: calc(240px + 12vw);
+  }
+
+  .category-cards {
+    grid-template-columns: 1fr 1fr;
+  }
+}

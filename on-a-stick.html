@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>ON A STICK — The Food Competition</title>
+    <link rel="icon" type="image/png" href="images/favicon.jpg" />
+    <link rel="stylesheet" href="css/on-a-stick.css" />
+  </head>
+
+  <body>
+    <!-- ===== HERO: sticky corndog scroll scene ===== -->
+    <section class="hero" id="hero">
+      <div class="hero-stage">
+        <header class="hero-title">
+          <h1>On a Stick</h1>
+          <p class="hero-when">DEC 5, 2026 &middot; 3:00 PM</p>
+        </header>
+
+        <!-- Layered corndog: #corndog-food slides off on scroll, #corndog-stick stays.
+             Art lives in images/stick/*.svg; swap files or adjust image x/y/width here. -->
+        <div class="hero-art" aria-hidden="true">
+          <svg viewBox="0 0 120 340" xmlns="http://www.w3.org/2000/svg">
+            <g id="corndog-stick">
+              <image href="images/stick/corndog_stick.svg" x="50" y="40" width="20" height="297" />
+            </g>
+            <g id="corndog-food">
+              <!-- placement knobs live in CSS: .hero-art custom properties (--food-*) -->
+              <g class="food-knob">
+                <image href="images/stick/corndog.svg" x="15" y="10" width="90" height="179" />
+              </g>
+            </g>
+          </svg>
+        </div>
+
+        <!-- Previous placeholder corndog art, kept for easy revert: paste back inside the
+             groups above in place of the <image> elements.
+        <g id="corndog-stick">
+          <rect x="52" y="70" width="16" height="260" rx="8"
+            fill="#c9a06a" stroke="#16130f" stroke-width="5" />
+        </g>
+        <g id="corndog-food">
+          <g transform="translate(0, 25)">
+            <rect x="18" y="10" width="84" height="190" rx="42"
+              fill="#e8a33d" stroke="#16130f" stroke-width="6" />
+            <path d="M38 45 Q60 28 82 45 Q60 62 38 45 Z" fill="#c77f24" opacity="0.35" />
+            <path d="M34 70 C52 88 46 104 64 118 C80 130 74 148 88 160"
+              fill="none" stroke="#16130f" stroke-width="12" stroke-linecap="round" opacity="0.15" />
+            <path d="M34 70 C52 88 46 104 64 118 C80 130 74 148 88 160"
+              fill="none" stroke="#fff200" stroke-width="10" stroke-linecap="round" />
+          </g>
+        </g>
+        -->
+
+        <!-- Emerges as the food slides away -->
+        <div class="hero-reveal">
+          <p>You're invited to put food on a stick.</p>
+          <p>Do it.</p>
+          <div class="event-meta">
+            <strong class="meta-date">SAT DEC 5, 2026</strong>
+            <span class="meta-time"><em>3:00</em> arrival</span>
+            <span class="meta-time"><em>3:30</em> judging starts</span>
+            <a
+              class="meta-map"
+              target="_blank"
+              rel="noopener"
+              href="https://www.google.com/maps/place/20524+97th+Ave+S,+Kent,+WA+98031/@47.4183575,-122.2129232,638m/data=!3m2!1e3!4b1!4m6!3m5!1s0x54905c4edc544895:0x4fffd5d501940550!8m2!3d47.4183575!4d-122.2103429!16s%2Fg%2F11c1cm2r4v?entry=ttu&amp;g_ep=EgoyMDI2MDkyMy4wIKXMDSoASAFQAw%3D%3D"
+            >
+              Nick &amp; Lori's House<br />
+              20524 97th Ave S, Kent, WA 98031
+            </a>
+          </div>
+        </div>
+
+        <div class="scroll-hint">SCROLL</div>
+      </div>
+    </section>
+
+    <div class="stripe-band" aria-hidden="true"></div>
+
+    <!-- ===== RULES ===== -->
+    <section class="rules">
+      <!-- Sticky full-width scene bar; inner .wrap aligns the skewer with content.
+           Scroll progress (--rules-p) is set by js/pages/on-a-stick.js; motion lives in CSS.
+           Layers are nested svgs (overflow visible) so pieces can fly outside their boxes. -->
+      <div class="skewer-scene" aria-hidden="true">
+        <div class="wrap">
+          <svg class="rules-skewer" viewBox="0 0 160 460" xmlns="http://www.w3.org/2000/svg">
+            <svg
+              x="70.8"
+              y="8"
+              width="18.4"
+              height="444"
+              viewBox="113.6072 -88.5575 18.4423 443.9435"
+              overflow="visible"
+            >
+              <path
+                d="M 122.194 -88.556 C 123.326 -88.777 129.947 -64.744 129.671 -56.928 C 129.395 -49.112 130.093 -23.447 130.952 -5.744 C 131.809 11.959 130.215 32.555 130.717 55.962 C 131.219 79.37 130.914 105.691 130.958 132.705 C 131.002 159.719 131.391 184.868 130.965 208.276 C 130.54 231.683 130.728 241.499 131.498 269.773 C 132.268 298.047 132.286 307.83 131.206 317.731 C 130.127 327.632 125.015 355.386 123.75 355.386 C 122.486 355.386 117.264 329.249 116.153 319.348 C 115.041 309.448 115.891 286.314 115.032 268.611 C 114.175 250.908 114.589 231.683 114.087 208.275 C 113.586 184.867 113.783 159.132 113.739 132.119 C 113.695 105.105 113.414 79.37 113.839 55.962 C 114.264 32.555 113.217 11.475 114.017 -6.228 C 114.817 -23.932 113.475 -46.289 114.554 -56.19 C 115.634 -66.09 120.878 -88.534 122.143 -88.534"
+                style="stroke: rgb(0, 0, 0); fill: rgb(251, 209, 144); stroke-width: 6px"
+              />
+            </svg>
+            <g class="skewer-piece skewer-piece--red">
+              <svg
+                x="24"
+                y="60"
+                width="112"
+                height="86.4"
+                viewBox="-59.5447 -0.5634 112.0528 86.4306"
+                overflow="visible"
+              >
+                <g transform="matrix(1, 0, 0, 1, 17.831912994384766, -29.571405410766545)">
+                  <path
+                    d="M -76.686 31.193 C -75.524 29.571 -52.324 31.819 -52.324 31.819 L -23.998 30.389 L 2.96 29.008 C 2.96 29.008 25.8 29.571 29.14 30.348 C 33.973 31.472 30.342 44.588 30.784 51.719 C 31.183 58.154 31.546 64.594 31.692 71.039 C 31.845 77.77 30.958 84.541 31.66 91.237 C 32.894 103.001 37.404 107.473 32.29 112.277 C 24.966 119.158 10.655 112.694 0.241 112.486 C -7.995 112.322 -23.654 111.072 -23.654 111.072 L -48.362 112.421 C -48.362 112.421 -68.546 115.466 -71.496 114.688 C -76.431 113.386 -74.122 91.834 -74.122 91.834 L -74.081 69.394 L -75.383 50.294 C -75.383 50.294 -78.801 34.146 -76.686 31.193 Z"
+                    style="
+                      stroke: rgb(0, 0, 0);
+                      stroke-width: 6px;
+                      stroke-linejoin: round;
+                      fill: rgb(224, 58, 62);
+                    "
+                  />
+                  <rect
+                    x="-15.776"
+                    y="47.088"
+                    width="25.864"
+                    height="18.407"
+                    style="fill: rgb(224, 58, 62)"
+                  />
+                </g>
+              </svg>
+            </g>
+            <g class="skewer-piece skewer-piece--yellow">
+              <svg
+                x="2.5"
+                y="160"
+                width="155"
+                height="75.5"
+                viewBox="-78.039 112.5227 155.0607 75.5183"
+                overflow="visible"
+              >
+                <path
+                  d="M 73.869 151.603 C 73.869 161.664 65.368 170.774 51.623 177.368 C 37.878 183.962 18.89 188.041 -2.085 188.041 C -23.059 188.041 -42.048 183.962 -55.793 177.368 C -69.538 170.774 -78.039 161.664 -78.039 151.603 C -78.039 141.541 -69.971 128.812 -56.071 132.867 C -42.171 136.923 -21.872 148.972 -0.897 148.972 C 20.077 148.972 55.805 106.626 69.55 113.22 C 83.295 119.814 73.869 141.541 73.869 151.603 Z"
+                  style="stroke: rgb(0, 0, 0); stroke-width: 6px; fill: rgb(255, 242, 0)"
+                />
+              </svg>
+            </g>
+            <g class="skewer-piece skewer-piece--blue">
+              <svg
+                x="24.4"
+                y="250"
+                width="111"
+                height="88.9"
+                viewBox="-51.3014 223.6744 111.3183 88.8682"
+                overflow="visible"
+              >
+                <g transform="matrix(1, 0, 0, 1, 31.238021850585938, 201.29101562500006)">
+                  <path
+                    d="M -79.94 25.332 C -72.422 21.688 -55.578 24.987 -55.578 24.987 L -27.252 24.528 L -0.294 23.147 C -0.294 23.147 21.729 20.734 25.886 24.487 C 29.52 27.768 25.729 36.73 25.666 42.852 C 25.589 50.294 24.969 57.753 25.473 65.178 C 25.934 71.966 30.013 78.765 28.406 85.376 C 27.479 89.19 24.373 94.63 21.555 94.952 C 18.746 95.273 16.298 94.333 -6.221 98.029 C -6.221 98.029 -20.155 99.687 -27.05 100.956 C -35.31 102.476 -43.326 105.214 -51.616 106.56 C -59.264 107.802 -69.938 114.9 -74.75 108.827 C -79.754 102.512 -76.187 90.566 -75.769 82.519 C -75.312 73.728 -75.439 61.469 -75.439 61.469 C -75.439 61.469 -78.846 49.256 -80.055 43.228 C -81.228 37.379 -85.068 27.817 -79.94 25.332 Z"
+                    style="
+                      stroke: rgb(0, 0, 0);
+                      stroke-width: 6px;
+                      fill: rgb(0, 118, 192);
+                      stroke-linejoin: round;
+                    "
+                  />
+                  <rect
+                    x="-15.776"
+                    y="47.088"
+                    width="25.864"
+                    height="18.407"
+                    style="fill: rgb(0, 118, 192); stroke-linejoin: round"
+                  />
+                </g>
+              </svg>
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <div class="wrap">
+        <div class="rules-head">
+          <!-- spacer grows with the lay-flat phase, pushing the heading right -->
+          <span class="head-spacer" aria-hidden="true"></span>
+          <h2>Rules</h2>
+        </div>
+
+        <ul class="stick-checklist">
+          <li>Is it food? <img src="images/stick/stick_check_cropped.svg" alt="check" /></li>
+          <li>Is it on a stick? <img src="images/stick/stick_check_cropped.svg" alt="check" /></li>
+        </ul>
+
+        <p class="rules-intro">Each entry will be judged based on the following categories:</p>
+
+        <ol class="category-cards">
+          <li>
+            <h3>Taste</h3>
+            <p>The most important category, make sure your entry tastes great.</p>
+          </li>
+          <li>
+            <h3>Presentation</h3>
+            <p>
+              The more appetizing it looks the better. Garnishes, plating, and decoration all belong
+              here.
+            </p>
+          </li>
+          <li>
+            <h3>Craft</h3>
+            <p>
+              Let everyone know that stick food can be gourmet. Show off the technique and effort
+              that went into your dish to earn points in this category.
+            </p>
+          </li>
+          <li>
+            <h3>Stickiness</h3>
+            <p>
+              Look, we aren't the stick police, but we expect your food to be edible on a stick. If
+              not, well, you'll lose some points here.
+            </p>
+          </li>
+        </ol>
+
+        <a class="btn-stick" href="on-a-stick-rubric.html">FULL SCORING BREAKDOWN</a>
+      </div>
+    </section>
+
+    <div class="stripe-band" aria-hidden="true"></div>
+
+    <!-- ===== SIGNUP: registration placeholder (link lands here later) ===== -->
+    <section class="signup">
+      <div class="wrap">
+        <h2>Count Me In</h2>
+        <p>
+          Registration will open right here. You'll confirm you're coming so we can lock in a final
+          headcount well before the event &mdash; that number is how everyone knows how many sticks
+          to prepare.
+        </p>
+        <div class="signup-slot">
+          <span>REGISTRATION OPENS SOON</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="stripe-band" aria-hidden="true"></div>
+
+    <!-- ===== OUTRO: brispace plug ===== -->
+    <section class="outro">
+      <div class="wrap">
+        <h2>While You're Here</h2>
+        <p>
+          On a Stick is part of Brispace. Browse past competition recipes, sign a guestbook or two,
+          and claim your own corner of the early internet.
+        </p>
+        <div class="outro-links">
+          <a class="btn-stick" href="/recipes">BROWSE RECIPES</a>
+          <a class="btn-stick" href="/">BRISPACE HOME</a>
+        </div>
+      </div>
+    </section>
+
+    <script src="js/pages/on-a-stick.js" defer></script>
+  </body>
+</html>

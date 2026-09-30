@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-29",
+  "generated": "2026-09-30",
   "staticPages": {
     "admin-approvals.html": {
       "css": [
@@ -226,6 +226,26 @@
         "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js",
         "./js/app.js"
       ]
+    },
+    "on-a-stick-rubric.html": {
+      "css": [
+        "css/on-a-stick.css"
+      ],
+      "pageScripts": [],
+      "components": [],
+      "partials": [],
+      "otherScripts": []
+    },
+    "on-a-stick.html": {
+      "css": [
+        "css/on-a-stick.css"
+      ],
+      "pageScripts": [
+        "js/pages/on-a-stick.js"
+      ],
+      "components": [],
+      "partials": [],
+      "otherScripts": []
     },
     "register.html": {
       "css": [

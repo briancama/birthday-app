@@ -1,6 +1,6 @@
 # Site Inventory — Birthday Challenge Zone
 
-Generated: **2026-09-29** by scanning root HTML files and `templates/*.ejs` for stylesheet links, script tags, module imports, and EJS partial includes. Machine-readable version: [site-inventory.json](site-inventory.json) (same data, per-page `css` / `pageScripts` / `components` / `partials` / `otherScripts`).
+Generated: **2026-09-30** by scanning root HTML files and `templates/*.ejs` for stylesheet links, script tags, module imports, and EJS partial includes. Machine-readable version: [site-inventory.json](site-inventory.json) (same data, per-page `css` / `pageScripts` / `components` / `partials` / `otherScripts`).
 
 For what each page _does_, see [API.md](API.md) (route table) and the [feature docs](README.md#feature-docs).
 
