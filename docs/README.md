@@ -23,6 +23,7 @@ Last full docs refresh: **2026-09-28**.
 | Challenges (progressive unlock, trigger/swap, Brian mode, submissions/approvals) | [features/challenges.md](features/challenges.md)                             |
 | Scoring, leaderboards & achievements                                             | [features/scoring-and-achievements.md](features/scoring-and-achievements.md) |
 | Recipes & cocktail competitions (judging, favorites, comments)                   | [features/recipes-and-cocktails.md](features/recipes-and-cocktails.md)       |
+| On a Stick food competition (standalone landing + rubric pages)                  | [features/on-a-stick.md](features/on-a-stick.md)                             |
 | Notifications (web push + Account Center feed)                                   | [features/notifications.md](features/notifications.md)                       |
 | User profiles / Brispace (wall, Top 8, themes, backgrounds, GIFs, headshots)     | [features/profiles.md](features/profiles.md)                                 |
 | Sidebar media & ads (slot system)                                                | [features/media-slots.md](features/media-slots.md)                           |

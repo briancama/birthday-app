@@ -29,7 +29,7 @@ Each route also matches its `.html` variant (e.g. `/dashboard` and `/dashboard.h
 
 ## Static Pages (no EJS route)
 
-Served by static middleware + extensionless rewrite: `index.html` (login), `register.html` (onboarding), `invitation.html`, `hub.html`, `ytmnd.html`, `hello.html`.
+Served by static middleware + extensionless rewrite: `index.html` (login), `register.html` (onboarding), `on-a-stick.html` + `on-a-stick-rubric.html` (On a Stick competition — see [features/on-a-stick.md](features/on-a-stick.md)), `invitation.html`, `hub.html`, `ytmnd.html`, `hello.html`.
 
 ## Auth — `routes/auth.js`, mounted at `/auth`
 
