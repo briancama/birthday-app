@@ -1,0 +1,11 @@
+{
+  "name": "On a Stick — The Food Competition",
+  "short_name": "On a Stick",
+  "icons": [
+    { "src": "/images/stick/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/images/stick/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "theme_color": "#e03a3e",
+  "background_color": "#fffdf5",
+  "display": "standalone"
+}
