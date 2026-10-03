@@ -1011,6 +1011,43 @@ app.get("/competitions/:slug/results", async (req, res) => {
   }
 });
 
+// Walktober: October step-logging dashboard (data loads client-side from /api/walktober)
+app.get(["/walktober", "/walktober.html"], async (req, res) => {
+  try {
+    const supabase = getSupabase();
+    const { data: season, error } = await supabase
+      .from("walktober_seasons")
+      .select("year")
+      .order("year", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    if (!season) return res.status(404).send("Walktober isn't set up yet");
+
+    const currentUser =
+      res.locals.navData && res.locals.navData.user ? res.locals.navData.user : null;
+    const isSignedIn = !!currentUser;
+    const mediaState = buildMediaSlots({
+      req,
+      isSignedIn,
+      slotPlan: [{ key: "sidebar", area: "sidebar", count: 2, includeTypes: ["ad"] }],
+    });
+
+    return res.render("walktober", {
+      year: season.year,
+      currentUser,
+      isSignedIn,
+      isAdmin: !!(currentUser && currentUser.isAdmin),
+      adSlots: mediaState.slots,
+      adCatalogKeys: mediaState.adKeys,
+      hasGifStepper: mediaState.anyGifStepper,
+    });
+  } catch (err) {
+    console.error("GET /walktober error:", err);
+    return res.status(500).send("Failed to load Walktober");
+  }
+});
+
 // Mount API/auth routes BEFORE static so they are never shadowed by file serving
 const usersRouter = require("./routes/users");
 app.use("/users", usersRouter);
@@ -1018,6 +1055,8 @@ const apiUsersRouter = require("./routes/api-users");
 app.use("/api", apiUsersRouter);
 const apiCompetitionsRouter = require("./routes/api-competitions");
 app.use("/api", apiCompetitionsRouter);
+const apiWalktoberRouter = require("./routes/api-walktober");
+app.use("/api", apiWalktoberRouter);
 const authRouter = require("./routes/auth");
 app.use("/auth", authRouter);
 

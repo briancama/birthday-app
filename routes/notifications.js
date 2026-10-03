@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { getSupabase, requireSignedUser } = require("../js/utils/server-utils");
+const { getSupabase, requireSignedUser, isAdminUser } = require("../js/utils/server-utils");
 const {
   createAndDeliverNotification,
   ensureWebPushConfigured,
@@ -66,18 +66,6 @@ async function resolveUserUuid(possibleIdOrUsername) {
     console.error("resolveUserUuid error", err);
     return null;
   }
-}
-
-async function isAdminUser(userId) {
-  if (!userId || !supabase) return false;
-  const { data, error } = await supabase
-    .from("users")
-    .select("username")
-    .eq("id", userId)
-    .maybeSingle();
-  if (error || !data) return false;
-  const username = String(data.username || "").toLowerCase();
-  return username === "brianc" || username === "admin";
 }
 
 router.get("/config", (req, res) => {

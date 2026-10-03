@@ -177,6 +177,21 @@ Always implement and call `cleanup()` in pages/components to remove event listen
 - Ad creatives can optionally include `imageMaxWidth` (for example `"320px"`); when set, slot rendering constrains and centers the media block in the container.
 - Catalog entries can include `pinUntil: "YYYY-MM-DD"` to be placed first in every matching slot (area/type/audience) through that date; after it, the entry is dropped from the catalog entirely (rotation and `adKeys`), so it never blocks `ad_completionist`.
 
+### Walktober (2026)
+
+October step-logging event at `/walktober` (Brispace layout, `theme-walktober` body class).
+
+- Schema: `sql/2026_10_03_walktober.sql` — `walktober_seasons` (one row per year; dates, `edit_until`, `min_goal`, `closed_at`), `walktober_participants` (year + user + `daily_goal`), `walktober_entries` (one row per user per day), `walktober_totals` view. RLS on with no policies; all access goes through `routes/api-walktober.js` (service role + signed cookie).
+- A row with `steps = 0` is a logged zero; no row means unlogged. Clearing a day deletes the row.
+- Setting a goal = joining. The goal can change until the first entry exists, then it's locked (server-enforced, 409).
+- Entries are editable for any season day up to "today" (server cap = UTC+14 date) until `edit_until` or until the season is closed.
+- Goal progress % = total ÷ (goal × days in season); daily average shown = total ÷ days logged.
+- Community lists and medal ranking include every walker (published or not); names only link to `/users/:username` when the profile is published.
+- Achievements are per-year keys: `walktober_<year>_gold|silver|bronze` (dense rank by total steps, ties share) and `walktober_<year>_goal_average` (total ≥ goal × days). Awarded only by the admin "Close Walktober" action (`POST /api/walktober/:year/close`), which is idempotent and sends `walktober_award` notifications.
+- New year = new SQL file inserting a season row + the four achievement rows. No code change needed.
+- Halloween gifs live in `images/walktober/`.
+- `isAdminUser(userId)` lives in `js/utils/server-utils.js` for server-side admin checks.
+
 ---
 
 ### Rules for New Updates

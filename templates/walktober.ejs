@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BriSpace - Walktober <%= year %></title>
+    <link rel="icon" type="image/png" href="/images/brispace_favicon.png" />
+    <link rel="stylesheet" href="/css/geocities.css" />
+    <link rel="stylesheet" href="/css/components/myspace.css" />
+    <link rel="stylesheet" href="/css/components/navigation.css" />
+    <link rel="stylesheet" href="/css/components/brispace-home.css" />
+    <link rel="stylesheet" href="/css/components/login-signup.css" />
+    <link rel="stylesheet" href="/css/components/walktober.css" />
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
+  </head>
+  <body
+    class="myspace theme-walktober"
+    data-auth="<%= isSignedIn %>"
+    data-walktober-year="<%= year %>"
+  >
+    <%- include('partials/navigation-visitor', { navData: (typeof navData !== 'undefined' ? navData
+    : {}) }) %>
+
+    <main class="myspace-container full-width-content">
+      <div class="container myspace-layout">
+        <div class="myspace-main" id="walktoberMain">
+          <section class="myspace-section walktober-hero">
+            <h3 class="myspace-section-alt-header">Walktober <%= year %></h3>
+            <div class="walktober-hero__body">
+              <img class="walktober-hero__gif" src="/images/zombie-walk.gif" alt="" />
+              <div>
+                <h1 class="walktober-title">WALKTOBER</h1>
+                <p class="walktober-hero__intro">
+                  Set a daily step goal, then log your steps for each day in October. Use whatever
+                  phone or watch you already have. Missed a day? Fill it in later.
+                </p>
+              </div>
+              <img class="walktober-hero__gif" src="/images/zombie-walk.gif" alt="" />
+            </div>
+            <div id="walktoberHeadline" class="walktober-headline"></div>
+          </section>
+
+          <section id="walktoberJoin" class="myspace-section" hidden>
+            <h3>Pick your daily goal</h3>
+            <div id="walktoberJoinBody"></div>
+          </section>
+
+          <section id="walktoberCalendarSection" class="myspace-section" hidden>
+            <h3>Your October</h3>
+            <div id="walktoberCalendar"></div>
+            <ul class="walktober-legend">
+              <li>
+                <span class="walktober-legend__swatch walktober-legend__swatch--hit"></span> Hit
+                goal
+              </li>
+              <li>
+                <span class="walktober-legend__swatch walktober-legend__swatch--under"></span> Under
+                goal
+              </li>
+              <li>
+                <span class="walktober-legend__swatch walktober-legend__swatch--zero"></span> Logged
+                0
+              </li>
+              <li>
+                <span class="walktober-legend__swatch walktober-legend__swatch--unlogged"></span>
+                Not logged
+              </li>
+            </ul>
+          </section>
+
+          <section id="walktoberStatsSection" class="myspace-section" hidden>
+            <h3>Your numbers</h3>
+            <div id="walktoberStats"></div>
+          </section>
+
+          <% if (!isSignedIn) { %>
+          <section class="myspace-section walktober-teaser">
+            <h3>Want in?</h3>
+            <p>Sign in to set a goal and start logging your steps.</p>
+          </section>
+          <% } %>
+
+          <% if (isAdmin) { %>
+          <section id="walktoberAdmin" class="myspace-section walktober-admin">
+            <h3>Admin: Close Walktober</h3>
+            <div id="walktoberAdminBody"></div>
+          </section>
+          <% } %>
+        </div>
+
+        <aside class="myspace-sidebar brispace-auth">
+          <% if (!currentUser) { %>
+          <div id="loginSignupContainer"></div>
+          <% } %>
+          <section class="myspace-section walktober-community">
+            <h3 class="myspace-section-alt-header">The Walktober Crew</h3>
+            <div id="walktoberCommunity"><p>Loading...</p></div>
+          </section>
+          <%- include('partials/media-slot', {
+            mediaSlot: adSlots && adSlots.sidebar ? adSlots.sidebar : null,
+            adCatalogKeys: adCatalogKeys,
+            isSignedIn: isSignedIn
+          }) %>
+        </aside>
+      </div>
+    </main>
+
+    <dialog id="walktoberDayDialog" class="walktober-dialog">
+      <form id="walktoberDayForm" class="walktober-dialog__form">
+        <h3 id="walktoberDayTitle" class="walktober-dialog__title"></h3>
+        <label for="walktoberStepsInput">Steps</label>
+        <input
+          id="walktoberStepsInput"
+          name="steps"
+          type="number"
+          inputmode="numeric"
+          min="0"
+          step="1"
+          required
+        />
+        <p class="walktober-dialog__hint">Enter 0 for a rest day.</p>
+        <div class="walktober-dialog__actions">
+          <button type="submit" class="btn btn--primary" data-action="save-day">Save</button>
+          <button type="button" class="btn btn--secondary" data-action="clear-day">
+            Clear day
+          </button>
+          <button type="button" class="btn btn--secondary" data-action="close-dialog">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <script type="module">
+      import { createLoginSignupForm } from "/js/components/login-signup.js";
+      import { WalktoberPage } from "/js/pages/walktober.js";
+
+      const page = new WalktoberPage();
+      await page.init();
+
+      const container = document.getElementById("loginSignupContainer");
+      if (container) {
+        container.appendChild(
+          createLoginSignupForm({
+            onSuccess: () => {
+              window.location.href = "/walktober";
+            },
+          })
+        );
+      }
+    </script>
+
+    <% if (typeof hasGifStepper !== 'undefined' && hasGifStepper) { %>
+    <script src="/js/components/gif-stepper.js"></script>
+    <% } %>
+  </body>
+</html>

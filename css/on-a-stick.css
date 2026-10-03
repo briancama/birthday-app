@@ -802,6 +802,42 @@ body.stick-modal-open {
   gap: 0.9rem;
 }
 
+/* ---------- commercial break: outside promo between stripe bands ---------- */
+
+.commercial-break {
+  --break-bg: var(--stick-cream);
+  --break-label: #9a9a9a;
+  --break-image-width: 360px;
+
+  background: var(--break-bg);
+  padding: 1.25rem 1.25rem 1.5rem;
+  text-align: center;
+}
+
+.commercial-break__label {
+  margin: 0 0 0.6rem;
+  font-family: Verdana, sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--break-label);
+}
+
+.commercial-break__label span {
+  font-size: 7px;
+}
+
+.commercial-break__link {
+  display: inline-block;
+  width: min(var(--break-image-width), 100%);
+}
+
+.commercial-break__link img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 /* ---------- rubric page ---------- */
 
 .rubric-hero {

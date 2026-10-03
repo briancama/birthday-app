@@ -23,6 +23,19 @@ function requireSignedUser(req) {
   return req && req.signedCookies && req.signedCookies.user_id ? req.signedCookies.user_id : null;
 }
 
+async function isAdminUser(userId) {
+  const supabase = getSupabase();
+  if (!userId || !supabase) return false;
+  const { data, error } = await supabase
+    .from("users")
+    .select("username")
+    .eq("id", userId)
+    .maybeSingle();
+  if (error || !data) return false;
+  const username = String(data.username || "").toLowerCase();
+  return username === "brianc" || username === "admin";
+}
+
 function createSanitizer() {
   const window = new JSDOM("").window;
   return createDOMPurify(window);
@@ -57,4 +70,10 @@ function ensureFirebaseAdmin() {
   return admin;
 }
 
-module.exports = { getSupabase, requireSignedUser, createSanitizer, ensureFirebaseAdmin };
+module.exports = {
+  getSupabase,
+  requireSignedUser,
+  isAdminUser,
+  createSanitizer,
+  ensureFirebaseAdmin,
+};

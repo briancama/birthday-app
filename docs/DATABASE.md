@@ -74,6 +74,16 @@ New-model competitions define their own category set (count/labels/weights); a c
 | `competition_judgment_scores` | One score row (1–5) per category per judgment                                      |
 | `competition_registrations`   | role `entrant`/`judge`, status `active`/`withdrawn` (soft withdraw), dish title    |
 
+### Walktober (2026-10, October step logging)
+
+RLS on with no policies — all access via `routes/api-walktober.js` (service role). See `sql/2026_10_03_walktober.sql`.
+
+| Table                    | Purpose                                                                                        |
+| ------------------------ | ---------------------------------------------------------------------------------------------- |
+| `walktober_seasons`      | One row per year: `starts_on`, `ends_on`, `edit_until`, `min_goal`, `closed_at`/`closed_by`    |
+| `walktober_participants` | PK (year, user_id) + `daily_goal`; setting a goal = joining; locked after first entry (API)    |
+| `walktober_entries`      | One row per user per day (UNIQUE user_id, step_date); `steps = 0` is logged, no row = unlogged |
+
 ## Views
 
 | View                                 | Purpose                                                                                             |
@@ -87,6 +97,7 @@ New-model competitions define their own category set (count/labels/weights); a c
 | `competition_leaderboard_view`       | New-model ranking: avg per-judge SUM(score×weight) + favorites×`favorite_bonus`; withdrawn excluded |
 | `competition_category_averages_view` | Per-entry per-category averages for results pages                                                   |
 | `user_profile_view`                  | `users` ⋈ `user_profile` for profile rendering                                                      |
+| `walktober_totals`                   | Per season+user: total steps, days logged, days at goal, `goal_progress_pct`, `is_published`        |
 
 ## RPC Functions
 

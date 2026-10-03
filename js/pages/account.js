@@ -380,6 +380,8 @@ class AccountPage extends BasePage {
         return type.startsWith("top8_") ? "top8_updates" : type;
       case "challenge_triggered":
         return "challenge_triggered";
+      case "walktober_award":
+        return "walktober_award";
       default:
         return "other";
     }
@@ -452,6 +454,8 @@ class AccountPage extends BasePage {
         return "Top 8 Update";
       case "challenge_triggered":
         return "Challenge";
+      case "walktober_award":
+        return "Walktober";
       case "other":
         return "Other Updates";
       default:

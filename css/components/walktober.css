@@ -1,0 +1,651 @@
+/* Walktober: Brispace layout with a Halloween skin. Swap gifs/colors via the tokens below. */
+
+.myspace.theme-walktober {
+  --wt-orange: #ff6600;
+  --wt-orange-bright: #ff9900;
+  --wt-purple: #9900ff;
+  --wt-purple-light: #cc66ff;
+  --wt-black: #1a1a1a;
+  --wt-page-bg: #000;
+
+  --wt-text: #f3eadb;
+  --wt-accent-text: var(--wt-orange-bright);
+  --wt-link: var(--wt-orange);
+  --wt-link-hover: #ffcc00;
+  --wt-divider: rgba(255, 255, 255, 0.15);
+  --wt-me-row-bg: rgba(153, 0, 255, 0.45);
+
+  /* Side gifs are centered in the gutters and may overlap the content or run off-screen */
+  --wt-layout-width: 1000px;
+  --wt-gutter: calc((100vw - var(--wt-layout-width)) / 2);
+  --wt-side-gif: url("/images/walkingskeleton.avif");
+  --wt-side-gif-width: 360px;
+  --wt-side-gif-offset: calc((var(--wt-gutter) - var(--wt-side-gif-width)) / 2);
+
+  --wt-hit-bg: #33ff00;
+  --wt-hit-border: #009900;
+  --wt-under-bg: #ffcc00;
+  --wt-under-fill: var(--wt-orange);
+  --wt-zero-bg: #999999;
+  --wt-zero-text: #000;
+  --wt-unlogged-bg: #000;
+  --wt-unlogged-border: var(--wt-purple-light);
+  --wt-future-bg: #330066;
+  --wt-future-border: #4d0099;
+  --wt-future-text: #9966cc;
+  --wt-today-outline: #ff00ff;
+
+  --wt-hit-stamp: url("/images/green-checkmark.gif");
+  --wt-hit-stamp-size: 16px;
+
+  --wt-cell-min-height: 72px;
+  --wt-cell-gap: 4px;
+
+  background: var(--wt-page-bg);
+}
+
+.theme-walktober .myspace-container {
+  background-color: var(--wt-page-bg);
+  background-image: var(--wt-side-gif), var(--wt-side-gif);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: var(--wt-side-gif-width) auto;
+  background-position:
+    left var(--wt-side-gif-offset) center,
+    right var(--wt-side-gif-offset) center;
+}
+
+.theme-walktober .myspace-layout {
+  background: transparent;
+  color: var(--wt-text);
+}
+
+.theme-walktober .myspace-layout a:not(.btn) {
+  color: var(--wt-link);
+
+  &:hover {
+    color: var(--wt-link-hover);
+  }
+}
+
+.theme-walktober .myspace-layout .btn--secondary {
+  background: #fff;
+}
+
+.theme-walktober .sidebar-advertisement-header {
+  color: var(--wt-accent-text);
+}
+
+.theme-walktober .myspace-section h3 {
+  background: var(--wt-orange-bright);
+}
+
+.theme-walktober .myspace-section h3.myspace-section-alt-header {
+  background: var(--wt-purple);
+  color: #fff;
+}
+
+/* ── Hero ─────────────────────────────────────────────────────────────── */
+
+.walktober-hero__body {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.walktober-hero__gif {
+  width: 56px;
+  height: auto;
+  flex-shrink: 0;
+}
+
+.walktober-title {
+  margin: 0;
+  font-family: "Cinzel", Verdana, serif;
+  font-size: 2.2em;
+  letter-spacing: 3px;
+  color: var(--wt-orange);
+  text-shadow: 2px 2px 0 var(--wt-purple);
+  text-align: left;
+}
+
+.walktober-hero__intro {
+  margin: 0.25rem 0 0;
+}
+
+.walktober-headline {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.walktober-headline:empty {
+  display: none;
+}
+
+.walktober-headline__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+  border: 2px solid var(--wt-purple);
+  background: var(--wt-purple-light);
+  color: var(--wt-black);
+  text-align: center;
+}
+
+.walktober-headline__label {
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: var(--wt-black);
+}
+
+.walktober-headline__value {
+  font-size: 1.8em;
+  font-weight: bold;
+  color: var(--wt-black);
+}
+
+.walktober-headline__unit {
+  font-size: 11px;
+}
+
+.walktober-progress {
+  --wt-progress-height: 24px;
+  --wt-progress-track: #330066;
+  --wt-progress-border: var(--wt-purple-light);
+  --wt-progress-stripe-a: var(--wt-orange);
+  --wt-progress-stripe-b: var(--wt-purple);
+  --wt-progress-stripe-size: 12px;
+
+  grid-column: 1 / -1;
+  height: var(--wt-progress-height);
+  border: 3px solid var(--wt-progress-border);
+  background: var(--wt-progress-track);
+}
+
+.walktober-progress__fill {
+  width: var(--wt-progress, 0%);
+  height: 100%;
+  background: repeating-linear-gradient(
+    45deg,
+    var(--wt-progress-stripe-a) 0 var(--wt-progress-stripe-size),
+    var(--wt-progress-stripe-b) var(--wt-progress-stripe-size)
+      calc(var(--wt-progress-stripe-size) * 2)
+  );
+}
+
+.walktober-link-btn {
+  margin-top: 2px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 11px;
+  color: var(--myspace-dark-blue);
+  text-shadow: none;
+
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ── Goal form ────────────────────────────────────────────────────────── */
+
+.walktober-goal-form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.walktober-goal-form p,
+.walktober-goal-form label {
+  margin: 0;
+  color: inherit;
+}
+
+.walktober-goal-form label {
+  font-size: 12px;
+  font-weight: normal;
+  text-shadow: none;
+}
+
+.walktober-goal-form input {
+  width: 10rem;
+  padding: 4px 6px;
+  font-size: 1.1em;
+}
+
+.walktober-goal-form__note {
+  font-size: 11px;
+  font-style: italic;
+}
+
+.walktober-goal-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.walktober-chip {
+  padding: 6px 12px;
+  border: 2px solid var(--wt-purple);
+  background: #fff;
+  font-family: Verdana, sans-serif;
+  font-weight: bold;
+  cursor: pointer;
+  color: var(--myspace-dark-blue);
+
+  &:hover,
+  &.is-selected {
+    background: var(--wt-orange);
+    color: #fff;
+  }
+}
+
+/* ── Calendar ─────────────────────────────────────────────────────────── */
+
+.wt-calendar {
+  margin-top: 0.5rem;
+}
+
+.wt-calendar__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--wt-cell-gap);
+}
+
+.wt-calendar__weekday {
+  text-align: center;
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--wt-accent-text);
+}
+
+.wt-day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--wt-cell-min-height);
+  padding: 4px 2px 8px;
+  border: 1px solid #ccc;
+  background: #fff;
+  font-family: Verdana, sans-serif;
+  font-size: 12px;
+  color: var(--wt-black);
+  text-shadow: none;
+  overflow: hidden;
+}
+
+button.wt-day:not(:disabled) {
+  cursor: pointer;
+}
+
+/* Undo the site-wide disabled-button fade */
+button.wt-day:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+button.wt-day:not(:disabled):hover {
+  outline: 2px solid var(--wt-orange);
+  outline-offset: -2px;
+}
+
+.wt-day--blank {
+  border: none;
+  background: transparent;
+}
+
+.wt-day__num {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.wt-day__steps {
+  font-weight: bold;
+}
+
+.wt-day__steps-short {
+  display: none;
+}
+
+.wt-day__bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: calc(var(--wt-pct, 0) * 100%);
+  height: 5px;
+  background: var(--wt-under-fill);
+}
+
+.wt-day--future {
+  border-color: var(--wt-future-border);
+  background: var(--wt-future-bg);
+  color: var(--wt-future-text);
+}
+
+.wt-day--unlogged {
+  border: 2px dashed var(--wt-unlogged-border);
+  background: var(--wt-unlogged-bg);
+  color: var(--wt-unlogged-border);
+}
+
+.wt-day--under {
+  background: var(--wt-under-bg);
+}
+
+.wt-day--zero {
+  background: var(--wt-zero-bg);
+  color: var(--wt-zero-text);
+}
+
+.wt-day--hit {
+  border: 2px solid var(--wt-hit-border);
+  background: var(--wt-hit-bg);
+
+  .wt-day__bar {
+    background: var(--wt-hit-border);
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: var(--wt-hit-stamp-size);
+    height: var(--wt-hit-stamp-size);
+    background: var(--wt-hit-stamp) center / contain no-repeat;
+  }
+}
+
+.wt-day--today {
+  outline: 3px solid var(--wt-today-outline);
+  outline-offset: -3px;
+}
+
+.walktober-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+}
+
+.walktober-legend__swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #ccc;
+}
+
+.walktober-legend__swatch--hit {
+  border: 2px solid var(--wt-hit-border);
+  background: var(--wt-hit-bg);
+}
+
+.walktober-legend__swatch--under {
+  background: var(--wt-under-bg);
+  border-bottom: 4px solid var(--wt-under-fill);
+}
+
+.walktober-legend__swatch--zero {
+  background: var(--wt-zero-bg);
+}
+
+.walktober-legend__swatch--unlogged {
+  border: 2px dashed var(--wt-unlogged-border);
+  background: var(--wt-unlogged-bg);
+}
+
+/* ── Stats ────────────────────────────────────────────────────────────── */
+
+.walktober-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.walktober-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+  border: 1px solid var(--wt-orange);
+  background: var(--wt-under-bg);
+  color: var(--wt-black);
+  text-align: center;
+}
+
+.walktober-stat__value {
+  font-size: 1.4em;
+  font-weight: bold;
+}
+
+.walktober-stat__label {
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.walktober-note {
+  margin: 0.6rem 0 0;
+}
+
+/* ── Community (sidebar) ──────────────────────────────────────────────── */
+
+.walktober-crew-total {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  border: 2px solid var(--wt-black);
+  background: var(--wt-black);
+  color: var(--wt-orange);
+}
+
+.walktober-crew-total__value {
+  font-size: 1.8em;
+  font-weight: bold;
+}
+
+.walktober-crew-total__label {
+  font-size: 11px;
+  color: #fff;
+}
+
+.walktober-subhead {
+  margin: 0.75rem 0 0.25rem;
+  font-size: 12px;
+  color: var(--wt-accent-text);
+  text-transform: uppercase;
+}
+
+.walktober-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.walktober-list__row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 4px 2px 6px;
+  border-bottom: 1px solid var(--wt-divider);
+}
+
+.walktober-list__place {
+  width: 24px;
+  text-align: center;
+  font-weight: bold;
+
+  img {
+    width: 20px;
+    height: auto;
+  }
+}
+
+.walktober-list__name {
+  flex: 1;
+  color: var(--myspace-dark-blue);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+span.walktober-list__name {
+  color: inherit;
+}
+
+.walktober-list__value {
+  font-weight: bold;
+}
+
+.walktober-list__bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: var(--wt-progress, 0%);
+  height: 3px;
+  background: var(--wt-orange);
+}
+
+.walktober-empty {
+  margin: 0.25rem 0;
+  font-style: italic;
+}
+
+.walktober-list__row.is-me {
+  background: var(--wt-me-row-bg);
+  font-weight: bold;
+}
+
+.walktober-list__gap {
+  padding: 2px 0;
+  text-align: center;
+  letter-spacing: 2px;
+  color: var(--wt-accent-text);
+}
+
+.walktober-compare {
+  margin: 0;
+  padding-left: 1.25rem;
+  line-height: 1.5;
+  list-style-type: square;
+
+  li::marker {
+    color: #fff;
+  }
+
+  strong {
+    color: var(--wt-orange-bright);
+  }
+}
+
+/* ── Admin ────────────────────────────────────────────────────────────── */
+
+.walktober-admin {
+  border: 2px dashed var(--myspace-red);
+  padding: 0.5rem;
+
+  ul {
+    margin: 0.25rem 0 0.5rem 1.25rem;
+  }
+}
+
+/* ── Day dialog ───────────────────────────────────────────────────────── */
+
+.walktober-dialog {
+  padding: 0;
+  border: 3px solid var(--wt-purple);
+  width: min(320px, 90vw);
+
+  &::backdrop {
+    background: rgba(26, 26, 26, 0.7);
+  }
+}
+
+.walktober-dialog__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1rem;
+  font-family: Verdana, sans-serif;
+  font-size: 12px;
+
+  input {
+    padding: 6px;
+    font-size: 1.4em;
+  }
+}
+
+.walktober-dialog__title {
+  margin: 0 0 0.25rem;
+  padding: 4px 8px;
+  background: var(--wt-orange-bright);
+  font-size: 13px;
+}
+
+.walktober-dialog__hint {
+  margin: 0;
+  font-size: 11px;
+  font-style: italic;
+}
+
+.walktober-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+/* ── Mobile ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .myspace.theme-walktober {
+    --wt-cell-min-height: 52px;
+    --wt-cell-gap: 2px;
+  }
+
+  .walktober-hero__gif {
+    display: none;
+  }
+
+  .walktober-headline__value {
+    font-size: 1.3em;
+  }
+
+  .walktober-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .wt-day {
+    font-size: 11px;
+  }
+
+  .wt-day__steps-full {
+    display: none;
+  }
+
+  .wt-day__steps-short {
+    display: inline;
+  }
+}
