@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title><%= competition.name %> Results - Brian's Birthday Zone</title>
+    <link rel="icon" type="image/png" href="/images/favicon.jpg" />
+    <link rel="stylesheet" href="/css/geocities.css" />
+    <link rel="stylesheet" href="/css/components/navigation.css" />
+    <link rel="stylesheet" href="/css/components/competition-judging.css" />
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
+  </head>
+
+  <body class="has-bottom-menu<%= competition.theme ? ' theme-' + competition.theme : '' %>">
+    <div class="container">
+      <% const navLocal = Object.assign({}, (typeof navData !== 'undefined' ? navData : {}), {
+      pageTitle: competition.name + ' Results' }); %> <%- include('partials/navigation', { navData:
+      navLocal }) %>
+
+      <marquee behavior="scroll" direction="left" scrollamount="6">
+        *** <%= competition.name.toUpperCase() %> RESULTS! *** <%= competition.voting_open ?
+        'Judging is still open — scores are live!' : '' %>
+      </marquee>
+
+      <div class="section">
+        <h1 class="text-shadow-light" style="text-align: left">
+          <%= competition.name %> LEADERBOARD
+        </h1>
+
+        <% if (rows.length === 0) { %>
+        <p>No scored entries yet.</p>
+        <% } else { %>
+        <table class="comp-results-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Entry</th>
+              <th>By</th>
+              <th>Score</th>
+              <th>Favs</th>
+              <th>Final</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% rows.forEach((row) => { %>
+            <tr
+              class="comp-results-row<%= row.competition_medal ? ' medal-' + row.competition_medal : '' %>"
+            >
+              <td>
+                <%= row.competition_rank %><%= row.competition_medal ? ' (' + row.competition_medal + ')' : '' %>
+              </td>
+              <td>
+                <% if (row.recipe_slug) { %>
+                <a href="/recipes/<%= row.recipe_slug %>"><%= row.title %></a>
+                <% } else { %>
+                <%= row.title %>
+                <% } %>
+                <% const avgs = categoryAverages[row.entry_id]; %>
+                <% if (avgs && avgs.length) { %>
+                <div class="comp-category-avgs">
+                  <% avgs.forEach((a, i) => { %><%= i > 0 ? ' · ' : '' %><%= a.category_label %>:
+                  <%= a.avg_score %><% }) %>
+                </div>
+                <% } %>
+              </td>
+              <td><%= row.display_name || '—' %></td>
+              <td><%= row.avg_score != null ? row.avg_score : '—' %></td>
+              <td><%= row.favorites_count %></td>
+              <td>
+                <strong><%= row.final_score != null ? row.final_score : '—' %></strong>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <p style="font-size: 0.8rem; margin-top: 0.5rem">
+          Final = average weighted score + <%= competition.favorite_bonus %> per favorite vote.
+        </p>
+        <% } %>
+      </div>
+
+      <div class="section" style="text-align: center">
+        <a href="/competitions/<%= competition.slug %>/judge" class="btn btn-primary">GO JUDGE</a>
+      </div>
+    </div>
+
+    <script type="module">
+      import { BasePage } from "/js/pages/base-page.js";
+
+      const page = new BasePage({ requiresAuth: false });
+      await page.init();
+    </script>
+  </body>
+</html>

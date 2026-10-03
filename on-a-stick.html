@@ -76,6 +76,7 @@
               20524 97th Ave S, Kent, WA 98031
             </a>
           </div>
+          <button class="btn-stick hero-cta" type="button" data-stick-cta>I'LL BE THERE</button>
         </div>
 
         <div class="scroll-hint">SCROLL</div>
@@ -190,8 +191,8 @@
         </div>
 
         <ul class="stick-checklist">
-          <li>Is it food? <img src="images/stick/stick_check_cropped.svg" alt="check" /></li>
-          <li>Is it on a stick? <img src="images/stick/stick_check_cropped.svg" alt="check" /></li>
+          <li>Is it food? <img src="images/stick/stick_check_thicker.svg" alt="check" /></li>
+          <li>Is it on a stick? <img src="images/stick/stick_check_thicker.svg" alt="check" /></li>
         </ul>
 
         <p class="rules-intro">Each entry will be judged based on the following categories:</p>
@@ -230,17 +231,25 @@
 
     <div class="stripe-band" aria-hidden="true"></div>
 
-    <!-- ===== SIGNUP: registration placeholder (link lands here later) ===== -->
+    <!-- ===== SIGNUP: registration info + status ===== -->
     <section class="signup">
       <div class="wrap">
-        <h2>Count Me In</h2>
+        <h2>Are You Coming?</h2>
         <p>
-          Registration will open right here. You'll confirm you're coming so we can lock in a final
-          headcount well before the event &mdash; that number is how everyone knows how many sticks
-          to prepare.
+          Competing or just judging? <strong>Entrants</strong> bring enough of their dish for
+          everyone to try and judge, while <strong>Judges</strong> just show up hungry and score
+          each entry. Every RSVP adds to the headcount so entrants know how many sticks to make. You
+          can change your status anytime.
         </p>
-        <div class="signup-slot">
-          <span>REGISTRATION OPENS SOON</span>
+        <div class="signup-slot is-loading" data-stick-slot>
+          <p class="signup-status" data-stick-status>Registration is open.</p>
+          <p class="signup-role" data-stick-role hidden>
+            <span class="signup-role-box"
+              ><img src="images/stick/stick_check_thicker.svg" alt=""
+            /></span>
+            <span data-stick-role-label></span>
+          </p>
+          <button class="btn-stick" type="button" data-stick-cta>I'LL BE THERE</button>
         </div>
       </div>
     </section>
@@ -262,6 +271,11 @@
       </div>
     </section>
 
+    <div id="stickModalRoot"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js" defer></script>
     <script src="js/pages/on-a-stick.js" defer></script>
+    <script type="module" src="js/pages/on-a-stick-register.js"></script>
   </body>
 </html>

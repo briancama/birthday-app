@@ -9,6 +9,7 @@
       locals.activeCategory || locals.activeCompetition %> — <% } %>All Recipes — AFewRecipes.com<%
       } else { %>AFewRecipes.com<% } %>
     </title>
+    <link rel="icon" type="image/svg+xml" href="/images/afewrecipes_favicon.svg" />
     <link rel="stylesheet" href="/css/recipe.css" />
   </head>
   <body>
@@ -40,7 +41,9 @@
         <ul class="site-nav__list" role="list">
           <li class="site-nav__item"><a href="/recipes">Home</a></li>
           <li class="site-nav__item"><a href="/recipes/all">All Recipes</a></li>
+          <!-- Hidden for now
           <li class="site-nav__item"><a href="#">Competition Results</a></li>
+          -->
           <% if (locals.currentUser) { %>
           <li class="site-nav__item">
             <a href="/recipes/all?author=<%= encodeURIComponent(currentUser.username) %>"
@@ -213,6 +216,12 @@
                 </ul>
               </div>
             </div>
+
+            <% (locals.competitionAds || []).forEach(function(ad) { %>
+            <a class="sidebar-ad" href="<%= ad.href %>"
+              ><img src="<%= ad.src %>" alt="<%= ad.name %>"
+            /></a>
+            <% }); %>
 
             <% if (locals.latestCompetition) { %>
             <div class="sidebar-block">

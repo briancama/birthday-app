@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title><%= competition.name %> Judging - Brian's Birthday Zone</title>
+    <link rel="icon" type="image/png" href="/images/favicon.jpg" />
+    <link rel="stylesheet" href="/css/geocities.css" />
+    <link rel="stylesheet" href="/css/components/navigation.css" />
+    <link rel="stylesheet" href="/css/components/competition-judging.css" />
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
+  </head>
+
+  <body
+    class="has-bottom-menu<%= competition.theme ? ' theme-' + competition.theme : '' %>"
+    data-competition-slug="<%= competition.slug %>"
+    data-competition-id="<%= competition.id %>"
+  >
+    <div class="container">
+      <% const navLocal = Object.assign({}, (typeof navData !== 'undefined' ? navData : {}), {
+      pageTitle: competition.name }); %> <%- include('partials/navigation', { navData: navLocal })
+      %>
+
+      <marquee behavior="scroll" direction="left" scrollamount="6">
+        *** <%= competition.name.toUpperCase() %> JUDGING ZONE! *** Rate each entry on a 1-5 scale *
+        Pick your favorite!
+      </marquee>
+
+      <div class="section">
+        <h1 class="text-shadow-light" style="text-align: left"><%= competition.name %> ENTRIES</h1>
+        <p style="max-width: 600px; margin-bottom: 1rem">
+          Rate each entry on the rubric criteria (1-5 scale), then pick your favorite!
+        </p>
+
+        <div class="judging-toolbar">
+          <% if (rubricUrl) { %>
+          <a href="<%= rubricUrl %>" target="_blank" class="btn btn-secondary">RUBRIC</a>
+          <% } %>
+          <div id="judgingStatus" class="judging-status">
+            <p style="margin: 0">Loading...</p>
+          </div>
+        </div>
+
+        <div id="judgingBanner"></div>
+
+        <div id="entriesList" class="comp-entries-grid">
+          <div class="loading">Loading entries...</div>
+        </div>
+      </div>
+
+      <div class="section" style="text-align: center">
+        <a href="/competitions/<%= competition.slug %>/results" class="btn btn-secondary">
+          VIEW RESULTS
+        </a>
+      </div>
+    </div>
+
+    <script type="module">
+      import { CompetitionJudgingPage } from "/js/pages/competition-judging.js";
+
+      const page = new CompetitionJudgingPage();
+      await page.init();
+    </script>
+  </body>
+</html>

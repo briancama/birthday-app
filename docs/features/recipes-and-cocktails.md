@@ -6,6 +6,7 @@ A retro AllRecipes-style recipe section (`/recipes`) plus judged cocktail/recipe
 
 - **Phase 1 (legacy)** — entries live directly in `cocktail_entries`, tied to a `cocktail_competitions` row (entries gained full recipe fields over time).
 - **Phase 2** — standalone `recipes` table; competitions link recipes via `recipe_competition_entries`.
+- **Phase 3 (competition platform, 2026-10)** — per-competition judging categories: a `recipe_competitions` row with `competition_categories` rows is a "new model" competition scored from `competition_judgments` + `competition_judgment_scores` (weights/labels/count vary per competition; scale fixed 1–5). Registration (`competition_registrations`, entrant/judge roles, soft withdraw) gates entry + judging. Reusable pages: `/competitions/:slug/judge` and `/competitions/:slug/results` (themed via `recipe_competitions.theme`). API: `routes/api-competitions.js`. First consumer: On a Stick (see [on-a-stick.md](on-a-stick.md)).
 
 ## How it works
 
@@ -38,6 +39,7 @@ A retro AllRecipes-style recipe section (`/recipes`) plus judged cocktail/recipe
 
 Phase 1: `cocktail_competitions`, `cocktail_entries`, `cocktail_judgments`, `cocktail_favorites`, view `cocktail_leaderboard`.
 Phase 2: `recipes`, `recipe_competitions`, `recipe_competition_entries`, `recipe_competition_judgments`, `recipe_competition_favorites`, `recipe_comments`, `recipe_categories`, view `recipe_detail_view`. See [../DATABASE.md](../DATABASE.md).
+Phase 3: `competition_categories`, `competition_judgments`, `competition_judgment_scores`, `competition_registrations`, views `competition_leaderboard_view` + `competition_category_averages_view` (`sql/2026_10_01_competition_platform.sql`). `recipe_detail_view` scores both models (`sql/2026_10_01_recipe_detail_view_union.sql`).
 
 ## Gotchas
 

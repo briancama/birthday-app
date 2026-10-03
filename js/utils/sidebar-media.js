@@ -69,6 +69,21 @@ function getMediaCatalog() {
 
   const adCandidates = [
     {
+      id: "ad_on_a_stick",
+      type: "ad",
+      src: "/images/ad_on-a-stick.png",
+      alt: "On a Stick — The Food Competition",
+      link: "/on-a-stick",
+      audio: null,
+      overlayText: null,
+      belowText: null,
+      overlayClass: null,
+      allowedAreas: ["sidebar"],
+      audience: "both",
+      // shown in every matching slot through this date, then dropped from the catalog
+      pinUntil: "2026-12-05",
+    },
+    {
       id: "ad_att_click_here",
       type: "ad",
       src: "/images/ad_att-click-here.png",
@@ -255,7 +270,9 @@ function resolveForcedItem(forced, catalogById) {
 }
 
 function buildMediaSlots({ req, isSignedIn, slotPlan = [] }) {
-  const catalog = getMediaCatalog();
+  const today = new Date().toISOString().slice(0, 10);
+  const catalog = getMediaCatalog().filter((item) => !item.pinUntil || item.pinUntil >= today);
+  const pinned = catalog.filter((item) => item.pinUntil);
   const catalogById = new Map(catalog.map((item) => [item.id, item]));
   const usedIds = new Set();
   const slots = {};
@@ -279,7 +296,14 @@ function buildMediaSlots({ req, isSignedIn, slotPlan = [] }) {
     if (!key) continue;
     const items = [];
 
-    const forcedItems = Array.isArray(forced) ? forced : forced ? [forced] : [];
+    const forcedItems = Array.isArray(forced) ? [...forced] : forced ? [forced] : [];
+    pinned.forEach((item) => {
+      if (Array.isArray(item.allowedAreas) && area && !item.allowedAreas.includes(area)) return;
+      if (Array.isArray(includeTypes) && includeTypes.length && !includeTypes.includes(item.type))
+        return;
+      if (!isAudienceMatch(item, isSignedIn)) return;
+      forcedItems.push(item);
+    });
     for (const forcedEntry of forcedItems) {
       const forcedItem = resolveForcedItem(forcedEntry, catalogById);
       if (!forcedItem) continue;

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>ON A STICK — Guest List</title>
+    <link rel="icon" href="/images/stick/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/stick/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/stick/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/stick/apple-touch-icon.png" />
+    <meta name="theme-color" content="#e03a3e" />
+    <link rel="stylesheet" href="/css/on-a-stick.css" />
+  </head>
+
+  <body>
+    <header class="rubric-hero">
+      <h1>Guest List</h1>
+    </header>
+
+    <div class="stripe-band" aria-hidden="true"></div>
+
+    <main class="rubric-main">
+      <div class="wrap">
+        <dl class="guest-totals">
+          <div class="guest-total guest-total--all">
+            <dt>Total</dt>
+            <dd><%= entrants.length + judges.length %></dd>
+          </div>
+          <div class="guest-total">
+            <dt>Entrants</dt>
+            <dd><%= entrants.length %></dd>
+          </div>
+          <div class="guest-total">
+            <dt>Judges</dt>
+            <dd><%= judges.length %></dd>
+          </div>
+        </dl>
+
+        <% if (entrants.length + judges.length === 0) { %>
+        <p>Nobody yet.</p>
+        <% } else { %>
+        <table class="guest-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Role</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% entrants.forEach((g) => { %>
+            <tr>
+              <td><%= g.name %></td>
+              <td>Entrant</td>
+            </tr>
+            <% }) %>
+            <% judges.forEach((g) => { %>
+            <tr>
+              <td><%= g.name %></td>
+              <td>Judge</td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <% } %>
+
+        <a class="btn-stick back-link" href="/on-a-stick">&larr; BACK TO ON A STICK</a>
+      </div>
+    </main>
+  </body>
+</html>

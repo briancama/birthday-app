@@ -287,6 +287,9 @@
     .page-layout {
       grid-template-columns: 1fr;
     }
+    .page-layout > .sidebar {
+      order: 1;
+    }
     .page-layout__divider {
       display: none;
     }
@@ -510,6 +513,15 @@
   .sidebar-block__list a:hover {
     text-decoration: underline;
     color: var(--link-hover);
+  }
+  .sidebar-ad {
+    display: block;
+    margin-bottom: var(--space-3);
+  }
+  .sidebar-ad img {
+    display: block;
+    width: 100%;
+    height: auto;
   }
 
   /* ─────────────────────────────────────────────────────────

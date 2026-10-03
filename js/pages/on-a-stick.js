@@ -23,6 +23,8 @@
 
       stage.style.setProperty("--food-shift", foodShift.toFixed(3));
       stage.style.setProperty("--reveal", reveal.toFixed(3));
+      // CTA is invisible until revealed; keep it unclickable until then too
+      stage.classList.toggle("is-revealed", reveal > 0.5);
     }
 
     // Rules scene: 0 when the section top reaches the viewport top, 1 near its end

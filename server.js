@@ -8,6 +8,7 @@ if (process.env.NODE_ENV !== "production") {
   }
 }
 const path = require("path");
+const fs = require("fs");
 const cookieParser = require("cookie-parser");
 const { getSupabase, createSanitizer } = require("./js/utils/server-utils");
 const _sanitizer = createSanitizer();
@@ -42,6 +43,25 @@ app.use(async (req, res, next) => {
     try {
       const signed = req.signedCookies && req.signedCookies.user_id;
       const override = req.query && req.query.devUserId;
+      // `?devUserId=guest` signs out and STAYS signed out (sticky via cookie)
+      // so Firebase test-number OTP flows can be exercised locally. A real
+      // /auth/login or a new ?devUserId=<user> exits guest mode.
+      const GUEST_VALUES = new Set(["guest", "none", "off"]);
+      if (override && GUEST_VALUES.has(String(override).toLowerCase())) {
+        res.clearCookie("user_id");
+        res.clearCookie("user_id_dev_readable");
+        res.cookie("dev_signed_out", "1", {
+          httpOnly: false,
+          sameSite: "lax",
+          maxAge: 1000 * 60 * 60 * 24 * 7,
+        });
+        if (req.signedCookies) delete req.signedCookies.user_id;
+        return next();
+      }
+      if (override) res.clearCookie("dev_signed_out");
+      if (!signed && !override && req.cookies && req.cookies.dev_signed_out) {
+        return next();
+      }
       const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       // Re-resolve when: no cookie, explicit switch, or a stale username-valued cookie
       if (!signed || override || !UUID_RE.test(signed)) {
@@ -231,7 +251,12 @@ app.use((req, res, next) => {
   // Do NOT rewrite deep paths like /recipes/tasty-garbage — those are dynamic routes
   const isSingleSegment = !req.path.slice(1).includes("/");
   if (isGet && !hasExtension && !isRoot && !isApiLike && isSingleSegment) {
-    req.url += ".html";
+    // .html must go on the path, not after the query string
+    const qIndex = req.url.indexOf("?");
+    req.url =
+      qIndex === -1
+        ? req.url + ".html"
+        : req.url.slice(0, qIndex) + ".html" + req.url.slice(qIndex);
   }
   next();
 });
@@ -387,6 +412,22 @@ app.get(["/account", "/account.html"], (req, res) => {
   return res.render("account", { currentUser });
 });
 
+// Recipes entered in a competition stay secret until the day after its event_date
+async function getSecretCompetitionIds(supabase) {
+  const today = new Date().toISOString().slice(0, 10);
+  const { data, error } = await supabase
+    .from("recipe_competitions")
+    .select("id")
+    .gte("event_date", today);
+  if (error) throw error;
+  return (data || []).map((c) => c.id);
+}
+
+function excludeSecretRecipes(query, secretIds) {
+  if (!secretIds.length) return query;
+  return query.or(`competition_id.is.null,competition_id.not.in.(${secretIds.join(",")})`);
+}
+
 // A Few Recipes — homepage: recently added recipes + sidebar data
 app.get(["/recipes", "/recipes.html"], async (req, res) => {
   const currentUser =
@@ -395,17 +436,14 @@ app.get(["/recipes", "/recipes.html"], async (req, res) => {
     const supabase = getSupabase();
     const cols =
       "id, slug, title, description, author, author_slug, category, prep_time, image_url, competition_name, competition_medal, avg_score, created_at";
+    const secretIds = await getSecretCompetitionIds(supabase);
 
     const [{ data: recentRecipes, error: recentError }, { data: topRated, error: topError }] =
       await Promise.all([
-        supabase
-          .from("recipe_detail_view")
-          .select(cols)
+        excludeSecretRecipes(supabase.from("recipe_detail_view").select(cols), secretIds)
           .order("created_at", { ascending: false })
           .limit(5),
-        supabase
-          .from("recipe_detail_view")
-          .select(cols)
+        excludeSecretRecipes(supabase.from("recipe_detail_view").select(cols), secretIds)
           .order("avg_score", { ascending: false, nullsFirst: false })
           .order("created_at", { ascending: false })
           .limit(5),
@@ -416,18 +454,31 @@ app.get(["/recipes", "/recipes.html"], async (req, res) => {
     // All competitions for the homepage grid (most recent first)
     const { data: allCompetitions, error: compError } = await supabase
       .from("recipe_competitions")
-      .select("id, name, event_date")
+      .select("id, name, slug, event_date")
       .order("event_date", { ascending: false });
     if (compError) console.warn("recipe_competitions query error:", compError.message);
 
-    const latestComp = (allCompetitions && allCompetitions[0]) || null;
+    const today = new Date().toISOString().slice(0, 10);
+    const comps = allCompetitions || [];
+    const latestComp = comps.find((c) => c.event_date && c.event_date < today) || null;
+    // Upcoming competitions advertise via images/ad_<slug>.png linking to /<slug>
+    const competitionAds = comps
+      .filter(
+        (c) =>
+          c.slug &&
+          c.event_date >= today &&
+          fs.existsSync(path.join(__dirname, "images", `ad_${c.slug}.png`))
+      )
+      .reverse()
+      .map((c) => ({ href: `/${c.slug}`, src: `/images/ad_${c.slug}.png`, name: c.name }));
 
     return res.render("recipe", {
       currentUser,
       recentRecipes: recentRecipes || [],
       topRated: topRated || [],
       latestCompetition: latestComp,
-      allCompetitions: allCompetitions || [],
+      competitionAds,
+      allCompetitions: comps.filter((c) => !(c.event_date >= today)),
       sanitizeHtml,
     });
   } catch (err) {
@@ -464,9 +515,17 @@ app.get(["/recipes/all", "/recipes/all.html"], async (req, res) => {
     if (competition) query = query.eq("competition_name", competition);
     if (author) query = query.eq("author_slug", author);
 
+    // Authors still see their own secret entries under My Recipes
+    const secretIds = await getSecretCompetitionIds(supabase);
+    const isOwnList = !!(author && currentUser && author === currentUser.username);
+    if (!isOwnList) query = excludeSecretRecipes(query, secretIds);
+
     const [{ data: allRecipes, error: recipesError }, { data: filterData }] = await Promise.all([
       query,
-      supabase.from("recipe_detail_view").select("category, competition_name"),
+      excludeSecretRecipes(
+        supabase.from("recipe_detail_view").select("category, competition_name"),
+        secretIds
+      ),
     ]);
 
     if (recipesError) throw recipesError;
@@ -545,6 +604,11 @@ app.get("/recipes/:slug", async (req, res) => {
 
     if (error) throw error;
     if (!recipe) return res.redirect("/recipes");
+
+    if (recipe.competition_id && !(currentUser && currentUser.username === recipe.author_slug)) {
+      const secretIds = await getSecretCompetitionIds(supabase);
+      if (secretIds.includes(recipe.competition_id)) return res.redirect("/recipes");
+    }
 
     // Shape competition_result for the template
     const competition_result = recipe.competition_rank
@@ -836,11 +900,124 @@ app.get(["/event-info", "/event-info.html"], (req, res) => {
   return res.render("event-info");
 });
 
+// On a Stick guest list: active registrations with totals
+app.get("/on-a-stick/guest-list", async (req, res) => {
+  try {
+    const supabase = getSupabase();
+    const { data: competition, error } = await supabase
+      .from("recipe_competitions")
+      .select("id")
+      .eq("slug", "on-a-stick")
+      .maybeSingle();
+    if (error) throw error;
+    if (!competition) return res.status(404).send("Competition not found");
+
+    const { data: regs, error: regErr } = await supabase
+      .from("competition_registrations")
+      .select("role, users ( display_name, username )")
+      .eq("competition_id", competition.id)
+      .eq("status", "active")
+      .order("created_at");
+    if (regErr) throw regErr;
+
+    const guests = (regs || []).map((r) => ({
+      role: r.role,
+      name: (r.users && (r.users.display_name || r.users.username)) || "Guest",
+    }));
+    return res.render("on-a-stick-guest-list", {
+      entrants: guests.filter((g) => g.role === "entrant"),
+      judges: guests.filter((g) => g.role === "judge"),
+    });
+  } catch (err) {
+    console.error("GET /on-a-stick/guest-list error:", err);
+    return res.status(500).send("Failed to load guest list");
+  }
+});
+
+// Competition platform: reusable judging + results pages (new-model competitions)
+app.get("/competitions/:slug/judge", async (req, res) => {
+  const currentUser =
+    res.locals.navData && res.locals.navData.user ? res.locals.navData.user : null;
+  if (!currentUser) return res.redirect("/");
+  try {
+    const supabase = getSupabase();
+    const { data: competition, error } = await supabase
+      .from("recipe_competitions")
+      .select("id, name, slug, theme, event_date, voting_open, favorite_bonus")
+      .eq("slug", req.params.slug)
+      .maybeSingle();
+    if (error) throw error;
+    if (!competition) return res.status(404).send("Competition not found");
+
+    // Per-competition rubric page when one exists (e.g. /on-a-stick-rubric)
+    const rubricFile = `${competition.slug}-rubric.html`;
+    const rubricUrl = fs.existsSync(path.join(__dirname, rubricFile))
+      ? `/${competition.slug}-rubric`
+      : null;
+
+    return res.render("competition-judging", { competition, rubricUrl });
+  } catch (err) {
+    console.error("GET /competitions/:slug/judge error:", err);
+    return res.status(500).send("Failed to load judging page");
+  }
+});
+
+app.get("/competitions/:slug/results", async (req, res) => {
+  try {
+    const supabase = getSupabase();
+    const { data: competition, error } = await supabase
+      .from("recipe_competitions")
+      .select("id, name, slug, theme, event_date, voting_open, favorite_bonus")
+      .eq("slug", req.params.slug)
+      .maybeSingle();
+    if (error) throw error;
+    if (!competition) return res.status(404).send("Competition not found");
+
+    const today = new Date().toISOString().slice(0, 10);
+    const revealed =
+      competition.voting_open || !competition.event_date || competition.event_date <= today;
+    if (!revealed) {
+      return res.render("competition-results", { competition, rows: [], categoryAverages: {} });
+    }
+
+    const [{ data: rows, error: rowsErr }, { data: avgRows, error: avgErr }] = await Promise.all([
+      supabase
+        .from("competition_leaderboard_view")
+        .select("*")
+        .eq("competition_id", competition.id)
+        .order("competition_rank"),
+      supabase
+        .from("competition_category_averages_view")
+        .select("entry_id, category_label, avg_score, sort_order")
+        .eq("competition_id", competition.id)
+        .order("sort_order"),
+    ]);
+    if (rowsErr) throw rowsErr;
+    if (avgErr) throw avgErr;
+
+    const categoryAverages = {};
+    (avgRows || []).forEach((a) => {
+      (categoryAverages[a.entry_id] = categoryAverages[a.entry_id] || []).push(a);
+    });
+
+    return res.render("competition-results", {
+      competition,
+      rows: rows || [],
+      categoryAverages,
+    });
+  } catch (err) {
+    console.error("GET /competitions/:slug/results error:", err);
+    return res.status(500).send("Failed to load results");
+  }
+});
+
 // Mount API/auth routes BEFORE static so they are never shadowed by file serving
 const usersRouter = require("./routes/users");
 app.use("/users", usersRouter);
 const apiUsersRouter = require("./routes/api-users");
 app.use("/api", apiUsersRouter);
+const apiCompetitionsRouter = require("./routes/api-competitions");
+app.use("/api", apiCompetitionsRouter);
 const authRouter = require("./routes/auth");
 app.use("/auth", authRouter);
 

@@ -175,6 +175,7 @@ Always implement and call `cleanup()` in pages/components to remove event listen
 - If slot rendering, catalog metadata, or selection behavior changes, verify no-duplicate behavior across all slots on a page.
 - For ad additions/edits, update `js/utils/sidebar-media.js` catalog entries with `id`, `allowedAreas`, and any overlay/audio metadata.
 - Ad creatives can optionally include `imageMaxWidth` (for example `"320px"`); when set, slot rendering constrains and centers the media block in the container.
+- Catalog entries can include `pinUntil: "YYYY-MM-DD"` to be placed first in every matching slot (area/type/audience) through that date; after it, the entry is dropped from the catalog entirely (rotation and `adKeys`), so it never blocks `ad_completionist`.
 
 ---
 

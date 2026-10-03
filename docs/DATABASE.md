@@ -63,17 +63,30 @@ Phase 1 (legacy, competition-embedded) and Phase 2 (standalone recipes) coexist:
 | `recipe_comments`                                     | Recipe discussion (user or guest_name)                                                 |
 | `recipe_categories`                                   | Category catalog (slug PK, tagline, gif_url, sort_order)                               |
 
+### Competition Platform (2026-10, per-competition judging)
+
+New-model competitions define their own category set (count/labels/weights); a competition with `competition_categories` rows is scored from the normalized tables below. Legacy competitions keep the frozen fixed-column judgments. `recipe_competitions` gained `slug`, `theme`, `favorite_bonus`, `event_id`. See `sql/2026_10_01_competition_platform.sql`.
+
+| Table                         | Purpose                                                                            |
+| ----------------------------- | ---------------------------------------------------------------------------------- |
+| `competition_categories`      | Per-competition judging categories: key, label, weight, sort_order                 |
+| `competition_judgments`       | Judgment header, UNIQUE(entry_id, judge_user_id); self-judging blocked via trigger |
+| `competition_judgment_scores` | One score row (1–5) per category per judgment                                      |
+| `competition_registrations`   | role `entrant`/`judge`, status `active`/`withdrawn` (soft withdraw), dish title    |
+
 ## Views
 
-| View                   | Purpose                                                                         |
-| ---------------------- | ------------------------------------------------------------------------------- |
-| `scoreboard`           | Event leaderboard: assigned + competition + achievement points → `total_points` |
-| `scoreboard_old`       | Pre-achievements version (legacy, still present)                                |
-| `site_leaderboard`     | Brispace ranking: visitor-eligible achievement points only, all users           |
-| `brispace_leaderboard` | Site ranking variant with `headshot` (used by SSR scoreboard)                   |
-| `cocktail_leaderboard` | Competition ranking: avg technical score + favorites → `final_score`            |
-| `recipe_detail_view`   | Unified recipe detail: author, competition rank/medal, avg score                |
-| `user_profile_view`    | `users` ⋈ `user_profile` for profile rendering                                  |
+| View                                 | Purpose                                                                                             |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| `scoreboard`                         | Event leaderboard: assigned + competition + achievement points → `total_points`                     |
+| `scoreboard_old`                     | Pre-achievements version (legacy, still present)                                                    |
+| `site_leaderboard`                   | Brispace ranking: visitor-eligible achievement points; published profiles only (2026-10)            |
+| `brispace_leaderboard`               | Site ranking variant with `headshot` (SSR scoreboard); published profiles only (2026-10)            |
+| `cocktail_leaderboard`               | Competition ranking: avg technical score + favorites → `final_score`                                |
+| `recipe_detail_view`                 | Unified recipe detail: author, competition rank/medal, avg score (legacy + new-model scoring)       |
+| `competition_leaderboard_view`       | New-model ranking: avg per-judge SUM(score×weight) + favorites×`favorite_bonus`; withdrawn excluded |
+| `competition_category_averages_view` | Per-entry per-category averages for results pages                                                   |
+| `user_profile_view`                  | `users` ⋈ `user_profile` for profile rendering                                                      |
 
 ## RPC Functions
 
