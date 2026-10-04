@@ -8,15 +8,17 @@
   <div class="nav-user-info">
     <div class="user-welcome">
       <span data-nav="page-title"><%= navData.pageTitle %></span>
-      <img src="/images/star_icon.gif" alt="star" class="icon-gif" />
+      <img src="/images/star_icon.gif" width="30" height="29" alt="star" class="icon-gif" />
       <span id="secretArnold" class="secret-arnold">RICKTER</span>
       <% if (navData && navData.user) { %>
       <a href="/users/<%= navData.user.username %>" class="profile-nav-link" aria-label="Profile">
-        <img src="/images/profile.gif" alt="profile" class="icon-gif user-profile-button" />
+        <img src="/images/profile.gif" width="70" height="36" alt="profile" class="icon-gif user-profile-button" />
       </a>
       <a href="/account" class="notification-nav-link" aria-label="Account Center">
         <img
           src="/images/notification-bell.gif"
+          width="32"
+          height="32"
           alt="notifications"
           class="icon-gif user-profile-button"
         />
@@ -35,17 +37,19 @@
 <div class="myspace-header full-width-content">
   <div class="myspace-header__logo">
     <a href="/" aria-label="Go to home page">
-      <img src="/images/brispace_logo.jpg" alt="brispace logo" />
+      <img src="/images/brispace_logo.jpg" width="280" height="80" alt="brispace logo" />
     </a>
     <span id="secretArnold" class="secret-arnold">RICKTER</span>
     <div class="nav-content-right">
       <% if (navData && navData.user) { %>
       <a href="/users/<%= navData.user.username %>" class="profile-nav-link" aria-label="Profile">
-        <img src="/images/profile.gif" alt="profile" class="icon-gif user-profile-button" />
+        <img src="/images/profile.gif" width="70" height="36" alt="profile" class="icon-gif user-profile-button" />
       </a>
       <a href="/account" class="notification-nav-link" aria-label="Account Center">
         <img
           src="/images/notification-bell.gif"
+          width="32"
+          height="32"
           alt="notifications"
           class="icon-gif user-profile-button"
         />
@@ -70,29 +74,31 @@
 
       <% if (isVisitorView) { %>
       <a href="/" class="nav-tab" data-sound="menu" data-page="home">
-        <img src="/images/home.gif" alt="home" class="icon-gif icon-gif--lg icon-gif--with-text" />
+        <img src="/images/home.gif" width="35" height="35" alt="home" class="icon-gif icon-gif--lg icon-gif--with-text" />
         <span>HOME</span>
       </a>
       <a href="/friends" class="nav-tab" data-sound="menu" data-page="friends">
-        <img src="/images/reveal.gif" alt="friends" class="icon-gif icon-gif--lg icon-gif--with-text" />
+        <img src="/images/reveal.gif" width="101" height="105" alt="friends" class="icon-gif icon-gif--lg icon-gif--with-text" />
         <span>BROWSE</span>
       </a>
       <a href="/leaderboard" class="nav-tab" data-sound="menu" data-page="leaderboard">
-        <img src="/images/trophy.gif" alt="trophy" class="icon-gif icon-gif--with-text" />
+        <img src="/images/trophy.gif" width="23" height="22" alt="trophy" class="icon-gif icon-gif--with-text" />
         <span>LEADERBOARD</span>
       </a>
       <a href="/walktober" class="nav-tab" data-sound="menu" data-page="walktober">
-        <img src="/images/zombie-walk.gif" alt="walktober" class="icon-gif icon-gif--with-text" />
+        <img src="/images/walktober_nav.gif" width="68" height="84" alt="walktober" class="icon-gif icon-gif--lg icon-gif--with-text" />
         <span>WALKTOBER</span>
       </a>
       <% if (isLoggedIn) { %>
       <a href="/users/<%= navData.user.username %>" class="nav-tab" data-sound="menu" data-page="edit-profile">
-        <img src="/images/pencil.gif" alt="profile" class="icon-gif icon-gif--lg icon-gif--with-text" />
+        <img src="/images/pencil.gif" width="32" height="32" alt="profile" class="icon-gif icon-gif--lg icon-gif--with-text" />
         <span>EDIT PROFILE</span>
       </a>
       <button class="nav-tab logout-btn">
         <img
           src="/images/logout.gif"
+          width="320"
+          height="240"
           alt="logout"
           class="icon-gif icon-gif--lg icon-gif--with-text"
         />
@@ -102,26 +108,26 @@
       <% } else { %>
       <% if (navData && navData.user && navData.user.user_type === 'participant') { %>
       <a href="/dashboard" class="nav-tab" data-sound="menu" data-page="dashboard">
-        <img src="/images/home.gif" alt="home" class="icon-gif icon-gif--lg icon-gif--with-text" />
+        <img src="/images/home.gif" width="35" height="35" alt="home" class="icon-gif icon-gif--lg icon-gif--with-text" />
         <span>DASHBOARD</span>
       </a>
       <% } %>
       <a href="/event-info" class="nav-tab" data-sound="menu" data-page="event-info">
-        <img src="/images/question.gif" alt="info" class="icon-gif icon-gif--with-text" />
+        <img src="/images/question.gif" width="27" height="36" alt="info" class="icon-gif icon-gif--with-text" />
         <span>EVENT INFO</span>
       </a>
       <% if (navData && navData.user && navData.user.user_type === 'participant' && navData.challengesEnabled !== false) { %>
       <a href="/challenges-submit" class="nav-tab" data-sound="menu" data-page="challenges-submit">
-        <img src="/images/star_icon.gif" alt="star" class="icon-gif icon-gif--with-text" />
+        <img src="/images/star_icon.gif" width="30" height="29" alt="star" class="icon-gif icon-gif--with-text" />
         <span>SUBMIT CHALLENGE</span>
       </a>
       <% } %>
       <a href="/leaderboard" class="nav-tab" data-sound="menu" data-page="leaderboard">
-        <img src="/images/trophy.gif" alt="trophy" class="icon-gif icon-gif--with-text" />
+        <img src="/images/trophy.gif" width="23" height="22" alt="trophy" class="icon-gif icon-gif--with-text" />
         <span>LEADERBOARD</span>
       </a>
       <a href="/walktober" class="nav-tab" data-sound="menu" data-page="walktober">
-        <img src="/images/flame.gif" alt="walktober" class="icon-gif icon-gif--with-text" />
+        <img src="/images/walktober_nav.gif" width="68" height="84" alt="walktober" class="icon-gif icon-gif--lg icon-gif--with-text" />
         <span>WALKTOBER</span>
       </a>
       <% if (navData && navData.user && navData.user.user_type === 'participant' && navData.eventStarted && navData.challengesEnabled !== false) { %>
@@ -132,13 +138,15 @@
         data-page="challenges"
         data-participant-only
       >
-        <img src="/images/question.gif" alt="my-challenges" class="icon-gif icon-gif--with-text" />
+        <img src="/images/question.gif" width="27" height="36" alt="my-challenges" class="icon-gif icon-gif--with-text" />
         <span>MY CHALLENGES</span>
       </a>
       <% } %>
       <a href="/cocktail-judging" class="nav-tab" data-sound="menu" data-page="cocktail-judging">
         <img
           src="/images/cocktail_stirrer.gif"
+          width="113"
+          height="113"
           alt="cocktail"
           class="icon-gif icon-gif--with-text"
         />
@@ -146,13 +154,15 @@
       </a>
       <% if (navData && navData.user && navData.user.isAdmin) { %>
       <a href="/admin-approvals" class="nav-tab" data-page="admin-approvals" data-admin-only>
-        <img src="/images/star_icon.gif" alt="admin" class="icon-gif icon-gif--with-text" />
+        <img src="/images/star_icon.gif" width="30" height="29" alt="admin" class="icon-gif icon-gif--with-text" />
         <span>🔐 ADMIN</span>
       </a>
       <% } %>
       <button class="nav-tab logout-btn">
         <img
           src="/images/logout.gif"
+          width="320"
+          height="240"
           alt="logout"
           class="icon-gif icon-gif--lg icon-gif--with-text"
         />

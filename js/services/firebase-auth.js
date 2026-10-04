@@ -6,23 +6,53 @@
 
 import { FIREBASE_CONFIG } from "../config.js";
 
+// Keep in sync with the <script>/<link rel=preload> tags in templates and HTML pages
+const FIREBASE_SDK_URLS = [
+  "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+  "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js",
+];
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error(`Failed to load ${src}`));
+    document.head.appendChild(script);
+  });
+}
+
+// Pages without the SDK script tags load it on demand so it never blocks first render.
+async function ensureFirebaseSdk() {
+  if (window.firebase?.auth) return;
+  for (const src of FIREBASE_SDK_URLS) await loadScript(src);
+}
+
 class FirebaseAuthService {
   constructor() {
     this.app = null;
     this.auth = null;
     this.recaptchaVerifier = null;
     this.confirmationResult = null;
+    this.initPromise = null;
   }
 
   /**
-   * Initialize Firebase app and auth
+   * Initialize Firebase app and auth. Safe to call repeatedly; only runs once.
    */
-  async init() {
+  init() {
+    if (!this.initPromise) {
+      this.initPromise = this._init().catch((err) => {
+        this.initPromise = null;
+        throw err;
+      });
+    }
+    return this.initPromise;
+  }
+
+  async _init() {
     try {
-      // Firebase compat API - firebase is global from script tags
-      if (!window.firebase) {
-        throw new Error("Firebase SDK not loaded globally. Check script tags in HTML.");
-      }
+      await ensureFirebaseSdk();
 
       this.app = firebase.initializeApp(FIREBASE_CONFIG);
       this.auth = firebase.auth();
@@ -53,9 +83,7 @@ class FirebaseAuthService {
    */
   async setupRecaptcha(containerId) {
     try {
-      if (!this.auth) {
-        throw new Error("Firebase auth not initialized. Call init() first.");
-      }
+      await this.init();
       const container = document.getElementById(containerId);
       if (!container) {
         const errorMsg = `Container with ID "${containerId}" not found`;

@@ -6,7 +6,7 @@
 <div class="myspace-header full-width-content">
   <div class="myspace-header__logo">
     <a href="/" aria-label="Go to home page">
-      <img src="/images/brispace_logo.jpg" alt="brispace logo" />
+      <img src="/images/brispace_logo.jpg" width="280" height="80" alt="brispace logo" />
     </a>
     <span id="secretArnold" class="secret-arnold">RICKTER</span>
     <div class="nav-content-right">
@@ -14,6 +14,8 @@
       <a href="/account" class="notification-nav-link" aria-label="Account Center">
         <img
           src="/images/notification-bell.gif"
+          width="32"
+          height="32"
           alt="notifications"
           class="icon-gif user-profile-button"
         />
@@ -28,7 +30,13 @@
         class="profile-nav-link"
         aria-label="Profile"
       >
-        <img src="/images/profile.gif" alt="profile" class="icon-gif user-profile-button" />
+        <img
+          src="/images/profile.gif"
+          width="70"
+          height="36"
+          alt="profile"
+          class="icon-gif user-profile-button"
+        />
       </a>
       <% } %>
       <button class="mobile-menu-toggle" data-sound="menu" aria-label="Toggle navigation menu">
@@ -39,23 +47,43 @@
   <div class="nav-menu">
     <div class="nav-tabs">
       <a href="/" class="nav-tab" data-sound="menu" data-page="home">
-        <img src="/images/home.gif" alt="home" class="icon-gif icon-gif--lg icon-gif--with-text" />
+        <img
+          src="/images/home.gif"
+          width="35"
+          height="35"
+          alt="home"
+          class="icon-gif icon-gif--lg icon-gif--with-text"
+        />
         <span>HOME</span>
       </a>
       <a href="/friends" class="nav-tab" data-sound="menu" data-page="friends">
         <img
           src="/images/reveal.gif"
+          width="101"
+          height="105"
           alt="friends"
           class="icon-gif icon-gif--lg icon-gif--with-text"
         />
         <span>BROWSE</span>
       </a>
       <a href="/scoreboard" class="nav-tab" data-sound="menu" data-page="scoreboard">
-        <img src="/images/trophy.gif" alt="trophy" class="icon-gif icon-gif--with-text" />
+        <img
+          src="/images/trophy.gif"
+          width="23"
+          height="22"
+          alt="trophy"
+          class="icon-gif icon-gif--with-text"
+        />
         <span>SCOREBOARD</span>
       </a>
       <a href="/walktober" class="nav-tab" data-sound="menu" data-page="walktober">
-        <img src="/images/flame.gif" alt="walktober" class="icon-gif icon-gif--with-text" />
+        <img
+          src="/images/walktober_nav.gif"
+          width="68"
+          height="84"
+          alt="walktober"
+          class="icon-gif icon-gif--lg icon-gif--with-text"
+        />
         <span>WALKTOBER</span>
       </a>
       <% if (isLoggedIn) { %>
@@ -67,6 +95,8 @@
       >
         <img
           src="/images/pencil.gif"
+          width="32"
+          height="32"
           alt="profile"
           class="icon-gif icon-gif--lg icon-gif--with-text"
         />
@@ -75,6 +105,8 @@
       <button class="nav-tab logout-btn">
         <img
           src="/images/logout.gif"
+          width="320"
+          height="240"
           alt="logout"
           class="icon-gif icon-gif--lg icon-gif--with-text"
         />

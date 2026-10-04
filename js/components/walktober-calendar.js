@@ -23,7 +23,12 @@ class WalktoberCalendar extends EventTarget {
 
     const cells = [];
     for (let i = 0; i < firstWeekday; i++) {
-      cells.push(`<div class="wt-day wt-day--blank" aria-hidden="true"></div>`);
+      // Frankenstein hides in the first week's blank Tuesday (david-pumpkins egg)
+      const frank =
+        i === TUESDAY
+          ? `<img class="wt-pumpkin-gif wt-pumpkin-gif--frank" data-pumpkin-gif="frank" src="/images/frank-walk.gif" width="200" height="241" alt="" />`
+          : "";
+      cells.push(`<div class="wt-day wt-day--blank" aria-hidden="true">${frank}</div>`);
     }
     for (let day = 1; day <= daysInMonth; day++) {
       const date = `${year}-${pad(month)}-${pad(day)}`;
@@ -84,6 +89,8 @@ class WalktoberCalendar extends EventTarget {
 function pad(n) {
   return String(n).padStart(2, "0");
 }
+
+const TUESDAY = 2;
 
 function shortSteps(steps) {
   if (steps < 1000) return String(steps);

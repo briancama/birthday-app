@@ -9,7 +9,9 @@ const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_STEPS = 200000;
 const MAX_GOAL = 1000000;
 const MEDALS = ["gold", "silver", "bronze"];
+const TOP_LIST_LIMIT = 4;
 const DAY_MS = 24 * 60 * 60 * 1000;
+const SEASON_COLUMNS = "year, starts_on, ends_on, edit_until, min_goal, closed_at";
 
 function utcToday() {
   return new Date().toISOString().slice(0, 10);
@@ -39,8 +41,19 @@ function getSignedUserId(req) {
 async function getSeason(year) {
   const { data, error } = await supabase
     .from("walktober_seasons")
-    .select("year, starts_on, ends_on, edit_until, min_goal, closed_at")
+    .select(SEASON_COLUMNS)
     .eq("year", year)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+async function getLatestSeason() {
+  const { data, error } = await supabase
+    .from("walktober_seasons")
+    .select(SEASON_COLUMNS)
+    .order("year", { ascending: false })
+    .limit(1)
     .maybeSingle();
   if (error) throw error;
   return data;
@@ -123,6 +136,41 @@ async function getTotals(year) {
   return data || [];
 }
 
+async function getDailyLeaders(year) {
+  const { data, error } = await supabase
+    .from("walktober_daily_leaders")
+    .select("step_date, user_id, steps")
+    .eq("year", year)
+    .order("step_date");
+  if (error) throw error;
+  return data || [];
+}
+
+// One entry per day; tied walkers share the day.
+function groupDailyLeaders(leaderRows, totals) {
+  const totalsById = new Map(totals.map((r) => [r.user_id, r]));
+  const byDate = new Map();
+  leaderRows.forEach((row) => {
+    const walker = totalsById.get(row.user_id);
+    if (!walker) return;
+    if (!byDate.has(row.step_date)) {
+      byDate.set(row.step_date, { date: row.step_date, steps: row.steps, walkers: [] });
+    }
+    byDate.get(row.step_date).walkers.push(toWalker(walker));
+  });
+  return [...byDate.values()];
+}
+
+function goalBoard(totals) {
+  return totals
+    .map((r) => ({ ...toWalker(r), place: densePlace(totals, goalPct, r) }))
+    .sort((a, b) => b.goal_progress_pct - a.goal_progress_pct || b.total_steps - a.total_steps);
+}
+
+function displayName(row) {
+  return (row.display_name || row.username || "").toLowerCase();
+}
+
 async function countEntries(year, userId) {
   const { count, error } = await supabase
     .from("walktober_entries")
@@ -177,88 +225,123 @@ async function loadEditableDay(req, res) {
   return { userId, year, date };
 }
 
-// ── GET /api/walktober/:year ─────────────────────────────────────────────────
 // Season + community stats for everyone; the caller's goal and entries when signed in.
+async function buildSeasonPayload(season, userId) {
+  const year = season.year;
+  const [totals, leaderRows, entriesResult, isAdmin] = await Promise.all([
+    getTotals(year),
+    getDailyLeaders(year),
+    userId
+      ? supabase
+          .from("walktober_entries")
+          .select("step_date, steps")
+          .eq("year", year)
+          .eq("user_id", userId)
+          .order("step_date")
+      : Promise.resolve({ data: [], error: null }),
+    userId ? isAdminUser(userId) : Promise.resolve(false),
+  ]);
+  if (entriesResult.error) throw entriesResult.error;
+
+  const ranked = rankByTotal(totals);
+  const mine = userId ? totals.find((r) => r.user_id === userId) : null;
+  const myRanked = mine ? ranked.find((r) => r.user_id === mine.user_id) : null;
+  const crewTotal = totals.reduce((sum, r) => sum + (r.total_steps || 0), 0);
+
+  const payload = {
+    season: describeSeason(season),
+    today: utcToday(),
+    community: {
+      crew_total_steps: crewTotal,
+      walker_count: totals.length,
+      averages: crewAverages(totals),
+      walkers: goalBoard(totals),
+      top_totals: ranked
+        .filter((r) => r.place <= TOP_LIST_LIMIT)
+        .map((r) => ({ ...toWalker(r), place: r.place })),
+      daily_leaders: groupDailyLeaders(leaderRows, totals),
+    },
+    me: userId
+      ? {
+          user_id: userId,
+          daily_goal: mine ? mine.daily_goal : null,
+          entries: entriesResult.data || [],
+          goal_locked: (entriesResult.data || []).length > 0,
+          standing: mine
+            ? {
+                total_steps: mine.total_steps,
+                steps_place: myRanked ? myRanked.place : null,
+                steps_ranked: ranked.length,
+                goal_progress_pct: goalPct(mine),
+                goal_place: densePlace(totals, goalPct, mine),
+                walker_count: totals.length,
+                share_pct: crewTotal ? round1((mine.total_steps / crewTotal) * 100) : 0,
+                days_on_top: leaderRows.filter((r) => r.user_id === userId).length,
+              }
+            : null,
+        }
+      : null,
+    isAdmin,
+  };
+
+  if (isAdmin) {
+    payload.closePreview = {
+      medalists: ranked
+        .filter((r) => r.place <= MEDALS.length)
+        .map((r) => ({ username: r.username, place: r.place, total_steps: r.total_steps })),
+      goal_average: totals
+        .filter(earnedGoalAverage)
+        .map((r) => ({ username: r.username, total_steps: r.total_steps })),
+    };
+  }
+
+  return payload;
+}
+
+// Full boards for everyone who joined, including walkers who haven't logged yet.
+async function buildLeaderboardPayload(season, userId) {
+  const totals = await getTotals(season.year);
+  const ranked = rankByTotal(totals).map((r) => ({ ...toWalker(r), place: r.place }));
+  const unlogged = totals
+    .filter((r) => !(r.total_steps > 0))
+    .sort((a, b) => displayName(a).localeCompare(displayName(b)))
+    .map((r) => ({ ...toWalker(r), place: null }));
+
+  return {
+    season: describeSeason(season),
+    me_id: userId,
+    crew_total_steps: totals.reduce((sum, r) => sum + (r.total_steps || 0), 0),
+    walker_count: totals.length,
+    steps: [...ranked, ...unlogged],
+    goal: goalBoard(totals),
+  };
+}
+
+// ── GET /api/walktober/:year ─────────────────────────────────────────────────
 router.get("/walktober/:year", async (req, res) => {
   try {
     const year = parseYear(req.params.year);
     if (!year) return res.status(400).json({ error: "Invalid year" });
     const season = await getSeason(year);
     if (!season) return res.status(404).json({ error: "Walktober season not found" });
-
-    const userId = getSignedUserId(req);
-    const [totals, entriesResult, isAdmin] = await Promise.all([
-      getTotals(year),
-      userId
-        ? supabase
-            .from("walktober_entries")
-            .select("step_date, steps")
-            .eq("year", year)
-            .eq("user_id", userId)
-            .order("step_date")
-        : Promise.resolve({ data: [], error: null }),
-      userId ? isAdminUser(userId) : Promise.resolve(false),
-    ]);
-    if (entriesResult.error) throw entriesResult.error;
-
-    const ranked = rankByTotal(totals);
-    const mine = userId ? totals.find((r) => r.user_id === userId) : null;
-    const myRanked = mine ? ranked.find((r) => r.user_id === mine.user_id) : null;
-    const crewTotal = totals.reduce((sum, r) => sum + (r.total_steps || 0), 0);
-
-    const payload = {
-      season: describeSeason(season),
-      today: utcToday(),
-      community: {
-        crew_total_steps: crewTotal,
-        walker_count: totals.length,
-        averages: crewAverages(totals),
-        walkers: totals
-          .map((r) => ({ ...toWalker(r), place: densePlace(totals, goalPct, r) }))
-          .sort(
-            (a, b) => b.goal_progress_pct - a.goal_progress_pct || b.total_steps - a.total_steps
-          ),
-        top_totals: ranked
-          .filter((r) => r.place <= MEDALS.length)
-          .map((r) => ({ ...toWalker(r), place: r.place })),
-      },
-      me: userId
-        ? {
-            user_id: userId,
-            daily_goal: mine ? mine.daily_goal : null,
-            entries: entriesResult.data || [],
-            goal_locked: (entriesResult.data || []).length > 0,
-            standing: mine
-              ? {
-                  total_steps: mine.total_steps,
-                  steps_place: myRanked ? myRanked.place : null,
-                  steps_ranked: ranked.length,
-                  goal_progress_pct: goalPct(mine),
-                  goal_place: densePlace(totals, goalPct, mine),
-                  walker_count: totals.length,
-                  share_pct: crewTotal ? round1((mine.total_steps / crewTotal) * 100) : 0,
-                }
-              : null,
-          }
-        : null,
-      isAdmin,
-    };
-
-    if (isAdmin) {
-      payload.closePreview = {
-        medalists: ranked
-          .filter((r) => r.place <= MEDALS.length)
-          .map((r) => ({ username: r.username, place: r.place, total_steps: r.total_steps })),
-        goal_average: totals
-          .filter(earnedGoalAverage)
-          .map((r) => ({ username: r.username, total_steps: r.total_steps })),
-      };
-    }
-
-    return res.json(payload);
+    return res.json(await buildSeasonPayload(season, getSignedUserId(req)));
   } catch (err) {
     console.error("GET /api/walktober/:year error:", err);
     return res.status(500).json({ error: "Failed to load Walktober" });
+  }
+});
+
+// ── GET /api/walktober/:year/leaderboard ─────────────────────────────────────
+router.get("/walktober/:year/leaderboard", async (req, res) => {
+  try {
+    const year = parseYear(req.params.year);
+    if (!year) return res.status(400).json({ error: "Invalid year" });
+    const season = await getSeason(year);
+    if (!season) return res.status(404).json({ error: "Walktober season not found" });
+    return res.json(await buildLeaderboardPayload(season, getSignedUserId(req)));
+  } catch (err) {
+    console.error("GET /api/walktober/:year/leaderboard error:", err);
+    return res.status(500).json({ error: "Failed to load the Walktober leaderboard" });
   }
 });
 
@@ -453,3 +536,7 @@ router.post("/walktober/:year/close", async (req, res) => {
 });
 
 module.exports = router;
+module.exports.getLatestSeason = getLatestSeason;
+module.exports.getSignedUserId = getSignedUserId;
+module.exports.buildSeasonPayload = buildSeasonPayload;
+module.exports.buildLeaderboardPayload = buildLeaderboardPayload;

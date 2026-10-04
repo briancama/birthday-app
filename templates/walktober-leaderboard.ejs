@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BriSpace - Walktober <%= year %> Leaderboard</title>
+    <link rel="icon" type="image/png" href="/images/brispace_favicon.png" />
+    <link rel="stylesheet" href="/css/geocities.css" />
+    <link rel="stylesheet" href="/css/components/myspace.css" />
+    <link rel="stylesheet" href="/css/components/navigation.css" />
+    <link rel="stylesheet" href="/css/components/brispace-home.css" />
+    <link rel="stylesheet" href="/css/components/login-signup.css" />
+    <link rel="stylesheet" href="/css/components/walktober.css" />
+
+    <!-- Firebase SDK loads on demand from firebase-auth.js; preload so it's ready without blocking render -->
+    <link rel="preconnect" href="https://www.gstatic.com" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link
+      rel="preload"
+      as="script"
+      href="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"
+    />
+    <link
+      rel="preload"
+      as="script"
+      href="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"
+    />
+    <link rel="modulepreload" href="/js/pages/walktober-leaderboard.js" />
+    <link rel="modulepreload" href="/js/pages/brispace.js" />
+    <link rel="modulepreload" href="/js/pages/base-page.js" />
+    <link rel="modulepreload" href="/js/app.js" />
+    <link rel="modulepreload" href="/js/services/auth-manager.js" />
+    <link
+      rel="modulepreload"
+      href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.94.1/+esm"
+    />
+  </head>
+  <body
+    class="myspace theme-walktober"
+    data-auth="<%= isSignedIn %>"
+    data-walktober-year="<%= year %>"
+  >
+    <%- include('partials/navigation-visitor', { navData: (typeof navData !== 'undefined' ? navData
+    : {}) }) %>
+
+    <main class="myspace-container full-width-content">
+      <div class="container myspace-layout">
+        <div class="myspace-main">
+          <section class="myspace-section walktober-hero">
+            <h3 class="myspace-section-alt-header">Walktober <%= year %></h3>
+            <div class="walktober-hero__body">
+              <div>
+                <h1 class="walktober-title">LEADERBOARD</h1>
+                <p class="walktober-hero__intro">
+                  See who is leading this year's haunted jaunt.
+                  <a href="/walktober">Back to Walktober &raquo;</a>
+                </p>
+              </div>
+              <img
+                class="walktober-hero__gif"
+                src="/images/zombie-walk.gif"
+                width="49"
+                height="77"
+                alt=""
+              />
+            </div>
+            <div id="walktoberCrewTotal" class="walktober-leaderboard__crew"></div>
+          </section>
+
+          <div class="walktober-boards">
+            <section id="most-steps" class="myspace-section">
+              <h3>Most steps</h3>
+              <div id="walktoberStepsBoard"><%- include('partials/walktober-loading') %></div>
+            </section>
+
+            <section id="goal-progress" class="myspace-section">
+              <h3>Goal progress</h3>
+              <div id="walktoberGoalBoard"><%- include('partials/walktober-loading') %></div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script type="application/json" id="walktoberData">
+      <%- walktoberJson %>
+    </script>
+    <script type="module">
+      import { WalktoberLeaderboardPage } from "/js/pages/walktober-leaderboard.js";
+
+      const page = new WalktoberLeaderboardPage();
+      page.render();
+      await page.init();
+    </script>
+  </body>
+</html>

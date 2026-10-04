@@ -39,8 +39,8 @@ SELECT
   '2026-12-05',
   '15:00',
   '3:00 arrival · 3:30 judging',
-  '20524 97th Ave S, Kent, WA 98031',
-  'https://www.google.com/maps/place/20524+97th+Ave+S,+Kent,+WA+98031',
+  '20516 97th Ave S, Kent, WA 98032',
+  'https://maps.app.goo.gl/88ErufHETcgXFSJc9',
   '/on-a-stick',
   'Event page'
 WHERE NOT EXISTS (

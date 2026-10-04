@@ -187,10 +187,25 @@ October step-logging event at `/walktober` (Brispace layout, `theme-walktober` b
 - Entries are editable for any season day up to "today" (server cap = UTC+14 date) until `edit_until` or until the season is closed.
 - Goal progress % = total ÷ (goal × days in season); daily average shown = total ÷ days logged.
 - Community lists and medal ranking include every walker (published or not); names only link to `/users/:username` when the profile is published.
+- Sidebar crew box: Most steps Top 4 (medals for 1–3, "you" row appended if outside), then the viewer's local "yesterday" top walker (held to `ends_on` after the season, hidden on day 1). Both link to the full leaderboard.
+- Daily top walkers come from the `walktober_daily_leaders` view (`sql/2026_10_03_walktober_daily_leaders.sql`). Ties all get the day; days where everyone logged 0 have no leader. "Days on top" shows in Your numbers only when ≥ 1.
+- `/walktober/leaderboard` (template `walktober-leaderboard.ejs`, page `js/pages/walktober-leaderboard.js`, API `GET /api/walktober/:year/leaderboard`) shows full Most steps + Goal progress boards for everyone who joined; unlogged walkers sit at the bottom of Most steps with no place.
+- List row markup is shared via `js/components/walktober-lists.js`.
 - Achievements are per-year keys: `walktober_<year>_gold|silver|bronze` (dense rank by total steps, ties share) and `walktober_<year>_goal_average` (total ≥ goal × days). Awarded only by the admin "Close Walktober" action (`POST /api/walktober/:year/close`), which is idempotent and sends `walktober_award` notifications.
 - New year = new SQL file inserting a season row + the four achievement rows. No code change needed.
 - Halloween gifs live in `images/walktober/`.
 - `isAdminUser(userId)` lives in `js/utils/server-utils.js` for server-side admin checks.
+- Initial data ships with the HTML: `renderWalktober` (server.js) calls `buildSeasonPayload` / `buildLeaderboardPayload` (exported from `routes/api-walktober.js`) and embeds the result as `<script type="application/json" id="walktoberData">` via `jsonForScript()`. Pages read it in the constructor and the template calls `page.render()` before `await page.init()`, so nothing waits on Firebase/auth. The GET APIs return the same shapes and are used only to refresh after edits.
+- The server decides which sections are visible from the payload (no `hidden` flip on load). JS-filled slots start with `partials/walktober-loading.ejs`; `walktober.css` holds their space with `--wt-*-reserve` knobs (applied via `:has(> .wt-loading)`), and the calendar reserve follows `data-weeks`.
+- Walktober templates don't include the Firebase `<script>` tags; they `preload` them and `firebaseAuth.init()` loads the SDK on demand. `firebaseAuth.init()` only runs once per page (cached promise).
+- Hidden "David S Pumpkins" egg (`js/components/david-pumpkins.js`, achievement `david_pumpkins`, `sql/2026_10_04_add_david_pumpkins_achievement.sql`): any `[data-pumpkin-gif]` on `/walktober` plays a dance track on click (zombie = hero right gif, frank = calendar's first blank Tuesday, skull = crew box, werewolf = Your numbers). Signed-in progress lives in localStorage per user; once all four are found and a track ends, David rises (stays until clicked), his clip plays, and the achievement is awarded. Plays once per user. Placement/size knobs are `--wt-*` vars in `walktober.css`.
+
+### Request Pipeline Performance (2026)
+
+- `/css`, `/js`, `/images`, `/fonts`, `/audio`, `/songs` are served by `express.static` at the top of server.js, before dev auto-login and nav hydration. Images/fonts/audio/songs get `Cache-Control: max-age=1d` (`ASSET_CACHE_MAX_AGE`).
+- Nav hydration (`res.locals.navData`) skips `/api`, `/auth`, `/notifications`, and any non-`.html` file path (`wantsNavData()`). Only page renders read `navData`.
+- New asset folders must be added to the early static list, or every request for them pays the nav Supabase lookups.
+- The project root is not served wholesale: only top-level `*.html` files plus `PUBLIC_ROOT_FILES` (`robots.txt`, `sw-notifications.js`) in server.js. New public root files must be added there or they 404.
 
 ---
 

@@ -41,6 +41,14 @@ function createSanitizer() {
   return createDOMPurify(window);
 }
 
+// JSON that is safe to print inside a <script> tag (no "</script>" breakouts).
+function jsonForScript(value) {
+  return JSON.stringify(value === undefined ? null : value)
+    .replace(/</g, "\\u003c")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}
+
 function ensureFirebaseAdmin() {
   if (!admin.apps.length) {
     try {
@@ -75,5 +83,6 @@ module.exports = {
   requireSignedUser,
   isAdminUser,
   createSanitizer,
+  jsonForScript,
   ensureFirebaseAdmin,
 };

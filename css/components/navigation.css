@@ -282,6 +282,7 @@ body.has-bottom-menu {
 
 .myspace-header__logo img {
   height: 50px;
+  width: auto;
 }
 
 .myspace-container {

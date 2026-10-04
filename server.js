@@ -10,7 +10,7 @@ if (process.env.NODE_ENV !== "production") {
 const path = require("path");
 const fs = require("fs");
 const cookieParser = require("cookie-parser");
-const { getSupabase, createSanitizer } = require("./js/utils/server-utils");
+const { getSupabase, createSanitizer, jsonForScript } = require("./js/utils/server-utils");
 const _sanitizer = createSanitizer();
 const sanitizeHtml = (str) => _sanitizer.sanitize(str || "");
 const app = express();
@@ -23,6 +23,15 @@ const port = process.env.PORT || 8000;
 // Use EJS for server-rendered pages
 app.set("views", path.join(__dirname, "templates"));
 app.set("view engine", "ejs");
+
+// Asset folders are served before the session/nav middleware so files never wait on Supabase.
+const ASSET_CACHE_MAX_AGE = "1d";
+for (const dir of ["css", "js"]) {
+  app.use(`/${dir}`, express.static(path.join(__dirname, dir)));
+}
+for (const dir of ["images", "fonts", "audio", "songs"]) {
+  app.use(`/${dir}`, express.static(path.join(__dirname, dir), { maxAge: ASSET_CACHE_MAX_AGE }));
+}
 
 app.use(express.json());
 // Expose challenge state helper to EJS templates
@@ -110,13 +119,20 @@ app.use(async (req, res, next) => {
   next();
 });
 
+// Only page renders read navData; API calls and non-HTML files skip the lookups.
+function wantsNavData(req) {
+  if (/^\/(api|auth|notifications)(\/|$)/.test(req.path)) return false;
+  const ext = path.extname(req.path);
+  return !ext || ext === ".html";
+}
+
 // Server middleware: populate nav data for server-rendered navigation partials
 app.use(async (req, res, next) => {
   try {
     const supabase = getSupabase();
     res.locals.navData = { isAuthenticated: false };
 
-    if (!supabase) return next();
+    if (!supabase || !wantsNavData(req)) return next();
 
     const signed = req.signedCookies && req.signedCookies.user_id;
     if (!signed) return next();
@@ -125,6 +141,34 @@ app.use(async (req, res, next) => {
     // already be a UUID or a development shortcut like 'local-dev-user'. Try
     // id first (only if value looks like a UUID), then username.
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(signed);
+
+    const unreadWindowDays = 7;
+    const unreadCutoffIso = new Date(
+      Date.now() - unreadWindowDays * 24 * 60 * 60 * 1000
+    ).toISOString();
+    const navLookups = (userId) =>
+      Promise.allSettled([
+        supabase.from("push_subscriptions").select("id").eq("user_id", userId).limit(1),
+        supabase
+          .from("app_settings")
+          .select("setting_value")
+          .eq("setting_key", "event_started")
+          .maybeSingle(),
+        supabase
+          .from("app_settings")
+          .select("setting_value")
+          .eq("setting_key", "challenges_enabled")
+          .maybeSingle(),
+        supabase
+          .from("notifications")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId)
+          .eq("read", false)
+          .gte("created_at", unreadCutoffIso),
+      ]);
+    // A UUID cookie is almost always the user's id, so start the nav lookups alongside the user lookup
+    let lookups = isUuid ? navLookups(signed) : null;
+
     let { data: user, error: userErr } = isUuid
       ? await supabase
           .from("users")
@@ -143,33 +187,9 @@ app.use(async (req, res, next) => {
     }
 
     if (!user) return next();
+    if (!lookups || user.id !== signed) lookups = navLookups(user.id);
 
-    const unreadWindowDays = 7;
-    const unreadCutoffIso = new Date(
-      Date.now() - unreadWindowDays * 24 * 60 * 60 * 1000
-    ).toISOString();
-
-    // Run independent nav-state lookups in parallel for faster TTFB on SSR pages.
-    const [pushResult, eventFlagResult, challengesFlagResult, unreadResult] =
-      await Promise.allSettled([
-        supabase.from("push_subscriptions").select("id").eq("user_id", user.id).limit(1),
-        supabase
-          .from("app_settings")
-          .select("setting_value")
-          .eq("setting_key", "event_started")
-          .maybeSingle(),
-        supabase
-          .from("app_settings")
-          .select("setting_value")
-          .eq("setting_key", "challenges_enabled")
-          .maybeSingle(),
-        supabase
-          .from("notifications")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", user.id)
-          .eq("read", false)
-          .gte("created_at", unreadCutoffIso),
-      ]);
+    const [pushResult, eventFlagResult, challengesFlagResult, unreadResult] = await lookups;
 
     const hasPush = !!(
       pushResult.status === "fulfilled" &&
@@ -219,12 +239,7 @@ app.use(async (req, res, next) => {
     };
     // Precompute a sanitized JSON blob for navData to safely embed in templates
     try {
-      let navJson = JSON.stringify(res.locals.navData || {});
-      navJson = navJson
-        .replace(/</g, "\\u003c")
-        .replace(/\u2028/g, "\\u2028")
-        .replace(/\u2029/g, "\\u2029");
-      res.locals.navDataJson = navJson;
+      res.locals.navDataJson = jsonForScript(res.locals.navData || {});
     } catch (e) {
       res.locals.navDataJson = "{}";
     }
@@ -1011,42 +1026,60 @@ app.get("/competitions/:slug/results", async (req, res) => {
   }
 });
 
-// Walktober: October step-logging dashboard (data loads client-side from /api/walktober)
-app.get(["/walktober", "/walktober.html"], async (req, res) => {
-  try {
-    const supabase = getSupabase();
-    const { data: season, error } = await supabase
-      .from("walktober_seasons")
-      .select("year")
-      .order("year", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (error) throw error;
-    if (!season) return res.status(404).send("Walktober isn't set up yet");
+// Walktober pages ship their first data in the HTML; the API is used for refreshes after edits
+const apiWalktoberRouter = require("./routes/api-walktober");
+const WALKTOBER_PAYLOADS = {
+  walktober: apiWalktoberRouter.buildSeasonPayload,
+  "walktober-leaderboard": apiWalktoberRouter.buildLeaderboardPayload,
+};
 
-    const currentUser =
-      res.locals.navData && res.locals.navData.user ? res.locals.navData.user : null;
-    const isSignedIn = !!currentUser;
-    const mediaState = buildMediaSlots({
-      req,
-      isSignedIn,
-      slotPlan: [{ key: "sidebar", area: "sidebar", count: 2, includeTypes: ["ad"] }],
-    });
+function calendarWeeks(startsOn) {
+  const [year, month] = startsOn.split("-").map(Number);
+  const firstWeekday = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  return Math.ceil((firstWeekday + daysInMonth) / 7);
+}
 
-    return res.render("walktober", {
-      year: season.year,
-      currentUser,
-      isSignedIn,
-      isAdmin: !!(currentUser && currentUser.isAdmin),
-      adSlots: mediaState.slots,
-      adCatalogKeys: mediaState.adKeys,
-      hasGifStepper: mediaState.anyGifStepper,
-    });
-  } catch (err) {
-    console.error("GET /walktober error:", err);
-    return res.status(500).send("Failed to load Walktober");
-  }
-});
+function renderWalktober(view) {
+  return async (req, res) => {
+    try {
+      const season = await apiWalktoberRouter.getLatestSeason();
+      if (!season) return res.status(404).send("Walktober isn't set up yet");
+
+      const currentUser =
+        res.locals.navData && res.locals.navData.user ? res.locals.navData.user : null;
+      const isSignedIn = !!currentUser;
+      const mediaState = buildMediaSlots({
+        req,
+        isSignedIn,
+        slotPlan: [{ key: "sidebar", area: "sidebar", count: 2, includeTypes: ["ad"] }],
+      });
+      const walktober = await WALKTOBER_PAYLOADS[view](
+        season,
+        apiWalktoberRouter.getSignedUserId(req)
+      );
+
+      return res.render(view, {
+        year: season.year,
+        walktober,
+        walktoberJson: jsonForScript(walktober),
+        calendarWeeks: calendarWeeks(season.starts_on),
+        currentUser,
+        isSignedIn,
+        isAdmin: !!(currentUser && currentUser.isAdmin),
+        adSlots: mediaState.slots,
+        adCatalogKeys: mediaState.adKeys,
+        hasGifStepper: mediaState.anyGifStepper,
+      });
+    } catch (err) {
+      console.error(`GET ${req.path} error:`, err);
+      return res.status(500).send("Failed to load Walktober");
+    }
+  };
+}
+
+app.get(["/walktober", "/walktober.html"], renderWalktober("walktober"));
+app.get("/walktober/leaderboard", renderWalktober("walktober-leaderboard"));
 
 // Mount API/auth routes BEFORE static so they are never shadowed by file serving
 const usersRouter = require("./routes/users");
@@ -1055,7 +1088,6 @@ const apiUsersRouter = require("./routes/api-users");
 app.use("/api", apiUsersRouter);
 const apiCompetitionsRouter = require("./routes/api-competitions");
 app.use("/api", apiCompetitionsRouter);
-const apiWalktoberRouter = require("./routes/api-walktober");
 app.use("/api", apiWalktoberRouter);
 const authRouter = require("./routes/auth");
 app.use("/auth", authRouter);
@@ -1064,7 +1096,20 @@ app.use("/auth", authRouter);
 const notificationsRouter = require("./routes/notifications");
 app.use("/notifications", notificationsRouter);
 
-app.use(express.static(path.join(__dirname)));
+// Only top-level .html pages and a few root files are public; source, sql, docs, etc. stay private
+const PUBLIC_ROOT_FILES = new Set(["robots.txt", "sw-notifications.js"]);
+const rootStatic = express.static(__dirname, { index: false });
+app.use((req, res, next) => {
+  let name;
+  try {
+    name = decodeURIComponent(req.path.slice(1));
+  } catch {
+    return next();
+  }
+  const isRootFile = name && !/[\\/]/.test(name);
+  const isPublic = isRootFile && (name.endsWith(".html") || PUBLIC_ROOT_FILES.has(name));
+  return isPublic ? rootStatic(req, res, next) : next();
+});
 
 app.listen(port, () => {
   console.log(`Birthday App server running at http://localhost:${port}`);

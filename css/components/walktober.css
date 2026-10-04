@@ -41,6 +41,36 @@
   --wt-cell-min-height: 72px;
   --wt-cell-gap: 4px;
 
+  --wt-crew-gap: 1.25rem;
+
+  /* Space held for JS-filled slots until they render, so nothing below jumps */
+  --wt-cal-weeks: 5;
+  --wt-cal-weekday-height: 16px;
+  --wt-headline-reserve: 8.5rem;
+  --wt-join-reserve: 12rem;
+  --wt-stats-reserve: 16rem;
+  --wt-crew-reserve: 22rem;
+  --wt-board-reserve: 20rem;
+  --wt-admin-reserve: 10rem;
+  --wt-login-reserve: 14rem;
+
+  --wt-loading-gif-height: 40px;
+  --wt-loading-color: var(--wt-accent-text);
+  --wt-loading-blink: 1s;
+
+  /* David S. Pumpkins egg: character gifs + finale */
+  --wt-pumpkin-hover-scale: 1.15;
+  --wt-frank-height: calc(var(--wt-cell-min-height) - 6px);
+  --wt-werewolf-height: 90px;
+  --wt-werewolf-gap: 0.25rem;
+  --wt-werewolf-shape-margin: 6px;
+  --wt-werewolf-shape-threshold: 0.3;
+  --wt-skull-height: 59px;
+  --wt-skull-right: 0.25rem;
+  --wt-david-width: min(480px, 90vw);
+  --wt-david-rise: 1.2s;
+  --wt-david-sink: 0.6s;
+
   background: var(--wt-page-bg);
 }
 
@@ -444,6 +474,11 @@ button.wt-day:not(:disabled):hover {
   text-transform: uppercase;
 }
 
+/* A lone tile on the last row spans it instead of sitting in one column */
+.walktober-stat:last-child:nth-child(3n + 1) {
+  grid-column: 1 / -1;
+}
+
 .walktober-note {
   margin: 0.6rem 0 0;
 }
@@ -546,6 +581,71 @@ span.walktober-list__name {
   color: var(--wt-accent-text);
 }
 
+.walktober-board + .walktober-board {
+  margin-top: var(--wt-crew-gap);
+}
+
+.walktober-more-link {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 11px;
+  text-align: right;
+}
+
+.walktober-yesterday {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.5rem;
+  border: 2px solid var(--wt-orange);
+  text-align: center;
+}
+
+.walktober-yesterday__date {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--wt-accent-text);
+}
+
+.walktober-yesterday__names {
+  font-size: 1.15em;
+  font-weight: bold;
+
+  .walktober-list__name {
+    flex: none;
+    white-space: normal;
+  }
+}
+
+.walktober-yesterday__steps {
+  font-weight: bold;
+  color: var(--wt-orange-bright);
+}
+
+.walktober-list--full .walktober-list__row {
+  padding: 6px 4px 8px;
+}
+
+/* ── Leaderboard page ────────────────────────────────────────────────────────── */
+
+.walktober-leaderboard__crew {
+  margin-top: 0.75rem;
+}
+
+.walktober-boards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--wt-boards-gap, 1rem);
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .walktober-boards {
+    grid-template-columns: 1fr;
+  }
+}
+
 .walktober-compare {
   margin: 0;
   padding-left: 1.25rem;
@@ -617,15 +717,197 @@ span.walktober-list__name {
   gap: 0.4rem;
 }
 
+/* ── David S. Pumpkins egg ───────────────────────────────────────────── */
+
+.wt-pumpkin-gif {
+  cursor: pointer;
+  transition: transform 0.15s ease-out;
+
+  &:hover {
+    transform: scale(var(--wt-pumpkin-hover-scale));
+  }
+}
+
+.wt-day--blank:has(.wt-pumpkin-gif--frank) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.wt-pumpkin-gif--frank {
+  width: auto;
+  height: var(--wt-frank-height);
+}
+
+/* Contains the floated werewolf when the stats run short */
+#walktoberStats {
+  display: flow-root;
+}
+
+/* Text wraps the werewolf's outline (first gif frame's alpha) via shape-outside */
+.wt-pumpkin-gif--werewolf {
+  float: right;
+  width: auto;
+  height: var(--wt-werewolf-height);
+  margin-left: var(--wt-werewolf-gap);
+  shape-outside: url("/images/werewolf-walk.gif");
+  shape-image-threshold: var(--wt-werewolf-shape-threshold);
+  shape-margin: var(--wt-werewolf-shape-margin);
+  filter: drop-shadow(1px 1px 2px #ffcc00);
+}
+
+/* Sits in the crew total box (built in JS); vertical centering via margins keeps the hover transform free */
+.walktober-crew-total:has(> .wt-pumpkin-gif--skull) {
+  position: relative;
+}
+
+.wt-pumpkin-gif--skull {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: var(--wt-skull-right);
+  margin: auto 0;
+  width: auto;
+  height: var(--wt-skull-height);
+  filter: drop-shadow(1px 1px 2px #ff6600);
+}
+
+.wt-david-pumpkins {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  z-index: 9000;
+  width: var(--wt-david-width);
+  height: auto;
+  cursor: pointer;
+  transform: translate(-50%, 100%);
+
+  &.is-rising {
+    animation: wt-david-rise var(--wt-david-rise) ease-out forwards;
+  }
+
+  &.is-sinking {
+    animation: wt-david-sink var(--wt-david-sink) ease-in forwards;
+  }
+}
+
+@keyframes wt-david-rise {
+  from {
+    transform: translate(-50%, 100%);
+  }
+  to {
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes wt-david-sink {
+  from {
+    transform: translate(-50%, 0);
+  }
+  to {
+    transform: translate(-50%, 100%);
+  }
+}
+
+/* Near-instant instead of none so animationend still fires and removes David */
+@media (prefers-reduced-motion: reduce) {
+  .wt-david-pumpkins.is-rising,
+  .wt-david-pumpkins.is-sinking {
+    animation-duration: 1ms;
+  }
+}
+
+/* ── Loading placeholders ─────────────────────────────────────────────── */
+
+.wt-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 0;
+  font-family: Verdana, sans-serif;
+  font-weight: bold;
+  color: var(--wt-loading-color);
+}
+
+.wt-loading__gif {
+  width: auto;
+  height: var(--wt-loading-gif-height);
+}
+
+.wt-loading__text {
+  animation: wt-blink var(--wt-loading-blink) steps(1) infinite;
+}
+
+@keyframes wt-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wt-loading__text {
+    animation: none;
+  }
+}
+
+.walktober-headline:has(> .wt-loading) {
+  display: block;
+  min-height: var(--wt-headline-reserve);
+}
+
+#walktoberJoinBody:has(> .wt-loading) {
+  min-height: var(--wt-join-reserve);
+}
+
+#walktoberCalendar[data-weeks="4"] {
+  --wt-cal-weeks: 4;
+}
+
+#walktoberCalendar[data-weeks="6"] {
+  --wt-cal-weeks: 6;
+}
+
+/* Matches the rendered grid: margin + weekday row + one row of cells per week */
+#walktoberCalendar:has(> .wt-loading) {
+  min-height: calc(
+    0.5rem + var(--wt-cal-weekday-height) + var(--wt-cal-weeks) *
+      (var(--wt-cell-min-height) + var(--wt-cell-gap))
+  );
+}
+
+#walktoberStats:has(> .wt-loading) {
+  min-height: var(--wt-stats-reserve);
+}
+
+#walktoberCommunity:has(> .wt-loading) {
+  min-height: var(--wt-crew-reserve);
+}
+
+#walktoberAdminBody:has(> .wt-loading) {
+  min-height: var(--wt-admin-reserve);
+}
+
+#walktoberStepsBoard:has(> .wt-loading),
+#walktoberGoalBoard:has(> .wt-loading) {
+  min-height: var(--wt-board-reserve);
+}
+
+.theme-walktober #loginSignupContainer:empty {
+  min-height: var(--wt-login-reserve);
+}
+
 /* ── Mobile ───────────────────────────────────────────────────────────── */
 
 @media (max-width: 480px) {
   .myspace.theme-walktober {
     --wt-cell-min-height: 52px;
     --wt-cell-gap: 2px;
+    --wt-headline-reserve: 7.5rem;
   }
 
-  .walktober-hero__gif {
+  .walktober-hero__gif:first-child {
     display: none;
   }
 

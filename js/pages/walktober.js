@@ -1,19 +1,30 @@
 import { BrispacePage } from "./brispace.js";
 import { WalktoberCalendar } from "../components/walktober-calendar.js";
+import { DavidPumpkinsEgg } from "../components/david-pumpkins.js";
+import {
+  fmt,
+  escapeHtml,
+  longDate,
+  userLink,
+  placeCell,
+  listRow,
+  stepsRow,
+  listGap,
+  crewTotal,
+} from "../components/walktober-lists.js";
 
 const GOAL_SUGGESTIONS = [5000, 7500, 10000, 12500, 15000];
-const GOAL_LIST_LIMIT = 3;
-const MEDAL_GIFS = {
-  1: "/images/gold-medal.gif",
-  2: "/images/silver-medal.gif",
-  3: "/images/bronze-medal.gif",
-};
+const LEADERBOARD_URL = "/walktober/leaderboard";
+const SKULL_GIF = `<img class="wt-pumpkin-gif wt-pumpkin-gif--skull" data-pumpkin-gif="skull"
+  src="/images/skull-walk.gif" width="160" height="160" alt="" />`;
+const WEREWOLF_GIF = `<img class="wt-pumpkin-gif wt-pumpkin-gif--werewolf" data-pumpkin-gif="werewolf"
+  src="/images/werewolf-walk.gif" width="156" height="180" alt="" />`;
 
 class WalktoberPage extends BrispacePage {
   constructor() {
     super();
     this.year = document.body.dataset.walktoberYear;
-    this.data = null;
+    this.data = JSON.parse(document.getElementById("walktoberData").textContent);
     this.editingGoal = false;
     this.selectedDate = null;
     this.calendar = new WalktoberCalendar();
@@ -35,20 +46,25 @@ class WalktoberPage extends BrispacePage {
     dialog.addEventListener("click", onDialogClick);
     form.addEventListener("submit", onDaySubmit);
     this.calendar.addEventListener("day:select", onDaySelect);
+
+    // David's clip replaces the usual achievement sound
+    const pumpkins = new DavidPumpkinsEgg();
+    const onFinaleStart = () => (this.suppressAchievementSound = true);
+    const onFinaleEnd = () => (this.suppressAchievementSound = false);
+    pumpkins.addEventListener("finale:start", onFinaleStart);
+    pumpkins.addEventListener("finale:end", onFinaleEnd);
+    pumpkins.init();
+
     this.eventCleanup.push(() => {
       main.removeEventListener("click", onMainClick);
       main.removeEventListener("submit", onMainSubmit);
       dialog.removeEventListener("click", onDialogClick);
       form.removeEventListener("submit", onDaySubmit);
       this.calendar.removeEventListener("day:select", onDaySelect);
+      pumpkins.removeEventListener("finale:start", onFinaleStart);
+      pumpkins.removeEventListener("finale:end", onFinaleEnd);
+      pumpkins.destroy();
     });
-
-    try {
-      await this.loadData();
-      this.render();
-    } catch (err) {
-      this.showErrorToast(err.message);
-    }
   }
 
   async loadData() {
@@ -238,6 +254,7 @@ class WalktoberPage extends BrispacePage {
       : this.season.has_ended && this.season.is_editable
         ? `October's over. You can still fill in missing days until ${longDate(this.season.edit_until)}.`
         : "";
+    const daysOnTop = this.me.standing?.days_on_top || 0;
 
     document.getElementById("walktoberStats").innerHTML = `
       <div class="walktober-stats">
@@ -247,9 +264,11 @@ class WalktoberPage extends BrispacePage {
         ${statTile("Days at goal", `${s.daysHit}`)}
         ${statTile("Days logged", `${s.daysLogged} / ${s.daysInSeason}`)}
         ${statTile("Steps to go", fmt(s.stepsToGo))}
+        ${daysOnTop ? statTile("Days on top", fmt(daysOnTop)) : ""}
       </div>
       ${paceNote ? `<p class="walktober-note">${paceNote}</p>` : ""}
       ${editNote ? `<p class="walktober-note">${editNote}</p>` : ""}
+      ${WEREWOLF_GIF}
       ${this.renderComparisons(s)}`;
   }
 
@@ -289,7 +308,7 @@ class WalktoberPage extends BrispacePage {
         `You've hit your goal <strong>${plural(s.daysHit, "time")}</strong>. The average walker has hit theirs ${plural(avg.days_hit_goal, "time")}.`
       );
       lines.push(
-        `Your steps are <strong>${standing.share_pct}%</strong> of everything the crew has walked.`
+        `Your steps account for <strong>${standing.share_pct}%</strong> of the walktober crew's total.`
       );
       lines.push(
         `Your goal is <strong>${fmt(s.goal)}</strong> a day. The average goal is ${fmt(avg.daily_goal)}.`
@@ -312,9 +331,7 @@ class WalktoberPage extends BrispacePage {
 
     let topList = `<p class="walktober-empty">Nobody's logged steps yet.</p>`;
     if (community.top_totals.length) {
-      const rows = community.top_totals.map((w) =>
-        listRow(w, w.user_id === myId, placeCell(w.place, true), fmt(w.total_steps))
-      );
+      const rows = community.top_totals.map((w) => stepsRow(w, w.user_id === myId));
       if (standing?.steps_place && !community.top_totals.some((w) => w.user_id === myId)) {
         rows.push(listGap());
         rows.push(
@@ -324,26 +341,40 @@ class WalktoberPage extends BrispacePage {
       topList = `<ol class="walktober-list">${rows.join("")}</ol>`;
     }
 
-    let walkerList = `<p class="walktober-empty">No walkers yet. Be the first.</p>`;
-    if (community.walkers.length) {
-      const shown = community.walkers.slice(0, GOAL_LIST_LIMIT);
-      const rows = shown.map((w) => goalRow(w, w.user_id === myId));
-      if (myWalker && !shown.includes(myWalker)) {
-        rows.push(listGap());
-        rows.push(goalRow(myWalker, true));
-      }
-      walkerList = `<ol class="walktober-list">${rows.join("")}</ol>`;
-    }
-
     el.innerHTML = `
-      <div class="walktober-crew-total">
-        <span class="walktober-crew-total__value">${fmt(community.crew_total_steps)}</span>
-        <span class="walktober-crew-total__label">steps by ${community.walker_count} walker${community.walker_count === 1 ? "" : "s"}</span>
+      ${crewTotal(community.crew_total_steps, community.walker_count, SKULL_GIF)}
+      <div class="walktober-board">
+        <h4 class="walktober-subhead">Most steps</h4>
+        ${topList}
+        ${moreLink()}
       </div>
-      <h4 class="walktober-subhead">Most steps</h4>
-      ${topList}
-      <h4 class="walktober-subhead">Goal progress</h4>
-      ${walkerList}`;
+      ${this.renderYesterday(community.daily_leaders, myId)}`;
+  }
+
+  // "Yesterday" is the viewer's local yesterday, held to the last season day once October's over.
+  renderYesterday(dailyLeaders, myId) {
+    const yesterday = shiftDate(localToday(), -1);
+    const day = yesterday > this.season.ends_on ? this.season.ends_on : yesterday;
+    if (day < this.season.starts_on) return "";
+
+    const leader = dailyLeaders.find((d) => d.date === day);
+    const heading = day === yesterday ? "Yesterday's top walker" : "Final day's top walker";
+    const body = leader
+      ? `<span class="walktober-yesterday__names">${leader.walkers
+          .map((w) => (w.user_id === myId ? "<strong>You</strong>" : userLink(w)))
+          .join(" &amp; ")}</span>
+        <span class="walktober-yesterday__steps">${fmt(leader.steps)} steps</span>`
+      : `<p class="walktober-empty">Nobody logged steps that day.</p>`;
+
+    return `
+      <div class="walktober-board">
+        <h4 class="walktober-subhead">${heading}</h4>
+        <div class="walktober-yesterday">
+          <span class="walktober-yesterday__date">${longDate(day, true)}</span>
+          ${body}
+        </div>
+        ${moreLink()}
+      </div>`;
   }
 
   renderAdmin() {
@@ -509,23 +540,18 @@ class WalktoberPage extends BrispacePage {
   }
 }
 
-function fmt(n) {
-  return Number(n || 0).toLocaleString("en-US");
-}
-
 function localToday() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function longDate(date, withWeekday = false) {
+function shiftDate(date, days) {
   const [y, m, d] = date.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-US", {
-    weekday: withWeekday ? "long" : undefined,
-    month: "long",
-    day: "numeric",
-    timeZone: "UTC",
-  });
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+}
+
+function moreLink() {
+  return `<a class="walktober-more-link" href="${LEADERBOARD_URL}">Full leaderboard &raquo;</a>`;
 }
 
 function statTile(label, value) {
@@ -536,40 +562,6 @@ function statTile(label, value) {
     </div>`;
 }
 
-function userLink(walker) {
-  const name = escapeHtml(walker.display_name || walker.username || "Walker");
-  if (!walker.is_published) return `<span class="walktober-list__name">${name}</span>`;
-  return `<a class="walktober-list__name" href="/users/${encodeURIComponent(walker.username)}">${name}</a>`;
-}
-
-function placeCell(place, withMedal = false) {
-  const content =
-    withMedal && MEDAL_GIFS[place]
-      ? `<img src="${MEDAL_GIFS[place]}" alt="#${place}" />`
-      : `#${place}`;
-  return `<span class="walktober-list__place">${content}</span>`;
-}
-
-function listRow(walker, isMe, placeHtml, valueText, extraHtml = "") {
-  const name = isMe ? `<span class="walktober-list__name">You</span>` : userLink(walker);
-  return `
-    <li class="walktober-list__row${isMe ? " is-me" : ""}">
-      ${placeHtml}
-      ${name}
-      <span class="walktober-list__value">${valueText}</span>
-      ${extraHtml}
-    </li>`;
-}
-
-function goalRow(walker, isMe) {
-  const bar = `<span class="walktober-list__bar" style="--wt-progress: ${Math.min(100, walker.goal_progress_pct)}%"></span>`;
-  return listRow(walker, isMe, placeCell(walker.place), `${walker.goal_progress_pct}%`, bar);
-}
-
-function listGap() {
-  return `<li class="walktober-list__gap" aria-hidden="true">&middot; &middot; &middot;</li>`;
-}
-
 function plural(n, word) {
   return `${fmt(n)} ${word}${n === 1 ? "" : "s"}`;
 }
@@ -578,15 +570,6 @@ function versusAverage(diff, word, threshold) {
   if (Math.abs(diff) < threshold) return "about the same as the average walker";
   const amount = Math.round(Math.abs(diff) * 10) / 10;
   return `${plural(amount, word)} ${diff > 0 ? "more" : "fewer"} than the average walker`;
-}
-
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
 }
 
 export { WalktoberPage };

@@ -12,9 +12,17 @@
     <link rel="stylesheet" href="/css/components/login-signup.css" />
     <link rel="stylesheet" href="/css/components/walktober.css" />
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
+    <!-- Firebase SDK loads on demand from firebase-auth.js; preload so it's ready without blocking render -->
+    <link rel="preconnect" href="https://www.gstatic.com" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="preload" as="script" href="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js" />
+    <link rel="preload" as="script" href="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js" />
+    <link rel="modulepreload" href="/js/pages/walktober.js" />
+    <link rel="modulepreload" href="/js/pages/brispace.js" />
+    <link rel="modulepreload" href="/js/pages/base-page.js" />
+    <link rel="modulepreload" href="/js/app.js" />
+    <link rel="modulepreload" href="/js/services/auth-manager.js" />
+    <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.94.1/+esm" />
   </head>
   <body
     class="myspace theme-walktober"
@@ -25,12 +33,14 @@
     : {}) }) %>
 
     <main class="myspace-container full-width-content">
+      <% const me = walktober.me; %>
+      <% const hasGoal = !!(me && me.daily_goal); %>
       <div class="container myspace-layout">
         <div class="myspace-main" id="walktoberMain">
           <section class="myspace-section walktober-hero">
             <h3 class="myspace-section-alt-header">Walktober <%= year %></h3>
             <div class="walktober-hero__body">
-              <img class="walktober-hero__gif" src="/images/zombie-walk.gif" alt="" />
+              <img class="walktober-hero__gif" src="/images/zombie-walk.gif" width="49" height="77" alt="" />
               <div>
                 <h1 class="walktober-title">WALKTOBER</h1>
                 <p class="walktober-hero__intro">
@@ -38,19 +48,26 @@
                   phone or watch you already have. Missed a day? Fill it in later.
                 </p>
               </div>
-              <img class="walktober-hero__gif" src="/images/zombie-walk.gif" alt="" />
+              <img
+                class="walktober-hero__gif wt-pumpkin-gif"
+                data-pumpkin-gif="zombie"
+                src="/images/zombie-walk.gif"
+                width="49"
+                height="77"
+                alt=""
+              />
             </div>
-            <div id="walktoberHeadline" class="walktober-headline"></div>
+            <div id="walktoberHeadline" class="walktober-headline"><% if (hasGoal) { %><%- include('partials/walktober-loading') %><% } %></div>
           </section>
 
-          <section id="walktoberJoin" class="myspace-section" hidden>
+          <section id="walktoberJoin" class="myspace-section" <%= me && !hasGoal ? '' : 'hidden' %>>
             <h3>Pick your daily goal</h3>
-            <div id="walktoberJoinBody"></div>
+            <div id="walktoberJoinBody"><% if (me && !hasGoal) { %><%- include('partials/walktober-loading') %><% } %></div>
           </section>
 
-          <section id="walktoberCalendarSection" class="myspace-section" hidden>
+          <section id="walktoberCalendarSection" class="myspace-section" <%= hasGoal ? '' : 'hidden' %>>
             <h3>Your October</h3>
-            <div id="walktoberCalendar"></div>
+            <div id="walktoberCalendar" data-weeks="<%= calendarWeeks %>"><% if (hasGoal) { %><%- include('partials/walktober-loading') %><% } %></div>
             <ul class="walktober-legend">
               <li>
                 <span class="walktober-legend__swatch walktober-legend__swatch--hit"></span> Hit
@@ -71,9 +88,9 @@
             </ul>
           </section>
 
-          <section id="walktoberStatsSection" class="myspace-section" hidden>
+          <section id="walktoberStatsSection" class="myspace-section" <%= hasGoal ? '' : 'hidden' %>>
             <h3>Your numbers</h3>
-            <div id="walktoberStats"></div>
+            <div id="walktoberStats"><% if (hasGoal) { %><%- include('partials/walktober-loading') %><% } %></div>
           </section>
 
           <% if (!isSignedIn) { %>
@@ -86,7 +103,7 @@
           <% if (isAdmin) { %>
           <section id="walktoberAdmin" class="myspace-section walktober-admin">
             <h3>Admin: Close Walktober</h3>
-            <div id="walktoberAdminBody"></div>
+            <div id="walktoberAdminBody"><%- include('partials/walktober-loading') %></div>
           </section>
           <% } %>
         </div>
@@ -97,7 +114,7 @@
           <% } %>
           <section class="myspace-section walktober-community">
             <h3 class="myspace-section-alt-header">The Walktober Crew</h3>
-            <div id="walktoberCommunity"><p>Loading...</p></div>
+            <div id="walktoberCommunity"><%- include('partials/walktober-loading') %></div>
           </section>
           <%- include('partials/media-slot', {
             mediaSlot: adSlots && adSlots.sidebar ? adSlots.sidebar : null,
@@ -121,7 +138,9 @@
           step="1"
           required
         />
-        <p class="walktober-dialog__hint">Enter 0 for a rest day.</p>
+        <p class="walktober-dialog__hint">
+          Step count should be based on your phone/tracker's amount for the day.
+        </p>
         <div class="walktober-dialog__actions">
           <button type="submit" class="btn btn--primary" data-action="save-day">Save</button>
           <button type="button" class="btn btn--secondary" data-action="clear-day">
@@ -134,12 +153,10 @@
       </form>
     </dialog>
 
+    <script type="application/json" id="walktoberData"><%- walktoberJson %></script>
     <script type="module">
       import { createLoginSignupForm } from "/js/components/login-signup.js";
       import { WalktoberPage } from "/js/pages/walktober.js";
-
-      const page = new WalktoberPage();
-      await page.init();
 
       const container = document.getElementById("loginSignupContainer");
       if (container) {
@@ -151,6 +168,11 @@
           })
         );
       }
+
+      // Data ships with the HTML, so draw it before auth/Firebase setup runs
+      const page = new WalktoberPage();
+      page.render();
+      await page.init();
     </script>
 
     <% if (typeof hasGifStepper !== 'undefined' && hasGifStepper) { %>

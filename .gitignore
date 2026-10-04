@@ -49,6 +49,9 @@ ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 
+# Miscellaneous
+cookies.txt
+
 # Backup files
 *.bak
 *.backup
