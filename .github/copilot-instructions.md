@@ -187,11 +187,12 @@ October step-logging event at `/walktober` (Brispace layout, `theme-walktober` b
 - Entries are editable for any season day up to "today" (server cap = UTC+14 date) until `edit_until` or until the season is closed.
 - Goal progress % = total ÷ (goal × days in season); daily average shown = total ÷ days logged.
 - Community lists and medal ranking include every walker (published or not); names only link to `/users/:username` when the profile is published.
-- Sidebar crew box: Most steps Top 4 (medals for 1–3, "you" row appended if outside), then the viewer's local "yesterday" top walker (held to `ends_on` after the season, hidden on day 1). Both link to the full leaderboard.
+- Sidebar crew box: Most steps Top 4 (medals for 1–3, "you" row appended if outside), then "Latest Big Stepper": the latest day with a leader, up to the viewer's local yesterday, switching over at 10am local (`LEADER_SWITCH_HOUR` in `js/pages/walktober.js`), capped at `ends_on`, hidden until a leader exists. Both link to the full leaderboard.
 - Daily top walkers come from the `walktober_daily_leaders` view (`sql/2026_10_03_walktober_daily_leaders.sql`). Ties all get the day; days where everyone logged 0 have no leader. "Days on top" shows in Your numbers only when ≥ 1.
 - `/walktober/leaderboard` (template `walktober-leaderboard.ejs`, page `js/pages/walktober-leaderboard.js`, API `GET /api/walktober/:year/leaderboard`) shows full Most steps + Goal progress boards for everyone who joined; unlogged walkers sit at the bottom of Most steps with no place.
 - List row markup is shared via `js/components/walktober-lists.js`.
 - Achievements are per-year keys: `walktober_<year>_gold|silver|bronze` (dense rank by total steps, ties share) and `walktober_<year>_goal_average` (total ≥ goal × days). Awarded only by the admin "Close Walktober" action (`POST /api/walktober/:year/close`), which is idempotent and sends `walktober_award` notifications.
+- Exception: `walktober_<year>_streak_7` ("Count von Count", `sql/2026_10_04_walktober_streak_achievement.sql`) is checked on every step save. It needs 7 consecutive season days, each first logged on time (`created_at` < `step_date` + 2 days UTC, so next-day logging counts and backfills don't). The PUT response returns `achievement` when newly earned and the page emits `achievement:awarded` for the toast. It also adds a `walktober_award` inbox notification (no push). Next year needs a new achievement row.
 - New year = new SQL file inserting a season row + the four achievement rows. No code change needed.
 - Halloween gifs live in `images/walktober/`.
 - `isAdminUser(userId)` lives in `js/utils/server-utils.js` for server-side admin checks.

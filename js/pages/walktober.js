@@ -1,6 +1,7 @@
 import { BrispacePage } from "./brispace.js";
 import { WalktoberCalendar } from "../components/walktober-calendar.js";
 import { DavidPumpkinsEgg } from "../components/david-pumpkins.js";
+import { EventBus } from "../events/event-bus.js";
 import {
   fmt,
   escapeHtml,
@@ -15,6 +16,8 @@ import {
 
 const GOAL_SUGGESTIONS = [5000, 7500, 10000, 12500, 15000];
 const LEADERBOARD_URL = "/walktober/leaderboard";
+// A day's leader can show from this local hour on the next day.
+const LEADER_SWITCH_HOUR = 10;
 const SKULL_GIF = `<img class="wt-pumpkin-gif wt-pumpkin-gif--skull" data-pumpkin-gif="skull"
   src="/images/skull-walk.gif" width="160" height="160" alt="" />`;
 const WEREWOLF_GIF = `<img class="wt-pumpkin-gif wt-pumpkin-gif--werewolf" data-pumpkin-gif="werewolf"
@@ -348,30 +351,26 @@ class WalktoberPage extends BrispacePage {
         ${topList}
         ${moreLink()}
       </div>
-      ${this.renderYesterday(community.daily_leaders, myId)}`;
+      ${this.renderLatestLeader(community.daily_leaders, myId)}`;
   }
 
-  // "Yesterday" is the viewer's local yesterday, held to the last season day once October's over.
-  renderYesterday(dailyLeaders, myId) {
-    const yesterday = shiftDate(localToday(), -1);
-    const day = yesterday > this.season.ends_on ? this.season.ends_on : yesterday;
-    if (day < this.season.starts_on) return "";
-
-    const leader = dailyLeaders.find((d) => d.date === day);
-    const heading = day === yesterday ? "Yesterday's top walker" : "Final day's top walker";
-    const body = leader
-      ? `<span class="walktober-yesterday__names">${leader.walkers
-          .map((w) => (w.user_id === myId ? "<strong>You</strong>" : userLink(w)))
-          .join(" &amp; ")}</span>
-        <span class="walktober-yesterday__steps">${fmt(leader.steps)} steps</span>`
-      : `<p class="walktober-empty">Nobody logged steps that day.</p>`;
+  // dailyLeaders arrives sorted by date from the server.
+  renderLatestLeader(dailyLeaders, myId) {
+    const shifted = new Date(Date.now() - LEADER_SWITCH_HOUR * 3600 * 1000);
+    const latest = shiftDate(localToday(shifted), -1);
+    const cutoff = latest > this.season.ends_on ? this.season.ends_on : latest;
+    const leader = dailyLeaders.filter((d) => d.date <= cutoff).at(-1);
+    if (!leader) return "";
 
     return `
       <div class="walktober-board">
-        <h4 class="walktober-subhead">${heading}</h4>
+        <h4 class="walktober-subhead">Latest Big Stepper</h4>
         <div class="walktober-yesterday">
-          <span class="walktober-yesterday__date">${longDate(day, true)}</span>
-          ${body}
+          <span class="walktober-yesterday__date">${longDate(leader.date, true)}</span>
+          <span class="walktober-yesterday__names">${leader.walkers
+            .map((w) => (w.user_id === myId ? "<strong>You</strong>" : userLink(w)))
+            .join(" &amp; ")}</span>
+          <span class="walktober-yesterday__steps">${fmt(leader.steps)} steps</span>
         </div>
         ${moreLink()}
       </div>`;
@@ -506,14 +505,23 @@ class WalktoberPage extends BrispacePage {
     if (!date) return;
     button.disabled = true;
     try {
+      let achievement = null;
       if (steps === null) {
         await this.request("DELETE", `/entries/${date}`);
       } else {
-        await this.request("PUT", `/entries/${date}`, { steps });
+        ({ achievement } = await this.request("PUT", `/entries/${date}`, { steps }));
       }
       this.closeDay();
       await this.loadData();
       this.render();
+      if (achievement) {
+        EventBus.instance.emit("achievement:awarded", {
+          userId: this.me?.user_id,
+          achievementKey: achievement.key,
+          name: achievement.name,
+          points: achievement.points,
+        });
+      }
     } catch (err) {
       this.showErrorToast(err.message);
     } finally {
@@ -540,8 +548,7 @@ class WalktoberPage extends BrispacePage {
   }
 }
 
-function localToday() {
-  const d = new Date();
+function localToday(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 

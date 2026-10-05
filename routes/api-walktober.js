@@ -11,6 +11,7 @@ const MAX_GOAL = 1000000;
 const MEDALS = ["gold", "silver", "bronze"];
 const TOP_LIST_LIMIT = 4;
 const DAY_MS = 24 * 60 * 60 * 1000;
+const STREAK_DAYS = 7;
 const SEASON_COLUMNS = "year, starts_on, ends_on, edit_until, min_goal, closed_at";
 
 function utcToday() {
@@ -179,6 +180,72 @@ async function countEntries(year, userId) {
     .eq("user_id", userId);
   if (error) throw error;
   return count || 0;
+}
+
+// On time = first logged before UTC midnight two days out, so every timezone gets through its next day.
+function isOnTime(entry) {
+  return Date.parse(entry.created_at) < Date.parse(`${entry.step_date}T00:00:00Z`) + 2 * DAY_MS;
+}
+
+function longestOnTimeStreak(entries) {
+  const days = entries
+    .filter(isOnTime)
+    .map((e) => e.step_date)
+    .sort();
+  let best = 0;
+  let run = 0;
+  let prev = null;
+  for (const day of days) {
+    run = prev && Date.parse(day) - Date.parse(prev) === DAY_MS ? run + 1 : 1;
+    best = Math.max(best, run);
+    prev = day;
+  }
+  return best;
+}
+
+// Returns the achievement only when this call newly awards it.
+async function awardStreakIfEarned(year, userId) {
+  const { data: entries, error } = await supabase
+    .from("walktober_entries")
+    .select("step_date, created_at")
+    .eq("year", year)
+    .eq("user_id", userId);
+  if (error) throw error;
+  if (longestOnTimeStreak(entries || []) < STREAK_DAYS) return null;
+
+  const key = `walktober_${year}_streak_${STREAK_DAYS}`;
+  const { data: rpcData, error: rpcErr } = await supabase.rpc("rpc_award_achievement_by_key", {
+    p_user_id: userId,
+    p_key: key,
+    p_details: { year, streak_days: STREAK_DAYS },
+  });
+  if (rpcErr) throw rpcErr;
+  const rpcRow = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+  if (!rpcRow || !rpcRow.awarded) return null;
+
+  const { data: ach } = await supabase
+    .from("achievements")
+    .select("key, name, points")
+    .eq("key", key)
+    .maybeSingle();
+
+  if (ach) {
+    try {
+      // They're on the page when this fires, so inbox only, no push.
+      await createAndDeliverNotification({
+        userId,
+        type: "walktober_award",
+        title: `Walktober ${year}`,
+        body: `You earned "${ach.name}" (+${ach.points} pts).`,
+        url: "/walktober",
+        data: { action_label: "Keep walking", achievement_key: key },
+        skipPush: true,
+      });
+    } catch (notifyErr) {
+      console.warn("Walktober streak notification failed:", notifyErr.message || notifyErr);
+    }
+  }
+  return ach || { key };
 }
 
 // Shared guard for entry writes: returns { season } or sends an error response.
@@ -414,7 +481,14 @@ router.put("/walktober/:year/entries/:date", async (req, res) => {
       .select("step_date, steps")
       .single();
     if (error) throw error;
-    return res.json({ entry: data });
+
+    let achievement = null;
+    try {
+      achievement = await awardStreakIfEarned(ctx.year, ctx.userId);
+    } catch (streakErr) {
+      console.warn("Walktober streak check failed:", streakErr.message || streakErr);
+    }
+    return res.json({ entry: data, achievement });
   } catch (err) {
     console.error("PUT /api/walktober/:year/entries/:date error:", err);
     return res.status(500).json({ error: "Failed to save steps" });
