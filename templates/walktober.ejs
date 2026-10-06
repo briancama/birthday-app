@@ -90,7 +90,17 @@
           </section>
 
           <section id="walktoberStatsSection" class="myspace-section" <%= hasGoal ? '' : 'hidden' %>>
-            <h3>Your numbers</h3>
+            <h3 class="walktober-collapse">
+              Your numbers
+              <button
+                type="button"
+                class="walktober-collapse__toggle"
+                data-action="toggle-collapse"
+                aria-expanded="false"
+                aria-controls="walktoberStats"
+                aria-label="Show or hide your numbers"
+              ></button>
+            </h3>
             <div id="walktoberStats"><% if (hasGoal) { %><%- include('partials/walktober-loading') %><% } %></div>
           </section>
 

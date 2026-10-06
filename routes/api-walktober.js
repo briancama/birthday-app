@@ -10,8 +10,11 @@ const MAX_STEPS = 200000;
 const MAX_GOAL = 1000000;
 const MEDALS = ["gold", "silver", "bronze"];
 const TOP_LIST_LIMIT = 4;
+const PAGE_SIZE = 1000;
+// Walktober 2026 went live Oct 3: Oct 1–2 are on time only if logged by the end of Oct 3 (Pacific).
+const LAUNCH_GRACE = { 2026: { through: "2026-10-02", loggedBefore: "2026-10-04T07:00:00Z" } };
 const DAY_MS = 24 * 60 * 60 * 1000;
-const STREAK_DAYS = 7;
+const LADDER_TIERS = [5, 10, 15, 20, 25, 31];
 const SEASON_COLUMNS = "year, starts_on, ends_on, edit_until, min_goal, closed_at";
 
 function utcToday() {
@@ -183,13 +186,16 @@ async function countEntries(year, userId) {
 }
 
 // On time = first logged before UTC midnight two days out, so every timezone gets through its next day.
-function isOnTime(entry) {
-  return Date.parse(entry.created_at) < Date.parse(`${entry.step_date}T00:00:00Z`) + 2 * DAY_MS;
+function isOnTime(entry, year) {
+  const createdAt = Date.parse(entry.created_at);
+  const grace = LAUNCH_GRACE[year];
+  if (grace && entry.step_date <= grace.through) return createdAt < Date.parse(grace.loggedBefore);
+  return createdAt < Date.parse(`${entry.step_date}T00:00:00Z`) + 2 * DAY_MS;
 }
 
-function longestOnTimeStreak(entries) {
+function longestOnTimeStreak(entries, year) {
   const days = entries
-    .filter(isOnTime)
+    .filter((e) => isOnTime(e, year))
     .map((e) => e.step_date)
     .sort();
   let best = 0;
@@ -203,49 +209,102 @@ function longestOnTimeStreak(entries) {
   return best;
 }
 
-// Returns the achievement only when this call newly awards it.
-async function awardStreakIfEarned(year, userId) {
+// Every ladder tier + full-month key this walker's entries qualify for.
+function qualifyingKeys(year, entries, dailyGoal, daysInSeason) {
+  const streak = longestOnTimeStreak(entries, year);
+  const goalDays = entries.filter((e) => e.steps >= dailyGoal).length;
+  const keys = [];
+  LADDER_TIERS.forEach((tier) => {
+    if (streak >= tier) keys.push(`walktober_${year}_streak_${tier}`);
+    if (goalDays >= tier) keys.push(`walktober_${year}_goal_days_${tier}`);
+  });
+  if (entries.length >= daysInSeason) keys.push(`walktober_${year}_full_month`);
+  return keys;
+}
+
+function toWalktoberAchievement(row) {
+  const meta = row.metadata || {};
+  return {
+    key: row.key,
+    name: row.name,
+    description: row.description,
+    points: row.points,
+    image_url: row.image_url,
+    ladder: meta.ladder || null,
+    tier: meta.tier || null,
+  };
+}
+
+async function getMyWalktoberAchievements(year, userId) {
+  const { data, error } = await supabase
+    .from("user_achievements")
+    .select("awarded_at, achievements!inner(key, name, description, points, image_url, metadata)")
+    .eq("user_id", userId)
+    .like("achievements.key", `walktober_${year}_%`)
+    .order("awarded_at");
+  if (error) throw error;
+  return (data || []).map((r) => toWalktoberAchievement(r.achievements));
+}
+
+// Awards any newly reached ladder tiers / full month. Returns only the new ones.
+async function awardEntryAchievements(season, userId, dailyGoal) {
+  const year = season.year;
   const { data: entries, error } = await supabase
     .from("walktober_entries")
-    .select("step_date, created_at")
+    .select("step_date, steps, created_at")
     .eq("year", year)
     .eq("user_id", userId);
   if (error) throw error;
-  if (longestOnTimeStreak(entries || []) < STREAK_DAYS) return null;
 
-  const key = `walktober_${year}_streak_${STREAK_DAYS}`;
-  const { data: rpcData, error: rpcErr } = await supabase.rpc("rpc_award_achievement_by_key", {
-    p_user_id: userId,
-    p_key: key,
-    p_details: { year, streak_days: STREAK_DAYS },
-  });
-  if (rpcErr) throw rpcErr;
-  const rpcRow = Array.isArray(rpcData) ? rpcData[0] : rpcData;
-  if (!rpcRow || !rpcRow.awarded) return null;
+  const keys = qualifyingKeys(
+    year,
+    entries || [],
+    dailyGoal,
+    describeSeason(season).days_in_season
+  );
+  if (!keys.length) return [];
 
-  const { data: ach } = await supabase
-    .from("achievements")
-    .select("key, name, points")
-    .eq("key", key)
-    .maybeSingle();
-
-  if (ach) {
-    try {
-      // They're on the page when this fires, so inbox only, no push.
-      await createAndDeliverNotification({
-        userId,
-        type: "walktober_award",
-        title: `Walktober ${year}`,
-        body: `You earned "${ach.name}" (+${ach.points} pts).`,
-        url: "/walktober",
-        data: { action_label: "Keep walking", achievement_key: key },
-        skipPush: true,
-      });
-    } catch (notifyErr) {
-      console.warn("Walktober streak notification failed:", notifyErr.message || notifyErr);
-    }
+  const owned = new Set((await getMyWalktoberAchievements(year, userId)).map((a) => a.key));
+  const newlyAwarded = [];
+  for (const key of keys.filter((k) => !owned.has(k))) {
+    const { data: rpcData, error: rpcErr } = await supabase.rpc("rpc_award_achievement_by_key", {
+      p_user_id: userId,
+      p_key: key,
+      p_details: { year },
+    });
+    if (rpcErr) throw rpcErr;
+    const rpcRow = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+    if (rpcRow && rpcRow.awarded) newlyAwarded.push(key);
   }
-  return ach || { key };
+  if (!newlyAwarded.length) return [];
+
+  const { data: rows, error: achErr } = await supabase
+    .from("achievements")
+    .select("key, name, description, points, image_url, metadata")
+    .in("key", newlyAwarded);
+  if (achErr) throw achErr;
+  const awarded = (rows || []).map(toWalktoberAchievement);
+
+  const points = awarded.reduce((sum, a) => sum + (a.points || 0), 0);
+  const body =
+    awarded.length === 1
+      ? `You earned "${awarded[0].name}" (+${points} pts).`
+      : `You earned ${awarded.length} achievements (+${points} pts): ${awarded.map((a) => a.name).join(", ")}.`;
+  try {
+    // They're on the page when this fires, so inbox only, no push.
+    await createAndDeliverNotification({
+      userId,
+      type: "walktober_award",
+      title: `Walktober ${year}`,
+      body,
+      url: "/walktober",
+      data: { action_label: "Keep walking", achievement_keys: newlyAwarded },
+      skipPush: true,
+    });
+  } catch (notifyErr) {
+    console.warn("Walktober award notification failed:", notifyErr.message || notifyErr);
+  }
+  return awarded;
 }
 
 // Shared guard for entry writes: returns { season } or sends an error response.
@@ -289,26 +348,32 @@ async function loadEditableDay(req, res) {
     res.status(409).json({ error: "Set your daily goal first." });
     return null;
   }
-  return { userId, year, date };
+  return { userId, year, date, season, dailyGoal: participant.daily_goal };
 }
 
 // Season + community stats for everyone; the caller's goal and entries when signed in.
 async function buildSeasonPayload(season, userId) {
   const year = season.year;
-  const [totals, leaderRows, entriesResult, isAdmin] = await Promise.all([
+  const [totals, leaderRows, entriesResult, isAdmin, myAchievements] = await Promise.all([
     getTotals(year),
     getDailyLeaders(year),
     userId
       ? supabase
           .from("walktober_entries")
-          .select("step_date, steps")
+          .select("step_date, steps, created_at")
           .eq("year", year)
           .eq("user_id", userId)
           .order("step_date")
       : Promise.resolve({ data: [], error: null }),
     userId ? isAdminUser(userId) : Promise.resolve(false),
+    userId ? getMyWalktoberAchievements(year, userId) : Promise.resolve([]),
   ]);
   if (entriesResult.error) throw entriesResult.error;
+  const myEntries = (entriesResult.data || []).map((e) => ({
+    step_date: e.step_date,
+    steps: e.steps,
+    on_time: isOnTime(e, year),
+  }));
 
   const ranked = rankByTotal(totals);
   const mine = userId ? totals.find((r) => r.user_id === userId) : null;
@@ -332,8 +397,9 @@ async function buildSeasonPayload(season, userId) {
       ? {
           user_id: userId,
           daily_goal: mine ? mine.daily_goal : null,
-          entries: entriesResult.data || [],
-          goal_locked: (entriesResult.data || []).length > 0,
+          entries: myEntries,
+          goal_locked: myEntries.length > 0,
+          achievements: myAchievements,
           standing: mine
             ? {
                 total_steps: mine.total_steps,
@@ -365,9 +431,55 @@ async function buildSeasonPayload(season, userId) {
   return payload;
 }
 
+// Paged because PostgREST caps each response at 1000 rows.
+async function getEntries(year) {
+  const rows = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from("walktober_entries")
+      .select("id, user_id, step_date, steps, created_at")
+      .eq("year", year)
+      .order("id")
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) throw error;
+    rows.push(...(data || []));
+    if (!data || data.length < PAGE_SIZE) return rows;
+  }
+}
+
+// Every logged entry for days that have a leader (someone above 0), oldest day first.
+function dailyEntries(entries) {
+  const byDate = new Map();
+  entries.forEach((e) => {
+    if (!byDate.has(e.step_date)) byDate.set(e.step_date, []);
+    byDate.get(e.step_date).push({ user_id: e.user_id, steps: e.steps });
+  });
+  return [...byDate.entries()]
+    .filter(([, rows]) => rows.some((r) => r.steps > 0))
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, rows]) => ({ date, entries: rows.sort((a, b) => b.steps - a.steps) }));
+}
+
+function streakBoard(totals, entries, year) {
+  const byUser = new Map();
+  entries.forEach((e) => {
+    if (!byUser.has(e.user_id)) byUser.set(e.user_id, []);
+    byUser.get(e.user_id).push(e);
+  });
+  const rows = totals
+    .map((r) => ({
+      ...toWalker(r),
+      streak_days: longestOnTimeStreak(byUser.get(r.user_id) || [], year),
+    }))
+    .filter((r) => r.streak_days > 0);
+  return rows
+    .map((r) => ({ ...r, place: densePlace(rows, (x) => x.streak_days, r) }))
+    .sort((a, b) => b.streak_days - a.streak_days || displayName(a).localeCompare(displayName(b)));
+}
+
 // Full boards for everyone who joined, including walkers who haven't logged yet.
 async function buildLeaderboardPayload(season, userId) {
-  const totals = await getTotals(season.year);
+  const [totals, entries] = await Promise.all([getTotals(season.year), getEntries(season.year)]);
   const ranked = rankByTotal(totals).map((r) => ({ ...toWalker(r), place: r.place }));
   const unlogged = totals
     .filter((r) => !(r.total_steps > 0))
@@ -381,6 +493,8 @@ async function buildLeaderboardPayload(season, userId) {
     walker_count: totals.length,
     steps: [...ranked, ...unlogged],
     goal: goalBoard(totals),
+    daily: dailyEntries(entries),
+    streaks: streakBoard(totals, entries, season.year),
   };
 }
 
@@ -482,13 +596,13 @@ router.put("/walktober/:year/entries/:date", async (req, res) => {
       .single();
     if (error) throw error;
 
-    let achievement = null;
+    let achievements = [];
     try {
-      achievement = await awardStreakIfEarned(ctx.year, ctx.userId);
-    } catch (streakErr) {
-      console.warn("Walktober streak check failed:", streakErr.message || streakErr);
+      achievements = await awardEntryAchievements(ctx.season, ctx.userId, ctx.dailyGoal);
+    } catch (awardErr) {
+      console.warn("Walktober achievement check failed:", awardErr.message || awardErr);
     }
-    return res.json({ entry: data, achievement });
+    return res.json({ entry: data, achievements });
   } catch (err) {
     console.error("PUT /api/walktober/:year/entries/:date error:", err);
     return res.status(500).json({ error: "Failed to save steps" });

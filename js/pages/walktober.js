@@ -6,6 +6,9 @@ import {
   fmt,
   escapeHtml,
   longDate,
+  localToday,
+  shiftDate,
+  leaderCutoff,
   userLink,
   placeCell,
   listRow,
@@ -16,8 +19,6 @@ import {
 
 const GOAL_SUGGESTIONS = [5000, 7500, 10000, 12500, 15000];
 const LEADERBOARD_URL = "/walktober/leaderboard";
-// A day's leader can show from this local hour on the next day.
-const LEADER_SWITCH_HOUR = 10;
 const SKULL_GIF = `<img class="wt-pumpkin-gif wt-pumpkin-gif--skull" data-pumpkin-gif="skull"
   src="/images/skull-walk.gif" width="160" height="160" alt="" />`;
 const WEREWOLF_GIF = `<img class="wt-pumpkin-gif wt-pumpkin-gif--werewolf" data-pumpkin-gif="werewolf"
@@ -107,7 +108,8 @@ class WalktoberPage extends BrispacePage {
 
   computeStats() {
     const goal = this.me.daily_goal;
-    const steps = (this.me.entries || []).map((e) => e.steps);
+    const entries = this.me.entries || [];
+    const steps = entries.map((e) => e.steps);
     const total = steps.reduce((sum, n) => sum + n, 0);
     const daysLogged = steps.length;
     const daysInSeason = this.season.days_in_season;
@@ -115,6 +117,26 @@ class WalktoberPage extends BrispacePage {
     const stepsToGo = Math.max(0, monthTarget - total);
     const daysUnlogged = daysInSeason - daysLogged;
     const dailyAverage = daysLogged ? Math.round(total / daysLogged) : 0;
+
+    const today = localToday();
+    const lastDay = today > this.season.ends_on ? this.season.ends_on : today;
+    const loggedLastDay = entries.some((e) => e.step_date === lastDay);
+    // Today only counts toward pace once it's logged, so mornings don't read as "behind".
+    const daysSoFar =
+      lastDay < this.season.starts_on
+        ? 0
+        : daysBetween(this.season.starts_on, lastDay) +
+          (loggedLastDay || lastDay !== today ? 1 : 0);
+
+    const onTime = new Set(entries.filter((e) => e.on_time).map((e) => e.step_date));
+    let day = onTime.has(lastDay) ? lastDay : shiftDate(lastDay, -1);
+    let currentStreak = 0;
+    while (onTime.has(day)) {
+      currentStreak += 1;
+      day = shiftDate(day, -1);
+    }
+    const longestStreak = longestRun([...onTime]);
+
     return {
       goal,
       total,
@@ -127,6 +149,10 @@ class WalktoberPage extends BrispacePage {
       progressPct: Math.round((total / monthTarget) * 1000) / 10,
       stepsToGo,
       neededPerDay: stepsToGo > 0 && daysUnlogged > 0 ? Math.ceil(stepsToGo / daysUnlogged) : 0,
+      daysSoFar,
+      paceDiff: total - goal * daysSoFar,
+      currentStreak,
+      longestStreak,
     };
   }
 
@@ -166,14 +192,76 @@ class WalktoberPage extends BrispacePage {
         <span class="walktober-headline__value">${s.daysLogged ? fmt(s.dailyAverage) : "--"}</span>
         <span class="walktober-headline__unit">steps</span>
       </div>
-      <div class="walktober-headline__item">
-        <span class="walktober-headline__label">Goal Progress</span>
-        <span class="walktober-headline__value">${s.progressPct}%</span>
-        <span class="walktober-headline__unit">of ${fmt(s.monthTarget)}</span>
-      </div>
+      ${this.renderPace(s)}
       <div class="walktober-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100"
         aria-valuenow="${Math.min(100, s.progressPct)}">
         <div class="walktober-progress__fill" style="--wt-progress: ${Math.min(100, s.progressPct)}%"></div>
+      </div>
+      <p class="walktober-progress__caption">${fmt(s.total)} of ${fmt(s.monthTarget)} steps</p>
+      ${this.renderStreakChip(s)}
+      ${this.renderAwards()}`;
+  }
+
+  renderPace(s) {
+    let value = "--";
+    let unit = "vs. your goal";
+    let state = "";
+    if (s.daysSoFar) {
+      const ahead = s.paceDiff >= 0;
+      value = `${ahead ? "+" : "&minus;"}${fmt(Math.abs(s.paceDiff))}`;
+      unit = ahead ? "steps ahead of goal" : "steps behind goal";
+      state = ahead ? " is-ahead" : " is-behind";
+    }
+    return `
+      <div class="walktober-headline__item${state}">
+        <span class="walktober-headline__label">Pace</span>
+        <span class="walktober-headline__value">${value}</span>
+        <span class="walktober-headline__unit">${unit}</span>
+      </div>`;
+  }
+
+  renderStreakChip(s) {
+    const body = s.currentStreak
+      ? `<strong>${plural(s.currentStreak, "day")}</strong> in a row`
+      : "No streak going yet.";
+    return `
+      <div class="walktober-streak">
+        <span class="walktober-streak__label">Streak</span>
+        <span class="walktober-streak__body">${body}</span>
+        <span class="wt-help">
+          <button type="button" class="wt-help__btn" aria-label="How streaks work"
+            aria-describedby="wtStreakHelp">?</button>
+          <span class="wt-help__tip" role="tooltip" id="wtStreakHelp">
+            <span class="wt-help__line"><strong>Streak:</strong> log each day's steps by the end of the next day. Miss that and your streak starts over.</span>
+          </span>
+        </span>
+      </div>`;
+  }
+
+  // Streak tiers, then goal tiers, then everything else in the order earned.
+  renderAwards() {
+    const list = this.me.achievements || [];
+    if (!list.length) return "";
+    const ladderOrder = { streak: 0, goal: 1 };
+    const rank = (a) => ladderOrder[a.ladder] ?? 2;
+    const items = [...list]
+      .sort((a, b) => rank(a) - rank(b) || (a.tier || 0) - (b.tier || 0))
+      .map((a) => {
+        const tier = a.tier ? `<span class="walktober-award__tier">${a.tier}</span>` : "";
+        const title = `${a.name}: ${a.description || ""} (+${a.points} pts)`;
+        return `
+          <li class="walktober-award" title="${escapeHtml(title)}">
+            <span class="walktober-award__badge${a.ladder ? " walktober-award__badge--ladder" : ""}">
+              <img src="${escapeHtml(a.image_url || "/images/star_icon.gif")}" alt="${escapeHtml(a.description || a.name)}" />
+              ${tier}
+            </span>
+            <span class="walktober-award__name">${escapeHtml(a.name)}</span>
+          </li>`;
+      });
+    return `
+      <div class="walktober-awards">
+        <h4 class="walktober-subhead">Your Walktober achievements</h4>
+        <ul class="walktober-awards__list">${items.join("")}</ul>
       </div>`;
   }
 
@@ -264,10 +352,11 @@ class WalktoberPage extends BrispacePage {
         ${statTile("Total steps", fmt(s.total))}
         ${statTile("Daily average", s.daysLogged ? fmt(s.dailyAverage) : "--")}
         ${statTile("Average vs. goal", s.daysLogged ? `${s.averageVsGoal}%` : "--")}
-        ${statTile("Days at goal", `${s.daysHit}`)}
-        ${statTile("Days logged", `${s.daysLogged} / ${s.daysInSeason}`)}
+        ${statTile("At goal", plural(s.daysHit, "day"))}
+        ${statTile("Current streak", plural(s.currentStreak, "day"))}
+        ${statTile("Longest streak", plural(s.longestStreak, "day"))}
         ${statTile("Steps to go", fmt(s.stepsToGo))}
-        ${daysOnTop ? statTile("Days on top", fmt(daysOnTop)) : ""}
+        ${daysOnTop ? statTile("On top", plural(daysOnTop, "day")) : ""}
       </div>
       ${paceNote ? `<p class="walktober-note">${paceNote}</p>` : ""}
       ${editNote ? `<p class="walktober-note">${editNote}</p>` : ""}
@@ -291,13 +380,6 @@ class WalktoberPage extends BrispacePage {
       }
       lines.push(
         `You're <strong>#${standing.goal_place}</strong> of ${standing.walker_count} in goal progress.`
-      );
-      lines.push(
-        `You've logged <strong>${plural(s.daysLogged, "day")}</strong>, ${versusAverage(
-          s.daysLogged - avg.days_logged,
-          "day",
-          0.5
-        )}.`
       );
 
       const avgDiff = s.dailyAverage - avg.daily_average;
@@ -356,9 +438,7 @@ class WalktoberPage extends BrispacePage {
 
   // dailyLeaders arrives sorted by date from the server.
   renderLatestLeader(dailyLeaders, myId) {
-    const shifted = new Date(Date.now() - LEADER_SWITCH_HOUR * 3600 * 1000);
-    const latest = shiftDate(localToday(shifted), -1);
-    const cutoff = latest > this.season.ends_on ? this.season.ends_on : latest;
+    const cutoff = leaderCutoff(this.season.ends_on);
     const leader = dailyLeaders.filter((d) => d.date <= cutoff).at(-1);
     if (!leader) return "";
 
@@ -436,6 +516,9 @@ class WalktoberPage extends BrispacePage {
       case "close-season":
         this.closeSeason(btn);
         break;
+      case "toggle-collapse":
+        btn.setAttribute("aria-expanded", String(btn.getAttribute("aria-expanded") !== "true"));
+        break;
     }
   }
 
@@ -505,23 +588,23 @@ class WalktoberPage extends BrispacePage {
     if (!date) return;
     button.disabled = true;
     try {
-      let achievement = null;
+      let achievements = [];
       if (steps === null) {
         await this.request("DELETE", `/entries/${date}`);
       } else {
-        ({ achievement } = await this.request("PUT", `/entries/${date}`, { steps }));
+        ({ achievements = [] } = await this.request("PUT", `/entries/${date}`, { steps }));
       }
       this.closeDay();
       await this.loadData();
       this.render();
-      if (achievement) {
+      achievements.forEach((a) => {
         EventBus.instance.emit("achievement:awarded", {
           userId: this.me?.user_id,
-          achievementKey: achievement.key,
-          name: achievement.name,
-          points: achievement.points,
+          achievementKey: a.key,
+          name: a.name,
+          points: a.points,
         });
-      }
+      });
     } catch (err) {
       this.showErrorToast(err.message);
     } finally {
@@ -548,15 +631,6 @@ class WalktoberPage extends BrispacePage {
   }
 }
 
-function localToday(d = new Date()) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function shiftDate(date, days) {
-  const [y, m, d] = date.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
-}
-
 function moreLink() {
   return `<a class="walktober-more-link" href="${LEADERBOARD_URL}">Full leaderboard &raquo;</a>`;
 }
@@ -573,10 +647,20 @@ function plural(n, word) {
   return `${fmt(n)} ${word}${n === 1 ? "" : "s"}`;
 }
 
-function versusAverage(diff, word, threshold) {
-  if (Math.abs(diff) < threshold) return "about the same as the average walker";
-  const amount = Math.round(Math.abs(diff) * 10) / 10;
-  return `${plural(amount, word)} ${diff > 0 ? "more" : "fewer"} than the average walker`;
+function daysBetween(from, to) {
+  return Math.round((Date.parse(to) - Date.parse(from)) / (24 * 60 * 60 * 1000));
+}
+
+function longestRun(dates) {
+  let best = 0;
+  let run = 0;
+  let prev = null;
+  [...dates].sort().forEach((d) => {
+    run = prev && shiftDate(prev, 1) === d ? run + 1 : 1;
+    best = Math.max(best, run);
+    prev = d;
+  });
+  return best;
 }
 
 export { WalktoberPage };

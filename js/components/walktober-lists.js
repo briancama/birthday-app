@@ -3,6 +3,24 @@ const MEDAL_GIFS = {
   2: "/images/silver-medal.gif",
   3: "/images/bronze-medal.gif",
 };
+// A day's leader can show from this local hour on the next day.
+const LEADER_SWITCH_HOUR = 10;
+
+function localToday(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function shiftDate(date, days) {
+  const [y, m, d] = date.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+}
+
+// Latest day eligible for "Latest Big Stepper" in the viewer's local time, capped at the season end.
+function leaderCutoff(endsOn) {
+  const shifted = new Date(Date.now() - LEADER_SWITCH_HOUR * 3600 * 1000);
+  const latest = shiftDate(localToday(shifted), -1);
+  return latest > endsOn ? endsOn : latest;
+}
 
 function fmt(n) {
   return Number(n || 0).toLocaleString("en-US");
@@ -81,6 +99,9 @@ export {
   fmt,
   escapeHtml,
   longDate,
+  localToday,
+  shiftDate,
+  leaderCutoff,
   userLink,
   placeCell,
   listRow,

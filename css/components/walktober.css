@@ -43,10 +43,20 @@
 
   --wt-crew-gap: 1.25rem;
 
+  /* Walktober achievements strip: badge size + tier number placement */
+  --wt-award-size: 48px;
+  --wt-award-ladder-height: 68px;
+  --wt-award-gap: 0.5rem;
+  --wt-award-tier-size: 1em;
+  --wt-award-tier-top: 6px;
+  --wt-award-tier-color: #fff;
+  --wt-help-size: 18px;
+  --wt-help-width: min(260px, 80vw);
+
   /* Space held for JS-filled slots until they render, so nothing below jumps */
   --wt-cal-weeks: 5;
   --wt-cal-weekday-height: 16px;
-  --wt-headline-reserve: 8.5rem;
+  --wt-headline-reserve: 12rem;
   --wt-join-reserve: 12rem;
   --wt-stats-reserve: 16rem;
   --wt-crew-reserve: 22rem;
@@ -181,6 +191,174 @@
 
 .walktober-headline__unit {
   font-size: 11px;
+}
+
+.walktober-headline__item.is-ahead {
+  border-color: var(--wt-hit-border);
+  background: var(--wt-hit-bg);
+}
+
+.walktober-headline__item.is-behind {
+  border-color: var(--wt-orange);
+  background: var(--wt-orange-bright);
+}
+
+.walktober-progress__caption {
+  grid-column: 1 / -1;
+  margin: -0.25rem 0 0;
+  font-size: 11px;
+  text-align: right;
+  color: var(--wt-accent-text);
+}
+
+.walktober-streak {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.6rem;
+  padding: 0.4rem 0.6rem;
+  border: 2px dashed var(--wt-orange);
+  background: var(--wt-black);
+  color: var(--wt-text);
+
+  strong {
+    color: var(--wt-hit-bg);
+    font-size: 1.2em;
+  }
+}
+
+.walktober-streak__label {
+  font-weight: bold;
+  text-transform: uppercase;
+  color: var(--wt-orange);
+}
+
+/* ? help: tip shows on hover, and on focus so a tap works on phones */
+.wt-help {
+  position: relative;
+  margin-left: auto;
+  align-self: center;
+}
+
+.wt-help__btn {
+  width: var(--wt-help-size);
+  height: var(--wt-help-size);
+  padding: 0;
+  border: 2px solid var(--wt-orange);
+  border-radius: 50%;
+  background: var(--wt-black);
+  color: var(--wt-orange);
+  font:
+    bold 11px/1 Verdana,
+    sans-serif;
+  cursor: help;
+}
+
+.wt-help__tip {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  z-index: 20;
+  width: var(--wt-help-width);
+  padding: 0.5rem;
+  border: 2px solid var(--wt-orange);
+  background: var(--wt-black);
+  color: var(--wt-text);
+  font-size: 11px;
+  line-height: 1.4;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.15s;
+
+  strong {
+    color: var(--wt-orange-bright);
+    font-size: inherit;
+  }
+}
+
+.wt-help__line {
+  display: block;
+
+  & + & {
+    margin-top: 0.35rem;
+  }
+}
+
+.wt-help:hover .wt-help__tip,
+.wt-help__btn:focus + .wt-help__tip {
+  visibility: visible;
+  opacity: 1;
+}
+
+.walktober-awards {
+  grid-column: 1 / -1;
+
+  .walktober-subhead {
+    margin-top: 0.25rem;
+  }
+}
+
+.walktober-awards__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--wt-award-gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.walktober-award {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 48px;
+  font-size: 10px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.walktober-award__badge {
+  position: relative;
+  width: var(--wt-award-size);
+  height: var(--wt-award-size);
+  border: 2px solid var(--wt-purple-light);
+  background: var(--wt-black);
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+/* Ghost/ghoul badges keep their own shape and aspect ratio */
+.walktober-award__badge--ladder {
+  width: auto;
+  height: var(--wt-award-ladder-height);
+  border: 0;
+  background: none;
+
+  img {
+    width: auto;
+    object-fit: initial;
+  }
+}
+
+/* Sits in the blank space the badge art leaves near the top */
+.walktober-award__tier {
+  position: absolute;
+  top: var(--wt-award-tier-top);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: var(--wt-award-tier-size);
+  font-weight: bold;
+  line-height: 1;
+  color: var(--wt-award-tier-color);
+  text-shadow:
+    2px 2px 0 var(--wt-award-tier-shadow),
+    -1px -1px 0 var(--wt-award-tier-shadow);
 }
 
 .walktober-progress {
@@ -633,6 +811,13 @@ span.walktober-list__name {
   margin-top: 0.75rem;
 }
 
+.walktober-board-date {
+  margin: 0.4rem 0 0.25rem;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--wt-accent-text);
+}
+
 .walktober-boards {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -890,7 +1075,9 @@ span.walktober-list__name {
 }
 
 #walktoberStepsBoard:has(> .wt-loading),
-#walktoberGoalBoard:has(> .wt-loading) {
+#walktoberGoalBoard:has(> .wt-loading),
+#walktoberDayBoard:has(> .wt-loading),
+#walktoberStreakBoard:has(> .wt-loading) {
   min-height: var(--wt-board-reserve);
 }
 
@@ -900,11 +1087,50 @@ span.walktober-list__name {
 
 /* ── Mobile ───────────────────────────────────────────────────────────── */
 
+/* Mobile-only collapse; aria-expanded on the toggle is the open state */
+.walktober-collapse__toggle {
+  display: none;
+}
+
 @media (max-width: 480px) {
+  .walktober-collapse {
+    position: relative;
+  }
+
+  .walktober-collapse__toggle {
+    display: inline;
+    float: right;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+
+    &::before {
+      content: "[+]";
+    }
+
+    &[aria-expanded="true"]::before {
+      content: "[-]";
+    }
+
+    /* Makes the whole header bar the tap target */
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+    }
+  }
+
+  .myspace-section:has(.walktober-collapse__toggle[aria-expanded="false"]) #walktoberStats {
+    display: none;
+  }
+
   .myspace.theme-walktober {
     --wt-cell-min-height: 52px;
     --wt-cell-gap: 2px;
-    --wt-headline-reserve: 7.5rem;
+    --wt-headline-reserve: 11rem;
   }
 
   .walktober-hero__gif:first-child {

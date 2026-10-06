@@ -1113,6 +1113,7 @@ class UserProfilePage extends BasePage {
         )
         .eq("user_id", this.profileUserId)
         .eq("achievements.is_visitor_eligible", true)
+        .eq("achievements.show_on_profile", true)
         .order("awarded_at", { ascending: false });
 
       if (error) throw error;

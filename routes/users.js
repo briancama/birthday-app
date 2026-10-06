@@ -264,6 +264,7 @@ router.get("/:identifier", async (req, res) => {
         )
         .eq("user_id", data.user_id || data.id)
         .eq("achievements.is_visitor_eligible", true)
+        .eq("achievements.show_on_profile", true)
         .order("awarded_at", { ascending: false });
       if (!uaErr && Array.isArray(ua)) userAchievements = ua;
     } catch (e) {

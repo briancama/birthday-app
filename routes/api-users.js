@@ -25,13 +25,17 @@ const PROFILE_GIF_KEYS = new Set([
   "kermit-the-frog-tea",
   "leeroy-jenkins",
   "mind-blown",
+  "minnie-mickey",
+  "n64",
   "not-okay-my-chemical-romance",
   "nsync",
   "roller-skate",
   "smash-bros",
   "snake-juice",
+  "spider-man-dancing",
   "spit-hot-fire",
   "spongebob",
+  "windows-95-maze",
 ]);
 const PROFILE_BACKGROUND_DIRECTORY = path.join(__dirname, "../images/backgrounds");
 const PROFILE_BACKGROUND_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp"]);
