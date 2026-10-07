@@ -37,8 +37,6 @@ class WalktoberPage extends BrispacePage {
   }
 
   async onReady() {
-    await super.onReady();
-
     const main = document.getElementById("walktoberMain");
     const dialog = document.getElementById("walktoberDayDialog");
     const form = document.getElementById("walktoberDayForm");
@@ -73,6 +71,9 @@ class WalktoberPage extends BrispacePage {
       pumpkins.destroy();
       stopStaleWatch();
     });
+
+    // Last: Firebase SDK load can stall or be blocked, and step logging doesn't need it
+    await super.onReady();
   }
 
   async loadData() {
