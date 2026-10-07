@@ -9,6 +9,7 @@ import {
   localToday,
   shiftDate,
   leaderCutoff,
+  onStaleReturn,
   userLink,
   placeCell,
   listRow,
@@ -19,6 +20,7 @@ import {
 
 const GOAL_SUGGESTIONS = [5000, 7500, 10000, 12500, 15000];
 const LEADERBOARD_URL = "/walktober/leaderboard";
+const REFRESH_FAILED = "Saved, but the page couldn't refresh. Reload to see it.";
 const SKULL_GIF = `<img class="wt-pumpkin-gif wt-pumpkin-gif--skull" data-pumpkin-gif="skull"
   src="/images/skull-walk.gif" width="160" height="160" alt="" />`;
 const WEREWOLF_GIF = `<img class="wt-pumpkin-gif wt-pumpkin-gif--werewolf" data-pumpkin-gif="werewolf"
@@ -58,6 +60,7 @@ class WalktoberPage extends BrispacePage {
     pumpkins.addEventListener("finale:start", onFinaleStart);
     pumpkins.addEventListener("finale:end", onFinaleEnd);
     pumpkins.init();
+    const stopStaleWatch = onStaleReturn(() => this.refresh());
 
     this.eventCleanup.push(() => {
       main.removeEventListener("click", onMainClick);
@@ -68,6 +71,7 @@ class WalktoberPage extends BrispacePage {
       pumpkins.removeEventListener("finale:start", onFinaleStart);
       pumpkins.removeEventListener("finale:end", onFinaleEnd);
       pumpkins.destroy();
+      stopStaleWatch();
     });
   }
 
@@ -75,6 +79,17 @@ class WalktoberPage extends BrispacePage {
     const res = await fetch(`/api/walktober/${encodeURIComponent(this.year)}`);
     if (!res.ok) throw new Error("Couldn't load Walktober. Try refreshing.");
     this.data = await res.json();
+  }
+
+  // Always re-renders so "today" moves forward even if the fetch fails.
+  async refresh(failMessage) {
+    try {
+      await this.loadData();
+    } catch (err) {
+      if (failMessage) this.showErrorToast(failMessage);
+      else console.warn("Walktober refresh failed:", err.message);
+    }
+    this.render();
   }
 
   async request(method, path, body) {
@@ -133,8 +148,7 @@ class WalktoberPage extends BrispacePage {
     const windowMs = (this.data.on_time_window_hours || 0) * 60 * 60 * 1000;
     // Today not being logged yet never breaks the streak; neither does yesterday while it's still on time.
     let day = today > this.season.ends_on ? shiftDate(this.season.ends_on, 1) : today;
-    let currentStreak = 0;
-    if (onTime.has(day)) currentStreak += 1;
+    const todayOnTime = onTime.has(day);
     day = shiftDate(day, -1);
     let needsYesterday = false;
     if (
@@ -146,10 +160,14 @@ class WalktoberPage extends BrispacePage {
       needsYesterday = true;
       day = shiftDate(day, -1);
     }
+    let run = 0;
     while (onTime.has(day)) {
-      currentStreak += 1;
+      run += 1;
       day = shiftDate(day, -1);
     }
+    // With yesterday still open, today and the earlier run aren't joined yet.
+    const todayCount = todayOnTime ? 1 : 0;
+    const currentStreak = needsYesterday ? Math.max(run, todayCount) : run + todayCount;
     const longestStreak = longestRun([...onTime]);
 
     return {
@@ -168,7 +186,7 @@ class WalktoberPage extends BrispacePage {
       paceDiff: total - goal * daysSoFar,
       currentStreak,
       longestStreak,
-      needsYesterday: needsYesterday && currentStreak > 0,
+      needsYesterday: needsYesterday && run > 0,
     };
   }
 
@@ -548,17 +566,17 @@ class WalktoberPage extends BrispacePage {
     e.preventDefault();
     const submit = form.querySelector("[type='submit']");
     submit.disabled = true;
+    const goal = Number(form.elements.daily_goal.value);
     try {
-      const goal = Number(form.elements.daily_goal.value);
       await this.request("PUT", "/goal", { daily_goal: goal });
-      this.editingGoal = false;
-      await this.loadData();
-      this.render();
-      this.showSuccessToast(`Goal set: ${fmt(goal)} steps a day.`);
     } catch (err) {
       submit.disabled = false;
       this.showErrorToast(err.message);
+      return;
     }
+    this.editingGoal = false;
+    this.showSuccessToast(`Goal set: ${fmt(goal)} steps a day.`);
+    await this.refresh(REFRESH_FAILED);
   }
 
   openDay(date) {
@@ -569,7 +587,6 @@ class WalktoberPage extends BrispacePage {
     document.getElementById("walktoberDayTitle").textContent = longDate(date, true);
     const input = document.getElementById("walktoberStepsInput");
     input.value = hasEntry ? entries[date] : "";
-    dialog.querySelector("[data-action='clear-day']").hidden = !hasEntry;
     dialog.showModal();
     input.focus();
   }
@@ -589,7 +606,6 @@ class WalktoberPage extends BrispacePage {
     const btn = e.target.closest("[data-action]");
     if (!btn) return;
     if (btn.dataset.action === "close-dialog") this.closeDay();
-    if (btn.dataset.action === "clear-day") this.saveDay(btn, null);
   }
 
   handleDaySubmit(e) {
@@ -607,29 +623,25 @@ class WalktoberPage extends BrispacePage {
     const date = this.selectedDate;
     if (!date) return;
     button.disabled = true;
+    let achievements;
     try {
-      let achievements = [];
-      if (steps === null) {
-        await this.request("DELETE", `/entries/${date}`);
-      } else {
-        ({ achievements = [] } = await this.request("PUT", `/entries/${date}`, { steps }));
-      }
-      this.closeDay();
-      await this.loadData();
-      this.render();
-      achievements.forEach((a) => {
-        EventBus.instance.emit("achievement:awarded", {
-          userId: this.me?.user_id,
-          achievementKey: a.key,
-          name: a.name,
-          points: a.points,
-        });
-      });
+      ({ achievements = [] } = await this.request("PUT", `/entries/${date}`, { steps }));
     } catch (err) {
       this.showErrorToast(err.message);
+      return;
     } finally {
       button.disabled = false;
     }
+    this.closeDay();
+    achievements.forEach((a) => {
+      EventBus.instance.emit("achievement:awarded", {
+        userId: this.me?.user_id,
+        achievementKey: a.key,
+        name: a.name,
+        points: a.points,
+      });
+    });
+    await this.refresh(REFRESH_FAILED);
   }
 
   async closeSeason(button) {

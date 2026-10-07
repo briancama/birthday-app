@@ -3,6 +3,7 @@ import {
   fmt,
   longDate,
   leaderCutoff,
+  onStaleReturn,
   placeCell,
   listRow,
   stepsRow,
@@ -20,6 +21,23 @@ class WalktoberLeaderboardPage extends BrispacePage {
     super();
     this.year = document.body.dataset.walktoberYear;
     this.data = JSON.parse(document.getElementById("walktoberData").textContent);
+  }
+
+  async onReady() {
+    await super.onReady();
+    this.eventCleanup.push(onStaleReturn(() => this.refresh()));
+  }
+
+  // Always re-renders so the latest-day board follows the viewer's clock even if the fetch fails.
+  async refresh() {
+    try {
+      const res = await fetch(`/api/walktober/${encodeURIComponent(this.year)}/leaderboard`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      this.data = await res.json();
+    } catch (err) {
+      console.warn("Walktober leaderboard refresh failed:", err.message);
+    }
+    this.render();
   }
 
   render() {

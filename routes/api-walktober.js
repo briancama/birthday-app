@@ -26,6 +26,11 @@ function latestPossibleToday() {
   return new Date(Date.now() + 14 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
+// Date in UTC-12, the last timezone to finish a day, so season boundaries never close early anywhere.
+function earliestPossibleToday() {
+  return new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
 function parseYear(raw) {
   const year = Number(raw);
   return Number.isInteger(year) && year >= 2000 && year <= 2999 ? year : null;
@@ -64,7 +69,7 @@ async function getLatestSeason() {
 }
 
 function describeSeason(season) {
-  const today = utcToday();
+  const today = earliestPossibleToday();
   const daysInSeason =
     Math.round((Date.parse(season.ends_on) - Date.parse(season.starts_on)) / DAY_MS) + 1;
   return {
@@ -188,13 +193,14 @@ async function countEntries(year, userId) {
 // On time = first logged by the end of the next day in UTC-12, the last timezone to finish it.
 const ON_TIME_WINDOW_HOURS = 60;
 
+// Launch grace only ever extends the normal deadline, never shortens it.
 function isOnTime(entry, year) {
   const createdAt = Date.parse(entry.created_at);
+  const deadline =
+    Date.parse(`${entry.step_date}T00:00:00Z`) + ON_TIME_WINDOW_HOURS * 60 * 60 * 1000;
+  if (createdAt < deadline) return true;
   const grace = LAUNCH_GRACE[year];
-  if (grace && entry.step_date <= grace.through) return createdAt < Date.parse(grace.loggedBefore);
-  return (
-    createdAt < Date.parse(`${entry.step_date}T00:00:00Z`) + ON_TIME_WINDOW_HOURS * 60 * 60 * 1000
-  );
+  return !!grace && entry.step_date <= grace.through && createdAt < Date.parse(grace.loggedBefore);
 }
 
 function longestOnTimeStreak(entries, year) {
@@ -251,7 +257,7 @@ async function getMyWalktoberAchievements(year, userId) {
 }
 
 // Awards any newly reached ladder tiers / full month. Returns only the new ones.
-async function awardEntryAchievements(season, userId, dailyGoal) {
+async function awardEntryAchievements(season, userId, dailyGoal, { closing = false } = {}) {
   const year = season.year;
   const { data: entries, error } = await supabase
     .from("walktober_entries")
@@ -295,15 +301,18 @@ async function awardEntryAchievements(season, userId, dailyGoal) {
       ? `You earned "${awarded[0].name}" (+${points} pts).`
       : `You earned ${awarded.length} achievements (+${points} pts): ${awarded.map((a) => a.name).join(", ")}.`;
   try {
-    // They're on the page when this fires, so inbox only, no push.
+    // Mid-season they're on the page when this fires, so inbox only; at close they're not.
     await createAndDeliverNotification({
       userId,
       type: "walktober_award",
       title: `Walktober ${year}`,
       body,
       url: "/walktober",
-      data: { action_label: "Keep walking", achievement_keys: newlyAwarded },
-      skipPush: true,
+      data: {
+        action_label: closing ? "See results" : "Keep walking",
+        achievement_keys: newlyAwarded,
+      },
+      skipPush: !closing,
     });
   } catch (notifyErr) {
     console.warn("Walktober award notification failed:", notifyErr.message || notifyErr);
@@ -614,29 +623,8 @@ router.put("/walktober/:year/entries/:date", async (req, res) => {
   }
 });
 
-// ── DELETE /api/walktober/:year/entries/:date ────────────────────────────────
-// Clears a day back to unlogged.
-router.delete("/walktober/:year/entries/:date", async (req, res) => {
-  try {
-    const ctx = await loadEditableDay(req, res);
-    if (!ctx) return;
-
-    const { error } = await supabase
-      .from("walktober_entries")
-      .delete()
-      .eq("year", ctx.year)
-      .eq("user_id", ctx.userId)
-      .eq("step_date", ctx.date);
-    if (error) throw error;
-    return res.json({ cleared: ctx.date });
-  } catch (err) {
-    console.error("DELETE /api/walktober/:year/entries/:date error:", err);
-    return res.status(500).json({ error: "Failed to clear day" });
-  }
-});
-
 // ── POST /api/walktober/:year/close ──────────────────────────────────────────
-// Admin only. Awards medals + goal-average achievements and locks edits.
+// Admin only. Awards medals + goal-average achievements, re-checks ladders, and locks edits.
 // Safe to re-run: the award RPC is idempotent and only new awards notify.
 router.post("/walktober/:year/close", async (req, res) => {
   try {
@@ -711,6 +699,14 @@ router.post("/walktober/:year/close", async (req, res) => {
       }
 
       results.push({ username: award.row.username, key: award.key, newlyAwarded });
+    }
+
+    // Final ladder sweep, in case rules changed or a tier was missed after someone's last save.
+    for (const r of totals) {
+      const ladder = await awardEntryAchievements(season, r.user_id, r.daily_goal, {
+        closing: true,
+      });
+      ladder.forEach((a) => results.push({ username: r.username, key: a.key, newlyAwarded: true }));
     }
 
     if (!season.closed_at) {

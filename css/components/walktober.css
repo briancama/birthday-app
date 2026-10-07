@@ -43,6 +43,12 @@
 
   --wt-crew-gap: 1.25rem;
 
+  /* Halloween distance line under the crew total */
+  --wt-distance-size: 12px;
+  --wt-distance-color: var(--wt-orange-bright);
+  --wt-distance-gap: 0.35rem;
+  --wt-distance-skull-inset: 4rem;
+
   /* Walktober achievements strip: badge size + tier number placement */
   --wt-award-size: 48px;
   --wt-award-ladder-height: 68px;
@@ -671,7 +677,7 @@ button.wt-day:not(:disabled):hover {
 .walktober-crew-total {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   margin: 0.5rem 0;
   padding: 0.5rem;
   border: 2px solid var(--wt-black);
@@ -687,6 +693,12 @@ button.wt-day:not(:disabled):hover {
 .walktober-crew-total__label {
   font-size: 11px;
   color: #fff;
+}
+
+.walktober-crew-total__distance {
+  margin-top: var(--wt-distance-gap);
+  font-size: var(--wt-distance-size);
+  color: var(--wt-distance-color);
 }
 
 .walktober-subhead {
@@ -961,6 +973,11 @@ span.walktober-list__name {
   width: auto;
   height: var(--wt-skull-height);
   filter: drop-shadow(1px 1px 2px #ff6600);
+}
+
+/* Keeps the line clear of the skull */
+.walktober-crew-total:has(> .wt-pumpkin-gif--skull) .walktober-crew-total__distance {
+  padding-right: var(--wt-distance-skull-inset);
 }
 
 .wt-david-pumpkins {
