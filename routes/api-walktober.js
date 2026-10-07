@@ -185,12 +185,16 @@ async function countEntries(year, userId) {
   return count || 0;
 }
 
-// On time = first logged before UTC midnight two days out, so every timezone gets through its next day.
+// On time = first logged by the end of the next day in UTC-12, the last timezone to finish it.
+const ON_TIME_WINDOW_HOURS = 60;
+
 function isOnTime(entry, year) {
   const createdAt = Date.parse(entry.created_at);
   const grace = LAUNCH_GRACE[year];
   if (grace && entry.step_date <= grace.through) return createdAt < Date.parse(grace.loggedBefore);
-  return createdAt < Date.parse(`${entry.step_date}T00:00:00Z`) + 2 * DAY_MS;
+  return (
+    createdAt < Date.parse(`${entry.step_date}T00:00:00Z`) + ON_TIME_WINDOW_HOURS * 60 * 60 * 1000
+  );
 }
 
 function longestOnTimeStreak(entries, year) {
@@ -383,6 +387,7 @@ async function buildSeasonPayload(season, userId) {
   const payload = {
     season: describeSeason(season),
     today: utcToday(),
+    on_time_window_hours: ON_TIME_WINDOW_HOURS,
     community: {
       crew_total_steps: crewTotal,
       walker_count: totals.length,

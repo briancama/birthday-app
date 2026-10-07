@@ -195,7 +195,7 @@ October step-logging event at `/walktober` (Brispace layout, `theme-walktober` b
 - List row markup is shared via `js/components/walktober-lists.js`.
 - Achievements are per-year keys: `walktober_<year>_gold|silver|bronze` (dense rank by total steps, ties share) and `walktober_<year>_goal_average` (total ≥ goal × days). Awarded only by the admin "Close Walktober" action (`POST /api/walktober/:year/close`), which is idempotent and sends `walktober_award` notifications.
 - Exception: entry achievements (`sql/2026_10_05_walktober_ladders.sql`) are checked on every step save by `awardEntryAchievements`:
-  - Streak ladder `walktober_<year>_streak_{5,10,15,20,25,31}`: longest run of on-time days (`created_at` < `step_date` + 2 days UTC, plus `LAUNCH_GRACE`). 1 pt each, `show_on_profile = false`.
+  - Streak ladder `walktober_<year>_streak_{5,10,15,20,25,31}`: longest run of on-time days (`created_at` < `step_date` 00:00 UTC + `ON_TIME_WINDOW_HOURS` (60h = end of the next day in UTC-12), plus `LAUNCH_GRACE`). 1 pt each, `show_on_profile = false`. The page's current streak stays alive while yesterday is unlogged but still inside that window, and the streak chip nudges "Log yesterday's steps to keep it going."
   - Goal ladder `walktober_<year>_goal_days_{5,...,31}`: total days at or above goal, any order. 1 pt each, `show_on_profile = false`.
   - Count von Count `walktober_<year>_full_month`: every season day has an entry (backfills OK). 3 pts, on profile.
   - Tiers live in `LADDER_TIERS` in `routes/api-walktober.js`. The PUT response returns `achievements: []` (new ones only); the page emits `achievement:awarded` per item. One `walktober_award` inbox notification per save (no push). Earned achievements are never revoked.

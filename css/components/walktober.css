@@ -234,6 +234,11 @@
   color: var(--wt-orange);
 }
 
+.walktober-streak__nudge {
+  font-weight: bold;
+  color: var(--wt-link-hover);
+}
+
 /* ? help: tip shows on hover, and on focus so a tap works on phones */
 .wt-help {
   position: relative;

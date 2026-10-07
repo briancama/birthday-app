@@ -129,8 +129,23 @@ class WalktoberPage extends BrispacePage {
           (loggedLastDay || lastDay !== today ? 1 : 0);
 
     const onTime = new Set(entries.filter((e) => e.on_time).map((e) => e.step_date));
-    let day = onTime.has(lastDay) ? lastDay : shiftDate(lastDay, -1);
+    const loggedDates = new Set(entries.map((e) => e.step_date));
+    const windowMs = (this.data.on_time_window_hours || 0) * 60 * 60 * 1000;
+    // Today not being logged yet never breaks the streak; neither does yesterday while it's still on time.
+    let day = today > this.season.ends_on ? shiftDate(this.season.ends_on, 1) : today;
     let currentStreak = 0;
+    if (onTime.has(day)) currentStreak += 1;
+    day = shiftDate(day, -1);
+    let needsYesterday = false;
+    if (
+      !loggedDates.has(day) &&
+      day >= this.season.starts_on &&
+      day <= this.season.ends_on &&
+      Date.now() < Date.parse(`${day}T00:00:00Z`) + windowMs
+    ) {
+      needsYesterday = true;
+      day = shiftDate(day, -1);
+    }
     while (onTime.has(day)) {
       currentStreak += 1;
       day = shiftDate(day, -1);
@@ -153,6 +168,7 @@ class WalktoberPage extends BrispacePage {
       paceDiff: total - goal * daysSoFar,
       currentStreak,
       longestStreak,
+      needsYesterday: needsYesterday && currentStreak > 0,
     };
   }
 
@@ -221,9 +237,13 @@ class WalktoberPage extends BrispacePage {
   }
 
   renderStreakChip(s) {
-    const body = s.currentStreak
-      ? `<strong>${plural(s.currentStreak, "day")}</strong> in a row`
-      : "No streak going yet.";
+    let body = "No streak going yet.";
+    if (s.currentStreak) {
+      body = `<strong>${plural(s.currentStreak, "day")}</strong> in a row`;
+      if (s.needsYesterday) {
+        body += ` <span class="walktober-streak__nudge">Log yesterday's steps to keep it going.</span>`;
+      }
+    }
     return `
       <div class="walktober-streak">
         <span class="walktober-streak__label">Streak</span>
