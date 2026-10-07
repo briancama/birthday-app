@@ -9,6 +9,9 @@
 --                               on time, 1 pt each, off profile.
 -- Goal ladder                   5/10/15/20/25/31 total days at goal,
 --                               1 pt each, off profile.
+-- Rebalance                     medals 10/7/5 (were 15/10/5), Goal Met 4
+--                               (was 10), so one event can't swamp the
+--                               rest of the site's achievements.
 -- All awarded by routes/api-walktober.js on step save.
 -- Next year: copy the blocks below with the new year.
 -- Date: 2026-10-05
@@ -18,6 +21,16 @@ BEGIN;
 
 ALTER TABLE public.achievements
   ADD COLUMN IF NOT EXISTS show_on_profile boolean NOT NULL DEFAULT true;
+
+UPDATE public.achievements AS a
+SET points = v.points
+FROM (VALUES
+  ('walktober_2026_gold', 10),
+  ('walktober_2026_silver', 7),
+  ('walktober_2026_bronze', 5),
+  ('walktober_2026_goal_average', 4)
+) AS v(key, points)
+WHERE a.key = v.key;
 
 -- Must run before the ladder insert, which reuses walktober_2026_streak_10.
 UPDATE public.achievements

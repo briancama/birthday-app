@@ -12,7 +12,7 @@ import {
 
 function streakRow(walker, isMe) {
   const days = `${walker.streak_days} day${walker.streak_days === 1 ? "" : "s"}`;
-  return listRow(walker, isMe, placeCell(walker.place, true), days);
+  return listRow(walker, isMe, placeCell(walker.place), days);
 }
 
 class WalktoberLeaderboardPage extends BrispacePage {
@@ -59,7 +59,7 @@ class WalktoberLeaderboardPage extends BrispacePage {
       return listRow(
         walkers.get(e.user_id),
         e.user_id === data.me_id,
-        placeCell(place, true),
+        placeCell(place),
         fmt(e.steps)
       );
     });

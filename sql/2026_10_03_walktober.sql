@@ -106,7 +106,7 @@ VALUES
     'walktober_2026_gold',
     'Walktober 2026: Most Steps',
     'Walked the most steps in Walktober 2026.',
-    15,
+    10,
     '{"trigger":"walktober:close","year":2026,"place":1}'::jsonb,
     true,
     '/images/gold-medal.gif'
@@ -115,7 +115,7 @@ VALUES
     'walktober_2026_silver',
     'Walktober 2026: 2nd Most Steps',
     'Walked the second most steps in Walktober 2026.',
-    10,
+    7,
     '{"trigger":"walktober:close","year":2026,"place":2}'::jsonb,
     true,
     '/images/silver-medal.gif'
@@ -133,7 +133,7 @@ VALUES
     'walktober_2026_goal_average',
     'Walktober 2026: Goal Met',
     'Averaged your daily step goal across all of Walktober 2026.',
-    10,
+    4,
     '{"trigger":"walktober:close","year":2026,"type":"goal_average"}'::jsonb,
     true,
     NULL
