@@ -102,10 +102,12 @@
   <% }); %>
 <% } %>
 
-<script>
+<script type="module">
+  import { audioManager } from "/js/utils/audio.js";
+
   (() => {
     const AD_CLICK_STORAGE_KEY = "sidebar-ads-clicked";
-    const audioCache = (window.__mediaAdAudioCache = window.__mediaAdAudioCache || new Map());
+    const AD_AUDIO_VOLUME = 0.8;
 
     const getAllAdKeys = () => {
       const blocks = document.querySelectorAll(".media-ad-block[data-sidebar-ad-keys]");
@@ -145,38 +147,9 @@
       }
     };
 
-    const getCachedAudio = (audioFile) => {
-      if (!audioFile) return null;
-      if (!audioCache.has(audioFile)) {
-        try {
-          const audio = new Audio(audioFile);
-          audio.preload = "auto";
-          audio.volume = 0.8;
-          audio.load();
-          audioCache.set(audioFile, audio);
-        } catch (err) {
-          console.debug("Failed to preload ad audio:", err.message);
-          return null;
-        }
-      }
-      return audioCache.get(audioFile) || null;
-    };
-
     const maybePlayAdAudio = (el) => {
       const audioFile = el.getAttribute("data-ad-audio");
-      if (!audioFile) return;
-      try {
-        const baseAudio = getCachedAudio(audioFile);
-        if (!baseAudio) return;
-        const clone = baseAudio.cloneNode();
-        clone.volume = baseAudio.volume;
-        clone.currentTime = 0;
-        clone.play().catch((err) => {
-          console.debug("Ad audio play failed:", err.message);
-        });
-      } catch (err) {
-        console.debug("Failed to create audio element:", err.message);
-      }
+      if (audioFile) audioManager.play(audioFile);
     };
 
     const maybeTrackAdClick = (el) => {
@@ -213,17 +186,17 @@
       ".media-ad-link[data-ad-key], .media-ad-static[data-ad-key]"
     );
 
-    // Warm the audio cache up front so first click avoids fetch/decode delay.
-    handlers.forEach((el) => {
-      const audioFile = el.getAttribute("data-ad-audio");
-      if (audioFile) getCachedAudio(audioFile);
-    });
-
     handlers.forEach((el) => {
       if (el.dataset.mediaAdBound === "true") return;
       el.dataset.mediaAdBound = "true";
-      el.addEventListener("click", () => {
-        maybePlayAdAudio(el);
+      const audioFile = el.getAttribute("data-ad-audio");
+      if (audioFile) audioManager.preload(audioFile, audioFile, { lazy: true, volume: AD_AUDIO_VOLUME });
+      el.addEventListener("pointerdown", (e) => {
+        if (e.isPrimary && e.button === 0) maybePlayAdAudio(el);
+      });
+      el.addEventListener("click", (e) => {
+        // Keyboard activation has no pointerdown
+        if (e.detail === 0) maybePlayAdAudio(el);
         maybeTrackAdClick(el);
       });
     });

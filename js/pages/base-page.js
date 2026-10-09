@@ -419,33 +419,9 @@ class BasePage {
     this.audioManager.preload("womp-womp-tuba", "/audio/womp-womp-tuba.mp3", true);
     // Street Fighter sound effect used by character selector
     this.audioManager.preload("sf_perfect", "/audio/sf_perfect.mp3", true);
-    // Load select sound immediately to avoid first-play latency on tiles
-    this.audioManager.preload("sf_select", "/audio/sf_select.ogg", false);
+    this.audioManager.preload("sf_select", "/audio/sf_select.mp3");
 
-    // Initialize audio on first interaction (required for mobile).
-    // Listen for touchend in addition to click — on iOS, preventDefault() on a
-    // touch handler suppresses the synthetic click, so we'd never unlock audio.
-    const initAudio = () => {
-      try {
-        this.audioManager.initialize();
-      } catch (err) {
-        console.warn("Audio init failed on gesture:", err);
-      }
-      document.removeEventListener("click", initAudio);
-      document.removeEventListener("touchend", initAudio);
-      document.removeEventListener("keydown", initAudio);
-    };
-    // Use capture and include pointerdown so initialization runs before
-    // target click handlers (reduces delay on first sound play).
-    document.addEventListener("pointerdown", initAudio, { once: true, capture: true });
-    document.addEventListener("click", initAudio, { once: true, capture: true });
-    document.addEventListener("touchend", initAudio, { once: true, capture: true });
-    document.addEventListener("keydown", initAudio, { once: true, capture: true });
-
-    // Add click sounds to common button selectors
-    addClickSound("button:not([data-no-sound])");
-    addClickSound("a.btn");
-    addClickSound(".action-button");
+    addClickSound("button:not([data-no-sound]), a.btn, .action-button");
   }
 
   // Utility methods

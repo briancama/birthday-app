@@ -212,6 +212,13 @@ October step-logging event at `/walktober` (Brispace layout, `theme-walktober` b
 - Walktober templates don't include the Firebase `<script>` tags; they `preload` them and `firebaseAuth.init()` loads the SDK on demand. `firebaseAuth.init()` only runs once per page (cached promise).
 - Hidden "David S Pumpkins" egg (`js/components/david-pumpkins.js`, achievement `david_pumpkins`, `sql/2026_10_04_add_david_pumpkins_achievement.sql`): any `[data-pumpkin-gif]` on `/walktober` plays a dance track on click (zombie = hero right gif, frank = calendar's first blank Tuesday, skull = crew box, werewolf = Your numbers). Signed-in progress lives in localStorage per user; once all four are found and a track ends, David rises (stays until clicked), his clip plays, and the achievement is awarded. Plays once per user. Placement/size knobs are `--wt-*` vars in `walktober.css`.
 
+### Sound Effects Engine (2026)
+
+- Short sound effects go through `audioManager` (`js/utils/audio.js`, Web Audio): decoded once, played from memory, leading silence skipped. Don't create `new Audio()` for UI sounds; use `audioManager.preload()` + `play()` (and `stop()` if needed).
+- Global button sounds fire on `pointerdown`; keyboard/programmatic clicks (`detail === 0`) still play. One delegated `addClickSound()` call in BasePage.
+- Long tracks (music player, secret tracks, easter-egg songs, rickroll) stay on `<audio>`/`new Audio()`.
+- Classic scripts can't import modules: anything that needs `audioManager` (e.g. `gif-stepper.js`, `media-slot.ejs` inline script) loads as `type="module"`.
+
 ### Request Pipeline Performance (2026)
 
 - `/css`, `/js`, `/images`, `/fonts`, `/audio`, `/songs` are served by `express.static` at the top of server.js, before dev auto-login and nav hydration. Images/fonts/audio/songs get `Cache-Control: max-age=1d` (`ASSET_CACHE_MAX_AGE`).
