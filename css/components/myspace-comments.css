@@ -223,6 +223,41 @@
   color: var(--profile-theme-section-text);
 }
 
+.myspace-comment-card {
+  --wall-mention-color: #9900ff;
+}
+
+.myspace.has-profile-theme .myspace-comment-card {
+  --wall-mention-color: var(--profile-theme-link);
+}
+
+.myspace-comment-mention {
+  color: var(--wall-mention-color);
+  font-weight: bold;
+}
+
+.myspace-comment-reply {
+  background: none;
+  border: none;
+  color: var(--wall-mention-color);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-decoration: underline;
+  padding: 0 4px;
+  margin-left: auto;
+}
+
+.myspace-comment-reply:hover,
+.myspace-comment-reply:focus-visible {
+  text-decoration: none;
+}
+
+.myspace-comment-reply + .myspace-comment-delete {
+  margin-left: 4px;
+}
+
 .myspace-comment-actions {
   display: flex;
   gap: 8px;

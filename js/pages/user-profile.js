@@ -5,6 +5,7 @@ import { appState } from "../app.js";
 import { EventBus } from "../events/event-bus.js";
 import { featureFlags } from "../utils/feature-flags.js";
 import { createCommentCard } from "../components/myspace-comment-card.js";
+import { MentionAutocomplete } from "../components/mention-autocomplete.js";
 import { MUSIC_SONGS } from "../constants/music-songs.js";
 import { SecretTrackPlayer } from "../components/secret-track-player.js";
 import profileThemes from "../constants/profile-themes.json" with { type: "json" };
@@ -1146,6 +1147,7 @@ class UserProfilePage extends BasePage {
       // Fetch headshots for all known authors in one query
       const userHeadshots = {};
       const userProfileKeys = {};
+      const userUsernames = {};
       const authorIds = [...new Set((entries || []).map((e) => e.author_user_id).filter(Boolean))];
       if (authorIds.length && this.supabase) {
         const { data: users } = await this.supabase
@@ -1156,16 +1158,17 @@ class UserProfilePage extends BasePage {
           users.forEach((u) => {
             if (u.headshot) userHeadshots[u.id] = u.headshot;
             userProfileKeys[u.id] = u.username || u.id;
+            if (u.username) userUsernames[u.id] = u.username;
           });
       }
 
-      this._renderWall(entries || [], userHeadshots, userProfileKeys);
+      this._renderWall(entries || [], userHeadshots, userProfileKeys, userUsernames);
     } catch {
       container.innerHTML = `<p class="text-center">Could not load wall.</p>`;
     }
   }
 
-  _renderWall(entries, userHeadshots = {}, userProfileKeys = {}) {
+  _renderWall(entries, userHeadshots = {}, userProfileKeys = {}, userUsernames = {}) {
     const container = document.getElementById("wall-entries");
     if (!container) return;
     if (entries.length === 0) {
@@ -1182,6 +1185,8 @@ class UserProfilePage extends BasePage {
       const avatarSrc =
         (e.author_user_id && userHeadshots[e.author_user_id]) || "/images/headshot.jpg";
       const dataHeadshot = e.author_user_id ? `user-${e.author_user_id}` : "user-default";
+      const authorUsername = e.author_user_id ? userUsernames[e.author_user_id] : null;
+      const canReply = !!(this.userId && authorUsername && e.author_user_id !== this.userId);
       frag.appendChild(
         createCommentCard({
           name: e.author_name,
@@ -1195,10 +1200,29 @@ class UserProfilePage extends BasePage {
           entryId: e.id,
           canDelete,
           onDelete: (id) => this._deleteWallEntry(id),
+          highlightMentions: true,
+          onReply: canReply ? () => this._replyToWallEntry(authorUsername) : null,
         })
       );
     });
     container.appendChild(frag);
+  }
+
+  _replyToWallEntry(username) {
+    const form = document.getElementById("wall-post-form");
+    const textarea = form?.querySelector("textarea");
+    if (!textarea) return;
+    const tag = `@${username}`;
+    const escapedTag = tag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const alreadyTagged = new RegExp(`(^|[^a-z0-9_])${escapedTag}(?![a-z0-9_-])`, "i").test(
+      textarea.value
+    );
+    if (!alreadyTagged) {
+      textarea.value = `${tag} ${textarea.value.replace(/^\s+/, "")}`.slice(0, textarea.maxLength);
+    }
+    form.scrollIntoView({ behavior: "smooth", block: "center" });
+    textarea.focus({ preventScroll: true });
+    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
   }
 
   setupWallPost() {
@@ -1212,6 +1236,11 @@ class UserProfilePage extends BasePage {
 
     const textarea = form.querySelector("textarea");
     const btn = form.querySelector(".wall-post-btn");
+
+    if (textarea) {
+      const mentions = new MentionAutocomplete(textarea);
+      this.localCleanup.push(() => mentions.cleanup());
+    }
 
     btn?.addEventListener("click", async () => {
       const message = textarea?.value.trim();

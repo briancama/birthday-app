@@ -314,7 +314,7 @@ class AccountPage extends BasePage {
   }
 
   groupNotificationsByType(notifications) {
-    const order = ["wall_post_received", "top8_updates", "challenge_triggered"];
+    const order = ["wall_post_received", "wall_mention", "top8_updates", "challenge_triggered"];
     const map = new Map();
 
     notifications.forEach((notification) => {
@@ -378,6 +378,8 @@ class AccountPage extends BasePage {
       case "top8_added":
       case "top8_removed":
         return type.startsWith("top8_") ? "top8_updates" : type;
+      case "wall_mention":
+        return "wall_mention";
       case "challenge_triggered":
         return "challenge_triggered";
       case "walktober_award":
@@ -446,6 +448,8 @@ class AccountPage extends BasePage {
     switch (type) {
       case "wall_post_received":
         return "Wall Post";
+      case "wall_mention":
+        return "Mentions";
       case "top8_updates":
         return "Top 8 Updates";
       case "top8_added":
@@ -479,6 +483,10 @@ class AccountPage extends BasePage {
     switch (payload.type) {
       case "wall_post_received":
         return `${actor} posted on your wall.`;
+      case "wall_mention": {
+        const owner = payload.wall_owner_display_name || payload.wall_owner_username || "someone";
+        return `${actor} mentioned you on ${owner}'s wall.`;
+      }
       case "top8_added":
         return `${actor} added you to their Top 8.`;
       case "top8_removed":

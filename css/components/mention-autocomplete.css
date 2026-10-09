@@ -1,0 +1,67 @@
+.mention-autocomplete-host {
+  position: relative;
+}
+
+.mention-autocomplete {
+  --mention-list-width: min(320px, 100%);
+  --mention-list-max-height: 240px;
+  --mention-list-bg: #ffffff;
+  --mention-list-border: #000099;
+  --mention-row-active-bg: #ffff00;
+  --mention-row-active-text: #000000;
+  --mention-username-color: #9900ff;
+  --mention-avatar-size: 28px;
+
+  position: absolute;
+  left: 0;
+  z-index: 50;
+  width: var(--mention-list-width);
+  max-height: var(--mention-list-max-height);
+  overflow-y: auto;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  background: var(--mention-list-bg);
+  border: 2px solid var(--mention-list-border);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35);
+  font-family: Verdana, Arial, sans-serif;
+  font-size: 0.85rem;
+  color: #000;
+}
+
+.mention-autocomplete[hidden] {
+  display: none;
+}
+
+.mention-autocomplete__option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  cursor: pointer;
+}
+
+.mention-autocomplete__option.is-active {
+  background: var(--mention-row-active-bg);
+  color: var(--mention-row-active-text);
+}
+
+.mention-autocomplete__avatar {
+  width: var(--mention-avatar-size);
+  height: var(--mention-avatar-size);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.mention-autocomplete__name {
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mention-autocomplete__username {
+  margin-left: auto;
+  color: var(--mention-username-color);
+  white-space: nowrap;
+}

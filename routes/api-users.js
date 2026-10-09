@@ -955,6 +955,75 @@ router.delete("/users/:id/top-n/:targetUserId", async (req, res) => {
 });
 
 // ── Profile wall ────────────────────────────────────────────────────────────
+const MAX_MENTIONS_PER_COMMENT = 10;
+const MENTION_REGEX = /(^|[^a-z0-9_])@([a-z0-9_-]{3,32})/gi;
+
+function parseMentions(message) {
+  const names = new Set();
+  for (const match of String(message || "").matchAll(MENTION_REGEX)) {
+    names.add(match[2].toLowerCase());
+    if (names.size >= MAX_MENTIONS_PER_COMMENT) break;
+  }
+  return [...names];
+}
+
+// GET /api/users/mention-search?q=  — published profiles only, for the @ dropdown
+router.get("/users/mention-search", async (req, res) => {
+  try {
+    const signedUserId = requireSignedUser(req);
+    if (!signedUserId) return res.status(401).json({ error: "Not authenticated" });
+
+    const q = String(req.query.q || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9 _-]/g, "")
+      .trim()
+      .slice(0, 32);
+    if (!q) return res.json({ users: [] });
+
+    const pattern = `%${q}%`;
+    const { data, error } = await supabase
+      .from("user_profile_view")
+      .select("user_id, username, display_name, headshot")
+      .eq("is_published", true)
+      .neq("user_id", signedUserId)
+      .or(`username.ilike."${pattern}",display_name.ilike."${pattern}"`)
+      .limit(20);
+
+    if (error) {
+      console.error("mention-search error:", error.message);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    const rank = (u) => {
+      const username = (u.username || "").toLowerCase();
+      const display = (u.display_name || "").toLowerCase();
+      if (username.startsWith(q) || display.startsWith(q)) return 0;
+      if (display.split(/\s+/).some((word) => word.startsWith(q))) return 1;
+      return 2;
+    };
+
+    const users = (data || [])
+      .filter((u) => u.username)
+      .sort(
+        (a, b) =>
+          rank(a) - rank(b) ||
+          (a.display_name || a.username).localeCompare(b.display_name || b.username)
+      )
+      .slice(0, 8)
+      .map((u) => ({
+        id: u.user_id,
+        username: u.username,
+        display_name: u.display_name || null,
+        headshot: u.headshot || null,
+      }));
+
+    return res.json({ users });
+  } catch (err) {
+    console.error("Error in GET /api/users/mention-search", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // GET /api/users/:id/wall
 router.get("/users/:id/wall", async (req, res) => {
   try {
@@ -1011,22 +1080,26 @@ router.post("/users/:id/wall", async (req, res) => {
       return res.status(500).json({ error: "Database error" });
     }
 
+    const targetLooksLikeUuid = UUID_REGEX.test(targetId);
+    const { data: targetUser } = await supabase
+      .from("users")
+      .select("id, username, display_name")
+      .eq(targetLooksLikeUuid ? "id" : "username", targetId)
+      .maybeSingle();
+    const wallUrl = targetUser?.username
+      ? `/users/${targetUser.username}#wall-entries`
+      : "/account";
+    const authorLabel = author?.display_name || author?.username || "Someone";
+
     if (targetId !== signedUserId) {
       try {
-        const targetLooksLikeUuid = UUID_REGEX.test(targetId);
-        const { data: targetUser } = await supabase
-          .from("users")
-          .select("username")
-          .eq(targetLooksLikeUuid ? "id" : "username", targetId)
-          .maybeSingle();
-
         await createAndDeliverNotification({
           userId: targetId,
           type: "wall_post_received",
           fromUserId: signedUserId,
           title: "New wall post",
-          body: `${author?.display_name || author?.username || "Someone"} posted on your wall.`,
-          url: targetUser?.username ? `/users/${targetUser.username}#wall-entries` : "/account",
+          body: `${authorLabel} posted on your wall.`,
+          url: wallUrl,
           data: {
             from_username: author?.username || null,
             from_display_name: author?.display_name || author?.username || null,
@@ -1036,6 +1109,51 @@ router.post("/users/:id/wall", async (req, res) => {
         });
       } catch (notifErr) {
         console.warn("Failed to create wall-post notification:", notifErr.message || notifErr);
+      }
+    }
+
+    const mentioned = parseMentions(message);
+    if (mentioned.length) {
+      try {
+        const { data: taggedUsers } = await supabase
+          .from("users")
+          .select("id, username")
+          .in("username", mentioned);
+        const ownerId = targetUser?.id || targetId;
+        const ownerLabel = targetUser?.display_name || targetUser?.username || "someone";
+        const recipients = (taggedUsers || []).filter(
+          (u) => u.id !== signedUserId && u.id !== ownerId
+        );
+        const results = await Promise.allSettled(
+          recipients.map((u) =>
+            createAndDeliverNotification({
+              userId: u.id,
+              type: "wall_mention",
+              fromUserId: signedUserId,
+              title: "You were mentioned",
+              body: `${authorLabel} mentioned you on ${ownerLabel}'s wall.`,
+              url: wallUrl,
+              data: {
+                from_username: author?.username || null,
+                from_display_name: author?.display_name || author?.username || null,
+                wall_owner_username: targetUser?.username || null,
+                wall_owner_display_name: targetUser?.display_name || targetUser?.username || null,
+                wall_entry_id: data?.id || null,
+                action_label: "View comment",
+              },
+            })
+          )
+        );
+        results
+          .filter((r) => r.status === "rejected")
+          .forEach((r) =>
+            console.warn(
+              "Failed to create wall-mention notification:",
+              r.reason?.message || r.reason
+            )
+          );
+      } catch (mentionErr) {
+        console.warn("Failed to process wall mentions:", mentionErr.message || mentionErr);
       }
     }
 

@@ -117,6 +117,15 @@ Always implement and call `cleanup()` in pages/components to remove event listen
 - Use optional `action_label` in notification payload data for per-type CTA text in Account Center (fallback remains generic).
 - Keep producer routes (`routes/api-users.js`) and Account rendering (`js/pages/account.js`) aligned so action labels and destinations stay consistent.
 
+### Wall Mentions (2026)
+
+- Profile wall comments can tag people with `@username` (typed, picked from the @ dropdown, or added by a comment's Reply button).
+- `POST /api/users/:id/wall` parses tags (`@` must start the text or follow a non-word char, so emails don't match), lowercases + dedupes, caps at 10 people, and sends each a `wall_mention` notification (inbox + push). The comment author and wall owner are skipped (the owner already gets `wall_post_received`). Unknown names are ignored. No schema change; tags live only in the message text.
+- Any registered user can be tagged, but the dropdown (`GET /api/users/mention-search?q=`, signed-in only) only suggests published profiles. It matches username or display name and always inserts `@username`.
+- Dropdown component: `js/components/mention-autocomplete.js` + `css/components/mention-autocomplete.css`.
+- `createCommentCard()` takes `highlightMentions` (wraps `@tags` in `.myspace-comment-mention`, text-only, no links) and `onReply`. Mention color uses `--wall-mention-color`, which follows `--profile-theme-link` on themed profiles.
+- Account Center groups `wall_mention` under "Mentions".
+
 ### Account Notification Center Grouping (2026)
 
 - The Account Center notification feed is compact and grouped by notification type using `<details>` sections.

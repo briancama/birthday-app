@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="/css/components/navigation.css" />
     <link rel="stylesheet" href="/css/components/myspace.css" />
     <link rel="stylesheet" href="/css/components/myspace-comments.css" />
+    <link rel="stylesheet" href="/css/components/mention-autocomplete.css" />
     <link rel="stylesheet" href="/css/components/user-profile.css" />
     <link rel="stylesheet" href="/css/components/secret-player.css" />
     <link rel="preload" as="image" href="<%= user.headshot || '/images/headshot.jpg' %>" />
@@ -454,7 +455,7 @@
               <p>Loading...</p>
             </div>
             <div id="wall-post-form" class="wall-post-form">
-              <textarea placeholder="Leave a comment..." maxlength="500"></textarea>
+              <textarea placeholder="Leave a comment... (@ to tag someone)" maxlength="500"></textarea>
               <button class="wall-post-btn">Post</button>
             </div>
           </div>

@@ -1,3 +1,23 @@
+const MENTION_SPLIT_REGEX = /((?:^|[^a-z0-9_])@[a-z0-9_-]{3,32})/gi;
+
+function appendMessageWithMentions(el, message) {
+  String(message)
+    .split(MENTION_SPLIT_REGEX)
+    .forEach((part, i) => {
+      if (!part) return;
+      if (i % 2 === 0) {
+        el.appendChild(document.createTextNode(part));
+        return;
+      }
+      const at = part.indexOf("@");
+      if (at > 0) el.appendChild(document.createTextNode(part.slice(0, at)));
+      const tag = document.createElement("span");
+      tag.className = "myspace-comment-mention";
+      tag.textContent = part.slice(at);
+      el.appendChild(tag);
+    });
+}
+
 /**
  * Shared MySpace-style comment card component.
  * Returns a .myspace-comment-card DOM element usable in any page.
@@ -12,6 +32,8 @@
  * @param {string}   [opts.entryId]     — entry id (enables delete button)
  * @param {boolean}  [opts.canDelete]   — whether to show delete button
  * @param {function} [opts.onDelete]    — called with entryId when deleted
+ * @param {boolean}  [opts.highlightMentions] — wrap @username tags in .myspace-comment-mention
+ * @param {function} [opts.onReply]     — shows a Reply button; called on click
  */
 export function createCommentCard({
   name,
@@ -23,6 +45,8 @@ export function createCommentCard({
   entryId,
   canDelete,
   onDelete,
+  highlightMentions = false,
+  onReply,
 }) {
   const dateText = new Date(date).toLocaleString([], {
     year: "numeric",
@@ -78,6 +102,16 @@ export function createCommentCard({
   dateSpan.textContent = dateText;
   header.appendChild(dateSpan);
 
+  if (onReply) {
+    const replyBtn = document.createElement("button");
+    replyBtn.type = "button";
+    replyBtn.className = "myspace-comment-reply";
+    replyBtn.textContent = "Reply";
+    replyBtn.setAttribute("aria-label", `Reply to ${(name || "Anonymous").trim() || "Anonymous"}`);
+    replyBtn.addEventListener("click", () => onReply(entryId));
+    header.appendChild(replyBtn);
+  }
+
   if (canDelete && onDelete) {
     const delBtn = document.createElement("button");
     delBtn.className = "myspace-comment-delete";
@@ -89,7 +123,11 @@ export function createCommentCard({
 
   const msg = document.createElement("div");
   msg.className = "myspace-comment-message";
-  msg.textContent = message || "";
+  if (highlightMentions && message) {
+    appendMessageWithMentions(msg, message);
+  } else {
+    msg.textContent = message || "";
+  }
 
   content.appendChild(header);
   content.appendChild(msg);
