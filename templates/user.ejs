@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="/css/components/myspace.css" />
     <link rel="stylesheet" href="/css/components/myspace-comments.css" />
     <link rel="stylesheet" href="/css/components/mention-autocomplete.css" />
+    <link rel="stylesheet" href="/css/components/emote-picker.css" />
     <link rel="stylesheet" href="/css/components/user-profile.css" />
     <link rel="stylesheet" href="/css/components/secret-player.css" />
     <link rel="preload" as="image" href="<%= user.headshot || '/images/headshot.jpg' %>" />
@@ -455,8 +456,15 @@
               <p>Loading...</p>
             </div>
             <div id="wall-post-form" class="wall-post-form">
-              <textarea placeholder="Leave a comment... (@ to tag someone)" maxlength="500"></textarea>
-              <button class="wall-post-btn">Post</button>
+              <textarea placeholder="Leave a comment... (@ to tag someone, : for emotes)" maxlength="500"></textarea>
+              <div class="wall-post-preview myspace-comment-message" aria-live="polite" hidden>
+                <span class="wall-post-preview__label">Preview:</span>
+                <span class="wall-post-preview__body"></span>
+              </div>
+              <div class="wall-post-actions">
+                <div class="emote-picker"></div>
+                <button class="wall-post-btn">Post</button>
+              </div>
             </div>
           </div>
           <% if (typeof topNCount !== 'undefined' && topNCount > 0) { %>

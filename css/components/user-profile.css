@@ -790,6 +790,23 @@ body.is-owner .wall-entry__delete,
   box-sizing: border-box;
 }
 
+.wall-post-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.wall-post-preview[hidden] {
+  display: none;
+}
+
+.wall-post-preview__label {
+  font-size: 0.75rem;
+  font-weight: bold;
+  margin-right: 0.25rem;
+}
+
 .wall-post-btn {
   align-self: flex-end;
   background: #00c;

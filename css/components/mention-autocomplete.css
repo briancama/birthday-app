@@ -53,6 +53,11 @@
   flex-shrink: 0;
 }
 
+.mention-autocomplete__emote {
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+
 .mention-autocomplete__name {
   font-weight: bold;
   overflow: hidden;

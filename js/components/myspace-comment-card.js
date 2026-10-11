@@ -1,21 +1,81 @@
-const MENTION_SPLIT_REGEX = /((?:^|[^a-z0-9_])@[a-z0-9_-]{3,32})/gi;
+import {
+  EMOTES_BY_ALIAS,
+  EMOTES_BY_KEY,
+  MAX_EMOTES_PER_COMMENT,
+} from "../constants/wall-emotes.js";
 
-function appendMessageWithMentions(el, message) {
-  String(message)
-    .split(MENTION_SPLIT_REGEX)
-    .forEach((part, i) => {
-      if (!part) return;
-      if (i % 2 === 0) {
-        el.appendChild(document.createTextNode(part));
-        return;
+const MENTION_PATTERN = "(?<mention>(?<=^|[^a-z0-9_])@[a-z0-9_-]{3,32})";
+const CODE_PATTERN = "(?<code>:[a-z][a-z0-9_-]{0,31}:)";
+const ALIAS_ALTERNATION = [...EMOTES_BY_ALIAS.keys()]
+  .sort((a, b) => b.length - a.length)
+  .map((a) => a.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+  .join("|");
+const ALIAS_PATTERN = ALIAS_ALTERNATION
+  ? `(?<=^|\\s)(?<alias>${ALIAS_ALTERNATION})(?=$|\\s|[.,!?])`
+  : "";
+
+const tokenRegexCache = new Map();
+
+function getTokenRegex(mentions, emotes) {
+  const cacheKey = `${mentions}|${emotes}`;
+  if (!tokenRegexCache.has(cacheKey)) {
+    const parts = [];
+    if (mentions) parts.push(MENTION_PATTERN);
+    if (emotes) parts.push(CODE_PATTERN, ALIAS_PATTERN);
+    const source = parts.filter(Boolean).join("|");
+    tokenRegexCache.set(cacheKey, source ? new RegExp(source, "gi") : null);
+  }
+  return tokenRegexCache.get(cacheKey);
+}
+
+function createEmoteImage(emote, typedText) {
+  const img = document.createElement("img");
+  img.className = "wall-emote";
+  img.src = emote.src;
+  img.alt = typedText;
+  img.title = `:${emote.key}:`;
+  img.width = emote.width;
+  img.height = emote.height;
+  img.decoding = "async";
+  img.draggable = false;
+  return img;
+}
+
+/** Appends message text to el, wrapping @mentions and/or swapping emote tokens for catalog GIFs. */
+export function appendCommentMessage(el, message, { mentions = false, emotes = false } = {}) {
+  const text = String(message ?? "");
+  const regex = getTokenRegex(mentions, emotes);
+  if (!regex) {
+    el.appendChild(document.createTextNode(text));
+    return;
+  }
+
+  let cursor = 0;
+  let emoteCount = 0;
+  for (const match of text.matchAll(regex)) {
+    const { mention, code, alias } = match.groups;
+    let node = null;
+    if (mention) {
+      node = document.createElement("span");
+      node.className = "myspace-comment-mention";
+      node.textContent = mention;
+    } else if (emoteCount < MAX_EMOTES_PER_COMMENT) {
+      const emote = code
+        ? EMOTES_BY_KEY.get(code.slice(1, -1).toLowerCase())
+        : EMOTES_BY_ALIAS.get(alias);
+      if (emote) {
+        node = createEmoteImage(emote, match[0]);
+        emoteCount++;
       }
-      const at = part.indexOf("@");
-      if (at > 0) el.appendChild(document.createTextNode(part.slice(0, at)));
-      const tag = document.createElement("span");
-      tag.className = "myspace-comment-mention";
-      tag.textContent = part.slice(at);
-      el.appendChild(tag);
-    });
+    }
+    if (!node) continue;
+    if (match.index > cursor) {
+      el.appendChild(document.createTextNode(text.slice(cursor, match.index)));
+    }
+    el.appendChild(node);
+    cursor = match.index + match[0].length;
+  }
+  if (cursor < text.length) el.appendChild(document.createTextNode(text.slice(cursor)));
 }
 
 /**
@@ -33,6 +93,7 @@ function appendMessageWithMentions(el, message) {
  * @param {boolean}  [opts.canDelete]   — whether to show delete button
  * @param {function} [opts.onDelete]    — called with entryId when deleted
  * @param {boolean}  [opts.highlightMentions] — wrap @username tags in .myspace-comment-mention
+ * @param {boolean}  [opts.renderEmotes] — swap :key: tokens and smiley aliases for catalog GIFs
  * @param {function} [opts.onReply]     — shows a Reply button; called on click
  */
 export function createCommentCard({
@@ -46,6 +107,7 @@ export function createCommentCard({
   canDelete,
   onDelete,
   highlightMentions = false,
+  renderEmotes = false,
   onReply,
 }) {
   const dateText = new Date(date).toLocaleString([], {
@@ -123,8 +185,8 @@ export function createCommentCard({
 
   const msg = document.createElement("div");
   msg.className = "myspace-comment-message";
-  if (highlightMentions && message) {
-    appendMessageWithMentions(msg, message);
+  if ((highlightMentions || renderEmotes) && message) {
+    appendCommentMessage(msg, message, { mentions: highlightMentions, emotes: renderEmotes });
   } else {
     msg.textContent = message || "";
   }

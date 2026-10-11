@@ -1,0 +1,72 @@
+.emote-picker {
+  --emote-picker-panel-width: 260px;
+  --emote-picker-cell-height: 30px;
+  --emote-picker-cell-pad: 4px;
+  --emote-picker-bg: #ffffff;
+  --emote-picker-border: #000099;
+  --emote-picker-active-bg: #ffff00;
+  --emote-picker-zoom: 1;
+
+  position: relative;
+  display: inline-block;
+}
+
+.emote-picker__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--emote-picker-cell-height);
+  height: var(--emote-picker-cell-height);
+  padding: 0 4px;
+  background: var(--emote-picker-bg);
+  border: 2px outset #c0c0c0;
+  cursor: pointer;
+}
+
+.emote-picker__toggle[aria-expanded="true"] {
+  border-style: inset;
+}
+
+.emote-picker__panel {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 4px);
+  z-index: 50;
+  display: flex;
+  flex-wrap: wrap;
+  width: max-content;
+  max-width: min(var(--emote-picker-panel-width), 90vw);
+  gap: 2px;
+  padding: 4px;
+  background: var(--emote-picker-bg);
+  border: 2px solid var(--emote-picker-border);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35);
+}
+
+.emote-picker__panel[hidden] {
+  display: none;
+}
+
+.emote-picker__option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--emote-picker-cell-height);
+  height: var(--emote-picker-cell-height);
+  padding: 0 var(--emote-picker-cell-pad);
+  background: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.emote-picker__option:hover,
+.emote-picker__option:focus-visible {
+  background: var(--emote-picker-active-bg);
+  border-color: var(--emote-picker-border);
+  outline: none;
+}
+
+.emote-picker img {
+  zoom: var(--emote-picker-zoom);
+  image-rendering: pixelated;
+}

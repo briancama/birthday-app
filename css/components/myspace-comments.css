@@ -223,11 +223,37 @@
   color: var(--profile-theme-section-text);
 }
 
-.myspace-comment-card {
+.myspace-comment-card,
+.wall-post-preview {
   --wall-mention-color: #9900ff;
 }
 
-.myspace.has-profile-theme .myspace-comment-card {
+/* Shared by wall comments and the composer preview */
+.myspace-comment-card,
+.wall-post-preview {
+  --wall-emote-zoom: 1;
+  --wall-emote-nudge: -0.2em;
+  --wall-message-line-height: 1.5;
+}
+
+.myspace-comment-message,
+.wall-post-preview {
+  line-height: var(--wall-message-line-height);
+}
+
+.wall-emote {
+  display: inline;
+  width: auto;
+  height: auto;
+  max-width: none;
+  zoom: var(--wall-emote-zoom);
+  vertical-align: var(--wall-emote-nudge);
+  image-rendering: pixelated;
+  margin: 0 1px;
+}
+
+.myspace.has-profile-theme .myspace-comment-card,
+.myspace.has-profile-theme .wall-post-preview {
   --wall-mention-color: var(--profile-theme-link);
 }
 

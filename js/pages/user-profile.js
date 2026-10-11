@@ -4,8 +4,10 @@ import { BasePage } from "./base-page.js";
 import { appState } from "../app.js";
 import { EventBus } from "../events/event-bus.js";
 import { featureFlags } from "../utils/feature-flags.js";
-import { createCommentCard } from "../components/myspace-comment-card.js";
+import { createCommentCard, appendCommentMessage } from "../components/myspace-comment-card.js";
 import { MentionAutocomplete } from "../components/mention-autocomplete.js";
+import { EmotePicker } from "../components/emote-picker.js";
+import { WALL_EMOTES } from "../constants/wall-emotes.js";
 import { MUSIC_SONGS } from "../constants/music-songs.js";
 import { SecretTrackPlayer } from "../components/secret-track-player.js";
 import profileThemes from "../constants/profile-themes.json" with { type: "json" };
@@ -1201,6 +1203,7 @@ class UserProfilePage extends BasePage {
           canDelete,
           onDelete: (id) => this._deleteWallEntry(id),
           highlightMentions: true,
+          renderEmotes: true,
           onReply: canReply ? () => this._replyToWallEntry(authorUsername) : null,
         })
       );
@@ -1236,10 +1239,37 @@ class UserProfilePage extends BasePage {
 
     const textarea = form.querySelector("textarea");
     const btn = form.querySelector(".wall-post-btn");
+    const preview = form.querySelector(".wall-post-preview");
+    const previewBody = preview?.querySelector(".wall-post-preview__body");
+    const pickerHost = form.querySelector(".emote-picker");
+
+    const updatePreview = () => {
+      if (!preview || !previewBody) return;
+      previewBody.replaceChildren();
+      appendCommentMessage(previewBody, textarea?.value || "", { mentions: true, emotes: true });
+      preview.hidden = !previewBody.querySelector(".wall-emote, .myspace-comment-mention");
+    };
 
     if (textarea) {
       const mentions = new MentionAutocomplete(textarea);
-      this.localCleanup.push(() => mentions.cleanup());
+      const emotes = new MentionAutocomplete(textarea, {
+        tokenRegex: /(?:^|[^a-z0-9_:-]):([a-z][a-z0-9_-]{0,31})$/i,
+        search: (query) => this._searchEmotes(query),
+        renderOption: (emote) => this._renderEmoteOption(emote),
+        insertText: (emote) => `:${emote.key}: `,
+        ariaLabel: "Emotes",
+        debounceMs: 0,
+      });
+      textarea.addEventListener("input", updatePreview);
+      this.localCleanup.push(() => {
+        mentions.cleanup();
+        emotes.cleanup();
+        textarea.removeEventListener("input", updatePreview);
+      });
+      if (pickerHost) {
+        const picker = new EmotePicker(pickerHost, textarea);
+        this.localCleanup.push(() => picker.cleanup());
+      }
     }
 
     btn?.addEventListener("click", async () => {
@@ -1256,6 +1286,7 @@ class UserProfilePage extends BasePage {
         });
         if (!resp.ok) throw new Error((await resp.json()).error || resp.statusText);
         if (textarea) textarea.value = "";
+        updatePreview();
         await this.loadWall();
         this.showSuccessToast("Comment posted!");
         EventBus.instance.emit("user:wall:posted", { userId: this.userId });
@@ -1266,6 +1297,32 @@ class UserProfilePage extends BasePage {
         btn.textContent = "Post";
       }
     });
+  }
+
+  _searchEmotes(query) {
+    const q = query.toLowerCase();
+    const starts = WALL_EMOTES.filter((e) => e.key.startsWith(q));
+    const contains = WALL_EMOTES.filter((e) => !e.key.startsWith(q) && e.key.includes(q));
+    return [...starts, ...contains].slice(0, 8);
+  }
+
+  _renderEmoteOption(emote) {
+    const img = document.createElement("img");
+    img.className = "mention-autocomplete__emote";
+    img.src = emote.src;
+    img.alt = "";
+    img.width = emote.width;
+    img.height = emote.height;
+
+    const code = document.createElement("span");
+    code.className = "mention-autocomplete__name";
+    code.textContent = `:${emote.key}:`;
+
+    const label = document.createElement("span");
+    label.className = "mention-autocomplete__username";
+    label.textContent = emote.label;
+
+    return [img, code, label];
   }
 
   async _deleteWallEntry(entryId) {

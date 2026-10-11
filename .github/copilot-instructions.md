@@ -126,6 +126,16 @@ Always implement and call `cleanup()` in pages/components to remove event listen
 - `createCommentCard()` takes `highlightMentions` (wraps `@tags` in `.myspace-comment-mention`, text-only, no links) and `onReply`. Mention color uses `--wall-mention-color`, which follows `--profile-theme-link` on themed profiles.
 - Account Center groups `wall_mention` under "Mentions".
 
+### Wall Emotes (2026)
+
+- Profile wall comments can include tiny retro GIF emotes. Comments stay plain text in `profile_wall.message`; no server or schema change.
+- Syntax: `:key:` (key starts with a letter: `[a-z][a-z0-9_-]*`) or a classic smiley alias (`:)`, `:(` ...). Aliases only match with whitespace/start before and whitespace/end/`.,!?` after, so `http://`, `x:P`, `(8)` stay text. Unknown keys stay text.
+- Catalog: `js/constants/wall-emotes.js` (`WALL_EMOTES`: `key`, `src`, `label`, `width`, `height`, optional `aliases`). GIFs live in `images/emotes/` (current set: classic 19×19 MSN Messenger faces). Spec: transparent GIF, about 19px tall, at most ~48px wide, shown at native size.
+- Rendering: `createCommentCard({ renderEmotes: true })` (only `js/pages/user-profile.js` turns it on; the event-info wall stays text-only). `<img>` src always comes from the catalog, `alt` is the typed text. Max `MAX_EMOTES_PER_COMMENT` (12) per comment; extras render as text.
+- Composer: `js/components/emote-picker.js` (grid button next to Post), a second `MentionAutocomplete` instance for `:` (local catalog), and a live preview line under the textarea.
+- CSS knobs (`css/components/myspace-comments.css`): `--wall-emote-zoom`, `--wall-emote-nudge`, `--wall-message-line-height`.
+- Notifications never include comment text. If a future notification or preview shows comment text, strip emote tokens first.
+
 ### Account Notification Center Grouping (2026)
 
 - The Account Center notification feed is compact and grouped by notification type using `<details>` sections.
