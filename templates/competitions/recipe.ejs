@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <%- include('partials/head', { pageTitle: recipe.title }) %>
+    <%- include(kit.headExtra) %>
+  </head>
+
+  <body class="kit<%= kit.key ? ' theme-' + kit.key : '' %>" data-page="recipe">
+    <%- include(kit.header) %> <%- include('partials/admin-bar') %>
+
+    <main class="kit-main">
+      <article class="kit-wrap kit-recipe">
+        <% if (isAuthor && state !== 'public') { %>
+        <p class="kit-notice">Preview. Only you can see this page until the competition is over.</p>
+        <% } %>
+
+        <header class="kit-recipe__head">
+          <% if (result && result.competition_medal) { %>
+          <p class="kit-medal kit-medal--<%= result.competition_medal %>">
+            <%= result.competition_medal %> · #<%= result.competition_rank %>
+          </p>
+          <% } %>
+          <h1 class="kit-title"><%= recipe.title %></h1>
+          <p class="kit-recipe__by">by <%= author %></p>
+          <% if (recipe.description) { %>
+          <p class="kit-recipe__blurb"><%= recipe.description %></p>
+          <% } %>
+        </header>
+
+        <% if (recipe.image_url) { %>
+        <img class="kit-recipe__photo" src="<%= recipe.image_url %>" alt="<%= recipe.title %>" />
+        <% } %>
+
+        <% const meta = [['Prep', recipe.prep_time], ['Cook', recipe.cook_time], ['Makes',
+        recipe.servings]].filter((m) => m[1]); %>
+        <% if (meta.length) { %>
+        <dl class="kit-recipe__meta">
+          <% meta.forEach(([label, value]) => { %>
+          <div>
+            <dt><%= label %></dt>
+            <dd><%= value %></dd>
+          </div>
+          <% }) %>
+        </dl>
+        <% } %>
+
+        <% const tags = (recipe.allergens || []).filter((k) => allergenLabels[k]); %>
+        <% if
+        (tags.length || recipe.allergens_other) { %>
+        <ul class="kit-chips" aria-label="Allergens and diet">
+          <% tags.forEach((k) => { %>
+          <li class="kit-chip kit-chip--<%= k %>">
+            <%= k === 'none' ? 'No common allergens' : allergenLabels[k] %>
+          </li>
+          <% }) %>
+          <% if (recipe.allergens_other) { %>
+          <li class="kit-chip"><%= recipe.allergens_other %></li>
+          <% } %>
+        </ul>
+        <% } %>
+
+        <section class="kit-card kit-recipe__section">
+          <h2>Ingredients</h2>
+          <% if (!groups.length) { %>
+          <p class="kit-empty">No ingredients yet.</p>
+          <% } %>
+          <% groups.forEach((g) => { %>
+          <% if (g.title) { %>
+          <h3><%= g.title %></h3>
+          <% } %>
+          <ul class="kit-ingredients">
+            <% g.items.forEach((i) => { %>
+            <li>
+              <% if (i.qty || i.unit) { %><span class="kit-ingredients__qty"
+                ><%= [i.qty, i.unit].filter(Boolean).join(' ') %></span
+              >
+              <% } %><%= i.item %><% if (i.note) { %><span class="kit-ingredients__note"
+                >,
+                <%= i.note %></span
+              ><% } %>
+            </li>
+            <% }) %>
+          </ul>
+          <% }) %>
+        </section>
+
+        <section class="kit-card kit-recipe__section">
+          <h2>Instructions</h2>
+          <% if (recipe.steps && recipe.steps.length) { %>
+          <ol class="kit-steps">
+            <% recipe.steps.forEach((s) => { %>
+            <li><%= s %></li>
+            <% }) %>
+          </ol>
+          <% } else { %>
+          <p class="kit-empty">The instructions haven't been written up yet.</p>
+          <% } %>
+        </section>
+
+        <% if (recipe.notes) { %>
+        <section class="kit-card kit-recipe__section">
+          <h2>Notes</h2>
+          <p class="kit-prewrap"><%= recipe.notes %></p>
+        </section>
+        <% } %>
+
+        <p class="kit-actions">
+          <% if (isAuthor) { %><a class="kit-btn" href="<%= links.enter %>">Edit recipe</a
+          ><% } %>
+          <% if (state === 'public') { %><a
+            class="kit-btn kit-btn--plain"
+            href="<%= links.results %>"
+            >All results</a
+          ><% } %>
+        </p>
+      </article>
+    </main>
+
+    <%- include(kit.footer) %>
+  </body>
+</html>

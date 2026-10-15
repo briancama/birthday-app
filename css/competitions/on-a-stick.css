@@ -1,0 +1,183 @@
+/* ON A STICK skin for the Competition Kit. Palette matches css/on-a-stick.css
+   (Hot Dog on a Stick red / blue / yellow, chunky black outlines, Cooper Black). */
+
+.kit.theme-on-a-stick {
+  --stick-red: #e03a3e;
+  --stick-blue: #0076c0;
+  --stick-yellow: #fff200;
+  --stick-cream: #fffdf5;
+  --stick-ink: #16130f;
+  --stick-batter: #e8a33d;
+
+  --kit-bg: var(--stick-cream);
+  --kit-surface: #ffffff;
+  --kit-ink: var(--stick-ink);
+  --kit-muted: #5c544a;
+  --kit-accent: var(--stick-yellow);
+  --kit-accent-ink: var(--stick-ink);
+  --kit-accent-2: var(--stick-blue);
+  --kit-highlight: var(--stick-yellow);
+  --kit-ok: var(--stick-blue);
+  --kit-warn: var(--stick-red);
+  --kit-chip-bg: #ffe9a8;
+  --kit-flag-bg: var(--stick-yellow);
+  --kit-header-bg: var(--stick-red);
+  --kit-header-ink: #ffffff;
+
+  --kit-border-w: 3px;
+  --kit-radius: 14px;
+  --kit-shadow: 4px 4px 0 var(--kit-border);
+  --kit-shadow-press: 2px 2px 0 var(--kit-border);
+  --kit-stripe: repeating-linear-gradient(
+    90deg,
+    var(--stick-red) 0 24px,
+    var(--stick-yellow) 24px 48px,
+    var(--stick-blue) 48px 72px
+  );
+  --kit-stripe-h: 14px;
+
+  --kit-font-display: "Cooper Black", "Arial Rounded MT Bold", Verdana, sans-serif;
+  --kit-font-body: "Cooper Black", "Arial Rounded MT Bold", Verdana, sans-serif;
+  --kit-font-ui: Verdana, sans-serif;
+  --kit-stamp-ink: var(--stick-red);
+  --kit-title-transform: uppercase;
+
+  --kit-band-1-bg: var(--stick-yellow);
+  --kit-band-1-ink: var(--stick-ink);
+  --kit-band-2-bg: var(--stick-red);
+  --kit-band-2-ink: #ffffff;
+  --kit-band-3-bg: var(--stick-blue);
+  --kit-band-3-ink: #ffffff;
+
+  /* header corndog knobs (food knobs mirror .hero-art on the landing page) */
+  --stick-header-art-h: 3.6rem;
+  --stick-header-art-tilt: 12deg;
+  --stick-header-food-y: 25px;
+  --stick-header-food-tilt: -10deg;
+  --stick-header-food-scale: 1.1;
+}
+
+.theme-on-a-stick .kit-header__title {
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  text-shadow: 2px 2px 0 var(--stick-ink);
+}
+
+.theme-on-a-stick .stick-header-art {
+  height: var(--stick-header-art-h);
+  width: auto;
+  overflow: visible;
+  transform: rotate(var(--stick-header-art-tilt));
+}
+
+.theme-on-a-stick .stick-header-food {
+  transform: translate(0, var(--stick-header-food-y)) rotate(var(--stick-header-food-tilt))
+    scale(var(--stick-header-food-scale));
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+.theme-on-a-stick .kit-nav__link.is-active {
+  border: 2px solid var(--stick-ink);
+}
+
+.theme-on-a-stick .kit-stripe {
+  border-bottom: 3px solid var(--stick-ink);
+}
+
+.theme-on-a-stick .kit-title {
+  color: var(--stick-red);
+  text-shadow: 3px 3px 0 var(--stick-ink);
+  letter-spacing: 0.03em;
+}
+
+.theme-on-a-stick .kit-card h2 {
+  color: var(--stick-blue);
+  text-transform: uppercase;
+}
+
+.theme-on-a-stick .kit-entry__num,
+.theme-on-a-stick .kit-level__score {
+  background: var(--stick-red);
+  color: #fff;
+  border: 2px solid var(--stick-ink);
+}
+
+.theme-on-a-stick .kit-entries li:nth-child(3n + 2) .kit-entry__num {
+  background: var(--stick-blue);
+}
+
+.theme-on-a-stick .kit-entries li:nth-child(3n) .kit-entry__num {
+  background: var(--stick-yellow);
+  color: var(--stick-ink);
+}
+
+.theme-on-a-stick .kit-score__opt input:checked + span {
+  background: var(--stick-red);
+  color: #fff;
+}
+
+.theme-on-a-stick .reg-form input {
+  font-family: var(--kit-font-ui);
+}
+
+.theme-on-a-stick .kit-modal__step h3 {
+  color: var(--stick-red);
+  text-shadow: 2px 2px 0 var(--stick-ink);
+  text-transform: uppercase;
+}
+
+/* ---------- rubric (matches the original hand-built page) ---------- */
+
+.theme-on-a-stick .kit-card--banded {
+  box-shadow: 5px 5px 0 var(--stick-ink);
+}
+
+.theme-on-a-stick .kit-levels,
+.theme-on-a-stick .stickiness-def,
+.theme-on-a-stick .kit-math p,
+.theme-on-a-stick .kit-rubric-cat p {
+  font-family: Verdana, sans-serif;
+  font-size: 0.92rem;
+}
+
+.theme-on-a-stick .kit-levels strong,
+.theme-on-a-stick .stickiness-def strong {
+  font-family: var(--kit-font-display);
+}
+
+.theme-on-a-stick .stickiness-def a {
+  color: var(--stick-blue);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+}
+
+.theme-on-a-stick .stickiness-def ul {
+  list-style: none;
+  margin: 0.75rem 0;
+  padding: 0;
+}
+
+.theme-on-a-stick .stickiness-def li {
+  margin: 0.4rem 0;
+}
+
+.theme-on-a-stick .stickiness-lede {
+  margin: 0;
+}
+
+.theme-on-a-stick .stickiness-verdict {
+  margin: 0.75rem 0 0;
+  padding-top: 0.6rem;
+  border-top: 2px dashed var(--stick-ink);
+}
+
+.theme-on-a-stick .kit-math {
+  background: var(--stick-cream);
+}
+
+.theme-on-a-stick .kit-math h2 {
+  color: var(--stick-ink);
+  text-transform: none;
+}

@@ -1,0 +1,15 @@
+<header class="kit-header">
+  <div class="kit-wrap kit-header__inner">
+    <a class="kit-header__title" href="<%= links.landing || links.judge %>">
+      <svg class="stick-header-art" viewBox="0 0 120 340" aria-hidden="true">
+        <image href="/images/stick/corndog_stick.svg" x="50" y="40" width="20" height="297" />
+        <g class="stick-header-food">
+          <image href="/images/stick/corndog.svg" x="15" y="10" width="90" height="179" />
+        </g>
+      </svg>
+      <span><%= competition.name %></span>
+    </a>
+    <%- include('../../partials/nav') %>
+  </div>
+</header>
+<div class="kit-stripe" aria-hidden="true"></div>

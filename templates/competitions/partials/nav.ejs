@@ -1,0 +1,14 @@
+<% const showAll = !!locals.isKitAdmin; const navItems = [ ['judge', 'Judge', links.judge, showAll
+|| state === 'judging'], ['enter', 'My Entry', links.enter, true], ['results', 'Results',
+links.results, showAll || state === 'public'], ['rubric', 'Rubric', links.rubric, true],
+].filter((item) => item[3]); %>
+<nav class="kit-nav" aria-label="<%= competition.name %>">
+  <% navItems.forEach(([key, label, href]) => { %>
+  <a
+    href="<%= href %>"
+    class="kit-nav__link<%= page === key ? ' is-active' : '' %>"
+    aria-current="<%= page === key ? 'page' : 'false' %>"
+    ><%= label %></a
+  >
+  <% }) %>
+</nav>

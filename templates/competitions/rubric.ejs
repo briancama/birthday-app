@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <%- include('partials/head', { pageTitle: 'Rubric' }) %>
+    <%- include(kit.headExtra) %>
+  </head>
+
+  <body class="kit<%= kit.key ? ' theme-' + kit.key : '' %>" data-page="rubric">
+    <%- include(kit.header) %> <%- include('partials/admin-bar') %>
+
+    <main class="kit-main">
+      <div class="kit-wrap">
+        <div class="kit-page-head">
+          <h1 class="kit-title">Scoring</h1>
+          <p class="kit-status">
+            Every judge rates every entry 1&ndash;5 in <%= categories.length %> categories. The
+            categories are weighted behind the scenes &mdash; here's the math.
+          </p>
+        </div>
+
+        <% categories.forEach((c) => { %>
+        <section class="kit-card kit-card--banded kit-rubric-cat">
+          <header class="kit-card__head">
+            <h2><%= c.label %></h2>
+            <span class="kit-pill"
+              >&times;<%= c.weight %>
+              &middot;
+              <%= c.weight * 5 %>
+              pts max</span
+            >
+          </header>
+          <div class="kit-card__body">
+            <% if (c.notesPartial) { %><%- include(c.notesPartial) %><% } else if (c.description) {
+            %>
+            <p><%= c.description %></p>
+            <% } %>
+            <% if (Array.isArray(c.levels) && c.levels.length) { %>
+            <ul class="kit-levels">
+              <% c.levels.slice().sort((a, b) => b.score - a.score).forEach((l) => { %>
+              <li>
+                <strong><%= l.score %><%= l.label ? ' = ' + l.label : '' %></strong
+                ><% if
+                (l.description) { %>
+                &mdash;
+                <%= l.description %><% } %>
+              </li>
+              <% }) %>
+            </ul>
+            <% } %>
+          </div>
+        </section>
+        <% }) %>
+
+        <% const example = categories.map((c, i) => ({ c, score: i === 0 ? 4 : 3 })); %>
+        <div class="kit-math">
+          <h2>The Math</h2>
+          <p>
+            <strong>Each judge's total:</strong>
+            <%= categories.map((c) => '(' + c.label + ' × ' + c.weight + ')').join(' + ') %> = up to
+            <%= maxTotal %>
+            points
+          </p>
+          <p>
+            <strong>Example:</strong>
+            <%= example.map((e) => e.score + ' (' + e.c.label + ') × ' + e.c.weight).join(' + ') %>
+            = <%= example.reduce((sum, e) => sum + e.score * e.c.weight, 0) %> points
+          </p>
+          <p>
+            <% if (competition.favorite_bonus > 0) { %><strong>Final score:</strong> the average of
+            every judge's total, plus
+            <%= competition.favorite_bonus %>
+            points for each judge who picks it as their favorite.<% } else { %><strong
+              >Final score:</strong
+            >
+            the average of every judge's total.<% } %>
+            Highest score takes the top spot.
+          </p>
+        </div>
+
+        <% if (rubricFooter) { %><%- include(rubricFooter) %><% } %>
+      </div>
+    </main>
+
+    <%- include(kit.footer) %>
+  </body>
+</html>

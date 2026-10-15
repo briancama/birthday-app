@@ -1,0 +1,10 @@
+<header class="kit-header">
+  <div class="kit-wrap kit-header__inner">
+    <p class="kit-header__title">
+      <% if (links.landing) { %><a href="<%= links.landing %>"><%= competition.name %></a
+      ><% } else
+      { %><%= competition.name %><% } %>
+    </p>
+    <%- include('nav') %>
+  </div>
+</header>

@@ -2,7 +2,7 @@
 // The page stays static: two [data-stick-cta] buttons open this modal and a
 // [data-stick-status] line hydrates quietly. All reads/writes happen in here.
 // Auth: Firebase phone OTP → POST /auth/login → signed cookie.
-import { firebaseAuth as firebaseAuthService } from "../services/firebase-auth.js";
+import { mountPhoneSignIn } from "../components/comp-kit/phone-sign-in.js";
 
 const SLUG = "on-a-stick";
 const PLACEHOLDER_USERNAME = /^visitor_[a-z0-9]+$/i;
@@ -25,7 +25,6 @@ class StickRegistrationModal {
     this.me = null; // /auth/me user row or null
     this.competition = null;
     this.registration = null;
-    this.firebaseReady = false;
     this.loaded = false;
   }
 
@@ -79,9 +78,11 @@ class StickRegistrationModal {
     if (role) role.hidden = !this.isRegistered;
     if (this.isRegistered) {
       if (status) status.textContent = "You're going";
+      const isEntrant = this.registration.role === "entrant";
       const label = role?.querySelector("[data-stick-role-label]");
-      if (label) label.textContent = this.registration.role === "entrant" ? "Entrant" : "Judge";
-      ctas.forEach((b) => (b.textContent = "CHANGE MY RSVP"));
+      if (label) label.textContent = isEntrant ? "Entrant" : "Judge";
+      // Entrants have more than RSVP in the modal (their recipe), so keep the label generic
+      ctas.forEach((b) => (b.textContent = isEntrant ? "MY REGISTRATION" : "CHANGE MY RSVP"));
     } else if (this.registration && this.registration.status === "withdrawn") {
       if (status) status.textContent = "You can't make it. Changed your mind?";
       ctas.forEach((b) => (b.textContent = "I CAN MAKE IT AFTER ALL"));
@@ -147,72 +148,15 @@ class StickRegistrationModal {
     return this.stepChoose();
   }
 
-  // ── Step: phone ──
+  // ── Steps: phone + OTP code ──
   stepPhone() {
-    const step = this.setStep(`
-      <h3>Are You Coming?</h3>
-      <p class="reg-note">Confirm your phone number to get started. No account setup, no passwords.</p>
-      <form class="reg-form" data-phone-form>
-        <input type="tel" name="phone" placeholder="Phone number" autocomplete="tel" required />
-        <button type="submit" class="btn-stick">SEND CODE</button>
-      </form>
-      <div id="stickRecaptcha"></div>
-      <p class="reg-error" data-reg-error></p>`);
-    step.querySelector("[data-phone-form]").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const btn = e.target.querySelector("button");
-      const phone = e.target.elements.phone.value;
-      btn.disabled = true;
-      btn.textContent = "SENDING...";
-      try {
-        if (!this.firebaseReady) {
-          await firebaseAuthService.init();
-          this.firebaseReady = true;
-        }
-        await firebaseAuthService.setupRecaptcha("stickRecaptcha");
-        await firebaseAuthService.sendOTP(phone);
-        this.stepCode();
-      } catch (err) {
-        btn.disabled = false;
-        btn.textContent = "SEND CODE";
-        this.showError(err.message);
-      }
-    });
-  }
-
-  // ── Step: OTP code ──
-  stepCode() {
-    const step = this.setStep(`
-      <h3>Check Your Texts</h3>
-      <p class="reg-note">Enter the 6-digit code we sent you.</p>
-      <form class="reg-form" data-code-form>
-        <input type="text" name="code" inputmode="numeric" maxlength="6" placeholder="123456" required />
-        <button type="submit" class="btn-stick">VERIFY</button>
-      </form>
-      <button class="reg-linklike" type="button" data-back>Wrong number? Go back</button>
-      <p class="reg-error" data-reg-error></p>`);
-    step.querySelector("[data-back]").addEventListener("click", () => this.stepPhone());
-    step.querySelector("[data-code-form]").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const btn = e.target.querySelector("button[type=submit]");
-      const code = e.target.elements.code.value.trim();
-      btn.disabled = true;
-      btn.textContent = "VERIFYING...";
-      try {
-        const credential = await firebaseAuthService.verifyOTP(code);
-        const idToken = await credential.user.getIdToken();
-        const login = await fetch("/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ idToken }),
-        });
-        if (!login.ok) throw new Error("Sign-in failed. Please try again.");
-        await this.route({ refresh: true });
-      } catch (err) {
-        btn.disabled = false;
-        btn.textContent = "VERIFY";
-        this.showError(err.message || "Invalid code. Try again.");
-      }
+    mountPhoneSignIn(this.setStep(""), {
+      buttonClass: "btn-stick",
+      copy: {
+        phoneTitle: "Are You Coming?",
+        phoneNote: "Confirm your phone number to get started. No account setup, no passwords.",
+      },
+      onSignedIn: () => this.route({ refresh: true }),
     });
   }
 
@@ -278,6 +222,7 @@ class StickRegistrationModal {
       <h3>See You There</h3>
       <p class="reg-confirmed">${isEntrant ? "COMPETITOR" : "JUDGE"}</p>
       <p class="reg-note">Sat Dec 5, 3:00 arrival &middot; Nick &amp; Lori's, Kent.</p>
+      ${isEntrant ? `<a class="btn-stick" href="/competitions/${SLUG}/enter">MY ENTRY</a>` : ""}
       <div class="reg-manage">
         <button class="reg-linklike" type="button" data-switch-role>
           ${isEntrant ? "Switch to just judging" : "Actually, I'll compete"}

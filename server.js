@@ -10,7 +10,14 @@ if (process.env.NODE_ENV !== "production") {
 const path = require("path");
 const fs = require("fs");
 const cookieParser = require("cookie-parser");
-const { getSupabase, createSanitizer, jsonForScript } = require("./js/utils/server-utils");
+const {
+  getSupabase,
+  createSanitizer,
+  jsonForScript,
+  requireSignedUser,
+  isAdminUser,
+} = require("./js/utils/server-utils");
+const { revealState, groupsFor, ALLERGEN_LABELS } = require("./js/utils/competition-kit");
 const _sanitizer = createSanitizer();
 const sanitizeHtml = (str) => _sanitizer.sanitize(str || "");
 const app = express();
@@ -121,7 +128,7 @@ app.use(async (req, res, next) => {
 
 // Only page renders read navData; API calls and non-HTML files skip the lookups.
 function wantsNavData(req) {
-  if (/^\/(api|auth|notifications)(\/|$)/.test(req.path)) return false;
+  if (/^\/(api|auth|notifications|competitions)(\/|$)/.test(req.path)) return false;
   const ext = path.extname(req.path);
   return !ext || ext === ".html";
 }
@@ -427,15 +434,13 @@ app.get(["/account", "/account.html"], (req, res) => {
   return res.render("account", { currentUser });
 });
 
-// Recipes entered in a competition stay secret until the day after its event_date
+// Competition recipes stay secret until the competition is public (see competition-kit.js)
 async function getSecretCompetitionIds(supabase) {
-  const today = new Date().toISOString().slice(0, 10);
   const { data, error } = await supabase
     .from("recipe_competitions")
-    .select("id")
-    .gte("event_date", today);
+    .select("id, event_date, voting_open, voting_closed_at");
   if (error) throw error;
-  return (data || []).map((c) => c.id);
+  return (data || []).filter((c) => revealState(c) !== "public").map((c) => c.id);
 }
 
 function excludeSecretRecipes(query, secretIds) {
@@ -690,7 +695,8 @@ app.get("/recipes/:slug", async (req, res) => {
 
     return res.render("recipe", {
       currentUser,
-      recipe: { ...recipe, competition_result },
+      recipe: { ...recipe, competition_result, ingredient_sections: groupsFor(recipe) },
+      allergenLabels: ALLERGEN_LABELS,
       recipeComments,
       recentRecipes: [],
       latestCompetition: null,
@@ -949,52 +955,100 @@ app.get("/on-a-stick/guest-list", async (req, res) => {
   }
 });
 
-// Competition platform: reusable judging + results pages (new-model competitions)
-app.get("/competitions/:slug/judge", async (req, res) => {
-  const currentUser =
-    res.locals.navData && res.locals.navData.user ? res.locals.navData.user : null;
-  if (!currentUser) return res.redirect("/");
+// Competition Kit: standalone themed pages per competition (/competitions/:slug/...)
+const competitionsApi = require("./routes/api-competitions");
+const KIT_THEME_CACHE = new Map();
+
+// Skin = css/competitions/<theme>.css; partials fall back from themes/<theme>/ to partials/
+function kitTheme(theme) {
+  const key = /^[a-z0-9-]+$/.test(theme || "") ? theme : null;
+  if (KIT_THEME_CACHE.has(key)) return KIT_THEME_CACHE.get(key);
+  const exists = (...parts) => fs.existsSync(path.join(__dirname, ...parts));
+  const partial = (name) =>
+    key && exists("templates", "competitions", "themes", key, `${name}.ejs`)
+      ? `themes/${key}/${name}`
+      : `partials/${name}`;
+  const kit = {
+    key,
+    css: key && exists("css", "competitions", `${key}.css`) ? `/css/competitions/${key}.css` : null,
+    headExtra: partial("head-extra"),
+    header: partial("header"),
+    footer: partial("footer"),
+  };
+  if (process.env.NODE_ENV === "production") KIT_THEME_CACHE.set(key, kit);
+  return kit;
+}
+
+function kitLocals(competition, page, extra = {}) {
+  const base = `/competitions/${competition.slug}`;
+  const hasRoot = (file) => fs.existsSync(path.join(__dirname, file));
+  return {
+    competition,
+    page,
+    state: revealState(competition),
+    kit: kitTheme(competition.theme),
+    links: {
+      landing: hasRoot(`${competition.slug}.html`) ? `/${competition.slug}` : null,
+      judge: `${base}/judge`,
+      enter: `${base}/enter`,
+      results: `${base}/results`,
+      rubric: `${base}/rubric`,
+    },
+    ...extra,
+  };
+}
+
+async function findKitCompetition(req, res) {
+  const [competition, isAdmin] = await Promise.all([
+    competitionsApi.getCompetitionBySlug(req.params.slug),
+    isAdminUser(requireSignedUser(req)),
+  ]);
+  // Templates read this through res.locals (admin bar + full nav)
+  res.locals.isKitAdmin = isAdmin;
+  if (!competition) res.status(404).send("Competition not found");
+  return competition;
+}
+
+app.get("/competitions/:slug", async (req, res) => {
   try {
-    const supabase = getSupabase();
-    const { data: competition, error } = await supabase
-      .from("recipe_competitions")
-      .select("id, name, slug, theme, event_date, voting_open, favorite_bonus")
-      .eq("slug", req.params.slug)
-      .maybeSingle();
-    if (error) throw error;
-    if (!competition) return res.status(404).send("Competition not found");
-
-    // Per-competition rubric page when one exists (e.g. /on-a-stick-rubric)
-    const rubricFile = `${competition.slug}-rubric.html`;
-    const rubricUrl = fs.existsSync(path.join(__dirname, rubricFile))
-      ? `/${competition.slug}-rubric`
-      : null;
-
-    return res.render("competition-judging", { competition, rubricUrl });
+    const competition = await findKitCompetition(req, res);
+    if (!competition) return;
+    const { links } = kitLocals(competition, null);
+    return res.redirect(links.landing || links.judge);
   } catch (err) {
-    console.error("GET /competitions/:slug/judge error:", err);
-    return res.status(500).send("Failed to load judging page");
+    console.error("GET /competitions/:slug error:", err);
+    return res.status(500).send("Failed to load competition");
+  }
+});
+
+// Judge + enter pages ship the same payload the API returns (already privacy-filtered)
+app.get(["/competitions/:slug/judge", "/competitions/:slug/enter"], async (req, res) => {
+  try {
+    const competition = await findKitCompetition(req, res);
+    if (!competition) return;
+    const page = req.path.endsWith("/enter") ? "enter" : "judge";
+    const payload = await competitionsApi.buildCompetitionPayload(
+      competition,
+      requireSignedUser(req)
+    );
+    return res.render(
+      `competitions/${page}`,
+      kitLocals(competition, page, { payloadJson: jsonForScript(payload) })
+    );
+  } catch (err) {
+    console.error(`GET ${req.path} error:`, err);
+    return res.status(500).send("Failed to load page");
   }
 });
 
 app.get("/competitions/:slug/results", async (req, res) => {
   try {
+    const competition = await findKitCompetition(req, res);
+    if (!competition) return;
+    const locals = kitLocals(competition, "results", { rows: null, categoryAverages: {} });
+    if (locals.state !== "public") return res.render("competitions/results", locals);
+
     const supabase = getSupabase();
-    const { data: competition, error } = await supabase
-      .from("recipe_competitions")
-      .select("id, name, slug, theme, event_date, voting_open, favorite_bonus")
-      .eq("slug", req.params.slug)
-      .maybeSingle();
-    if (error) throw error;
-    if (!competition) return res.status(404).send("Competition not found");
-
-    const today = new Date().toISOString().slice(0, 10);
-    const revealed =
-      competition.voting_open || !competition.event_date || competition.event_date <= today;
-    if (!revealed) {
-      return res.render("competition-results", { competition, rows: [], categoryAverages: {} });
-    }
-
     const [{ data: rows, error: rowsErr }, { data: avgRows, error: avgErr }] = await Promise.all([
       supabase
         .from("competition_leaderboard_view")
@@ -1010,19 +1064,105 @@ app.get("/competitions/:slug/results", async (req, res) => {
     if (rowsErr) throw rowsErr;
     if (avgErr) throw avgErr;
 
-    const categoryAverages = {};
     (avgRows || []).forEach((a) => {
-      (categoryAverages[a.entry_id] = categoryAverages[a.entry_id] || []).push(a);
+      (locals.categoryAverages[a.entry_id] = locals.categoryAverages[a.entry_id] || []).push(a);
     });
-
-    return res.render("competition-results", {
-      competition,
-      rows: rows || [],
-      categoryAverages,
-    });
+    locals.rows = rows || [];
+    return res.render("competitions/results", locals);
   } catch (err) {
     console.error("GET /competitions/:slug/results error:", err);
     return res.status(500).send("Failed to load results");
+  }
+});
+
+app.get("/competitions/:slug/rubric", async (req, res) => {
+  try {
+    const competition = await findKitCompetition(req, res);
+    if (!competition) return;
+    const locals = kitLocals(competition, "rubric");
+
+    const { data: categories, error } = await getSupabase()
+      .from("competition_categories")
+      .select("key, label, description, weight, sort_order, levels")
+      .eq("competition_id", competition.id)
+      .order("sort_order");
+    if (error) throw error;
+    const cats = categories || [];
+    // Optional theme prose: themes/<theme>/rubric/<categoryKey>.ejs and rubric/footer.ejs
+    const rubricPartial = (name) =>
+      locals.kit.key &&
+      /^[a-z0-9_-]+$/.test(name) &&
+      fs.existsSync(
+        path.join(
+          __dirname,
+          "templates",
+          "competitions",
+          "themes",
+          locals.kit.key,
+          "rubric",
+          `${name}.ejs`
+        )
+      )
+        ? `themes/${locals.kit.key}/rubric/${name}`
+        : null;
+    locals.categories = cats.map((c) => ({ ...c, notesPartial: rubricPartial(c.key) }));
+    locals.rubricFooter = rubricPartial("footer");
+    locals.maxTotal = cats.reduce((sum, c) => sum + 5 * c.weight, 0);
+    return res.render("competitions/rubric", locals);
+  } catch (err) {
+    console.error("GET /competitions/:slug/rubric error:", err);
+    return res.status(500).send("Failed to load rubric");
+  }
+});
+
+// Full recipe: public once the competition is public; before that, author only
+app.get("/competitions/:slug/recipes/:recipeSlug", async (req, res) => {
+  try {
+    const competition = await findKitCompetition(req, res);
+    if (!competition) return;
+    const { recipeSlug } = req.params;
+    if (!recipeSlug || recipeSlug.length > 200) return res.status(404).send("Recipe not found");
+
+    const supabase = getSupabase();
+    const { data: recipe, error } = await supabase
+      .from("recipes")
+      .select(
+        "id, user_id, title, slug, description, ingredients, ingredient_groups, steps, notes, prep_time, cook_time, servings, allergens, allergens_other, image_url, users ( username, display_name ), recipe_competition_entries!inner ( competition_id )"
+      )
+      .eq("slug", recipeSlug)
+      .eq("recipe_competition_entries.competition_id", competition.id)
+      .maybeSingle();
+    if (error) throw error;
+
+    const locals = kitLocals(competition, "recipe");
+    const isAuthor = !!recipe && recipe.user_id === requireSignedUser(req);
+    if (!recipe || (locals.state !== "public" && !isAuthor)) {
+      return res.status(404).send("Recipe not found");
+    }
+
+    let result = null;
+    if (locals.state === "public") {
+      const { data } = await supabase
+        .from("competition_leaderboard_view")
+        .select("competition_rank, competition_medal, final_score")
+        .eq("competition_id", competition.id)
+        .eq("recipe_id", recipe.id)
+        .maybeSingle();
+      result = data || null;
+    }
+
+    return res.render("competitions/recipe", {
+      ...locals,
+      recipe,
+      author: (recipe.users && (recipe.users.display_name || recipe.users.username)) || "Someone",
+      groups: groupsFor(recipe),
+      allergenLabels: ALLERGEN_LABELS,
+      isAuthor,
+      result,
+    });
+  } catch (err) {
+    console.error("GET competition recipe error:", err);
+    return res.status(500).send("Failed to load recipe");
   }
 });
 

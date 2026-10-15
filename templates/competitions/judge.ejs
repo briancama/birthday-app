@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <%- include('partials/head', { pageTitle: 'Judging' }) %>
+    <%- include(kit.headExtra) %>
+    <link
+      rel="preload"
+      as="script"
+      href="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"
+    />
+    <link
+      rel="preload"
+      as="script"
+      href="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"
+    />
+  </head>
+
+  <body class="kit<%= kit.key ? ' theme-' + kit.key : '' %>" data-page="judge">
+    <%- include(kit.header) %> <%- include('partials/admin-bar') %>
+
+    <main class="kit-main">
+      <div class="kit-wrap">
+        <div class="kit-page-head">
+          <h1 class="kit-title">Judging</h1>
+          <p class="kit-status" id="judgeStatus"></p>
+        </div>
+        <div id="judgeBanner"></div>
+        <div id="judgeView"></div>
+      </div>
+    </main>
+
+    <%- include(kit.footer) %>
+    <div id="kitModalRoot"></div>
+
+    <script type="application/json" id="kitData">
+      <%- payloadJson %>
+    </script>
+    <script type="module">
+      import { JudgePage } from "/js/pages/comp-kit-judge.js";
+
+      new JudgePage().init();
+    </script>
+  </body>
+</html>

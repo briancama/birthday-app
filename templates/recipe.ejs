@@ -529,15 +529,39 @@
 
             <section class="recipe-ingredients" id="ingredients">
               <h2 class="section-heading section-heading--sm">Ingredients</h2>
+              <% const allergenTags = (recipe.allergens || []).filter((k) => locals.allergenLabels
+              && allergenLabels[k]); %>
+              <% if (allergenTags.length || recipe.allergens_other) { %>
+              <p class="recipe-allergens">
+                <strong>Allergens &amp; diet:</strong>
+                <%= allergenTags.map((k) => k === 'none' ? 'No common allergens' :
+                allergenLabels[k]).concat(recipe.allergens_other ? [recipe.allergens_other] :
+                []).join(', ') %>
+              </p>
+              <% } %>
+              <% const sections = recipe.ingredient_sections || []; %>
+              <% if
+              (!sections.length) { %>
               <ul class="recipe-ingredients__list" aria-label="Ingredient list">
-                <% if (recipe.ingredients && recipe.ingredients.length > 0) { %>
-                <% recipe.ingredients.forEach(function(ing) { %>
-                <li><%= ing %></li>
-                <% }); %>
-                <% } else { %>
                 <li><em>No ingredients listed yet.</em></li>
-                <% } %>
               </ul>
+              <% } %>
+              <% sections.forEach(function(section) { %>
+              <% if (section.title) { %>
+              <h3 class="recipe-ingredients__group"><%= section.title %></h3>
+              <% } %>
+              <ul
+                class="recipe-ingredients__list"
+                aria-label="<%= section.title || 'Ingredient list' %>"
+              >
+                <% section.items.forEach(function(ing) { %>
+                <li>
+                  <%= [ing.qty, ing.unit, ing.item].filter(Boolean).join(' ') %><%= ing.note ? ', ' +
+                  ing.note : '' %>
+                </li>
+                <% }); %>
+              </ul>
+              <% }); %>
             </section>
 
             <section class="recipe-steps" id="instructions">

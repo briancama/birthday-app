@@ -1,0 +1,37 @@
+<% if (locals.isKitAdmin) { %>
+<div class="kit-admin" data-kit-admin data-competition-id="<%= competition.id %>">
+  <div class="kit-wrap kit-admin__inner">
+    <span class="kit-admin__state">
+      Admin · <% if (state === 'hidden') { %>Judging hasn't started. Entries are private.<% } else
+      if (state === 'judging') { %>Judging is open.<% } else { %>Judging is over. Results are
+      public.<% } %>
+    </span>
+    <% if (state === 'hidden') { %>
+    <button type="button" class="kit-btn" data-admin-action="open">Open judging</button>
+    <% } else if (state === 'judging') { %>
+    <button type="button" class="kit-btn kit-btn--plain" data-admin-action="pause">
+      Pause judging
+    </button>
+    <button
+      type="button"
+      class="kit-btn"
+      data-admin-action="close"
+      data-confirm="End judging and publish the results?"
+    >
+      End judging
+    </button>
+    <% } else if (competition.voting_closed_at) { %>
+    <button
+      type="button"
+      class="kit-btn kit-btn--plain"
+      data-admin-action="reopen"
+      data-confirm="Reopen judging? Results go private again."
+    >
+      Reopen judging
+    </button>
+    <% } %>
+    <span class="kit-error" data-admin-error></span>
+  </div>
+</div>
+<script type="module" src="/js/components/comp-kit/admin-bar.js"></script>
+<% } %>

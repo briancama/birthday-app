@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <%- include('partials/head', { pageTitle: 'Results' }) %>
+    <%- include(kit.headExtra) %>
+  </head>
+
+  <body class="kit<%= kit.key ? ' theme-' + kit.key : '' %>" data-page="results">
+    <%- include(kit.header) %> <%- include('partials/admin-bar') %>
+
+    <main class="kit-main">
+      <div class="kit-wrap">
+        <div class="kit-page-head">
+          <h1 class="kit-title">Results</h1>
+        </div>
+
+        <% if (!rows) { %>
+        <p class="kit-empty">Results show up here after judging closes.</p>
+        <% } else if (rows.length === 0) { %>
+        <p class="kit-empty">No scored entries.</p>
+        <% } else { %>
+        <ol class="kit-results">
+          <% rows.forEach((row) => { const avgs = categoryAverages[row.entry_id] || []; %>
+          <li
+            class="kit-result<%= row.competition_medal ? ' kit-result--' + row.competition_medal : '' %>"
+          >
+            <span class="kit-result__rank"><%= row.competition_rank %></span>
+            <div class="kit-result__body">
+              <a
+                class="kit-result__title"
+                href="/competitions/<%= competition.slug %>/recipes/<%= row.recipe_slug %>"
+                ><%= row.title %></a
+              >
+              <span class="kit-result__by">by <%= row.display_name || 'Someone' %></span>
+              <% if (avgs.length) { %>
+              <ul class="kit-result__cats">
+                <% avgs.forEach((a) => { %>
+                <li>
+                  <%= a.category_label %>
+                  <strong><%= Number(a.avg_score).toFixed(1) %></strong>
+                </li>
+                <% }) %>
+              </ul>
+              <% } %>
+            </div>
+            <div class="kit-result__score">
+              <strong
+                ><%= row.final_score != null ? Number(row.final_score).toFixed(1) : '—' %></strong
+              >
+              <% if (competition.favorite_bonus > 0 && row.favorites_count > 0) { %>
+              <span
+                >&#9733;
+                <%= row.favorites_count %></span
+              >
+              <% } %>
+            </div>
+          </li>
+          <% }) %>
+        </ol>
+        <p class="kit-fine">
+          Final score = average judge total<% if (competition.favorite_bonus > 0) { %> +
+          <%=
+          competition.favorite_bonus %>
+          per favorite vote<% } %>.
+        </p>
+        <% } %>
+      </div>
+    </main>
+
+    <%- include(kit.footer) %>
+  </body>
+</html>

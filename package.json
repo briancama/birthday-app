@@ -21,6 +21,7 @@
     "lint:ejs": "ejslint \"templates/**/*.ejs\"",
     "inventory": "node scripts/generate-site-inventory.js",
     "db:pull": "node scripts/db-pull.js",
-    "seed": "node scripts/seed-dev.js"
+    "seed": "node scripts/seed-dev.js",
+    "verify:kit": "node tests/dev/verify-competition-kit.js"
   }
 }

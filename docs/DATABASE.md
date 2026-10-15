@@ -74,6 +74,12 @@ New-model competitions define their own category set (count/labels/weights); a c
 | `competition_judgment_scores` | One score row (1–5) per category per judgment                                      |
 | `competition_registrations`   | role `entrant`/`judge`, status `active`/`withdrawn` (soft withdraw), dish title    |
 
+Competition Kit additions (`sql/2026_10_10_competition_kit.sql`):
+
+- `recipes`: `ingredient_groups` jsonb (sections of qty/unit/item/note; `ingredients[]` stays as a flattened copy), `allergens` text[], `allergens_other`, `image_path` (object in the private `recipe-photos` bucket).
+- `competition_categories.levels` jsonb: optional rubric descriptors `[{ score, label, description }]`.
+- Privacy: `recipe_competition_is_public()` / `recipe_is_public()` drive RLS on `recipes` and `recipe_competition_entries`; `competition_registrations` has no public read; the scoring views and `recipe_detail_view` are revoked from `anon`/`authenticated`.
+
 ### Walktober (2026-10, October step logging)
 
 RLS on with no policies — all access via `routes/api-walktober.js` (service role). See `sql/2026_10_03_walktober.sql`.
