@@ -11,6 +11,11 @@ import {
 } from "../components/comp-kit/kit-utils.js";
 import { mountPhoneSignIn } from "../components/comp-kit/phone-sign-in.js";
 import { scoreInputHtml, updateLevelText } from "../components/comp-kit/score-input.js";
+import {
+  scoreMeterHtml,
+  updateScoreMeter,
+  setMeterStatus,
+} from "../components/comp-kit/score-meter.js";
 
 const MISSING_LABELS = {
   title: "name",
@@ -19,14 +24,24 @@ const MISSING_LABELS = {
   ingredients: "ingredients",
 };
 
+const AUTOSAVE_MS = 900;
+const ARROW_PATHS = { prev: "M15 5 L8 12 L15 19", next: "M9 5 L16 12 L9 19" };
+
 export class JudgePage {
   constructor() {
     this.data = readKitData();
     this.view = document.getElementById("judgeView");
     this.banner = document.getElementById("judgeBanner");
     this.status = document.getElementById("judgeStatus");
+    // Unsaved scores per entry, kept across entries and reloads until saved
+    this.draftKey = `kit-judge-drafts:${this.data.competition.id}`;
+    this.drafts = this.loadDrafts();
+    this.autosave = null;
     this.handlers = {
-      hashchange: () => this.renderView(),
+      hashchange: () => {
+        this.flushAutosave();
+        this.renderView();
+      },
       click: (e) => this.handleClick(e),
       change: (e) => this.handleChange(e),
       submit: (e) => this.handleSubmit(e),
@@ -42,6 +57,7 @@ export class JudgePage {
   }
 
   cleanup() {
+    this.flushAutosave();
     window.removeEventListener("hashchange", this.handlers.hashchange);
     [this.view, this.banner].forEach((el) => el.removeEventListener("click", this.handlers.click));
     this.view.removeEventListener("change", this.handlers.change);
@@ -62,13 +78,36 @@ export class JudgePage {
     return this.data.entries.filter((e) => !e.is_own);
   }
 
-  get maxTotal() {
-    return this.data.categories.reduce((sum, c) => sum + 5 * c.weight, 0);
-  }
-
   isScored(entryId) {
     const j = this.data.myJudgments[entryId];
     return !!j && this.data.categories.every((c) => j.scores?.[c.key] >= 1);
+  }
+
+  isComplete(scores) {
+    return this.data.categories.every((c) => scores?.[c.key] >= 1);
+  }
+
+  // What the scorer shows: an unsaved draft wins over the saved judgment
+  current(entryId) {
+    return this.drafts[entryId] || this.data.myJudgments[entryId] || null;
+  }
+
+  loadDrafts() {
+    try {
+      return JSON.parse(localStorage.getItem(this.draftKey)) || {};
+    } catch {
+      return {};
+    }
+  }
+
+  persistDrafts() {
+    try {
+      if (Object.keys(this.drafts).length)
+        localStorage.setItem(this.draftKey, JSON.stringify(this.drafts));
+      else localStorage.removeItem(this.draftKey);
+    } catch {
+      // private mode / storage full: drafts still live in memory
+    }
   }
 
   total(scores) {
@@ -77,7 +116,7 @@ export class JudgePage {
 
   focusedId() {
     const m = location.hash.match(/^#entry-([0-9a-f-]{36})$/i);
-    return m && this.data.entries.some((e) => e.id === m[1]) ? m[1] : null;
+    return m && this.judgeable.some((e) => e.id === m[1]) ? m[1] : null;
   }
 
   async reload() {
@@ -142,27 +181,69 @@ export class JudgePage {
           : `<p class="kit-empty">No entries yet.</p>`;
       return;
     }
-    this.view.innerHTML = `<ol class="kit-entries">${entries.map((e, i) => this.cardHtml(e, i)).join("")}</ol>`;
+    const ranks = this.ranks();
+    this.view.innerHTML = `<ol class="kit-entries">${this.listOrder()
+      .map((entry) => this.cardHtml(entry, ranks))
+      .join("")}</ol>`;
   }
 
-  cardHtml(entry, index) {
+  // Highest score first, then not-yet-scored (submission order), your own entry last
+  listOrder() {
+    const rank = (entry) =>
+      entry.is_own
+        ? -2
+        : this.isScored(entry.id)
+          ? this.total(this.data.myJudgments[entry.id].scores)
+          : -1;
+    return this.data.entries
+      .map((entry, i) => ({ entry, i, rank: rank(entry) }))
+      .sort((a, b) => b.rank - a.rank || a.i - b.i)
+      .map(({ entry }) => entry);
+  }
+
+  // Judge's own ranking of the entries they've scored; ties share a place
+  ranks() {
+    const totals = this.judgeable
+      .filter((e) => this.isScored(e.id))
+      .map((e) => [e.id, this.total(this.data.myJudgments[e.id].scores)]);
+    return new Map(
+      totals.map(([id, t]) => [id, 1 + totals.filter(([, other]) => other > t).length])
+    );
+  }
+
+  // Star = your entry, number = your rank, empty circle = not scored yet
+  badgeHtml(entry, ranks) {
+    if (entry.is_own)
+      return `<span class="kit-entry__num kit-entry__num--own" title="Your entry"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 L14.9 8.6 L21.5 9.4 L16.6 14 L17.9 20.6 L12 17.3 L6.1 20.6 L7.4 14 L2.5 9.4 L9.1 8.6 Z" /></svg></span>`;
+    const rank = ranks.get(entry.id);
+    return rank
+      ? `<span class="kit-entry__num"><span class="kit-sr">Your rank </span>${rank}</span>`
+      : `<span class="kit-entry__num kit-entry__num--open" aria-hidden="true"></span>`;
+  }
+
+  cardHtml(entry, ranks) {
     const scored = this.isScored(entry.id);
     const judgment = this.data.myJudgments[entry.id];
     const fav = this.favoritesOn && this.data.myFavoriteEntryId === entry.id;
     const stateText = entry.is_own
       ? "Your entry"
-      : scored
-        ? `Scored ${this.total(judgment.scores)}`
-        : this.canJudge
-          ? "Not scored"
-          : "";
+      : this.drafts[entry.id]
+        ? "Not saved"
+        : scored
+          ? `Scored ${this.total(judgment.scores)}`
+          : this.canJudge
+            ? "Not scored"
+            : "";
     const classes = ["kit-entry", entry.is_own && "is-own", scored && "is-scored"]
       .filter(Boolean)
       .join(" ");
+    // Your own entry is listed but never opened in the scorer
+    const tag = entry.is_own ? "div" : "a";
+    const href = entry.is_own ? "" : ` href="#entry-${entry.id}"`;
     return `
       <li>
-        <a class="${classes}" href="#entry-${entry.id}">
-          <span class="kit-entry__num">${index + 1}</span>
+        <${tag} class="${classes}"${href}>
+          ${this.badgeHtml(entry, ranks)}
           <span class="kit-entry__main">
             <span class="kit-entry__title">${escapeHtml(entry.title)}${fav ? ' <span class="kit-fav-mark" aria-label="Your favorite">★</span>' : ""}</span>
             <span class="kit-entry__by">by ${escapeHtml(entry.author)}</span>
@@ -170,30 +251,36 @@ export class JudgePage {
             ${entry.missing.length ? `<span class="kit-flag">Details missing</span>` : ""}
           </span>
           ${stateText ? `<span class="kit-entry__state">${stateText}</span>` : ""}
-        </a>
+        </${tag}>
       </li>`;
   }
 
   renderFocus(id) {
-    const entries = this.data.entries;
+    const entries = this.judgeable;
     const index = entries.findIndex((e) => e.id === id);
     const entry = entries[index];
     const prev = entries[index - 1];
     const next = entries[index + 1];
     const missing = entry.missing.map((k) => MISSING_LABELS[k] || k);
+    const step = (target, dir, label) => {
+      const icon = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${ARROW_PATHS[dir]}" /></svg>`;
+      return target
+        ? `<a class="kit-icon-btn kit-focus__arrow" href="#entry-${target.id}" aria-label="${label}">${icon}</a>`
+        : `<span class="kit-icon-btn kit-focus__arrow" aria-disabled="true">${icon}</span>`;
+    };
 
     this.view.innerHTML = `
       <div class="kit-focus">
         <nav class="kit-focus__nav" aria-label="Entries">
-          <a href="#" data-act="list">&larr; All entries</a>
-          <span>${index + 1} of ${entries.length}</span>
+          <a class="kit-btn kit-btn--plain kit-focus__all" href="#" data-act="list">All entries</a>
           <span class="kit-focus__step">
-            ${prev ? `<a href="#entry-${prev.id}" aria-label="Previous entry">&lsaquo; Prev</a>` : ""}
-            ${next ? `<a href="#entry-${next.id}" aria-label="Next entry">Next &rsaquo;</a>` : ""}
+            ${step(prev, "prev", "Previous entry")}
+            <span class="kit-focus__count">${index + 1} of ${entries.length}</span>
+            ${step(next, "next", "Next entry")}
           </span>
         </nav>
         <article class="kit-card kit-dish">
-          <h2 class="kit-dish__title"><span class="kit-entry__num">${index + 1}</span> ${escapeHtml(entry.title)}</h2>
+          <h2 class="kit-dish__title">${this.badgeHtml(entry, this.ranks())} ${escapeHtml(entry.title)}</h2>
           <p class="kit-dish__by">by ${escapeHtml(entry.author)}</p>
           ${entry.description ? `<p class="kit-dish__desc">${escapeHtml(entry.description)}</p>` : ""}
           ${allergenChips(entry, this.data.allergens)}
@@ -204,49 +291,64 @@ export class JudgePage {
               : ""
           }
         </article>
-        ${this.scorerHtml(entry, next)}
+        ${this.scorerHtml(entry)}
+        ${this.canJudge && !entry.is_own ? this.meterHtml(entry) : ""}
       </div>`;
     window.scrollTo({ top: 0 });
   }
 
-  scorerHtml(entry, next) {
+  meterHtml(entry) {
+    const judgment = this.current(entry.id);
+    const label = this.isScored(entry.id) ? "Update" : "Save";
+    return scoreMeterHtml(this.data.categories, judgment?.scores, {
+      saved: !this.drafts[entry.id] && !!judgment,
+      actionHtml: `<button type="submit" form="judge-form-${entry.id}" class="kit-btn kit-btn--primary" data-save>${label}</button>`,
+    });
+  }
+
+  scorerHtml(entry) {
     if (entry.is_own)
       return `<p class="kit-card kit-empty">This is your entry. You can't score it.</p>`;
     if (!this.canJudge) return "";
-    const judgment = this.data.myJudgments[entry.id];
+    const judgment = this.current(entry.id);
     const fav = this.data.myFavoriteEntryId === entry.id;
     return `
-      <form class="kit-card kit-scorer" data-judge-form="${entry.id}">
+      <form class="kit-card kit-scorer" id="judge-form-${entry.id}" data-judge-form="${entry.id}" novalidate>
         ${this.data.categories.map((c) => scoreInputHtml(c, judgment?.scores?.[c.key])).join("")}
-        <p class="kit-total" data-total>Total ${this.total(judgment?.scores)} / ${this.maxTotal}</p>
         <label class="kit-field">
           <span class="kit-label">Notes (only you see these)</span>
           <textarea class="kit-input" name="notes" rows="2" maxlength="2000">${escapeHtml(judgment?.notes || "")}</textarea>
         </label>
-        <div class="kit-scorer__actions">
-          ${
-            this.favoritesOn
-              ? `<button type="button" class="kit-btn kit-btn--plain kit-fav-btn${fav ? " is-favorite" : ""}" data-act="favorite" data-entry="${entry.id}" aria-pressed="${fav}">
+        ${
+          this.favoritesOn
+            ? `<div class="kit-scorer__actions">
+          <button type="button" class="kit-btn kit-btn--plain kit-fav-btn${fav ? " is-favorite" : ""}" data-act="favorite" data-entry="${entry.id}" aria-pressed="${fav}">
             ${fav ? "★ My favorite" : "☆ Make this my favorite"}
-          </button>`
-              : ""
-          }
-          <button type="submit" class="kit-btn">${this.isScored(entry.id) ? "Update scores" : "Save scores"}</button>
-        </div>
-        <p class="kit-scorer__saved" data-saved role="status"></p>
-        ${next ? `<a class="kit-btn kit-btn--plain kit-next" href="#entry-${next.id}" hidden data-next>Next entry &rsaquo;</a>` : ""}
+          </button>
+        </div>`
+            : ""
+        }
       </form>`;
   }
 
   // ── Events ──
   handleChange(e) {
     const form = e.target.closest("[data-judge-form]");
-    if (!form || e.target.type !== "radio") return;
-    const scores = this.readScores(form);
-    const category = this.data.categories.find((c) => c.key === e.target.name);
-    if (category) updateLevelText(form, category);
-    form.querySelector("[data-total]").textContent =
-      `Total ${this.total(scores)} / ${this.maxTotal}`;
+    if (!form || (e.target.type !== "radio" && e.target.name !== "notes")) return;
+    const entryId = form.dataset.judgeForm;
+    const draft = { scores: this.readScores(form), notes: form.elements.notes.value };
+    this.drafts[entryId] = draft;
+    this.persistDrafts();
+
+    const meter = this.view.querySelector("[data-meter]");
+    if (e.target.type === "radio") {
+      const category = this.data.categories.find((c) => c.key === e.target.name);
+      if (category) updateLevelText(form, category);
+      updateScoreMeter(meter, this.data.categories, draft.scores);
+    } else {
+      setMeterStatus(meter, "not saved");
+    }
+    this.queueAutosave(entryId);
   }
 
   readScores(form) {
@@ -258,37 +360,88 @@ export class JudgePage {
     return scores;
   }
 
-  async handleSubmit(e) {
+  // A fully scored card saves itself shortly after the last tap
+  queueAutosave(entryId) {
+    clearTimeout(this.autosave?.timer);
+    this.autosave = null;
+    if (!this.isComplete(this.drafts[entryId]?.scores)) return;
+    this.autosave = {
+      entryId,
+      timer: setTimeout(() => {
+        this.autosave = null;
+        this.saveJudgment(entryId);
+      }, AUTOSAVE_MS),
+    };
+  }
+
+  flushAutosave() {
+    if (!this.autosave) return;
+    clearTimeout(this.autosave.timer);
+    const { entryId } = this.autosave;
+    this.autosave = null;
+    this.saveJudgment(entryId);
+  }
+
+  // Meter of the scorer currently on screen, if it belongs to this entry
+  meterFor(entryId) {
+    return this.view.querySelector(`#judge-form-${entryId}`)
+      ? this.view.querySelector("[data-meter]")
+      : null;
+  }
+
+  handleSubmit(e) {
     const form = e.target.closest("[data-judge-form]");
     if (!form) return;
     e.preventDefault();
     const entryId = form.dataset.judgeForm;
+    clearTimeout(this.autosave?.timer);
+    this.autosave = null;
     const scores = this.readScores(form);
-    const saved = form.querySelector("[data-saved]");
     const unscored = this.data.categories.find((c) => !scores[c.key]);
     if (unscored) {
-      saved.textContent = `Pick a score for ${unscored.label}.`;
+      setMeterStatus(this.meterFor(entryId), `Score ${unscored.label} first`, "error");
+      form
+        .querySelector(`#score-${CSS.escape(unscored.key)}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
-    const btn = form.querySelector('button[type="submit"]');
-    btn.disabled = true;
-    saved.textContent = "Saving...";
+    this.drafts[entryId] = { scores, notes: form.elements.notes.value };
+    this.persistDrafts();
+    this.saveJudgment(entryId);
+  }
+
+  async saveJudgment(entryId) {
+    const draft = this.drafts[entryId];
+    if (!draft || !this.isComplete(draft.scores)) return;
+    const btn = this.meterFor(entryId)?.querySelector("[data-save]");
+    if (btn) btn.disabled = true;
+    setMeterStatus(this.meterFor(entryId), "saving...");
     try {
-      const notes = form.elements.notes.value;
       await apiJson(`/api/competitions/${this.data.competition.id}/entries/${entryId}/judgment`, {
         method: "POST",
-        body: { scores, notes },
+        body: draft,
       });
-      this.data.myJudgments[entryId] = { scores, notes };
-      btn.textContent = "Update scores";
-      saved.textContent = `Saved. Total ${this.total(scores)}.`;
-      const nextLink = form.querySelector("[data-next]");
-      if (nextLink) nextLink.hidden = false;
+      this.data.myJudgments[entryId] = draft;
+      // a newer tap may have replaced the draft while this one was saving
+      const stillCurrent = this.drafts[entryId] === draft;
+      if (stillCurrent) {
+        delete this.drafts[entryId];
+        this.persistDrafts();
+      }
+      const meter = this.meterFor(entryId);
+      if (meter) {
+        updateScoreMeter(meter, this.data.categories, this.current(entryId).scores, {
+          saved: stillCurrent,
+        });
+        meter.querySelector("[data-save]").textContent = "Update";
+      }
       this.renderStatus();
+      if (!this.focusedId()) this.renderList();
     } catch (err) {
-      saved.textContent = err.message;
+      setMeterStatus(this.meterFor(entryId), err.message, "error");
     } finally {
-      btn.disabled = false;
+      const live = this.meterFor(entryId)?.querySelector("[data-save]");
+      if (live) live.disabled = false;
     }
   }
 
@@ -298,6 +451,7 @@ export class JudgePage {
     const act = btn.dataset.act;
     if (act === "list") {
       e.preventDefault();
+      this.flushAutosave();
       history.pushState(null, "", location.pathname + location.search);
       this.renderView();
       return;
@@ -313,10 +467,9 @@ export class JudgePage {
       return;
     }
     const showError = (msg) => {
-      const el =
-        this.banner.querySelector("[data-error]") ||
-        btn.closest("form")?.querySelector("[data-saved]");
+      const el = this.banner.querySelector("[data-error]");
       if (el) el.textContent = msg;
+      else setMeterStatus(this.view.querySelector("[data-meter]"), msg, "error");
     };
     btn.disabled = true;
     try {

@@ -97,29 +97,40 @@
   text-transform: uppercase;
 }
 
-.theme-on-a-stick .kit-entry__num,
+.theme-on-a-stick .kit-entry__num:not(.kit-entry__num--own),
 .theme-on-a-stick .kit-level__score {
   background: var(--stick-red);
   color: #fff;
   border: 2px solid var(--stick-ink);
 }
 
-.theme-on-a-stick .kit-entries li:nth-child(3n + 2) .kit-entry__num {
+.theme-on-a-stick .kit-entries li:nth-child(3n + 2) .kit-entry__num:not(.kit-entry__num--own) {
   background: var(--stick-blue);
 }
 
-.theme-on-a-stick .kit-entries li:nth-child(3n) .kit-entry__num {
+.theme-on-a-stick .kit-entries li:nth-child(3n) .kit-entry__num:not(.kit-entry__num--own) {
   background: var(--stick-yellow);
   color: var(--stick-ink);
 }
 
-.theme-on-a-stick .kit-score__opt input:checked + span {
-  background: var(--stick-red);
-  color: #fff;
-}
-
 .theme-on-a-stick .reg-form input {
   font-family: var(--kit-font-ui);
+}
+
+/* ---------- score meter: loader shapes loading onto a toothpick ---------- */
+
+.theme-on-a-stick .kit-meter {
+  background: var(--stick-cream);
+}
+
+.theme-on-a-stick .kit-meter__total {
+  color: var(--stick-red);
+  text-shadow: 2px 2px 0 var(--stick-ink);
+}
+
+.theme-on-a-stick .kit-meter__max {
+  color: var(--stick-ink);
+  text-shadow: none;
 }
 
 .theme-on-a-stick .kit-modal__step h3 {

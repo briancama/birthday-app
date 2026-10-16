@@ -489,6 +489,30 @@ body.kit {
   font-size: 1rem;
 }
 
+.kit-entry__num--open {
+  width: 2rem;
+  padding: 0;
+}
+
+.kit-entry__num--own {
+  width: 2.3rem;
+  height: 2.3rem;
+  min-width: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+}
+
+.kit-entry__num--own svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: var(--kit-highlight);
+  stroke: var(--kit-ink);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
 .kit-entry__thumb {
   flex: none;
   width: var(--kit-thumb);
@@ -532,18 +556,70 @@ body.kit {
 
 /* ---------- focused scorer ---------- */
 
+/* sticky so judges can always step between entries or go back to the list */
 .kit-focus__nav {
+  position: sticky;
+  top: 0;
+  z-index: 5;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  margin-bottom: 0.75rem;
-  font-weight: bold;
+  margin: 0 calc(var(--kit-pad) * -1) var(--kit-gap);
+  padding: 0.5rem var(--kit-pad);
+  background: var(--kit-bg);
+  border-bottom: var(--kit-border-w) solid var(--kit-border);
+}
+
+.kit-btn.kit-focus__all {
+  padding: 0.4rem 0.9rem;
+  background: var(--kit-accent-2);
+  color: var(--kit-surface) !important;
+  font-family: var(--kit-font-ui);
+  font-size: 0.85rem;
 }
 
 .kit-focus__step {
   display: flex;
-  gap: 1rem;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.kit-focus__count {
+  min-width: 3.5em;
+  text-align: center;
+  font-family: var(--kit-font-ui);
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.kit-focus__arrow {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--kit-ink) !important;
+  text-decoration: none;
+  box-shadow: var(--kit-check-shadow);
+}
+
+.kit-focus__arrow svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.kit-focus__arrow:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+.kit-focus__arrow[aria-disabled="true"] {
+  opacity: 0.3;
+  box-shadow: none;
+  cursor: default;
 }
 
 .kit-dish__photo {
@@ -598,6 +674,8 @@ body.kit {
   border: none;
   margin: 0 0 1.25rem;
   padding: 0;
+  /* keeps scrolled-to categories clear of the sticky nav and score bar */
+  scroll-margin: 5rem 0 9rem;
 }
 
 .kit-score__label {
@@ -607,18 +685,17 @@ body.kit {
   padding: 0;
 }
 
-.kit-score__desc {
-  margin: 0.15rem 0 0.4rem;
-  font-size: 0.9rem;
-  color: var(--kit-muted);
+.kit-score .kit-score__desc {
+  margin: 0.15rem 0 0.5rem;
 }
 
 .kit-score__options {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.5rem;
 }
 
 .kit-score__opt {
+  position: relative;
   flex: 1;
   cursor: pointer;
 }
@@ -635,33 +712,21 @@ body.kit {
   height: var(--kit-score-size);
   background: var(--kit-surface);
   border: var(--kit-border-w) solid var(--kit-border);
-  border-radius: var(--kit-radius);
+  border-radius: var(--kit-radius-pill);
+  box-shadow: var(--kit-check-shadow);
+  font-family: var(--kit-font-display);
   font-weight: bold;
   font-size: 1.15rem;
-}
-
-.kit-score__opt input:checked + span {
-  background: var(--kit-accent);
-  color: var(--kit-accent-ink);
-  box-shadow: var(--kit-shadow-press);
-}
-
-.kit-score__opt input:focus-visible + span {
-  outline: 3px solid var(--kit-accent-2);
-  outline-offset: 2px;
+  transition:
+    transform 0.08s ease,
+    box-shadow 0.08s ease;
 }
 
 .kit-score__level {
   min-height: 1.3em;
-  margin: 0.35rem 0 0;
-  font-size: 0.9rem;
-}
-
-.kit-total {
-  font-family: var(--kit-font-display);
-  font-weight: bold;
-  font-size: 1.3rem;
-  margin: 0 0 0.75rem;
+  margin: 0.45rem 0 0;
+  font-family: var(--kit-font-ui);
+  font-size: 0.85rem;
 }
 
 .kit-scorer__actions {
@@ -675,14 +740,154 @@ body.kit {
   background: var(--kit-highlight);
 }
 
-.kit-scorer__saved {
-  min-height: 1.3em;
-  margin: 0.5rem 0;
-  font-weight: bold;
+/* ---------- score meter (sticky bar under the scorer) ---------- */
+
+.kit-meter {
+  --kit-meter-stick-max: 22rem;
+  --kit-meter-slide: -26px;
+  --kit-meter-in: 0.32s;
+  --kit-meter-stroke: 3px;
+  /* matches the fill in images/stick/skewer_stick.svg */
+  --kit-meter-pick-fill: #fbd190;
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  /* phones: stick on its own row, total + Save below; wider: one row */
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    "track track"
+    "score action";
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+  margin: var(--kit-gap) calc(var(--kit-pad) * -1) 0;
+  padding: 0.5rem var(--kit-pad) calc(0.6rem + env(safe-area-inset-bottom));
+  background: var(--kit-surface);
+  border-top: var(--kit-border-w) solid var(--kit-border);
 }
 
-.kit-next {
+@media (min-width: 600px) {
+  .kit-meter {
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas: "score track action";
+  }
+}
+
+.kit-meter__action {
+  grid-area: action;
+  justify-self: end;
+}
+
+.kit-meter__action .kit-btn--primary {
+  min-width: 7.5rem;
+  padding: 0.65rem 1.4rem;
+}
+
+.kit-meter__score {
+  grid-area: score;
+  display: flex;
+  flex-direction: column;
+  min-width: 4.75rem;
+}
+
+.kit-meter__total {
+  font-family: var(--kit-font-display);
+  font-weight: bold;
+  font-size: 1.7rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.kit-meter__max {
+  margin-left: 0.15em;
+  font-size: 0.55em;
+  color: var(--kit-muted);
+}
+
+.kit-meter__saved {
+  min-height: 1.2em;
+  margin-top: 0.2rem;
+  font-family: var(--kit-font-ui);
+  font-size: 0.7rem;
+  font-weight: bold;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--kit-muted);
+}
+
+.kit-meter__saved[data-tone="error"] {
+  color: var(--kit-warn);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.kit-meter__track {
+  grid-area: track;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.kit-meter__stick {
+  display: block;
   width: 100%;
+  max-width: var(--kit-meter-stick-max);
+  height: auto;
+  overflow: visible;
+}
+
+.kit-meter__pick path {
+  fill: var(--kit-meter-pick-fill);
+  stroke: var(--kit-ink);
+  stroke-width: 6;
+}
+
+/* off = slid back up the stick and faded; on = in its slot */
+.kit-meter__shape {
+  fill: var(--shape-bg);
+  stroke: var(--kit-ink);
+  stroke-width: var(--kit-meter-stroke);
+  stroke-linejoin: round;
+  opacity: 0;
+  transform: translateX(var(--kit-meter-slide)) scale(0.5);
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  transition:
+    transform var(--kit-meter-in) cubic-bezier(0.3, 1.5, 0.6, 1),
+    opacity var(--kit-meter-in) ease;
+}
+
+.kit-meter__shape.is-on {
+  opacity: 1;
+  transform: none;
+}
+
+.kit-meter__shape[data-band="1"] {
+  --shape-bg: var(--kit-band-1-bg);
+}
+
+.kit-meter__shape[data-band="2"] {
+  --shape-bg: var(--kit-band-2-bg);
+}
+
+.kit-meter__shape[data-band="3"] {
+  --shape-bg: var(--kit-band-3-bg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kit-meter__shape {
+    transition: none;
+  }
+}
+
+.kit-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 /* ---------- forms ---------- */
@@ -887,17 +1092,20 @@ textarea.kit-input--short {
     box-shadow 0.08s ease;
 }
 
-.kit-check:hover span {
+.kit-check:hover span,
+.kit-score__opt:hover span {
   transform: translate(var(--kit-check-lift), var(--kit-check-lift));
   box-shadow: 4px 4px 0 var(--kit-border);
 }
 
-.kit-check:active span {
+.kit-check:active span,
+.kit-score__opt:active span {
   transform: translate(2px, 2px);
   box-shadow: none;
 }
 
-.kit-check input:checked + span {
+.kit-check input:checked + span,
+.kit-score__opt input:checked + span {
   transform: translate(2px, 2px) rotate(var(--kit-stamp-tilt));
   border-color: var(--kit-stamp-ink);
   box-shadow:
@@ -910,7 +1118,8 @@ textarea.kit-input--short {
   text-transform: uppercase;
 }
 
-.kit-check input:focus-visible + span {
+.kit-check input:focus-visible + span,
+.kit-score__opt input:focus-visible + span {
   outline: var(--kit-focus-ring);
   outline-offset: var(--kit-focus-offset);
 }

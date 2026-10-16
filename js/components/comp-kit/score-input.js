@@ -16,11 +16,11 @@ function levelText(category, score) {
 export function scoreInputHtml(category, value) {
   const key = escapeHtml(category.key);
   return `
-    <fieldset class="kit-score" data-score-cat="${key}">
+    <fieldset class="kit-score" id="score-${key}" data-score-cat="${key}">
       <legend class="kit-score__label">
         ${escapeHtml(category.label)} <span class="kit-weight">&times;${category.weight}</span>
       </legend>
-      ${category.description ? `<p class="kit-score__desc">${escapeHtml(category.description)}</p>` : ""}
+      ${category.description ? `<p class="kit-hint kit-score__desc">${escapeHtml(category.description)}</p>` : ""}
       <div class="kit-score__options">
         ${SCORES.map(
           (n) => `
