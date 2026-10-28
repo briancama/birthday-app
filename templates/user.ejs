@@ -435,12 +435,13 @@
               <% if (typeof userAchievements !== 'undefined' && userAchievements.length > 0) { %>
               <% userAchievements.forEach(function(ua) { %>
               <% const ach = ua.achievements || {}; %>
-              <div class="achievement-badge" title="<%= ach.name || '' %>">
+              <% const achName = ua.display_name || ach.name || ''; %>
+              <div class="achievement-badge" title="<%= achName %>">
                 <img
                   src="<%= ach.image_url || '/images/star_icon.gif' %>"
                   alt="<%= (ach.description || '').replace(/\"/g, '&quot;') %>"
                 />
-                <span class="achievement-badge__name"><%= ach.name || '' %></span>
+                <span class="achievement-badge__name"><%= achName %></span>
               </div>
               <% }); %>
               <% } else { %>

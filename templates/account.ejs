@@ -88,28 +88,43 @@ Push test from Account Center admin panel.
       </div>
       <% } %>
 
-      <div class="section" id="achievementsSection">
+      <div class="section visible" id="achievementsSection">
         <div class="account-section-header achievements-header">
-          <h2 class="text-shadow-light" style="margin-bottom: 0">ACHIEVEMENTS</h2>
-          <div
-            class="achievements-counter"
-            id="achievementsCounter"
-            style="font-size: 12px; font-weight: bold; color: var(--accent-color)"
-          ></div>
+          <h2 class="text-shadow-light">ACHIEVEMENTS</h2>
+          <div class="achievements-counter" id="achievementsCounter"></div>
         </div>
+        <p class="account-achievement-intro">
+          Explore BriSpace to unlock badges. These hints can help you find your next one.
+        </p>
+        <p class="account-achievement-scoring">
+          These badges add points to the <a href="/scoreboard">BriSpace leaderboard</a>.
+          Past event badges you've earned are grouped separately below.
+        </p>
         <div class="account-achievement-legend-wrap">
-          <div id="achievementsLegend" class="hide-desktop" style="font-size: 10px; color: #666">
+          <div id="achievementsLegend" class="hide-desktop">
             Click for details
           </div>
         </div>
-        <div id="achievementsList" class="achievements-grid" style="padding-top: 8px"></div>
+        <div id="achievementsList" class="achievements-grid"></div>
+        <p id="achievementsSecrets" class="account-achievement-secrets" hidden></p>
+        <section id="accountBirthdayAchievements" class="account-event-achievements" hidden
+          aria-labelledby="accountBirthdayHeading">
+          <h3 id="accountBirthdayHeading">Brian's Birthday</h3>
+          <p class="account-achievement-scoring">
+            Badges you earned during Brian's 40th birthday. These don't count toward BriSpace rank.
+          </p>
+          <div id="accountBirthdayList" class="achievements-grid"></div>
+        </section>
+        <div id="accountWalktoberAchievements" hidden></div>
       </div>
     </div>
 
+    <script type="application/json" id="accountAchievementsData"><%- achievementsJson %></script>
     <script type="module">
       import { AccountPage } from "/js/pages/account.js";
 
       const page = new AccountPage();
+      page.renderAchievements();
       await page.init();
     </script>
   </body>

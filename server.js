@@ -25,6 +25,7 @@ app.locals.sanitizeHtml = sanitizeHtml;
 // Shared challenge state logic for SSR
 const { computeChallengeState, getChallengeCardOptions } = require("./js/utils/challenge-state.js");
 const { buildMediaSlots } = require("./js/utils/sidebar-media.js");
+const { buildAccountAchievements } = require("./js/utils/account-achievements.js");
 const port = process.env.PORT || 8000;
 
 // Use EJS for server-rendered pages
@@ -423,7 +424,7 @@ app.get(["/friends", "/friends.html"], async (req, res) => {
 });
 
 // Account Center: server-rendered notifications and achievements hub
-app.get(["/account", "/account.html"], (req, res) => {
+app.get(["/account", "/account.html"], async (req, res) => {
   const currentUser =
     res.locals.navData && res.locals.navData.user ? res.locals.navData.user : null;
 
@@ -431,7 +432,30 @@ app.get(["/account", "/account.html"], (req, res) => {
     return res.redirect("/");
   }
 
-  return res.render("account", { currentUser });
+  res.set("Cache-Control", "private, no-store");
+  try {
+    const achievements = await buildAccountAchievements(getSupabase(), currentUser.id);
+    return res.render("account", {
+      currentUser,
+      achievementsJson: jsonForScript(achievements),
+    });
+  } catch (err) {
+    console.error("Account: failed to load achievements", err);
+    return res.status(500).send("Could not load Account Center. Please try again.");
+  }
+});
+
+app.get("/api/account/achievements", async (req, res) => {
+  res.set("Cache-Control", "private, no-store");
+  const userId = requireSignedUser(req);
+  if (!userId) return res.status(401).json({ error: "Sign in to view achievements" });
+
+  try {
+    return res.json(await buildAccountAchievements(getSupabase(), userId));
+  } catch (err) {
+    console.error("Account: failed to refresh achievements", err);
+    return res.status(500).json({ error: "Could not load achievements. Please try again." });
+  }
 });
 
 // Competition recipes stay secret until the competition is public (see competition-kit.js)

@@ -5,6 +5,15 @@ const fs = require("fs");
 const path = require("path");
 const profileThemes = require("../js/constants/profile-themes.json");
 
+// Event achievements (e.g. "1st place") need their event + year outside the Account Center's year sections.
+// Keep in sync with profileAchievementName() in js/pages/user-profile.js.
+function profileAchievementName(achievement) {
+  const name = achievement?.name || "";
+  const match = /^walktober_(\d{4})_/.exec(achievement?.key || "");
+  if (!match || /walktober/i.test(name)) return name;
+  return `Walktober ${match[1]}: ${name}`;
+}
+
 function _getThemeKeyFromUrl(url) {
   if (!url || typeof url !== "string") return "default";
   const fileName = url.split("/").pop() || "";
@@ -260,13 +269,18 @@ router.get("/:identifier", async (req, res) => {
       const { data: ua, error: uaErr } = await supabase
         .from("user_achievements")
         .select(
-          "achievement_id, awarded_at, achievements!inner(name,description,image_url,is_visitor_eligible)"
+          "achievement_id, awarded_at, achievements!inner(key,name,description,image_url,is_visitor_eligible)"
         )
         .eq("user_id", data.user_id || data.id)
         .eq("achievements.is_visitor_eligible", true)
         .eq("achievements.show_on_profile", true)
         .order("awarded_at", { ascending: false });
-      if (!uaErr && Array.isArray(ua)) userAchievements = ua;
+      if (!uaErr && Array.isArray(ua)) {
+        userAchievements = ua.map((row) => ({
+          ...row,
+          display_name: profileAchievementName(row.achievements),
+        }));
+      }
     } catch (e) {
       console.warn("user achievements query failed:", e && e.message ? e.message : e);
     }

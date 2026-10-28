@@ -27,6 +27,14 @@ const PROFILE_THEME_STYLE_VARS = [
 ];
 
 const ABOUT_HTML_MAX_CHARS = 3000;
+
+// Keep in sync with profileAchievementName() in routes/users.js.
+function profileAchievementName(achievement) {
+  const name = achievement?.name || "";
+  const match = /^walktober_(\d{4})_/.exec(achievement?.key || "");
+  if (!match || /walktober/i.test(name)) return name;
+  return `Walktober ${match[1]}: ${name}`;
+}
 const PROFILE_INTERESTS_MAX_CHARS = 1000;
 const PROFILE_INTERESTS_FIELDS = new Set([
   "general_interest",
@@ -1112,7 +1120,7 @@ class UserProfilePage extends BasePage {
       const { data, error } = await this.supabase
         .from("user_achievements")
         .select(
-          "achievement_id, awarded_at, achievements!inner(name, image_url, is_visitor_eligible)"
+          "achievement_id, awarded_at, achievements!inner(key, name, image_url, is_visitor_eligible)"
         )
         .eq("user_id", this.profileUserId)
         .eq("achievements.is_visitor_eligible", true)
@@ -1125,13 +1133,16 @@ class UserProfilePage extends BasePage {
         return;
       }
       container.innerHTML = data
-        .map(
-          (ua) => `
-          <div class="achievement-badge" title="${this._escapeHtml(ua.achievements?.name || ua.achievement_key)}">
-            <img src="${ua.achievements?.image_url || "images/star_icon.gif"}" alt="${this._escapeHtml(ua.achievements?.name || "")}"/>
-            <span class="achievement-badge__name">${this._escapeHtml(ua.achievements?.name || ua.achievement_key)}</span>
-          </div>`
-        )
+        .map((ua) => {
+          const name = this._escapeHtml(
+            profileAchievementName(ua.achievements) || ua.achievement_key
+          );
+          return `
+          <div class="achievement-badge" title="${name}">
+            <img src="${ua.achievements?.image_url || "images/star_icon.gif"}" alt="${name}"/>
+            <span class="achievement-badge__name">${name}</span>
+          </div>`;
+        })
         .join("");
     } catch {
       container.innerHTML = `<p class="achievements-empty">Could not load achievements.</p>`;

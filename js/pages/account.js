@@ -10,18 +10,20 @@ class AccountPage extends BasePage {
     this.hoverReadDelayMs = 200;
     this.pendingReadIds = new Set();
     this.hoverReadTimers = new Map();
+    const achievementsData = document.getElementById("accountAchievementsData");
+    this.achievements = achievementsData ? JSON.parse(achievementsData.textContent) : null;
   }
 
   async onReady() {
     this.setPageTitle("Account Center");
     this.bindAdminPushTestForm();
-    await Promise.all([this.loadNotifications(), this.renderAchievements()]);
+    await this.loadNotifications();
 
     const achCleanup = EventBus.instance.listen("achievement:awarded", (e) => {
       try {
         const userId = e.detail?.userId || e.detail?.user_id;
         if (userId && this.userId && userId === this.userId) {
-          this.renderAchievements();
+          this.loadAchievements();
         }
       } catch (err) {
         console.warn("Error handling achievement:awarded in account", err);
@@ -621,63 +623,140 @@ class AccountPage extends BasePage {
     window.location.href = href;
   }
 
-  async renderAchievements() {
+  async loadAchievements() {
     try {
-      if (!this.userId || !this.supabase) return;
+      const response = await fetch("/api/account/achievements", { credentials: "include" });
+      if (!response.ok) throw new Error(`Failed to load achievements (${response.status})`);
+      this.achievements = await response.json();
+      this.renderAchievements();
+    } catch (err) {
+      console.warn("Account: failed to load achievements", err);
+      this.showError("Could not refresh achievements. Please try again.");
+    }
+  }
 
-      const counterEl = document.getElementById("achievementsCounter");
-      const listEl = document.getElementById("achievementsList");
-      const section = document.getElementById("achievementsSection");
-      if (!counterEl || !listEl || !section) return;
+  renderAchievements() {
+    const counterEl = document.getElementById("achievementsCounter");
+    const listEl = document.getElementById("achievementsList");
+    const secretsEl = document.getElementById("achievementsSecrets");
+    if (!counterEl || !listEl || !secretsEl || !this.achievements) return;
+    const { earned, locked, secretCount, total } = this.achievements;
 
-      const [{ data: allAchievements }, { data: userAwards }] = await Promise.all([
-        this.supabase.from("achievements").select("id,key,name,description,points,metadata"),
-        this.supabase.from("user_achievements").select("achievement_id").eq("user_id", this.userId),
-      ]);
+    counterEl.innerHTML = `${earned.length} / ${total} <span>complete</span>`;
+    const renderEarnedBadge = (achievement) => {
+      const name = achievement.name || achievement.key || "Achievement";
+      const description = achievement.description || "";
+      const points = achievement.points || 0;
+      const initial = name.charAt(0) || "*";
+      const safeName = this.escapeHtml(name);
+      const safeDescription = this.escapeHtml(description);
+      const safeDescriptionAttr = this.escapeAttr(description);
+      const safePoints = this.escapeHtml(String(points));
+      const safeInitial = this.escapeHtml(initial);
+      const icon = achievement.image_url
+        ? `<img class="account-achievement-image" src="${this.escapeAttr(achievement.image_url)}" alt="" loading="lazy">`
+        : safeInitial;
 
-      const awardedIds = Array.isArray(userAwards)
-        ? userAwards.map((row) => row.achievement_id)
-        : [];
-
-      const visibleAchievements = Array.isArray(allAchievements)
-        ? allAchievements.filter(
-            (achievement) => !achievement.metadata?.hidden || awardedIds.includes(achievement.id)
-          )
-        : [];
-
-      const total = visibleAchievements.length;
-      const awarded = visibleAchievements.filter((achievement) =>
-        awardedIds.includes(achievement.id)
-      );
-
-      counterEl.innerHTML = `${awarded.length} / ${total} <span>complete</span>`;
-      section.classList.toggle("visible", awarded.length > 0);
-
-      listEl.innerHTML = awarded
-        .map((achievement) => {
-          const name = achievement.name || achievement.key || "Achievement";
-          const description = achievement.description || "";
-          const points = achievement.points || 0;
-          const initial = name.charAt(0) || "*";
-          const safeName = this.escapeHtml(name);
-          const safeDescription = this.escapeHtml(description);
-          const safeDescriptionAttr = this.escapeAttr(description);
-          const safePoints = this.escapeHtml(String(points));
-          const safeInitial = this.escapeHtml(initial);
-
-          return `
+      return `
             <div class="challenge-badge" tabindex="0" title="${safeDescriptionAttr}" data-title="${safeDescriptionAttr}">
-              <span class="badge-icon" aria-hidden="true">${safeInitial}</span>
+              <span class="badge-icon" aria-hidden="true">${icon}</span>
               <span class="badge-name">${safeName}</span>
               <span class="badge-description hide-mobile">${safeDescription}</span>
               <span class="badge-points">(${safePoints} pts)</span>
             </div>
           `;
-        })
-        .join("");
-    } catch (err) {
-      console.warn("Account: renderAchievements failed", err);
+    };
+    listEl.innerHTML = [
+      earned
+        .filter((achievement) => !achievement.walktober_year && achievement.counts_toward_rank)
+        .map(renderEarnedBadge)
+        .join(""),
+      locked
+        .map(
+          (achievement, index) => `
+          <div class="challenge-badge account-achievement--locked" data-lock-icon="${(index % 6) + 1}" aria-label="Locked achievement">
+            <span class="badge-icon account-locked-icon" aria-hidden="true"></span>
+            <span class="badge-name">???</span>
+            ${achievement.hint ? `<span class="account-achievement-hint">${this.escapeHtml(achievement.hint)}</span>` : ""}
+          </div>
+        `
+        )
+        .join(""),
+    ].join("");
+    secretsEl.textContent = secretCount > 0 ? `+${secretCount} secret ones` : "";
+    secretsEl.hidden = secretCount === 0;
+    const birthdaySection = document.getElementById("accountBirthdayAchievements");
+    const birthdayList = document.getElementById("accountBirthdayList");
+    if (birthdaySection && birthdayList) {
+      const birthday = earned.filter(
+        (achievement) => !achievement.walktober_year && !achievement.counts_toward_rank
+      );
+      birthdaySection.hidden = birthday.length === 0;
+      birthdayList.innerHTML = birthday.map(renderEarnedBadge).join("");
     }
+    this.renderWalktoberAchievements(earned.filter((achievement) => achievement.walktober_year));
+  }
+
+  renderWalktoberAchievements(achievements) {
+    const container = document.getElementById("accountWalktoberAchievements");
+    if (!container) return;
+    container.hidden = achievements.length === 0;
+    const years = new Map();
+    for (const achievement of achievements) {
+      const year = achievement.walktober_year;
+      if (!years.has(year)) years.set(year, []);
+      const awards = years.get(year);
+      const previous = achievement.ladder
+        ? awards.findIndex((award) => award.ladder === achievement.ladder)
+        : -1;
+      if (previous === -1) {
+        awards.push({ ...achievement });
+      } else {
+        const points = awards[previous].points + achievement.points;
+        if (achievement.tier > awards[previous].tier) {
+          awards[previous] = { ...achievement, points };
+        } else {
+          awards[previous].points = points;
+        }
+      }
+    }
+
+    container.innerHTML = [...years.entries()]
+      .sort(([a], [b]) => b - a)
+      .map(
+        ([year, awards]) => `
+        <section class="account-event-achievements" aria-labelledby="accountWalktoberHeading-${year}">
+          <h3 id="accountWalktoberHeading-${year}">Walktober ${year} achievements</h3>
+          <p class="account-achievement-scoring">
+            Your highest earned ladder tiers are shown. Every earned tier still counts toward BriSpace rank.
+            <a href="/walktober">Visit Walktober</a>
+          </p>
+          <ul class="account-walktober-list">
+            ${awards
+              .map((achievement) => {
+                const name = this.escapeHtml(achievement.name);
+                const details = `${achievement.name} (${achievement.walktober_year}): ${achievement.description}`;
+                const icon = achievement.image_url
+                  ? `<img src="${this.escapeAttr(achievement.image_url)}" alt="" loading="lazy">`
+                  : this.escapeHtml(achievement.name.charAt(0) || "*");
+                return `
+          <li class="account-walktober-award" tabindex="0" title="${this.escapeAttr(details)}">
+            <span class="account-walktober-icon${achievement.tier ? " account-walktober-icon--ladder" : ""}" aria-hidden="true">
+              ${icon}
+              ${achievement.tier ? `<span class="account-walktober-tier">${this.escapeHtml(String(achievement.tier))}</span>` : ""}
+            </span>
+            <span class="account-walktober-name">${name}</span>
+            <span class="account-walktober-points">${this.escapeHtml(String(achievement.points))} pts</span>
+            <span class="account-walktober-details">${this.escapeHtml(details)}</span>
+          </li>
+        `;
+              })
+              .join("")}
+          </ul>
+        </section>
+      `
+      )
+      .join("");
   }
 
   escapeHtml(value) {

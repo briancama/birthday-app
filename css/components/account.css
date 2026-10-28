@@ -1,4 +1,25 @@
 .account-container {
+  --account-locked-opacity: 0.9;
+  --account-locked-grayscale: 0.2;
+  --account-locked-icon: url("/images/cat-keyhole_achievement-lock.gif");
+  --account-locked-icon-2: url("/images/eye-keyhole_achievement-lock.gif");
+  --account-locked-icon-3: url("/images/key-turn_achievement-lock.gif");
+  --account-locked-icon-4: url("/images/safe-cracker_achievement-lock.gif");
+  --account-locked-icon-5: url("/images/safe_achievement-lock.gif");
+  --account-locked-icon-6: url("/images/wing-key_achievement-lock.gif");
+  --account-locked-icon-size: 32px;
+  --account-achievement-image-size: 32px;
+  --account-wt-icon-size: 48px;
+  --account-wt-ladder-height: 68px;
+  --account-wt-tier-top: 5px;
+  --account-wt-tier-size: 12px;
+  --account-wt-tier-color: #fff;
+  --account-wt-tier-shadow: #32174a;
+  --account-wt-gap: 1rem;
+  --account-event-copy-gap: 1.25rem;
+  --account-wt-caption-width: 100px;
+  --account-wt-caption-size: 10px;
+  --account-wt-caption-gap: 0.35rem;
   margin-top: 2rem;
 }
 .account-intro {
@@ -343,6 +364,190 @@
   margin-bottom: 0.5rem;
 }
 
+.account-container .achievements-header h2 {
+  margin-bottom: 0;
+}
+
+.account-container .achievements-counter {
+  font-size: 12px;
+}
+
+.account-achievement-intro,
+.account-achievement-scoring,
+.account-achievement-secrets {
+  font-family: "Courier New", monospace;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.account-container #achievementsLegend {
+  font-size: 10px;
+  color: #666;
+}
+
+.account-achievement-image {
+  width: var(--account-achievement-image-size);
+  height: var(--account-achievement-image-size);
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+.account-container .account-achievement--locked {
+  opacity: var(--account-locked-opacity);
+  filter: grayscale(var(--account-locked-grayscale));
+  cursor: default;
+  max-width: 100%;
+}
+
+.account-achievement--locked::after {
+  display: none;
+}
+
+.account-container .achievements-grid .account-achievement--locked .account-locked-icon {
+  background: var(--account-slot-icon, var(--account-locked-icon)) center / contain no-repeat #ddd;
+  width: var(--account-locked-icon-size);
+  min-width: var(--account-locked-icon-size);
+  height: var(--account-locked-icon-size);
+}
+
+.account-achievement--locked[data-lock-icon="2"] {
+  --account-slot-icon: var(--account-locked-icon-2);
+}
+.account-achievement--locked[data-lock-icon="3"] {
+  --account-slot-icon: var(--account-locked-icon-3);
+}
+.account-achievement--locked[data-lock-icon="4"] {
+  --account-slot-icon: var(--account-locked-icon-4);
+}
+.account-achievement--locked[data-lock-icon="5"] {
+  --account-slot-icon: var(--account-locked-icon-5);
+}
+.account-achievement--locked[data-lock-icon="6"] {
+  --account-slot-icon: var(--account-locked-icon-6);
+}
+
+.account-event-achievements {
+  margin-top: 1.5rem;
+  border-top: 2px solid #694184;
+  padding-top: 1rem;
+}
+
+.account-event-achievements h3 {
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.account-event-achievements > .account-achievement-scoring {
+  margin-bottom: var(--account-event-copy-gap);
+}
+
+.account-walktober-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--account-wt-gap);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.account-walktober-award {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--account-wt-caption-gap);
+  width: var(--account-wt-caption-width);
+  max-width: 100%;
+  font:
+    var(--account-wt-caption-size)/1.2 "Courier New",
+    monospace;
+  text-align: center;
+}
+
+.account-walktober-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--account-wt-icon-size);
+  height: var(--account-wt-ladder-height);
+}
+
+.account-walktober-icon img {
+  width: var(--account-wt-icon-size);
+  height: var(--account-wt-icon-size);
+  object-fit: contain;
+}
+
+.account-walktober-icon--ladder {
+  width: auto;
+}
+
+.account-walktober-icon--ladder img {
+  height: var(--account-wt-ladder-height);
+  width: auto;
+}
+
+.account-walktober-tier {
+  position: absolute;
+  top: var(--account-wt-tier-top);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: var(--account-wt-tier-size);
+  font-weight: bold;
+  line-height: 1;
+  color: var(--account-wt-tier-color);
+  text-shadow: 1px 1px 0 var(--account-wt-tier-shadow);
+}
+
+.account-walktober-name {
+  font-weight: bold;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.account-walktober-points {
+  white-space: nowrap;
+}
+
+.account-walktober-details {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  z-index: 1;
+  width: 220px;
+  max-width: 70vw;
+  padding: 0.5rem;
+  background: #fff;
+  color: #222;
+  border: 2px solid #694184;
+}
+
+.account-walktober-award:hover .account-walktober-details,
+.account-walktober-award:focus .account-walktober-details {
+  display: block;
+}
+
+.account-walktober-award:focus-visible {
+  outline: 2px solid #694184;
+  outline-offset: 3px;
+}
+
+.account-achievement--locked .badge-name {
+  width: auto;
+  min-width: 0;
+}
+
+.account-achievement-hint {
+  font-size: 9px;
+  color: #444;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
 @media (min-width: 900px) {
   .account-notification-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -369,5 +574,28 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 0.08rem;
+  }
+}
+
+@media (max-width: 726px) {
+  .account-container .challenge-badge {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .account-container .challenge-badge .badge-name {
+    min-width: 0;
+    width: auto;
+    overflow-wrap: anywhere;
+  }
+
+  .account-container .challenge-badge .badge-points {
+    min-width: 0;
+  }
+
+  .account-achievement-hint {
+    grid-column: 2 / -1;
   }
 }

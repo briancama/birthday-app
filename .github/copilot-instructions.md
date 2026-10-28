@@ -107,6 +107,17 @@ Always implement and call `cleanup()` in pages/components to remove event listen
   - `templates/partials/navigation-visitor.ejs`
   - `templates/partials/navigation.ejs`
 - Keep server-side nav hydration in `server.js` aligned with badge rendering expectations.
+- The achievements section is always visible to signed-in users, including users with no awards. Earned badges retain their details and use `image_url` when available (first-letter fallback).
+- `js/utils/account-achievements.js` builds the server-filtered payload for the initial HTML and signed-in `GET /api/account/achievements` refresh. Never fetch the full achievement catalog from AccountPage or send unearned secret names/hints to the browser.
+- Unearned slots show `???` plus a one-line `metadata.hint` when available, never points (points are also omitted from the locked payload). Only visitor-eligible, profile-visible, non-Walktober achievements get slots; unearned birthday/event achievements and Walktober awards are omitted because these events cannot be earned again. Earned achievements remain visible regardless of these flags.
+- Unearned hidden achievements in that discovery scope contribute only to a single `+N secret ones` line. Completion totals count earned badges plus visible locked slots, excluding undiscovered secrets and omitted tiers.
+- Hint copy lives in `achievements.metadata.hint`, set per key in `sql/2026_10_28_account_achievement_hints.sql` (edit and re-run). The same file seeds `TODO hint` for any other slot-eligible row without copy (skips `walktober_<year>_*`). New visitor-eligible achievements need a hint row added.
+- Locked visuals live in `css/components/account.css`: `--account-locked-opacity`, `--account-locked-grayscale`, `--account-locked-icon` (first image), `--account-locked-icon-2` through `-6`, and `--account-locked-icon-size`. The six `images/*_achievement-lock.gif` assets repeat across locked slots via `data-lock-icon` (1 through 6), independently of the earned badge count. Each slot keeps its assigned GIF; there is no timed image swapping or timer cleanup. GIFs retain their native animation.
+- Account achievement groups use `is_visitor_eligible` from the server: non-eligible earned badges go under "Brian's Birthday", without per-badge scoring labels. The section explains that birthday points do not count toward BriSpace rank. This is presentation only; leaderboard scoring remains unchanged, including Walktober points.
+- Earned `walktober_<year>_*` achievements appear in earned-only event sections titled "Walktober <year> achievements" (newest year first), without repeating the year beneath icons. Each year's Ghost Writer (streak) and Ghoul Getter (goal_days) ladders show only the highest earned tier; all earned tiers still count toward points and completion totals. Server-supplied year/ladder/tier data is limited to earned badges; show tier numbers over ghost/ghoul art and retain names, descriptions, and earned points. Unearned Walktober awards remain omitted. Size/overlay knobs are `--account-wt-*` in `account.css`.
+
+- Collapsed Walktober ladder icons show the sum of points from every earned tier in that ladder/year, not just the highest tier's points. Aggregation is display-only and must not mutate the earned payload or inflate totals on re-render.
+- Account event-copy spacing and Walktober caption layout use `--account-event-copy-gap`, `--account-wt-caption-width`, `--account-wt-caption-size`, and `--account-wt-caption-gap`. Tier overlays use line-height 1 like Walktober so the number stays in the artwork's top blank space; captions wrap within their badge column.
 
 ### Notification Action Destinations (2026)
 
@@ -152,6 +163,7 @@ Always implement and call `cleanup()` in pages/components to remove event listen
 - Keep participant-only achievements (`all_assigned_completed`, `first_challenge`, `three_challenges`, `the_challenger`) excluded from Brispace ranking unless requirements change.
 - No schema change is required in `user_achievements` for this split; filtering happens via the achievement catalog flag and leaderboard view.
 - `achievements.show_on_profile` (default true) keeps event-only achievements (e.g. Walktober ladder tiers) off Brispace profile badges. Points still count on every leaderboard, and Account Center / dashboard lists still show them. Both profile queries (`routes/users.js`, `js/pages/user-profile.js`) filter on it.
+- Profile badges label `walktober_<year>_*` achievements as "Walktober <year>: <name>" unless the name already says Walktober (`profileAchievementName()`, duplicated in both profile files; keep them in sync). This keeps short names like "1st place" readable outside the Account Center's year sections.
 
 ### Slot-Based Media System (2026 Ads & GIFs)
 
@@ -214,6 +226,9 @@ October step-logging event at `/walktober` (Brispace layout, `theme-walktober` b
 - List row markup is shared via `js/components/walktober-lists.js`.
 - Crew distance line: `crewTotal()` adds one Halloween comparison under the crew total (sidebar + leaderboard). The crew total picks the band and the count is live, rounded down. Bands, lengths, and copy live in `js/constants/walktober-distances.js`; re-space the `from` thresholds each year to fit that crew's pace. The first band starts at 1 step, so the line shows as soon as anyone logs.
 - Achievements are per-year keys: `walktober_<year>_gold|silver|bronze` (dense rank by total steps, ties share) and `walktober_<year>_goal_average` (total ≥ goal × days). Awarded only by the admin "Close Walktober" action (`POST /api/walktober/:year/close`), which is idempotent and sends `walktober_award` notifications.
+- The 2026 Most Steps achievement artwork uses `/images/1st-walktober-2026.avif`, `/images/2nd-walktober-2026.avif`, and `/images/3rd-walktober-2026.avif`, set via `sql/2026_10_28_walktober_2026_award_art.sql`. Keep artwork in catalog `image_url` so Account Center, Walktober, and profile badges stay aligned; generic leaderboard medal icons are unchanged.
+- The 2026 Goal Met achievement (`walktober_2026_goal_average`) uses `/images/frankenstein-finish.gif`, set via the same file. This is the season goal award, not the Ghoul Getter daily-goal ladder or Count von Count full-month logging award.
+- The 2026 medal names are "1st place", "2nd place", and "3rd place" (same file); descriptions retain the Most Steps criteria, and achievement keys/points remain unchanged.
 - Exception: entry achievements (`sql/2026_10_05_walktober_ladders.sql`) are checked on every step save by `awardEntryAchievements`:
   - Streak ladder `walktober_<year>_streak_{5,10,15,20,25,31}`: longest run of on-time days (`created_at` < `step_date` 00:00 UTC + `ON_TIME_WINDOW_HOURS` (60h = end of the next day in UTC-12), plus `LAUNCH_GRACE`). 1 pt each, `show_on_profile = false`. The page's current streak stays alive while yesterday is unlogged but still inside that window, and the streak chip nudges "Log yesterday's steps to keep it going."
   - Goal ladder `walktober_<year>_goal_days_{5,...,31}`: total days at or above goal, any order. 1 pt each, `show_on_profile = false`.
