@@ -16,7 +16,9 @@ import {
   stepsRow,
   listGap,
   crewTotal,
-  distanceLine,
+  distanceLines,
+  deadlineLabel,
+  countdownText,
 } from "../components/walktober-lists.js";
 
 const GOAL_SUGGESTIONS = [5000, 7500, 10000, 12500, 15000];
@@ -25,6 +27,8 @@ const REFRESH_FAILED = "Saved, but the page couldn't refresh. Reload to see it."
 const WRAP_INTRO =
   "That's a wrap! Thanks to everyone who walked through October. Here's how the crew finished.";
 const WRAP_HEADER = "Congratulations, walkers!";
+// Keep in step with --wt-haunt-duration in walktober.css
+const DISTANCE_ROTATE_MS = 8000;
 const PODIUM_ART = { 1: "gold", 2: "silver", 3: "bronze" };
 const PODIUM_LABELS = { 1: "1st", 2: "2nd", 3: "3rd" };
 const SKULL_GIF = `<img class="wt-pumpkin-gif wt-pumpkin-gif--skull" data-pumpkin-gif="skull"
@@ -65,6 +69,8 @@ class WalktoberPage extends BrispacePage {
     pumpkins.addEventListener("finale:end", onFinaleEnd);
     pumpkins.init();
     const stopStaleWatch = onStaleReturn(() => this.refresh());
+    const distanceTimer = setInterval(() => this.rotateDistance(), DISTANCE_ROTATE_MS);
+    const deadlineTimer = setInterval(() => this.renderDeadline(), 1000);
 
     this.eventCleanup.push(() => {
       main.removeEventListener("click", onMainClick);
@@ -76,6 +82,8 @@ class WalktoberPage extends BrispacePage {
       pumpkins.removeEventListener("finale:end", onFinaleEnd);
       pumpkins.destroy();
       stopStaleWatch();
+      clearInterval(distanceTimer);
+      clearInterval(deadlineTimer);
     });
 
     // Last: Firebase SDK load can stall or be blocked, and step logging doesn't need it
@@ -212,6 +220,7 @@ class WalktoberPage extends BrispacePage {
       document.getElementById("walktoberIntro").textContent = WRAP_INTRO;
       document.getElementById("walktoberHeroHeader").textContent = WRAP_HEADER;
     }
+    this.renderDeadline();
     this.renderHeadline(hasGoal);
     this.renderResults();
     this.renderJoin(hasGoal);
@@ -219,6 +228,31 @@ class WalktoberPage extends BrispacePage {
     this.renderStats(hasGoal);
     this.renderCommunity();
     this.renderAdmin();
+  }
+
+  // Ticks every second; only text changes, so the banner never resizes.
+  renderDeadline() {
+    const el = document.getElementById("walktoberDeadline");
+    const closeAt = this.season.entries_close_at;
+    if (!el || !closeAt) return;
+    if (this.results || this.season.is_closed) {
+      el.hidden = true;
+      return;
+    }
+    const left = Date.parse(closeAt) - Date.now();
+    const past = left <= 0;
+    // Crossing the deadline: refetch once so the calendar locks
+    if (past && !el.classList.contains("is-past") && this.season.is_editable) {
+      this.refresh();
+    }
+    el.classList.toggle("is-past", past);
+    document.getElementById("walktoberDeadlineTitle").textContent = past
+      ? "Step entries are closed"
+      : "Last call for steps!";
+    document.getElementById("walktoberDeadlineNote").textContent = past
+      ? "Final results are coming soon."
+      : `Log any missing days before entries close ${deadlineLabel(closeAt)}.`;
+    document.getElementById("walktoberDeadlineClock").textContent = countdownText(left);
   }
 
   renderHeadline(hasGoal) {
@@ -371,7 +405,6 @@ class WalktoberPage extends BrispacePage {
           <div class="walktober-headline">${this.renderFinalHeadline(this.computeStats())}</div>
         </section>`
       : "";
-    const awards = this.me?.daily_goal ? this.renderAwards() : "";
     el.innerHTML = `
       ${
         r.preview
@@ -397,12 +430,11 @@ class WalktoberPage extends BrispacePage {
           ${this.renderGoalMet(r, myId)}
         </section>
       </div>
-      <a class="walktober-more-link" href="${LEADERBOARD_URL}#longest-streaks">Streaks and daily boards &raquo;</a>
-      ${awards ? `<section class="myspace-section">${awards}</section>` : ""}`;
+      <a class="walktober-more-link" href="${LEADERBOARD_URL}#longest-streaks">Streaks and daily boards &raquo;</a>`;
   }
 
   renderCrewWrap(crew) {
-    const distance = distanceLine(crew.total_steps);
+    const lines = distanceLines(crew.total_steps);
     return `
       <div class="walktober-wrap">
         <img class="walktober-wrap__gif" src="/images/party-hats.gif" alt="" />
@@ -414,7 +446,31 @@ class WalktoberPage extends BrispacePage {
         </div>
         <img class="walktober-wrap__gif" src="/images/party-hats.gif" alt="" />
       </div>
-      ${distance ? `<p class="walktober-wrap__distance">${distance}</p>` : ""}`;
+      ${
+        lines.length
+          ? `<p class="walktober-wrap__distance">${lines
+              .map(
+                (line, i) =>
+                  `<span class="walktober-wrap__line${i ? "" : " is-active"}"${i ? ' aria-hidden="true"' : ""}><span class="visually-hidden">${line}</span>${hauntedLetters(line)}</span>`
+              )
+              .join("")}</p>`
+          : ""
+      }`;
+  }
+
+  // Steps the results-page distance line to the next comparison.
+  rotateDistance() {
+    const lines = [...document.querySelectorAll("#walktoberHeadline .walktober-wrap__line")];
+    if (lines.length < 2) return;
+    const current = Math.max(
+      0,
+      lines.findIndex((l) => l.classList.contains("is-active"))
+    );
+    const next = (current + 1) % lines.length;
+    lines[current].classList.remove("is-active");
+    lines[current].setAttribute("aria-hidden", "true");
+    lines[next].classList.add("is-active");
+    lines[next].removeAttribute("aria-hidden");
   }
 
   renderPodium(r, myId) {
@@ -600,7 +656,7 @@ class WalktoberPage extends BrispacePage {
     const editNote = this.season.is_closed
       ? `Walktober ${this.year} is closed.`
       : this.season.has_ended && this.season.is_editable
-        ? `October's over. You can still fill in missing days until ${longDate(this.season.edit_until)}.`
+        ? `October's over. You can still fill in missing days until ${this.season.entries_close_at ? deadlineLabel(this.season.entries_close_at) : longDate(this.season.edit_until)}.`
         : "";
     const daysOnTop = this.me.standing?.days_on_top || 0;
 
@@ -690,7 +746,13 @@ class WalktoberPage extends BrispacePage {
         ${topList}
         ${moreLink()}
       </div>
-      ${this.results ? "" : this.renderLatestLeader(community.daily_leaders, myId)}`;
+      ${
+        this.results
+          ? this.me?.daily_goal
+            ? this.renderAwards()
+            : ""
+          : this.renderLatestLeader(community.daily_leaders, myId)
+      }`;
   }
 
   // dailyLeaders arrives sorted by date from the server.
@@ -748,7 +810,7 @@ class WalktoberPage extends BrispacePage {
       action = `<p>Available after ${longDate(this.season.ends_on)}.</p>`;
     } else {
       const backfillWarning = this.season.is_editable
-        ? `<p><strong>Backfill is open until ${longDate(this.season.edit_until)}.</strong> Closing now locks everyone's entries.</p>`
+        ? `<p><strong>Backfill is open until ${this.season.entries_close_at ? deadlineLabel(this.season.entries_close_at) : longDate(this.season.edit_until)}.</strong> Closing now locks everyone's entries.</p>`
         : "";
       action = `${backfillWarning}<button type="button" class="btn btn--primary" data-action="close-season">Close Walktober ${this.year}</button>`;
     }
@@ -940,6 +1002,23 @@ function callout({ title, art, pts = "", body }) {
 function bigDayPlace(place, art) {
   if (!art?.image_url) return placeCell(place, true);
   return `<span class="walktober-list__place walktober-list__place--art"><img src="${escapeHtml(art.image_url)}" alt="#${place}" /></span>`;
+}
+
+// One span per letter (inside a no-wrap span per word) for the haunted-text animation.
+// --o is the letter's distance from the middle of the line, used to spread letters out before they settle.
+function hauntedLetters(text) {
+  const mid = ([...text].length - 1) / 2;
+  let i = 0;
+  const words = text.split(" ").map((word) => {
+    const letters = [...word]
+      .map(
+        (ch) => `<span class="wt-haunt__char" style="--o: ${i++ - mid}">${escapeHtml(ch)}</span>`
+      )
+      .join("");
+    i += 1;
+    return `<span class="wt-haunt__word">${letters}</span>`;
+  });
+  return `<span aria-hidden="true">${words.join(" ")}</span>`;
 }
 
 function shortDate(date) {

@@ -1,5 +1,12 @@
 /* Walktober: Brispace layout with a Halloween skin. Swap gifs/colors via the tokens below. */
 
+/* Typewriter face for the results-page haunted distance line (Apache 2.0, self-hosted) */
+@font-face {
+  font-family: "Special Elite";
+  src: url("/fonts/special-elite.woff2") format("woff2");
+  font-display: swap;
+}
+
 .myspace.theme-walktober {
   --wt-orange: #ff6600;
   --wt-orange-bright: #ff9900;
@@ -48,6 +55,16 @@
   --wt-distance-color: var(--wt-orange-bright);
   --wt-distance-gap: 0.35rem;
   --wt-distance-skull-inset: 4rem;
+  /* Results-page haunted distance line; duration stays just under DISTANCE_ROTATE_MS (8s).
+     Letters settle by 25%, hold still until 85% for reading, then float off. */
+  --wt-haunt-duration: 7.9s;
+  --wt-haunt-font: "Special Elite", "Courier New", monospace;
+  --wt-haunt-size: 15px;
+  --wt-haunt-spread: 0.35em;
+  --wt-haunt-glow: 20px;
+  --wt-haunt-glow-color: #fff;
+  --wt-haunt-float: 60px;
+  --wt-haunt-perspective: 1000px;
 
   /* Walktober achievements strip: badge size + tier number placement */
   --wt-award-size: 48px;
@@ -79,6 +96,10 @@
   --wt-podium-base: 0.5rem;
   --wt-podium-rise: 1rem;
   --wt-callout-art: 32px;
+  --wt-deadline-bg: #2a0052;
+  --wt-deadline-gap: 0.75rem;
+  --wt-deadline-gif-height: 48px;
+  --wt-deadline-clock-size: 1.4em;
   --wt-bigday-art: 44px;
 
   --wt-loading-gif-height: 40px;
@@ -140,6 +161,85 @@
 .theme-walktober .myspace-section h3.myspace-section-alt-header {
   background: var(--wt-purple);
   color: #fff;
+}
+
+/* ── Last-call banner (entry cutoff countdown) ────────────────────────── */
+
+.walktober-deadline {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: var(--wt-deadline-gap);
+  padding: 0.5rem 0.75rem;
+  border: 3px double var(--wt-orange-bright);
+  background: var(--wt-deadline-bg);
+  color: var(--wt-text);
+}
+
+.walktober-deadline[hidden] {
+  display: none;
+}
+
+.walktober-deadline__gif {
+  width: auto;
+  height: var(--wt-deadline-gif-height);
+  flex-shrink: 0;
+}
+
+.walktober-deadline__gif--flip {
+  transform: scaleX(-1);
+}
+
+.walktober-deadline__text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.walktober-deadline__title {
+  font-family: "Cinzel", Verdana, serif;
+  font-size: 1.2em;
+  color: var(--wt-orange-bright);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.walktober-deadline__note {
+  font-size: 12px;
+}
+
+/* Fixed-width digits so the ticking clock never changes width */
+.walktober-deadline__clock {
+  flex-shrink: 0;
+  padding: 0.25rem 0.5rem;
+  border: 2px solid var(--wt-purple-light);
+  background: var(--wt-black);
+  color: var(--wt-hit-bg);
+  font-family: "Courier New", monospace;
+  font-size: var(--wt-deadline-clock-size);
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.walktober-deadline.is-past .walktober-deadline__clock {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .walktober-deadline {
+    flex-wrap: wrap;
+  }
+
+  .walktober-deadline__gif {
+    display: none;
+  }
+
+  .walktober-deadline__clock {
+    width: 100%;
+    text-align: center;
+  }
 }
 
 /* ── Hero ─────────────────────────────────────────────────────────────── */
@@ -943,11 +1043,75 @@ span.walktober-list__name {
   text-transform: uppercase;
 }
 
+/* Every line sits in one grid cell, so the box is as tall as the longest line and never shifts */
 .walktober-wrap__distance {
+  display: grid;
   margin: 0.5rem 0 0;
+  /* Clip the spread-out letters at the sides only, so the glow can still bleed up and down */
+  overflow-x: clip;
+  overflow-y: visible;
   font-size: var(--wt-distance-size);
   color: var(--wt-distance-color);
   text-align: center;
+}
+
+.walktober-wrap__line {
+  grid-area: 1 / 1;
+  align-self: center;
+  visibility: hidden;
+
+  &.is-active {
+    visibility: visible;
+  }
+}
+
+/* Haunted text: each letter glows in from a spread-out, turned-away spot, settles,
+   then floats toward you and fades. Transforms only, so layout never moves. */
+.walktober-wrap__distance .walktober-wrap__line {
+  font-family: var(--wt-haunt-font);
+  font-size: var(--wt-haunt-size);
+}
+
+.wt-haunt__word {
+  display: inline-block;
+  white-space: nowrap;
+  perspective: var(--wt-haunt-perspective);
+}
+
+.wt-haunt__char {
+  display: inline-block;
+  transform-style: preserve-3d;
+  opacity: 0;
+}
+
+.walktober-wrap__line.is-active .wt-haunt__char {
+  animation: wt-haunt var(--wt-haunt-duration) linear forwards;
+}
+
+@keyframes wt-haunt {
+  0% {
+    opacity: 0.2;
+    text-shadow: 0 0 var(--wt-haunt-glow) var(--wt-haunt-glow-color);
+    transform: translateX(calc(var(--o) * var(--wt-haunt-spread))) rotateY(-90deg);
+  }
+  25%,
+  85% {
+    opacity: 1;
+    text-shadow: 0 0 1px var(--wt-haunt-glow-color);
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    text-shadow: 0 0 10px var(--wt-haunt-glow-color);
+    transform: translateZ(var(--wt-haunt-float));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .walktober-wrap__line.is-active .wt-haunt__char {
+    animation: none;
+    opacity: 1;
+  }
 }
 
 /* 2nd | 1st | 3rd, with 1st standing tallest */

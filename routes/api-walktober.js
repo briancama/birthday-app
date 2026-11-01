@@ -14,6 +14,8 @@ const TOP_LIST_LIMIT = 4;
 const PAGE_SIZE = 1000;
 // Walktober 2026 went live Oct 3: Oct 1–2 are on time only if logged by the end of Oct 3 (Pacific).
 const LAUNCH_GRACE = { 2026: { through: "2026-10-02", loggedBefore: "2026-10-04T07:00:00Z" } };
+// Optional exact cutoff for step entries, ahead of edit_until. 2026: Mon Nov 2, 12:00 PM PST.
+const ENTRIES_CLOSE_AT = { 2026: "2026-11-02T20:00:00Z" };
 const DAY_MS = 24 * 60 * 60 * 1000;
 const LADDER_TIERS = [5, 10, 15, 20, 25, 31];
 const SEASON_COLUMNS = "year, starts_on, ends_on, edit_until, min_goal, closed_at";
@@ -71,6 +73,7 @@ async function getLatestSeason() {
 
 function describeSeason(season) {
   const today = earliestPossibleToday();
+  const closeAt = ENTRIES_CLOSE_AT[season.year] || null;
   const daysInSeason =
     Math.round((Date.parse(season.ends_on) - Date.parse(season.starts_on)) / DAY_MS) + 1;
   return {
@@ -79,7 +82,11 @@ function describeSeason(season) {
     has_started: latestPossibleToday() >= season.starts_on,
     has_ended: today > season.ends_on,
     is_closed: !!season.closed_at,
-    is_editable: !season.closed_at && today <= season.edit_until,
+    entries_close_at: closeAt,
+    is_editable:
+      !season.closed_at &&
+      today <= season.edit_until &&
+      (!closeAt || Date.now() < Date.parse(closeAt)),
   };
 }
 
