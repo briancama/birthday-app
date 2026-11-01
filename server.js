@@ -1220,7 +1220,8 @@ function renderWalktober(view) {
       });
       const walktober = await WALKTOBER_PAYLOADS[view](
         season,
-        apiWalktoberRouter.getSignedUserId(req)
+        apiWalktoberRouter.getSignedUserId(req),
+        { preview: req.query.preview === "results" }
       );
 
       return res.render(view, {

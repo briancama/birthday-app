@@ -9,6 +9,7 @@ const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_STEPS = 200000;
 const MAX_GOAL = 1000000;
 const MEDALS = ["gold", "silver", "bronze"];
+const BIG_DAY_PLACES = 3;
 const TOP_LIST_LIMIT = 4;
 const PAGE_SIZE = 1000;
 // Walktober 2026 went live Oct 3: Oct 1–2 are on time only if logged by the end of Oct 3 (Pacific).
@@ -365,7 +366,8 @@ async function loadEditableDay(req, res) {
 }
 
 // Season + community stats for everyone; the caller's goal and entries when signed in.
-async function buildSeasonPayload(season, userId) {
+// Results (the end-of-season page) ship once the season is closed, or to admins previewing it.
+async function buildSeasonPayload(season, userId, { preview = false } = {}) {
   const year = season.year;
   const [totals, leaderRows, entriesResult, isAdmin, myAchievements] = await Promise.all([
     getTotals(year),
@@ -439,7 +441,26 @@ async function buildSeasonPayload(season, userId) {
       goal_average: totals
         .filter(earnedGoalAverage)
         .map((r) => ({ username: r.username, total_steps: r.total_steps })),
+      big_days: [],
     };
+  }
+
+  const showResults = !!season.closed_at || (preview && isAdmin);
+  if (isAdmin || showResults) {
+    const allEntries = await getEntries(year);
+    if (isAdmin) {
+      payload.closePreview.big_days = bestDayBoard(totals, allEntries)
+        .filter((r) => r.place <= BIG_DAY_PLACES)
+        .map((r) => ({
+          username: r.username,
+          place: r.place,
+          steps: r.best_day_steps,
+          date: r.best_day_date,
+        }));
+    }
+    if (showResults) {
+      payload.results = await buildResults(season, totals, allEntries, leaderRows, userId);
+    }
   }
 
   return payload;
@@ -491,21 +512,116 @@ function streakBoard(totals, entries, year) {
     .sort((a, b) => b.streak_days - a.streak_days || displayName(a).localeCompare(displayName(b)));
 }
 
-// Full boards for everyone who joined, including walkers who haven't logged yet.
-async function buildLeaderboardPayload(season, userId) {
-  const [totals, entries] = await Promise.all([getTotals(season.year), getEntries(season.year)]);
+// Each walker's single best day (earliest date wins a tie with themselves), dense-ranked by steps.
+function bestDayBoard(totals, entries) {
+  const best = new Map();
+  entries.forEach((e) => {
+    if (!(e.steps > 0)) return;
+    const cur = best.get(e.user_id);
+    if (!cur || e.steps > cur.steps || (e.steps === cur.steps && e.step_date < cur.date)) {
+      best.set(e.user_id, { steps: e.steps, date: e.step_date });
+    }
+  });
+  const rows = totals
+    .filter((r) => best.has(r.user_id))
+    .map((r) => ({
+      ...toWalker(r),
+      best_day_steps: best.get(r.user_id).steps,
+      best_day_date: best.get(r.user_id).date,
+    }));
+  return rows
+    .map((r) => ({ ...r, place: densePlace(rows, (x) => x.best_day_steps, r) }))
+    .sort(
+      (a, b) => b.best_day_steps - a.best_day_steps || displayName(a).localeCompare(displayName(b))
+    );
+}
+
+// Ranked walkers first, then walkers who joined but never logged (no place).
+function stepsBoard(totals) {
   const ranked = rankByTotal(totals).map((r) => ({ ...toWalker(r), place: r.place }));
   const unlogged = totals
     .filter((r) => !(r.total_steps > 0))
     .sort((a, b) => displayName(a).localeCompare(displayName(b)))
     .map((r) => ({ ...toWalker(r), place: null }));
+  return [...ranked, ...unlogged];
+}
+
+// Award art/name/points by key suffix (gold, big_day_1, ...), so the results page follows the DB.
+async function getAwardArt(year) {
+  const { data, error } = await supabase
+    .from("achievements")
+    .select("key, name, points, image_url")
+    .like("key", `walktober_${year}_%`);
+  if (error) throw error;
+  const prefix = `walktober_${year}_`;
+  return Object.fromEntries(
+    (data || []).map((a) => [
+      a.key.slice(prefix.length),
+      { name: a.name, points: a.points, image_url: a.image_url },
+    ])
+  );
+}
+
+// End-of-season callouts for the results page.
+async function buildResults(season, totals, entries, leaderRows, userId) {
+  const year = season.year;
+  const daysInSeason = describeSeason(season).days_in_season;
+  const steps = stepsBoard(totals);
+  const bigDays = bestDayBoard(totals, entries);
+  const streaks = streakBoard(totals, entries, year);
+
+  const topCounts = new Map();
+  leaderRows.forEach((r) => topCounts.set(r.user_id, (topCounts.get(r.user_id) || 0) + 1));
+  const mostTop = Math.max(0, ...topCounts.values());
+  const byTotal = (a, b) => b.total_steps - a.total_steps;
+
+  return {
+    preview: !season.closed_at,
+    crew: {
+      total_steps: totals.reduce((sum, r) => sum + (r.total_steps || 0), 0),
+      walkers: totals.length,
+      active_walkers: totals.filter((r) => r.days_logged > 0).length,
+      days_logged: totals.reduce((sum, r) => sum + (r.days_logged || 0), 0),
+      days_hit_goal: totals.reduce((sum, r) => sum + (r.days_hit_goal || 0), 0),
+    },
+    podium: steps.filter((r) => r.place && r.place <= MEDALS.length),
+    big_days: bigDays.filter((r) => r.place <= BIG_DAY_PLACES),
+    top_streaks: streaks.filter((r) => r.place === 1),
+    days_on_top: {
+      days: mostTop,
+      walkers: mostTop
+        ? totals
+            .filter((r) => topCounts.get(r.user_id) === mostTop)
+            .map(toWalker)
+            .sort(byTotal)
+        : [],
+    },
+    goal_crushers: totals.filter(earnedGoalAverage).map(toWalker).sort(byTotal),
+    full_month: totals
+      .filter((r) => r.days_logged >= daysInSeason)
+      .map(toWalker)
+      .sort(byTotal),
+    steps,
+    art: await getAwardArt(year),
+    me: userId
+      ? {
+          best_day: bigDays.find((r) => r.user_id === userId) || null,
+          longest_streak: (streaks.find((r) => r.user_id === userId) || {}).streak_days || 0,
+        }
+      : null,
+  };
+}
+
+// Full boards for everyone who joined, including walkers who haven't logged yet.
+async function buildLeaderboardPayload(season, userId) {
+  const [totals, entries] = await Promise.all([getTotals(season.year), getEntries(season.year)]);
 
   return {
     season: describeSeason(season),
     me_id: userId,
     crew_total_steps: totals.reduce((sum, r) => sum + (r.total_steps || 0), 0),
     walker_count: totals.length,
-    steps: [...ranked, ...unlogged],
+    steps: stepsBoard(totals),
     goal: goalBoard(totals),
     daily: dailyEntries(entries),
     streaks: streakBoard(totals, entries, season.year),
@@ -519,7 +635,11 @@ router.get("/walktober/:year", async (req, res) => {
     if (!year) return res.status(400).json({ error: "Invalid year" });
     const season = await getSeason(year);
     if (!season) return res.status(404).json({ error: "Walktober season not found" });
-    return res.json(await buildSeasonPayload(season, getSignedUserId(req)));
+    return res.json(
+      await buildSeasonPayload(season, getSignedUserId(req), {
+        preview: req.query.preview === "results",
+      })
+    );
   } catch (err) {
     console.error("GET /api/walktober/:year error:", err);
     return res.status(500).json({ error: "Failed to load Walktober" });
@@ -624,7 +744,7 @@ router.put("/walktober/:year/entries/:date", async (req, res) => {
 });
 
 // ── POST /api/walktober/:year/close ──────────────────────────────────────────
-// Admin only. Awards medals + goal-average achievements, re-checks ladders, and locks edits.
+// Admin only. Awards medals, Biggest Day, and goal-average achievements, re-checks ladders, and locks edits.
 // Safe to re-run: the award RPC is idempotent and only new awards notify.
 router.post("/walktober/:year/close", async (req, res) => {
   try {
@@ -640,7 +760,14 @@ router.post("/walktober/:year/close", async (req, res) => {
       return res.status(409).json({ error: "Walktober isn't over yet." });
     }
 
-    const keys = [...MEDALS, "goal_average"].map((suffix) => `walktober_${year}_${suffix}`);
+    const bigDayKeys = Array.from(
+      { length: BIG_DAY_PLACES },
+      (_, i) => `walktober_${year}_big_day_${i + 1}`
+    );
+    const keys = [
+      ...[...MEDALS, "goal_average"].map((suffix) => `walktober_${year}_${suffix}`),
+      ...bigDayKeys,
+    ];
     const { data: achievements, error: achErr } = await supabase
       .from("achievements")
       .select("key, name, points")
@@ -652,7 +779,7 @@ router.post("/walktober/:year/close", async (req, res) => {
       return res.status(500).json({ error: `Missing achievement rows: ${missing.join(", ")}` });
     }
 
-    const totals = await getTotals(year);
+    const [totals, entries] = await Promise.all([getTotals(year), getEntries(year)]);
     const awards = [];
     rankByTotal(totals)
       .filter((r) => r.place <= MEDALS.length)
@@ -670,6 +797,15 @@ router.post("/walktober/:year/close", async (req, res) => {
         details: { year, total_steps: r.total_steps, daily_goal: r.daily_goal },
       });
     });
+    bestDayBoard(totals, entries)
+      .filter((r) => r.place <= BIG_DAY_PLACES)
+      .forEach((r) => {
+        awards.push({
+          row: r,
+          key: bigDayKeys[r.place - 1],
+          details: { year, place: r.place, steps: r.best_day_steps, step_date: r.best_day_date },
+        });
+      });
 
     const results = [];
     for (const award of awards) {

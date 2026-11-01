@@ -36,17 +36,23 @@
     <main class="myspace-container full-width-content">
       <% const me = walktober.me; %>
       <% const hasGoal = !!(me && me.daily_goal); %>
+      <% const results = walktober.results || null; %>
       <div class="container myspace-layout">
         <div class="myspace-main" id="walktoberMain">
           <section class="myspace-section walktober-hero">
-            <h3 class="myspace-section-alt-header">Walktober <%= year %></h3>
+            <h3 id="walktoberHeroHeader" class="myspace-section-alt-header"><%= results ? 'Congratulations, walkers!' : `Walktober ${year}` %></h3>
             <div class="walktober-hero__body">
               <img class="walktober-hero__gif" src="/images/zombie-walk.gif" width="49" height="77" alt="" />
               <div>
                 <h1 class="walktober-title">WALKTOBER</h1>
-                <p class="walktober-hero__intro">
+                <p id="walktoberIntro" class="walktober-hero__intro">
+                  <% if (results) { %>
+                  That's a wrap! Thanks to everyone who walked through October. Here's how the crew
+                  finished.
+                  <% } else { %>
                   Set a daily step goal, then log your steps for each day in October. Use whatever
                   phone or watch you already have. Missed a day? Fill it in later.
+                  <% } %>
                 </p>
               </div>
               <img
@@ -58,8 +64,10 @@
                 alt=""
               />
             </div>
-            <div id="walktoberHeadline" class="walktober-headline"><% if (hasGoal) { %><%- include('partials/walktober-loading') %><% } %></div>
+            <div id="walktoberHeadline" class="walktober-headline"><% if (hasGoal || results) { %><%- include('partials/walktober-loading') %><% } %></div>
           </section>
+
+          <div id="walktoberResults" class="walktober-results" <%= results ? '' : 'hidden' %>><% if (results) { %><%- include('partials/walktober-loading') %><% } %></div>
 
           <section id="walktoberJoin" class="myspace-section" <%= me && !hasGoal ? '' : 'hidden' %>>
             <h3>Pick your daily goal</h3>
@@ -104,7 +112,7 @@
             <div id="walktoberStats"><% if (hasGoal) { %><%- include('partials/walktober-loading') %><% } %></div>
           </section>
 
-          <% if (!isSignedIn) { %>
+          <% if (!isSignedIn && !results) { %>
           <section class="myspace-section walktober-teaser">
             <h3>Want in?</h3>
             <p>Sign in to set a goal and start logging your steps.</p>

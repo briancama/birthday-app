@@ -69,6 +69,17 @@
   --wt-board-reserve: 20rem;
   --wt-admin-reserve: 10rem;
   --wt-login-reserve: 14rem;
+  --wt-results-reserve: 40rem;
+
+  /* Results page (closed season) */
+  --wt-results-gap: 0;
+  --wt-wrap-gif-width: 56px;
+  --wt-podium-art: 64px;
+  --wt-podium-art-first: 88px;
+  --wt-podium-base: 0.5rem;
+  --wt-podium-rise: 1rem;
+  --wt-callout-art: 32px;
+  --wt-bigday-art: 44px;
 
   --wt-loading-gif-height: 40px;
   --wt-loading-color: var(--wt-accent-text);
@@ -169,6 +180,10 @@
 
 .walktober-headline:empty {
   display: none;
+}
+
+.walktober-headline__wide {
+  grid-column: 1 / -1;
 }
 
 .walktober-headline__item {
@@ -863,6 +878,228 @@ span.walktober-list__name {
   }
 }
 
+/* ── Results (closed season) ─────────────────────────────────────────── */
+
+.walktober-results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--wt-results-gap);
+}
+
+.walktober-results[hidden] {
+  display: none;
+}
+
+.walktober-results__preview {
+  margin: 0;
+  padding: 0.5rem;
+  border: 2px dashed var(--myspace-red);
+  font-weight: bold;
+  text-align: center;
+}
+
+.walktober-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.walktober-wrap__gif {
+  width: var(--wt-wrap-gif-width);
+  height: auto;
+  flex-shrink: 0;
+}
+
+.walktober-wrap__gif:last-child {
+  transform: scaleX(-1);
+}
+
+.walktober-wrap__stats {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.walktober-wrap__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem 0.25rem;
+  border: 2px solid var(--wt-orange);
+  background: var(--wt-black);
+  text-align: center;
+}
+
+.walktober-wrap__value {
+  font-size: 1.4em;
+  font-weight: bold;
+  color: var(--wt-orange-bright);
+}
+
+.walktober-wrap__label {
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.walktober-wrap__distance {
+  margin: 0.5rem 0 0;
+  font-size: var(--wt-distance-size);
+  color: var(--wt-distance-color);
+  text-align: center;
+}
+
+/* 2nd | 1st | 3rd, with 1st standing tallest */
+.walktober-podium {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.walktober-podium__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.5rem 0.25rem var(--wt-podium-base);
+  border: 2px solid var(--wt-purple);
+  border-bottom-width: 6px;
+  background: var(--wt-black);
+  text-align: center;
+
+  .walktober-list__name {
+    flex: none;
+    white-space: normal;
+  }
+}
+
+.walktober-podium__step--1 {
+  order: 2;
+  padding-bottom: calc(var(--wt-podium-base) + 2 * var(--wt-podium-rise));
+  border-color: var(--wt-orange-bright);
+}
+
+.walktober-podium__step--2 {
+  order: 1;
+  padding-bottom: calc(var(--wt-podium-base) + var(--wt-podium-rise));
+}
+
+.walktober-podium__step--3 {
+  order: 3;
+}
+
+.walktober-podium__art {
+  width: var(--wt-podium-art);
+  height: var(--wt-podium-art);
+  object-fit: contain;
+}
+
+.walktober-podium__step--1 .walktober-podium__art {
+  width: var(--wt-podium-art-first);
+  height: var(--wt-podium-art-first);
+}
+
+.walktober-podium__names {
+  font-size: 1.1em;
+  font-weight: bold;
+}
+
+.walktober-podium__steps {
+  font-weight: bold;
+  color: var(--wt-orange-bright);
+}
+
+.walktober-podium__pts,
+.walktober-callout__pts {
+  font-size: 11px;
+  color: var(--wt-hit-bg);
+}
+
+.walktober-callouts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.walktober-callout {
+  padding: 0.5rem;
+  border: 2px solid var(--wt-purple-light);
+  background: var(--wt-black);
+
+  p {
+    margin: 0.35rem 0 0;
+  }
+
+  strong {
+    color: var(--wt-orange-bright);
+  }
+}
+
+/* A lone card on the last row spans it */
+.walktober-callout:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.walktober-callout__head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.walktober-callout__art {
+  width: var(--wt-callout-art);
+  height: var(--wt-callout-art);
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.walktober-callout__title {
+  flex: 1;
+  margin: 0;
+  font-size: 13px;
+  color: var(--wt-accent-text);
+  text-transform: uppercase;
+}
+
+.walktober-list__date {
+  font-size: 11px;
+  color: var(--wt-accent-text);
+}
+
+.walktober-list__place--art {
+  width: var(--wt-bigday-art);
+
+  img {
+    width: var(--wt-bigday-art);
+    height: var(--wt-bigday-art);
+  }
+}
+
+@media (max-width: 600px) {
+  .walktober-wrap__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .walktober-wrap__gif {
+    display: none;
+  }
+
+  .walktober-callouts {
+    grid-template-columns: 1fr;
+  }
+
+  .walktober-callout:last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+}
+
 /* ── Admin ────────────────────────────────────────────────────────────── */
 
 .walktober-admin {
@@ -1094,6 +1331,10 @@ span.walktober-list__name {
 
 #walktoberAdminBody:has(> .wt-loading) {
   min-height: var(--wt-admin-reserve);
+}
+
+#walktoberResults:has(> .wt-loading) {
+  min-height: var(--wt-results-reserve);
 }
 
 #walktoberStepsBoard:has(> .wt-loading),
