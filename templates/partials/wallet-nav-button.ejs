@@ -1,0 +1,22 @@
+<%# Chips wallet button + panel loader. Shared by navigation.ejs and navigation-visitor.ejs. %>
+<%# Hidden when signed out or when the balance lookup failed (navData.chipBalance === null). %>
+<% const walletNav = typeof navData !== 'undefined' && navData ? navData : {}; %>
+<% if (walletNav.user && typeof walletNav.chipBalance === 'number') { %>
+<% const chipLabel = (walletNav.chipBalance / 100).toLocaleString('en-US', { maximumFractionDigits: 2 }); %>
+<link rel="stylesheet" href="/css/components/wallet.css" />
+<button
+  type="button"
+  class="wallet-nav-button"
+  data-wallet-open
+  data-sound="menu"
+  aria-haspopup="dialog"
+  aria-label="Your chips: <%= chipLabel %>"
+>
+  <span class="wallet-chip-icon" aria-hidden="true"></span>
+  <span class="wallet-nav-amount" data-wallet-balance><%= chipLabel %></span>
+</button>
+<script type="module">
+  import { initWalletPanel } from "/js/components/wallet-panel.js";
+  initWalletPanel();
+</script>
+<% } %>

@@ -1,7 +1,12 @@
 // routes/auth.js
 const express = require("express");
 const router = express.Router();
-const { ensureFirebaseAdmin, getSupabase, requireSignedUser } = require("../js/utils/server-utils");
+const {
+  ensureFirebaseAdmin,
+  getSupabase,
+  requireSignedUser,
+  mintSupabaseJwt,
+} = require("../js/utils/server-utils");
 
 // Ensure firebase-admin is initialized and use shared Supabase client
 const admin = ensureFirebaseAdmin();
@@ -291,4 +296,20 @@ router.get("/me", async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
+// GET /auth/supabase-token - short-lived Supabase JWT (sub = users.id) for
+// clients that call the wallet RPCs directly. Cookie-gated; never cached.
+router.get("/supabase-token", (req, res) => {
+  res.set("Cache-Control", "private, no-store");
+  const userId = requireSignedUser(req);
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!userId || !UUID_RE.test(userId)) return res.status(401).json({ error: "Not authenticated" });
+  const minted = mintSupabaseJwt(userId);
+  if (!minted) return res.status(503).json({ error: "Supabase tokens are not configured" });
+  return res.json({
+    access_token: minted.token,
+    token_type: "bearer",
+    expires_at: minted.expiresAt,
+  });
+});
+
 module.exports = router;

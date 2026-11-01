@@ -16,6 +16,7 @@ Set in the EnvironmentFile referenced by the systemd unit. Plain `KEY=VALUE` lin
 | `FIREBASE_SERVICE_ACCOUNT` (JSON) or `GOOGLE_APPLICATION_CREDENTIALS` (path) | Firebase admin creds for ID-token verification         |
 | `FIREBASE_PROJECT_ID`                                                        | Fallback if no service account                         |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_EMAIL`                       | Web Push delivery                                      |
+| `SUPABASE_JWT_SECRET`                                                        | Prod JWT secret; signs `/auth/supabase-token` (wallet) |
 
 Client-side keys live in `js/config.js` (gitignored) which auto-selects prod keys by hostname — make sure the deployed copy exists on the droplet.
 

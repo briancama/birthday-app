@@ -90,6 +90,20 @@ RLS on with no policies — all access via `routes/api-walktober.js` (service ro
 | `walktober_participants` | PK (year, user_id) + `daily_goal`; setting a goal = joining; locked after first entry (API)    |
 | `walktober_entries`      | One row per user per day (UNIQUE user_id, step_date); `steps = 0` is logged, no row = unlogged |
 
+### Chips wallet (2026-10, play money)
+
+Amounts are **bigint units: 1 chip = 100 units**. The ledger is the source of truth; `wallets.balance` is a cached total written in the same transaction. RLS: players read only their own wallet/ledger; no client writes. All writes go through security-definer RPCs. Contract: [WALLET.md](WALLET.md). See `sql/2026_10_29_chips_wallet.sql` (+ dev-only `_down.sql`).
+
+| Table             | Purpose                                                                                         |
+| ----------------- | ----------------------------------------------------------------------------------------------- |
+| `wallets`         | PK `player_id`→users, `balance` (≥ 0), `updated_at`; created lazily on first ledger write       |
+| `wallet_ledger`   | Signed `amount`, `balance_after`, `kind` (CHECK), `ref_type`/`ref_id`, unique `idempotency_key` |
+| `earn_rules`      | `action` PK, `amount`, `daily_cap`, `lifetime_cap` (event counts), `active`, `description`      |
+| `wallet_settings` | Single row: `max_earn_per_player_per_day` (units), `day_boundary_tz`                            |
+| `contests`        | `name`, `starts_at`, `ends_at`: a scoring window over the persistent economy                    |
+
+`users.isadmin` is the SQL-side admin flag (backfilled for `brianc`/`admin`); a trigger blocks anon/authenticated sessions from changing it.
+
 ## Views
 
 | View                                 | Purpose                                                                                             |
@@ -107,15 +121,17 @@ RLS on with no policies — all access via `routes/api-walktober.js` (service ro
 
 ## RPC Functions
 
-| RPC                                      | Purpose                                                |
-| ---------------------------------------- | ------------------------------------------------------ |
-| `rpc_award_achievement_by_key`           | Atomic idempotent achievement award                    |
-| `rpc_award_on_challenge_threshold`       | Award when completed-challenge count crosses threshold |
-| `rpc_award_on_comment_threshold`         | Award on wall-post/comment thresholds                  |
-| `rpc_award_when_all_assigned_completed`  | "All assigned completed" award                         |
-| `update_challenge_assignments`           | Transactional assignment updates (optimistic locking)  |
-| `get_app_setting` / `update_app_setting` | Feature-flag access                                    |
-| `increment_page_views`                   | Atomic page-view counter                               |
+| RPC                                                           | Purpose                                                                                                      |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `rpc_award_achievement_by_key`                                | Atomic idempotent achievement award                                                                          |
+| `rpc_award_on_challenge_threshold`                            | Award when completed-challenge count crosses threshold                                                       |
+| `rpc_award_on_comment_threshold`                              | Award on wall-post/comment thresholds                                                                        |
+| `rpc_award_when_all_assigned_completed`                       | "All assigned completed" award                                                                               |
+| `update_challenge_assignments`                                | Transactional assignment updates (optimistic locking)                                                        |
+| `get_app_setting` / `update_app_setting`                      | Feature-flag access                                                                                          |
+| `increment_page_views`                                        | Atomic page-view counter                                                                                     |
+| `get_wallet` / `get_ledger` / `earn_chips`                    | Chips wallet player RPCs (JWT); `*_for(p_player)` variants are service-role only. See [WALLET.md](WALLET.md) |
+| `admin_adjust`, `grant_starting_chips`, `contest_leaderboard` | Wallet admin + contest RPCs ([WALLET.md](WALLET.md))                                                         |
 
 ## `/sql` Folder Conventions
 

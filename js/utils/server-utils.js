@@ -2,6 +2,7 @@ const { createClient } = require("@supabase/supabase-js");
 const { JSDOM } = require("jsdom");
 const createDOMPurify = require("dompurify");
 const admin = require("firebase-admin");
+const crypto = require("crypto");
 
 let supabaseInstance = null;
 function getSupabase() {
@@ -21,6 +22,31 @@ function getSupabase() {
 
 function requireSignedUser(req) {
   return req && req.signedCookies && req.signedCookies.user_id ? req.signedCookies.user_id : null;
+}
+
+const SUPABASE_JWT_TTL_SECONDS = 60 * 60;
+
+// HS256 Supabase access token for a users.id, signed with the project's JWT
+// secret. Postgres sees it as role `authenticated`; current_player_id() reads `sub`.
+function mintSupabaseJwt(userId, ttlSeconds = SUPABASE_JWT_TTL_SECONDS) {
+  const secret = process.env.SUPABASE_JWT_SECRET || "";
+  if (!secret || !userId) return null;
+  const now = Math.floor(Date.now() / 1000);
+  const encode = (obj) => Buffer.from(JSON.stringify(obj)).toString("base64url");
+  const header = encode({ alg: "HS256", typ: "JWT" });
+  const payload = encode({
+    sub: userId,
+    role: "authenticated",
+    aud: "authenticated",
+    iss: "birthday-app",
+    iat: now,
+    exp: now + ttlSeconds,
+  });
+  const signature = crypto
+    .createHmac("sha256", secret)
+    .update(`${header}.${payload}`)
+    .digest("base64url");
+  return { token: `${header}.${payload}.${signature}`, expiresAt: now + ttlSeconds };
 }
 
 async function isAdminUser(userId) {
@@ -82,6 +108,7 @@ module.exports = {
   getSupabase,
   requireSignedUser,
   isAdminUser,
+  mintSupabaseJwt,
   createSanitizer,
   jsonForScript,
   ensureFirebaseAdmin,

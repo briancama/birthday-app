@@ -246,6 +246,21 @@ October step-logging event at `/walktober` (Brispace layout, `theme-walktober` b
 - Walktober templates don't include the Firebase `<script>` tags; they `preload` them and `firebaseAuth.init()` loads the SDK on demand. `firebaseAuth.init()` only runs once per page (cached promise).
 - Hidden "David S Pumpkins" egg (`js/components/david-pumpkins.js`, achievement `david_pumpkins`, `sql/2026_10_04_add_david_pumpkins_achievement.sql`): any `[data-pumpkin-gif]` on `/walktober` plays a dance track on click (zombie = hero right gif, frank = calendar's first blank Tuesday, skull = crew box, werewolf = Your numbers). Signed-in progress lives in localStorage per user; once all four are found and a track ends, David rises (stays until clicked), his clip plays, and the achievement is awarded. Plays once per user. Placement/size knobs are `--wt-*` vars in `walktober.css`.
 
+### Chips Wallet (2026)
+
+Play-money wallet shared with the future prediction market (different frontend, same Supabase project). Contract: `docs/WALLET.md`. SQL: `sql/2026_10_29_chips_wallet.sql` (+ dev-only `_down.sql`).
+
+- **Units:** every amount is a bigint count of units, 1 chip = 100 units. Display `units / 100`. No floats.
+- **All money logic is in Postgres.** Never write `wallets`/`wallet_ledger` from JS. Writes go through `wallet_apply()` (internal) via `earn_chips`, `admin_adjust`, `grant_starting_chips`; the market will add its own security-definer functions that call `wallet_apply`.
+- Every ledger write needs a unique idempotency key; replay returns the original result. Key formats are in `docs/WALLET.md`.
+- Ledger `kind` is a CHECK constraint; new kinds = new migration.
+- Express (`routes/api-wallet.js`) uses the service-role `*_for(p_player)` RPCs with the signed `user_id` cookie. JWT clients use `get_wallet` / `get_ledger` / `earn_chips` with a token from `GET /auth/supabase-token` (`mintSupabaseJwt()` in `server-utils.js`, needs `SUPABASE_JWT_SECRET`, `sub = users.id`).
+- SQL admin = `users.isadmin` (trigger blocks client changes); Express admin routes still use `isAdminUser()`.
+- **Nav button:** `templates/partials/wallet-nav-button.ejs` is included in both `navigation.ejs` (both branches) and `navigation-visitor.ejs`; keep it in all three header spots. Balance comes from `navData.chipBalance` (server.js nav hydration); `null` hides the button. Panel: `js/components/wallet-panel.js` + `css/components/wallet.css`.
+- `grant_starting_chips` exists but is not run or scheduled: wallets start at 0 until the market launches.
+- Contests only measure: gain = end net worth − start net worth computed from the ledger at `starts_at`/`ends_at` (no snapshots; no ledger rows at start = 0). `compute_positions_value()` is the market hook (returns 0 for now).
+- Dev check: `npm run verify:wallet` (dev DB only).
+
 ### Competition Kit (2026)
 
 Standalone, re-skinnable judging + recipe pages for food competitions at `/competitions/:slug/{judge,enter,results,rubric,recipes/:recipeSlug}`. On a Stick is the first skin. Data model is the 2026-10-01 platform (`competition_categories`, `competition_judgments`, `competition_registrations`) plus `sql/2026_10_10_competition_kit.sql`.

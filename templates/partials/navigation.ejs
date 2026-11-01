@@ -11,6 +11,7 @@
       <img src="/images/star_icon.gif" width="30" height="29" alt="star" class="icon-gif" />
       <span id="secretArnold" class="secret-arnold">RICKTER</span>
       <% if (navData && navData.user) { %>
+      <%- include('wallet-nav-button', { navData: navData }) %>
       <a href="/users/<%= navData.user.username %>" class="profile-nav-link" aria-label="Profile">
         <img src="/images/profile.gif" width="70" height="36" alt="profile" class="icon-gif user-profile-button" />
       </a>
@@ -42,6 +43,7 @@
     <span id="secretArnold" class="secret-arnold">RICKTER</span>
     <div class="nav-content-right">
       <% if (navData && navData.user) { %>
+      <%- include('wallet-nav-button', { navData: navData }) %>
       <a href="/users/<%= navData.user.username %>" class="profile-nav-link" aria-label="Profile">
         <img src="/images/profile.gif" width="70" height="36" alt="profile" class="icon-gif user-profile-button" />
       </a>
