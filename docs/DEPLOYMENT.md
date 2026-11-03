@@ -99,6 +99,8 @@ curl -I https://thebri.space/
 curl -I https://www.thebri.space/walktober              # 301 -> https://thebri.space/walktober
 curl -I "https://birthday.briancama.com/users/x?a=1"    # 301 -> https://thebri.space/users/x?a=1
 curl -I http://birthday.briancama.com/                  # 301 -> https://thebri.space/
+# With the literal <TOKEN> placeholder this returns "Invalid Firebase ID token" (server + firebase-admin are up).
+# Test real sign-in through the browser OTP flow.
 curl -v -c cookies.txt -X POST https://thebri.space/auth/login \
   -H "Content-Type: application/json" -d '{"idToken":"<TOKEN>"}'
 curl -v -b cookies.txt https://thebri.space/auth/me
