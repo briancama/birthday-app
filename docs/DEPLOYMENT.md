@@ -1,6 +1,6 @@
 # Deployment (Production)
 
-Production runs on a DigitalOcean droplet (Ubuntu): Node/Express behind nginx (TLS via Certbot), managed by systemd as the `birthday-app` service. Domain: `birthday.briancama.com`.
+Production runs on a DigitalOcean droplet (Ubuntu): Node/Express behind nginx (TLS via Certbot), managed by systemd as the `birthday-app` service. Domain: `thebri.space` (`www.thebri.space` and the old `birthday.briancama.com` 301 to it).
 
 ## Environment Variables (production)
 
@@ -60,13 +60,16 @@ sudo journalctl -u birthday-app -f
 
 ### nginx reverse proxy
 
-See `deploy/birthday-app.nginx.conf.example` for the canonical config: TLS on 443 (Certbot-managed certs), `/songs/` served directly from disk, everything else proxied to `127.0.0.1:8000` with forwarded headers, security headers, gzip, `client_max_body_size 20M`.
+See `deploy/birthday-app.nginx.conf.example` for the canonical config: TLS on 443 (Certbot-managed certs), `/songs/` served directly from disk, everything else proxied to `127.0.0.1:8000` with forwarded headers, security headers, gzip, `client_max_body_size 20M`. Separate server blocks 301 `www.thebri.space`, `birthday.briancama.com`, and all port-80 traffic to `https://thebri.space`.
 
 ```bash
 sudo ln -s /etc/nginx/sites-available/birthday-app /etc/nginx/sites-enabled/
+sudo certbot certonly --nginx -d thebri.space -d www.thebri.space
 sudo nginx -t && sudo systemctl restart nginx
-sudo certbot --nginx -d birthday.briancama.com
+sudo certbot renew --dry-run   # covers both certs
 ```
+
+Keep the `birthday.briancama.com` cert renewing: its HTTPS redirect needs a valid cert, and old-domain push notification clicks land there.
 
 Note: Express should trust proxy headers behind nginx (`X-Forwarded-Proto` affects secure cookies).
 
@@ -92,15 +95,19 @@ rsync -avz --progress songs/ birthday@<droplet-ip>:/var/www/birthday-app/songs/
 ## Smoke Tests
 
 ```bash
-curl -I https://birthday.briancama.com/
-curl -v -c cookies.txt -X POST https://birthday.briancama.com/auth/login \
+curl -I https://thebri.space/
+curl -I https://www.thebri.space/walktober              # 301 -> https://thebri.space/walktober
+curl -I "https://birthday.briancama.com/users/x?a=1"    # 301 -> https://thebri.space/users/x?a=1
+curl -I http://birthday.briancama.com/                  # 301 -> https://thebri.space/
+curl -v -c cookies.txt -X POST https://thebri.space/auth/login \
   -H "Content-Type: application/json" -d '{"idToken":"<TOKEN>"}'
-curl -v -b cookies.txt https://birthday.briancama.com/auth/me
+curl -v -b cookies.txt https://thebri.space/auth/me
 ```
 
 ## Debug Checklist
 
 - **Firebase token verification fails** → service account accessible to the service process? Service-account project matches the Firebase project issuing client tokens (prod vs dev)?
+- **Phone sign-in fails only on a new host** → add the host under Firebase console → Authentication → Settings → Authorized domains (and any API-key referrer / reCAPTCHA domain lists).
 - **Supabase errors (missing view/table)** → prod project missing a migration; check [DATABASE.md](DATABASE.md) drift notes.
 - **Cookies missing in browser** → HTTPS required for `Secure` cookies; check nginx forwarded headers and `SameSite`.
 - **Env changes not taking effect** → systemd requires `daemon-reload` after unit/EnvironmentFile edits; values must be unquoted.

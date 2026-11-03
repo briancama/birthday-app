@@ -283,6 +283,13 @@ Standalone, re-skinnable judging + recipe pages for food competitions at `/compe
 - New asset folders must be added to the early static list, or every request for them pays the nav Supabase lookups.
 - The project root is not served wholesale: only top-level `*.html` files plus `PUBLIC_ROOT_FILES` (`robots.txt`, `sw-notifications.js`) in server.js. New public root files must be added there or they 404.
 
+### Production Domain (2026)
+
+- Canonical prod host is `https://thebri.space`. `www.thebri.space` and the old `birthday.briancama.com` 301 to it forever (nginx, see `deploy/birthday-app.nginx.conf.example`); keep the old domain's cert renewing.
+- Keep app links relative. Absolute URLs (only where required, e.g. `og:image` in `templates/partials/walktober-meta.ejs`) use `https://thebri.space`.
+- Cookies, Firebase sessions, localStorage, and notification permission are per-origin, so the move signed everyone out and reset local-only progress. New hosts must be added to Firebase Authorized domains.
+- `push_subscriptions.origin` stores the host a subscription was made on (`sql/2026_11_02_push_subscription_origin.sql`; NULL = pre-move). Old-domain service workers still get pushes, so `POST /notifications/subscribe` on any other host deletes that user's NULL/`birthday.briancama.com` rows from the same push service (`LEGACY_PUSH_HOST` in `routes/notifications.js`) to avoid double notifications.
+
 ---
 
 ### Rules for New Updates

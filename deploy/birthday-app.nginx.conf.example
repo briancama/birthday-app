@@ -1,14 +1,14 @@
 # Example nginx configuration for Birthday App
-# Replace `birthday.briancama.com` with your domain and enable via
-# /etc/nginx/sites-available/birthday-app -> /etc/nginx/sites-enabled/
+# Canonical host is thebri.space. www and the old birthday.briancama.com 301 to it.
+# Enable via /etc/nginx/sites-available/birthday-app -> /etc/nginx/sites-enabled/
 
 server {
     listen 443 ssl;
     listen [::]:443 ssl ipv6only=on;
-    server_name birthday.briancama.com;
+    server_name thebri.space;
 
-    ssl_certificate /etc/letsencrypt/live/birthday.briancama.com/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/birthday.briancama.com/privkey.pem; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/thebri.space/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/thebri.space/privkey.pem; # managed by Certbot
     include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
 
@@ -48,12 +48,42 @@ server {
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml;
 }
 
-# HTTP -> HTTPS redirect block (Certbot typically writes this)
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name www.thebri.space;
+
+    ssl_certificate /etc/letsencrypt/live/thebri.space/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/thebri.space/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+    return 301 https://thebri.space$request_uri;
+}
+
+# Old domain redirects forever so old links, bookmarks, and old-domain push
+# notification clicks keep working. Its cert must keep renewing.
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name birthday.briancama.com;
+
+    ssl_certificate /etc/letsencrypt/live/birthday.briancama.com/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/birthday.briancama.com/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+    return 301 https://thebri.space$request_uri;
+}
+
+# HTTP -> HTTPS, straight to the canonical host in one hop
 server {
     listen 80;
     listen [::]:80;
-    server_name birthday.briancama.com;
+    server_name thebri.space www.thebri.space birthday.briancama.com;
 
-    # Redirect all HTTP requests to HTTPS
-    return 301 https://$host$request_uri;
+    # Inside a location so Certbot's ACME challenge location still wins on renewal
+    location / {
+        return 301 https://thebri.space$request_uri;
+    }
 }
