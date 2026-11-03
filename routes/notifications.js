@@ -9,6 +9,9 @@ const {
 
 const supabase = getSupabase();
 
+// Old-domain service workers still receive pushes after the move to thebri.space.
+const LEGACY_PUSH_HOST = "birthday.briancama.com";
+
 router.use((req, res, next) => {
   const startedAt = Date.now();
   const signedUserId = requireSignedUser(req) || "anonymous";
@@ -125,10 +128,12 @@ router.post("/subscribe", async (req, res) => {
       return res
         .status(400)
         .json({ error: "unable to resolve user id; please sign in via server" });
+    const origin = req.hostname;
     const payload = {
       user_id: resolvedUserId,
       endpoint: subscription.endpoint,
       keys: subscription.keys || {},
+      origin,
       created_at: new Date().toISOString(),
     };
     const { data, error } = await supabase
@@ -137,6 +142,19 @@ router.post("/subscribe", async (req, res) => {
       .select("*");
 
     if (error) throw error;
+
+    // Same push service is the closest match to "same device" we can get across origins.
+    if (origin !== LEGACY_PUSH_HOST) {
+      const pushService = new URL(subscription.endpoint).origin;
+      const { error: dedupeError } = await supabase
+        .from("push_subscriptions")
+        .delete()
+        .eq("user_id", resolvedUserId)
+        .or(`origin.is.null,origin.eq."${LEGACY_PUSH_HOST}"`)
+        .like("endpoint", `${pushService}/%`);
+      if (dedupeError) console.warn("push legacy dedupe error", dedupeError);
+    }
+
     res.json({ success: true, subscription: data && data[0] });
   } catch (err) {
     console.error("subscribe error", err);

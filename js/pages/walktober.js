@@ -16,11 +16,21 @@ import {
   stepsRow,
   listGap,
   crewTotal,
+  distanceLines,
+  deadlineLabel,
+  countdownText,
 } from "../components/walktober-lists.js";
 
 const GOAL_SUGGESTIONS = [5000, 7500, 10000, 12500, 15000];
 const LEADERBOARD_URL = "/walktober/leaderboard";
 const REFRESH_FAILED = "Saved, but the page couldn't refresh. Reload to see it.";
+const WRAP_INTRO =
+  "That's a wrap! Thanks to everyone who walked through October. Here's how the crew finished.";
+const WRAP_HEADER = "Congratulations, walkers!";
+// Keep in step with --wt-haunt-duration in walktober.css
+const DISTANCE_ROTATE_MS = 8000;
+const PODIUM_ART = { 1: "gold", 2: "silver", 3: "bronze" };
+const PODIUM_LABELS = { 1: "1st", 2: "2nd", 3: "3rd" };
 const SKULL_GIF = `<img class="wt-pumpkin-gif wt-pumpkin-gif--skull" data-pumpkin-gif="skull"
   src="/images/skull-walk.gif" width="160" height="160" alt="" />`;
 const WEREWOLF_GIF = `<img class="wt-pumpkin-gif wt-pumpkin-gif--werewolf" data-pumpkin-gif="werewolf"
@@ -59,6 +69,8 @@ class WalktoberPage extends BrispacePage {
     pumpkins.addEventListener("finale:end", onFinaleEnd);
     pumpkins.init();
     const stopStaleWatch = onStaleReturn(() => this.refresh());
+    const distanceTimer = setInterval(() => this.rotateDistance(), DISTANCE_ROTATE_MS);
+    const deadlineTimer = setInterval(() => this.renderDeadline(), 1000);
 
     this.eventCleanup.push(() => {
       main.removeEventListener("click", onMainClick);
@@ -70,6 +82,8 @@ class WalktoberPage extends BrispacePage {
       pumpkins.removeEventListener("finale:end", onFinaleEnd);
       pumpkins.destroy();
       stopStaleWatch();
+      clearInterval(distanceTimer);
+      clearInterval(deadlineTimer);
     });
 
     // Last: Firebase SDK load can stall or be blocked, and step logging doesn't need it
@@ -77,7 +91,10 @@ class WalktoberPage extends BrispacePage {
   }
 
   async loadData() {
-    const res = await fetch(`/api/walktober/${encodeURIComponent(this.year)}`);
+    // Keeps an admin's ?preview=results on refreshes
+    const preview = new URLSearchParams(window.location.search).get("preview");
+    const query = preview === "results" ? "?preview=results" : "";
+    const res = await fetch(`/api/walktober/${encodeURIComponent(this.year)}${query}`);
     if (!res.ok) throw new Error("Couldn't load Walktober. Try refreshing.");
     this.data = await res.json();
   }
@@ -112,6 +129,10 @@ class WalktoberPage extends BrispacePage {
 
   get season() {
     return this.data.season;
+  }
+
+  get results() {
+    return this.data.results || null;
   }
 
   get entriesByDate() {
@@ -195,7 +216,13 @@ class WalktoberPage extends BrispacePage {
 
   render() {
     const hasGoal = !!this.me?.daily_goal;
+    if (this.results) {
+      document.getElementById("walktoberIntro").textContent = WRAP_INTRO;
+      document.getElementById("walktoberHeroHeader").textContent = WRAP_HEADER;
+    }
+    this.renderDeadline();
     this.renderHeadline(hasGoal);
+    this.renderResults();
     this.renderJoin(hasGoal);
     this.renderCalendar(hasGoal);
     this.renderStats(hasGoal);
@@ -203,8 +230,37 @@ class WalktoberPage extends BrispacePage {
     this.renderAdmin();
   }
 
+  // Ticks every second; only text changes, so the banner never resizes.
+  renderDeadline() {
+    const el = document.getElementById("walktoberDeadline");
+    const closeAt = this.season.entries_close_at;
+    if (!el || !closeAt) return;
+    if (this.results || this.season.is_closed) {
+      el.hidden = true;
+      return;
+    }
+    const left = Date.parse(closeAt) - Date.now();
+    const past = left <= 0;
+    // Crossing the deadline: refetch once so the calendar locks
+    if (past && !el.classList.contains("is-past") && this.season.is_editable) {
+      this.refresh();
+    }
+    el.classList.toggle("is-past", past);
+    document.getElementById("walktoberDeadlineTitle").textContent = past
+      ? "Step entries are closed"
+      : "Last call for steps!";
+    document.getElementById("walktoberDeadlineNote").textContent = past
+      ? "Final results are coming soon."
+      : `Log any missing days before entries close ${deadlineLabel(closeAt)}.`;
+    document.getElementById("walktoberDeadlineClock").textContent = countdownText(left);
+  }
+
   renderHeadline(hasGoal) {
     const el = document.getElementById("walktoberHeadline");
+    if (this.results) {
+      el.innerHTML = `<div class="walktober-headline__wide">${this.renderCrewWrap(this.results.crew)}</div>`;
+      return;
+    }
     if (!hasGoal) {
       el.innerHTML = "";
       return;
@@ -304,6 +360,224 @@ class WalktoberPage extends BrispacePage {
       </div>`;
   }
 
+  // ── Results (after close, or an admin's ?preview=results) ─────────────────
+
+  renderFinalHeadline(s) {
+    const standing = this.me.standing;
+    const place = standing?.steps_place;
+    const bestDay = this.results.me?.best_day;
+    const goalMet = s.total >= s.monthTarget;
+    return `
+      <div class="walktober-headline__item">
+        <span class="walktober-headline__label">Final Total</span>
+        <span class="walktober-headline__value">${fmt(s.total)}</span>
+        <span class="walktober-headline__unit">steps</span>
+      </div>
+      <div class="walktober-headline__item${place && place <= 3 ? " is-ahead" : ""}">
+        <span class="walktober-headline__label">You Finished</span>
+        <span class="walktober-headline__value">${place ? `#${place}` : "--"}</span>
+        <span class="walktober-headline__unit">${place ? `of ${standing.steps_ranked} walkers` : "no steps logged"}</span>
+      </div>
+      <div class="walktober-headline__item">
+        <span class="walktober-headline__label">Best Day</span>
+        <span class="walktober-headline__value">${bestDay ? fmt(bestDay.best_day_steps) : "--"}</span>
+        <span class="walktober-headline__unit">${bestDay ? longDate(bestDay.best_day_date) : "steps"}</span>
+      </div>
+      <div class="walktober-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+        aria-valuenow="${Math.min(100, s.progressPct)}">
+        <div class="walktober-progress__fill" style="--wt-progress: ${Math.min(100, s.progressPct)}%"></div>
+      </div>
+      <p class="walktober-progress__caption">${fmt(s.total)} of ${fmt(s.monthTarget)} steps (${s.progressPct}% of your goal)${goalMet ? ". Goal met!" : ""}</p>`;
+  }
+
+  renderResults() {
+    const el = document.getElementById("walktoberResults");
+    const r = this.results;
+    el.hidden = !r;
+    if (!r) {
+      el.innerHTML = "";
+      return;
+    }
+    const myId = this.me?.user_id;
+    const mine = this.me?.daily_goal
+      ? `<section class="myspace-section">
+          <h3>Your Walktober</h3>
+          <div class="walktober-headline">${this.renderFinalHeadline(this.computeStats())}</div>
+        </section>`
+      : "";
+    el.innerHTML = `
+      ${
+        r.preview
+          ? `<p class="walktober-results__preview">Admin preview: this is what everyone sees once Walktober ${this.year} is closed. Nothing has been awarded yet.</p>`
+          : ""
+      }
+      ${mine}
+      <section class="myspace-section">
+        <h3>The Podium</h3>
+        ${this.renderPodium(r, myId)}
+      </section>
+      <section class="myspace-section">
+        <h3>Hall of Fame</h3>
+        ${this.renderCallouts(r, myId)}
+      </section>
+      <div class="walktober-boards">
+        <section class="myspace-section">
+          <h3>Final: Most steps</h3>
+          ${fullBoard(r.steps, stepsRow, myId)}
+        </section>
+        <section class="myspace-section">
+          <h3>Final: Goal Completed</h3>
+          ${this.renderGoalMet(r, myId)}
+        </section>
+      </div>
+      <a class="walktober-more-link" href="${LEADERBOARD_URL}#longest-streaks">Streaks and daily boards &raquo;</a>`;
+  }
+
+  renderCrewWrap(crew) {
+    const lines = distanceLines(crew.total_steps);
+    return `
+      <div class="walktober-wrap">
+        <img class="walktober-wrap__gif" src="/images/party-hats.gif" alt="" />
+        <div class="walktober-wrap__stats">
+          ${wrapStat(fmt(crew.total_steps), "steps walked")}
+          ${wrapStat(fmt(crew.active_walkers), crew.active_walkers === 1 ? "walker" : "walkers")}
+          ${wrapStat(fmt(crew.days_logged), "days logged")}
+          ${wrapStat(fmt(crew.days_hit_goal), "goals hit")}
+        </div>
+        <img class="walktober-wrap__gif" src="/images/party-hats.gif" alt="" />
+      </div>
+      ${
+        lines.length
+          ? `<p class="walktober-wrap__distance">${lines
+              .map(
+                (line, i) =>
+                  `<span class="walktober-wrap__line${i ? "" : " is-active"}"${i ? ' aria-hidden="true"' : ""}><span class="visually-hidden">${line}</span>${hauntedLetters(line)}</span>`
+              )
+              .join("")}</p>`
+          : ""
+      }`;
+  }
+
+  // Steps the results-page distance line to the next comparison.
+  rotateDistance() {
+    const lines = [...document.querySelectorAll("#walktoberHeadline .walktober-wrap__line")];
+    if (lines.length < 2) return;
+    const current = Math.max(
+      0,
+      lines.findIndex((l) => l.classList.contains("is-active"))
+    );
+    const next = (current + 1) % lines.length;
+    lines[current].classList.remove("is-active");
+    lines[current].setAttribute("aria-hidden", "true");
+    lines[next].classList.add("is-active");
+    lines[next].removeAttribute("aria-hidden");
+  }
+
+  renderPodium(r, myId) {
+    const steps = [1, 2, 3]
+      .map((place) => ({ place, walkers: r.podium.filter((w) => w.place === place) }))
+      .filter((p) => p.walkers.length);
+    if (!steps.length) return `<p class="walktober-empty">Nobody logged steps this year.</p>`;
+
+    return `
+      <ol class="walktober-podium">
+        ${steps
+          .map(({ place, walkers }) => {
+            const art = r.art[PODIUM_ART[place]];
+            const src = art?.image_url || `/images/${PODIUM_ART[place]}-medal.gif`;
+            return `
+              <li class="walktober-podium__step walktober-podium__step--${place}">
+                <img class="walktober-podium__art" src="${escapeHtml(src)}" alt="${PODIUM_LABELS[place]} place" />
+                <span class="walktober-podium__names">${nameList(walkers, myId)}</span>
+                <span class="walktober-podium__steps">${fmt(walkers[0].total_steps)} steps</span>
+                ${art ? `<span class="walktober-podium__pts">+${art.points} pts</span>` : ""}
+              </li>`;
+          })
+          .join("")}
+      </ol>`;
+  }
+
+  renderGoalMet(r, myId) {
+    if (!r.goal_crushers.length) {
+      return `<p class="walktober-empty">Nobody averaged their daily goal this year.</p>`;
+    }
+    const check = `<span class="walktober-list__place"><img src="/images/green-checkmark.gif" alt="Goal met" /></span>`;
+    return `
+      <ol class="walktober-list walktober-list--full">${r.goal_crushers
+        .map((w) => listRow(w, w.user_id === myId, check, ""))
+        .join("")}</ol>`;
+  }
+
+  renderCallouts(r, myId) {
+    const days = this.season.days_in_season;
+    const cards = [];
+
+    if (r.big_days.length) {
+      const pts = [1, 2, 3]
+        .map((n) => r.art[`big_day_${n}`]?.points)
+        .filter((n) => n != null)
+        .join(" / ");
+      cards.push(
+        callout({
+          title: "Biggest Day",
+          art: "/images/frank-walk.gif",
+          pts: pts ? `${pts} pts` : "",
+          body: `
+            <p>Everyone's single best day, head to head.</p>
+            <ol class="walktober-list">
+              ${r.big_days
+                .map((w) =>
+                  listRow(
+                    w,
+                    w.user_id === myId,
+                    bigDayPlace(w.place, r.art[`big_day_${w.place}`]),
+                    fmt(w.best_day_steps),
+                    `<span class="walktober-list__date">${shortDate(w.best_day_date)}</span>`
+                  )
+                )
+                .join("")}
+            </ol>`,
+        })
+      );
+    }
+
+    if (r.top_streaks.length) {
+      cards.push(
+        callout({
+          title: "Longest Streak",
+          art: "/images/badge-ghost.svg",
+          body: `<p>${nameList(r.top_streaks, myId)} ${r.top_streaks.length > 1 ? "each logged" : "logged"} <strong>${plural(r.top_streaks[0].streak_days, "day")}</strong> in a row, every one on time.</p>`,
+        })
+      );
+    }
+
+    if (r.days_on_top.walkers.length) {
+      cards.push(
+        callout({
+          title: "Most Days on Top",
+          art: "/images/zombie-walk.gif",
+          body: `<p>${nameList(r.days_on_top.walkers, myId)} ${r.days_on_top.walkers.length > 1 ? "each out-walked" : "out-walked"} the whole crew on <strong>${plural(r.days_on_top.days, "day")}</strong>.</p>`,
+        })
+      );
+    }
+
+    if (r.full_month.length) {
+      const art = r.art.full_month;
+      cards.push(
+        callout({
+          title: art?.name || "Every Day Logged",
+          art: art?.image_url,
+          pts: art ? `+${art.points} pts` : "",
+          body: `<p>Logged all ${days} days:</p><p>${nameList(r.full_month, myId, ", ")}</p>`,
+        })
+      );
+    }
+
+    return cards.length
+      ? `<div class="walktober-callouts">${cards.join("")}</div>`
+      : `<p class="walktober-empty">No awards this year.</p>`;
+  }
+
   renderJoin(hasGoal) {
     const section = document.getElementById("walktoberJoin");
     const body = document.getElementById("walktoberJoinBody");
@@ -382,7 +656,7 @@ class WalktoberPage extends BrispacePage {
     const editNote = this.season.is_closed
       ? `Walktober ${this.year} is closed.`
       : this.season.has_ended && this.season.is_editable
-        ? `October's over. You can still fill in missing days until ${longDate(this.season.edit_until)}.`
+        ? `October's over. You can still fill in missing days until ${this.season.entries_close_at ? deadlineLabel(this.season.entries_close_at) : longDate(this.season.edit_until)}.`
         : "";
     const daysOnTop = this.me.standing?.days_on_top || 0;
 
@@ -392,9 +666,9 @@ class WalktoberPage extends BrispacePage {
         ${statTile("Daily average", s.daysLogged ? fmt(s.dailyAverage) : "--")}
         ${statTile("Average vs. goal", s.daysLogged ? `${s.averageVsGoal}%` : "--")}
         ${statTile("At goal", plural(s.daysHit, "day"))}
-        ${statTile("Current streak", plural(s.currentStreak, "day"))}
+        ${this.results ? "" : statTile("Current streak", plural(s.currentStreak, "day"))}
         ${statTile("Longest streak", plural(s.longestStreak, "day"))}
-        ${statTile("Steps to go", fmt(s.stepsToGo))}
+        ${this.results ? statTile("Days logged", `${s.daysLogged} / ${s.daysInSeason}`) : statTile("Steps to go", fmt(s.stepsToGo))}
         ${daysOnTop ? statTile("On top", plural(daysOnTop, "day")) : ""}
       </div>
       ${paceNote ? `<p class="walktober-note">${paceNote}</p>` : ""}
@@ -468,11 +742,17 @@ class WalktoberPage extends BrispacePage {
     el.innerHTML = `
       ${crewTotal(community.crew_total_steps, community.walker_count, SKULL_GIF)}
       <div class="walktober-board">
-        <h4 class="walktober-subhead">Most steps</h4>
+        <h4 class="walktober-subhead">${this.results ? "Final standings" : "Most steps"}</h4>
         ${topList}
         ${moreLink()}
       </div>
-      ${this.renderLatestLeader(community.daily_leaders, myId)}`;
+      ${
+        this.results
+          ? this.me?.daily_goal
+            ? this.renderAwards()
+            : ""
+          : this.renderLatestLeader(community.daily_leaders, myId)
+      }`;
   }
 
   // dailyLeaders arrives sorted by date from the server.
@@ -499,7 +779,7 @@ class WalktoberPage extends BrispacePage {
     const body = document.getElementById("walktoberAdminBody");
     if (!body || !this.data.isAdmin) return;
 
-    const preview = this.data.closePreview || { medalists: [], goal_average: [] };
+    const preview = this.data.closePreview || { medalists: [], goal_average: [], big_days: [] };
     const medalLines = preview.medalists.length
       ? preview.medalists
           .map((m) => `<li>#${m.place} ${escapeHtml(m.username)} (${fmt(m.total_steps)})</li>`)
@@ -508,6 +788,19 @@ class WalktoberPage extends BrispacePage {
     const goalLines = preview.goal_average.length
       ? preview.goal_average.map((m) => `<li>${escapeHtml(m.username)}</li>`).join("")
       : "<li>Nobody yet</li>";
+    const bigDayLines = preview.big_days?.length
+      ? preview.big_days
+          .map(
+            (m) =>
+              `<li>#${m.place} ${escapeHtml(m.username)} (${fmt(m.steps)} on ${shortDate(m.date)})</li>`
+          )
+          .join("")
+      : "<li>Nobody yet</li>";
+    const previewLink = this.season.is_closed
+      ? ""
+      : this.results
+        ? `<p><a href="/walktober">Exit results preview</a></p>`
+        : `<p><a href="/walktober?preview=results">Preview the results page &raquo;</a></p>`;
 
     let action;
     if (this.season.is_closed) {
@@ -517,7 +810,7 @@ class WalktoberPage extends BrispacePage {
       action = `<p>Available after ${longDate(this.season.ends_on)}.</p>`;
     } else {
       const backfillWarning = this.season.is_editable
-        ? `<p><strong>Backfill is open until ${longDate(this.season.edit_until)}.</strong> Closing now locks everyone's entries.</p>`
+        ? `<p><strong>Backfill is open until ${this.season.entries_close_at ? deadlineLabel(this.season.entries_close_at) : longDate(this.season.edit_until)}.</strong> Closing now locks everyone's entries.</p>`
         : "";
       action = `${backfillWarning}<button type="button" class="btn btn--primary" data-action="close-season">Close Walktober ${this.year}</button>`;
     }
@@ -525,8 +818,11 @@ class WalktoberPage extends BrispacePage {
     body.innerHTML = `
       <p>Medals (ties share):</p>
       <ul>${medalLines}</ul>
+      <p>Biggest Day (each walker's best day, ties share):</p>
+      <ul>${bigDayLines}</ul>
       <p>Goal average:</p>
       <ul>${goalLines}</ul>
+      ${previewLink}
       ${action}`;
   }
 
@@ -666,6 +962,72 @@ class WalktoberPage extends BrispacePage {
 
 function moreLink() {
   return `<a class="walktober-more-link" href="${LEADERBOARD_URL}">Full leaderboard &raquo;</a>`;
+}
+
+function fullBoard(walkers, row, myId) {
+  if (!walkers.length) return `<p class="walktober-empty">No walkers.</p>`;
+  return `<ol class="walktober-list walktober-list--full">${walkers
+    .map((w) => row(w, w.user_id === myId))
+    .join("")}</ol>`;
+}
+
+// "A", "A & B", "A, B & C"; pass a separator to join everything the same way.
+function nameList(walkers, myId, separator = null) {
+  const names = walkers.map((w) => (w.user_id === myId ? "<strong>You</strong>" : userLink(w)));
+  if (separator || names.length < 3) return names.join(separator || " &amp; ");
+  return `${names.slice(0, -1).join(", ")} &amp; ${names.at(-1)}`;
+}
+
+function wrapStat(value, label) {
+  return `
+    <div class="walktober-wrap__stat">
+      <span class="walktober-wrap__value">${value}</span>
+      <span class="walktober-wrap__label">${label}</span>
+    </div>`;
+}
+
+function callout({ title, art, pts = "", body }) {
+  return `
+    <article class="walktober-callout">
+      <header class="walktober-callout__head">
+        ${art ? `<img class="walktober-callout__art" src="${escapeHtml(art)}" alt="" />` : ""}
+        <h4 class="walktober-callout__title">${escapeHtml(title)}</h4>
+        ${pts ? `<span class="walktober-callout__pts">${pts}</span>` : ""}
+      </header>
+      <div class="walktober-callout__body">${body}</div>
+    </article>`;
+}
+
+// Biggest Day rows show the award art when the achievement row has it.
+function bigDayPlace(place, art) {
+  if (!art?.image_url) return placeCell(place, true);
+  return `<span class="walktober-list__place walktober-list__place--art"><img src="${escapeHtml(art.image_url)}" alt="#${place}" /></span>`;
+}
+
+// One span per letter (inside a no-wrap span per word) for the haunted-text animation.
+// --o is the letter's distance from the middle of the line, used to spread letters out before they settle.
+function hauntedLetters(text) {
+  const mid = ([...text].length - 1) / 2;
+  let i = 0;
+  const words = text.split(" ").map((word) => {
+    const letters = [...word]
+      .map(
+        (ch) => `<span class="wt-haunt__char" style="--o: ${i++ - mid}">${escapeHtml(ch)}</span>`
+      )
+      .join("");
+    i += 1;
+    return `<span class="wt-haunt__word">${letters}</span>`;
+  });
+  return `<span aria-hidden="true">${words.join(" ")}</span>`;
+}
+
+function shortDate(date) {
+  const [y, m, d] = date.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
 }
 
 function statTile(label, value) {

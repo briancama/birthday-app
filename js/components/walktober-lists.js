@@ -72,6 +72,28 @@ function longDate(date, withWeekday = false) {
   });
 }
 
+// Entry cutoff in Pacific time, e.g. "Mon, Nov 2, 12:00 PM PST". Matches the server render in walktober.ejs.
+function deadlineLabel(iso) {
+  return new Date(iso).toLocaleString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "America/Los_Angeles",
+    timeZoneName: "short",
+  });
+}
+
+// "1d 02h 05m 09s" / "02h 05m 09s"
+function countdownText(ms) {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const days = Math.floor(total / 86400);
+  const pad = (n) => String(n).padStart(2, "0");
+  const hms = `${pad(Math.floor((total % 86400) / 3600))}h ${pad(Math.floor((total % 3600) / 60))}m ${pad(total % 60)}s`;
+  return days ? `${days}d ${hms}` : hms;
+}
+
 function userLink(walker) {
   const name = escapeHtml(walker.display_name || walker.username || "Walker");
   if (!walker.is_published) return `<span class="walktober-list__name">${name}</span>`;
@@ -134,6 +156,16 @@ function distanceLine(totalSteps) {
   return band.text.replace("{n}", roughCount((totalSteps * FEET_PER_STEP) / band.feet));
 }
 
+// Every comparison with at least 1 of the thing, starting at the current band and wrapping.
+function distanceLines(totalSteps) {
+  const feet = totalSteps * FEET_PER_STEP;
+  const lines = DISTANCE_BANDS.filter((b) => feet / b.feet >= 1).map((b) =>
+    b.text.replace("{n}", roughCount(feet / b.feet))
+  );
+  const current = DISTANCE_BANDS.filter((b) => totalSteps >= b.from).length - 1;
+  return current > 0 ? [...lines.slice(current), ...lines.slice(0, current)] : lines;
+}
+
 function crewTotal(totalSteps, walkerCount, extraHtml = "") {
   const distance = distanceLine(totalSteps);
   return `
@@ -161,4 +193,7 @@ export {
   listGap,
   crewTotal,
   distanceLine,
+  distanceLines,
+  deadlineLabel,
+  countdownText,
 };
