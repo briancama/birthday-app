@@ -38,4 +38,76 @@
   font-size: 0.98em;
   margin-bottom: 8px;
   min-height: 1.2em;
+
+  &.is-status {
+    color: #003399;
+  }
+}
+
+/* Sending state: the label stays in place (just invisible) so the button
+   keeps its width; three retro pixel dots blink over it instead. */
+.login-signup-form .btn.is-sending {
+  --login-sending-dot: var(--myspace-dark-blue);
+  --login-sending-dot-dim: color-mix(in srgb, var(--login-sending-dot) 25%, transparent);
+  position: relative;
+  color: transparent;
+  opacity: 1;
+  cursor: progress;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    margin: -2.5px 0 0 -2.5px;
+    animation: login-sending-dots 0.9s steps(1, end) infinite;
+  }
+
+  &.btn--secondary:disabled {
+    background: var(--myspace-light-blue);
+    border-color: #444 #ccc #ccc #444;
+  }
+
+  &.btn--primary {
+    --login-sending-dot: #fff;
+  }
+
+  &.btn--primary:disabled {
+    background: #da5500;
+    border-color: #da5500 var(--myspace-light-orange) var(--myspace-light-orange) #da5500;
+  }
+}
+
+@keyframes login-sending-dots {
+  0%,
+  100% {
+    background: var(--login-sending-dot-dim);
+    box-shadow:
+      -10px 0 var(--login-sending-dot),
+      10px 0 var(--login-sending-dot-dim);
+  }
+  33% {
+    background: var(--login-sending-dot);
+    box-shadow:
+      -10px 0 var(--login-sending-dot-dim),
+      10px 0 var(--login-sending-dot-dim);
+  }
+  66% {
+    background: var(--login-sending-dot-dim);
+    box-shadow:
+      -10px 0 var(--login-sending-dot-dim),
+      10px 0 var(--login-sending-dot);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-signup-form .btn.is-sending::after {
+    animation: none;
+    background: var(--login-sending-dot);
+    box-shadow:
+      -10px 0 var(--login-sending-dot),
+      10px 0 var(--login-sending-dot);
+  }
 }

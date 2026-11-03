@@ -80,9 +80,12 @@ export function createLoginSignupForm({
   // Shared send code handler
   const sendCodeHandler = async (e) => {
     e.preventDefault();
-    errorDiv.textContent = "";
+    const activeBtn = e.currentTarget;
     loginBtn.disabled = signupBtn.disabled = true;
-    loginBtn.textContent = signupBtn.textContent = "Sending...";
+    activeBtn.classList.add("is-sending");
+    activeBtn.setAttribute("aria-busy", "true");
+    errorDiv.classList.add("is-status");
+    errorDiv.textContent = "Texting your code…";
     try {
       if (!recaptchaReady) {
         await firebaseAuth.setupRecaptcha("recaptchaContainer");
@@ -92,20 +95,24 @@ export function createLoginSignupForm({
       try {
         formatted = toE164Format(phoneInput.value.trim());
       } catch (fmtErr) {
+        errorDiv.classList.remove("is-status");
         errorDiv.textContent = fmtErr.message || "Invalid phone number.";
         return;
       }
       await firebaseAuth.sendOTP(formatted);
+      errorDiv.classList.remove("is-status");
+      errorDiv.textContent = "";
       phoneStep.style.display = "none";
       otpStep.style.display = "block";
       otpInput.focus();
     } catch (err) {
+      errorDiv.classList.remove("is-status");
       errorDiv.textContent = err.message || "Failed to send code.";
       recaptchaReady = false;
     } finally {
       loginBtn.disabled = signupBtn.disabled = false;
-      loginBtn.textContent = loginLabel || "Login";
-      signupBtn.textContent = signupLabel || "Sign Up";
+      activeBtn.classList.remove("is-sending");
+      activeBtn.removeAttribute("aria-busy");
     }
   };
   loginBtn.onclick = sendCodeHandler;
@@ -209,8 +216,6 @@ export function createLoginSignupForm({
     otpInput.value = "";
     errorDiv.textContent = "";
     loginBtn.disabled = signupBtn.disabled = false;
-    loginBtn.textContent = "Login";
-    signupBtn.textContent = "Sign Up";
   };
 
   verifyBtn.onclick = async (e) => {
