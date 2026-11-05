@@ -9,6 +9,92 @@
   --wallet-minus-color: var(--myspace-red, #cc0100);
 }
 
+/* Prototype: white masks use the supplied black artwork without editing the SVGs. */
+.wallet-reward {
+  --wallet-drop-duration: 650ms;
+  position: relative;
+  align-self: center;
+  width: 140px;
+  height: 164px;
+  background: #000;
+}
+
+.wallet-reward__bank {
+  position: absolute;
+  left: 10px;
+  top: 70px;
+  width: 120px;
+  height: 87px;
+  background: #fff;
+  mask: url("/images/BRIC/piggy_bank.svg") center / contain no-repeat;
+}
+
+.wallet-reward__flight {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 100px;
+  overflow: hidden;
+}
+
+.wallet-reward__moving {
+  position: absolute;
+  left: 54px;
+  top: 0;
+  width: 20px;
+  height: 24px;
+  visibility: hidden;
+}
+
+.wallet-reward__coin {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  mask: url("/images/BRIC/coin_illustrated.svg") center / contain no-repeat;
+}
+
+.wallet-reward__trail {
+  position: absolute;
+  bottom: 28px;
+  left: 3px;
+  height: 17px;
+  width: 2px;
+  background: #fff;
+  transform: rotate(-4deg);
+}
+
+.wallet-reward__trail:nth-child(3) {
+  left: 10px;
+  height: 27px;
+  transform: rotate(3deg);
+}
+
+.wallet-reward__trail:nth-child(4) {
+  left: 17px;
+  height: 12px;
+  transform: rotate(-2deg);
+}
+
+.wallet-reward__moving.is-dropping {
+  visibility: visible;
+  animation: wallet-coin-drop var(--wallet-drop-duration) cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@keyframes wallet-coin-drop {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(140px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wallet-reward__moving.is-dropping {
+    animation: none;
+    visibility: hidden;
+  }
+}
+
 /* ---------- Poker chip icon (pure CSS) ---------- */
 .wallet-chip-icon {
   display: inline-block;

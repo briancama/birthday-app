@@ -85,6 +85,17 @@ class WalletPanel {
     this.balanceEl = el("span", "wallet-panel__amount", "…");
     balance.append(icon, this.balanceEl, el("span", "wallet-panel__unit", "chips"));
 
+    const reward = el("div", "wallet-reward");
+    reward.setAttribute("aria-hidden", "true");
+    const flight = el("div", "wallet-reward__flight");
+    this.rewardCoin = el("div", "wallet-reward__moving");
+    this.rewardCoin.append(el("span", "wallet-reward__coin"));
+    for (let i = 0; i < 3; i++) {
+      this.rewardCoin.append(el("span", "wallet-reward__trail"));
+    }
+    flight.append(this.rewardCoin);
+    reward.append(flight, el("span", "wallet-reward__bank"));
+
     this.checkinBtn = el("button", "wallet-panel__checkin", "Daily check-in");
     this.checkinBtn.type = "button";
     this.statusEl = el("p", "wallet-panel__status");
@@ -99,6 +110,7 @@ class WalletPanel {
     box.append(
       head,
       balance,
+      reward,
       this.checkinBtn,
       this.statusEl,
       historyTitle,
@@ -109,6 +121,20 @@ class WalletPanel {
     document.body.append(dialog);
 
     const { signal } = this.abort;
+    if (["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+      const preview = el("button", "wallet-panel__more", "Preview coin drop");
+      preview.type = "button";
+      preview.addEventListener("click", () => this.playReward(), { signal });
+      reward.after(preview);
+    }
+    this.rewardCoin.addEventListener(
+      "animationend",
+      () => this.rewardCoin.classList.remove("is-dropping"),
+      { signal }
+    );
+    dialog.addEventListener("close", () => this.rewardCoin.classList.remove("is-dropping"), {
+      signal,
+    });
     close.addEventListener("click", () => dialog.close(), { signal });
     // Clicks on the dialog itself land on the backdrop area
     dialog.addEventListener("click", (e) => e.target === dialog && dialog.close(), { signal });
@@ -137,6 +163,13 @@ class WalletPanel {
   setStatus(text, tone = "") {
     this.statusEl.textContent = text;
     this.statusEl.dataset.tone = tone;
+  }
+
+  playReward() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    this.rewardCoin.classList.remove("is-dropping");
+    void this.rewardCoin.offsetWidth;
+    this.rewardCoin.classList.add("is-dropping");
   }
 
   renderRow(row) {
@@ -198,6 +231,12 @@ class WalletPanel {
       const message = CHECKIN_MESSAGES[data.status] || (() => "Check-in done.");
       this.setStatus(message(data), data.status === "earned" ? "success" : "");
       if (data.status === "earned") {
+        this.setBalance(data.balance);
+        this.setStatus(
+          `${formatChips(data.balance - data.amount)} → ${formatChips(data.balance)} brics (+${formatChips(data.amount)})`,
+          "success"
+        );
+        if (this.dialog.open) this.playReward();
         audioManager.play("wallet-earn");
         this.loaded = false;
         await this.loadPage(null);

@@ -14,13 +14,13 @@ When the spec is silent, ask. Do not invent labels, features, colors or copy.
 
 - **Platform:** Bric. **Currency:** brics (“1 bric”, “20 brics”). Platform with a capital B, currency in lowercase. The Bric symbol can stand in for the word beside numerals.
 - **Idea:** a ledger for friends: heavy, plain and exact.
-- **Look:** black page, white ink, double-ruled boxes, heavy monospace type, saturated color used only for fills and data.
+- **Look:** black page, white ink, double-ruled boxes, heavy monospace type, saturated color used only for fills and data. Interface structure and base icons use clean lines; illustration uses confident, hand-drawn lines.
 - **Voice:** earnest, plain and forward-leaning. It pushes the user toward gaining more brics, sincerely. It never jokes about brics, never calls them money, cash or funds, and never winks.
 
 ## 3. Hard rules
 
 1. Dark only. No light theme and no toggle. Set `color-scheme: dark`.
-2. Border radius is 0 everywhere in the interface. No shadows, gradients, blur or transparency effects.
+2. Border radius is 0 on interface containers and controls. Organic curves belong to supplied marks and hand-drawn illustration, not UI chrome. No shadows, gradients, blur or transparency effects.
 3. One typeface: IBM Plex Mono, weights 500 and 700 only. Never lighter. Fallbacks: ui-monospace, Menlo, Consolas, monospace.
 4. Every element must mean something. No decorative labels, badges, status words or icons. Status words name real states only: Open, Closed, Settled.
 5. Structure is drawn with lines, and each line style has a meaning (section 6).
@@ -211,11 +211,26 @@ A panel whose legend is the market question. It shows the leading probability as
 - The marks are always Ink. Series colors, Fill and Alert never tint them.
 - Never place a mark behind text, charts or tables, and never as a pattern or watermark.
 
-**Icons.** Each icon depicts one concrete thing the product has and always sits beside a text label. Build on a 24×24 grid with a 20×20 live area, 2px strokes (3px at 48px), square caps, mitered joins, whole-number coordinates, `stroke: currentColor`, `fill: none`. Fills are limited to solid ink and the 45° hatch. Prefer straight segments at 0°, 45° and 90°. One color per icon. Icons never animate. A standalone icon button is a 44px square with a 2px ink border and an accessible name.
+**Base icons.** Each icon depicts one concrete thing the product has and always sits beside a text label. Build on a 24×24 grid with a 20×20 live area, 2px strokes (3px at 48px), square caps, mitered joins, whole-number coordinates, `stroke: currentColor`, `fill: none`. Fills are limited to solid ink and the 45° hatch. Prefer straight segments at 0°, 45° and 90°. One color per icon. Base icons never animate. The illustrated wallet uses the piggy bank described below instead of a geometric wallet glyph. A standalone icon button is a 44px square with a 2px ink border and an accessible name.
 
 Market states are ledger boxes: an empty box for Open, a struck box for Closed, a ticked box for Settled.
 
-**Illustration** is for empty states, onboarding and rare milestones only, never on a screen with a chart or dense table. White line on black, 3px strokes, hatch in teal as the only color fill, one per screen, 160–240px. Subjects are the social world (friends, rooms, food, dice, tickets), never finance clichés such as coin stacks, rockets or upward arrows. No gradients, photos, 3D or emoji.
+**Illustration.** Use confident, hand-drawn contours with natural irregularity and organic curves, distinct from the exact lines of controls, tables and base icons. Do not force supplied illustration onto the icon grid or normalize its line weights. White artwork on black; hatch in teal is the only optional color fill. No gradients, photos, 3D or emoji.
+
+- Spot illustrations belong in empty states, onboarding and rare milestones: one per screen, 160–240px, not behind text or data and not competing with a chart or dense table.
+- The wallet piggy bank is a functional exception: it identifies the wallet beside its text label, including when the wallet contains a ledger. It is not a mascot or a decorative panel illustration. Scale proportionally for its context and retain an accessible name and a touch target of at least 44px.
+- Supplied examples: `images/BRIC/piggy_bank.svg` (wallet artwork) and `images/BRIC/coin_illustrated.svg` (reward artwork). They establish the hand-drawn direction. Their current black artwork needs author-supplied dark-background variants before use on black; do not recolor the files or add a white illustration panel.
+- Other subjects come from the social world (friends, rooms, food, dice, tickets). The piggy bank and individual reward coin are explicit exceptions to the restriction on finance imagery; coin stacks, rockets and upward arrows remain excluded.
+
+### Reward motion
+
+- After a confirmed bric credit, the illustrated coin falls into the piggy bank’s slot. One brief drop per confirmed reward, not one coin per bric.
+- Short, hand-drawn **white trailing lines on black** follow the coin’s path to communicate movement. They are transient illustration strokes, not chart guides, decorative texture or a new container-border style.
+- Occlude the coin at the slot so it reads as entering the bank, then remove the coin and trails. The piggy bank stays still. No loops, confetti, springs or unrelated celebration.
+- Trigger only for a newly confirmed credit. Failed or capped attempts, idempotent replays and loading existing ledger history do not animate.
+- Show the exact gain and balance before and after independently of the animation. Do not delay the balance update, block interaction or move focus for the effect.
+- With reduced motion, skip the coin and trails entirely and retain the same static balance feedback. This is the sole exception to the ordinary 100ms-or-less UI transition rule; it does not animate the Bric logo or currency symbol.
+- Use the same illustration and motion treatment in an embedded wallet and a future standalone Bric site. This decision does not expand the current wallet’s feature scope.
 
 ## 11. Voice and copy
 
@@ -234,7 +249,7 @@ Tone examples: “You hold 555 brics.” “+20 latest · 12 transactions”. �
 - Focus ring: 3px ink outline with 2px offset on every interactive element.
 - Touch targets at least 44px.
 - Never rely on color alone: every series has a marker shape and a direct label.
-- Respect reduced motion. Motion is functional only: state changes are immediate or a single step of 100ms or less. No easing flourishes, no looping animation, no celebration animation.
+- Respect reduced motion. Ordinary UI state changes are immediate or a single step of 100ms or less. The brief confirmed-reward coin drop is the only illustration-motion exception (see Reward motion); skip it entirely with reduced motion. No looping or unrelated celebration animation.
 
 ## 13. Data (first build)
 
@@ -273,11 +288,13 @@ Stop after each step and show the result before continuing.
 - [ ] Every balance change shows before and after.
 - [ ] No copy calls brics money, cash or funds, and none comments on their pointlessness.
 - [ ] Touch targets are at least 44px and focus rings are visible.
+- [ ] Hand-drawn artwork is distinct from clean UI lines; the piggy bank identifies the wallet without becoming a mascot.
+- [ ] Reward motion runs only for newly confirmed credits, uses white trails on black, and is absent with reduced motion.
 
 ## 17. Do not
 
 - Add status indicators, mode labels, badges, avatars, mascots or decorative icons.
-- Add rounded corners, shadows, gradients, blur or a light theme.
+- Add rounded UI corners, shadows, gradients, blur or a light theme. Organic illustration curves are not rounded controls.
 - Use font weights below 500.
 - Use yellow anywhere but the first letter of panel titles.
 - Use dashed lines outside the places listed above.

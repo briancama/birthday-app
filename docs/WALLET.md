@@ -129,6 +129,14 @@ start/end at that point.
 
 ## Site UI
 
+The wallet includes a provisional illustrated reward preview: one coin drops
+into a stationary piggy bank with white trails on black after a confirmed
+check-in credit. Reduced motion skips the effect. On localhost only,
+"Preview coin drop" replays it without any request or balance change.
+The supplied black SVGs are rendered as white CSS masks for this prototype;
+the source files remain unchanged, pending final dark-background artwork.
+`--wallet-drop-duration` in `wallet.css` controls the drop (650ms initially).
+
 Signed-in users see a chips button in the nav on every page
 (`templates/partials/wallet-nav-button.ejs`, included by both nav partials).
 It opens `js/components/wallet-panel.js` (balance, recent activity with
