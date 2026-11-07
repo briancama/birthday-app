@@ -4,17 +4,32 @@
 <% if (walletNav.user && typeof walletNav.chipBalance === 'number') { %>
 <% const chipLabel = (walletNav.chipBalance / 100).toLocaleString('en-US', { maximumFractionDigits: 2 }); %>
 <link rel="stylesheet" href="/css/components/wallet.css" />
-<button
-  type="button"
-  class="wallet-nav-button"
-  data-wallet-open
-  data-sound="menu"
-  aria-haspopup="dialog"
-  aria-label="Your chips: <%= chipLabel %>"
->
-  <span class="wallet-chip-icon" aria-hidden="true"></span>
-  <span class="wallet-nav-amount" data-wallet-balance><%= chipLabel %></span>
-</button>
+<dialog open id="walletPortal" class="wallet-portal" data-wallet-portal data-wallet-units="<%= walletNav.chipBalance %>" role="presentation">
+  <div class="wallet-portal__scene" data-wallet-scene></div>
+  <button type="button" class="wallet-portal__tuck" data-wallet-tuck aria-label="Tuck wallet away">
+    <span aria-hidden="true">›</span>
+  </button>
+  <button
+    type="button"
+    class="wallet-portal__open"
+    data-wallet-open
+    data-sound="menu"
+    aria-haspopup="dialog"
+    aria-controls="walletPortal"
+    aria-expanded="false"
+    aria-label="Your brics: <%= chipLabel %>"
+  >
+  </button>
+  <button
+    type="button"
+    class="wallet-portal__tab"
+    data-wallet-restore
+    aria-label="Bring wallet back"
+    hidden
+  >
+    <span class="wallet-portal__tab-icon" aria-hidden="true"></span>
+  </button>
+</dialog>
 <script type="module">
   import { initWalletPanel } from "/js/components/wallet-panel.js";
   initWalletPanel();

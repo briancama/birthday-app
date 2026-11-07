@@ -8,6 +8,21 @@
 
 BEGIN;
 
+DROP TRIGGER IF EXISTS wallet_credit_new_achievement ON public.user_achievements;
+DROP FUNCTION IF EXISTS public.wallet_credit_new_achievement();
+DROP FUNCTION IF EXISTS public.activate_wallet();
+DROP FUNCTION IF EXISTS public.activate_wallet_for(uuid);
+DROP FUNCTION IF EXISTS public.wallet_sync_achievements_internal(uuid, boolean);
+DROP TABLE IF EXISTS public.wallet_achievement_activation;
+
+DROP TRIGGER IF EXISTS wallet_reward_wall_post ON public.profile_wall;
+DROP FUNCTION IF EXISTS public.wallet_reward_wall_post();
+DROP FUNCTION IF EXISTS public.record_site_vote_for(text, uuid, uuid);
+DROP FUNCTION IF EXISTS public.earn_site_vote_for(uuid, text);
+DROP TABLE IF EXISTS public.site_votes;
+DROP TABLE IF EXISTS public.site_vote_types;
+DROP FUNCTION IF EXISTS public.wallet_earn_internal(uuid, text, uuid);
+
 DROP FUNCTION IF EXISTS public.contest_leaderboard(uuid);
 DROP FUNCTION IF EXISTS public.wallet_cash_at(uuid, timestamptz);
 DROP FUNCTION IF EXISTS public.compute_positions_value(uuid, timestamptz);

@@ -35,7 +35,7 @@ if (!process.env.SUPABASE_JWT_SECRET) {
 
 const db = getSupabase();
 const RUN = crypto.randomBytes(3).toString("hex");
-const created = { users: [], rules: [], contests: [] };
+const created = { users: [], rules: [], contests: [], achievements: [] };
 let failures = 0;
 
 const check = (label, ok, extra = "") => {
@@ -378,6 +378,81 @@ async function startingGrant() {
   check("grant balance", (await balanceOf(h)) === 2500);
 }
 
+async function achievementCredits() {
+  console.log("\n-- Achievement conversion (requires wallet_achievement_credits migration)");
+  const player = await makeUser("achievements");
+  async function catalog(tag, points, eligible) {
+    const { data, error } = await db
+      .from("achievements")
+      .insert({
+        key: `wtest_${RUN}_${tag}`,
+        name: `Wallet test ${tag}`,
+        points,
+        is_visitor_eligible: eligible,
+      })
+      .select("id")
+      .single();
+    if (error) throw new Error(`create achievement: ${error.message}`);
+    created.achievements.push(data.id);
+    return data.id;
+  }
+  async function award(id) {
+    const { error } = await db
+      .from("user_achievements")
+      .insert({ user_id: player, achievement_id: id });
+    if (error) throw new Error(`award achievement: ${error.message}`);
+  }
+  const eligible = await catalog("eligible", 3, true);
+  const excluded = await catalog("excluded", 20, false);
+  const zero = await catalog("zero", 0, true);
+  const racing = await catalog("racing", 2, true);
+  await award(eligible);
+  await award(excluded);
+  await award(zero);
+  check("awards before first open do not credit", (await balanceOf(player)) === 0);
+
+  const activate = async () => {
+    const { data, error } = await db.rpc("activate_wallet_for", { p_player: player });
+    if (error) throw new Error(`activate wallet: ${error.message}`);
+    return data;
+  };
+  const results = await Promise.all([
+    ...Array.from({ length: 10 }, activate),
+    award(racing).then(() => null),
+  ]);
+  const ledger = await ledgerOf(player);
+  check(
+    "racing first opens and award credit exactly once",
+    ledger.length === 2 && (await balanceOf(player)) === 25000
+  );
+  check(
+    "conversion bypasses earning caps and uses grant/achievement rows",
+    ledger.every((row) => row.kind === "grant" && row.ref_type === "achievement")
+  );
+  check(
+    "activation responses never claim duplicate credits",
+    results.filter(Boolean).reduce((total, row) => total + Number(row.amount), 0) <= 25000
+  );
+  check("repeat open pays nothing", (await activate()).amount === 0);
+
+  const { error } = await db
+    .from("user_achievements")
+    .delete()
+    .eq("user_id", player)
+    .eq("achievement_id", eligible);
+  if (error) throw new Error(`delete test award: ${error.message}`);
+  await award(eligible);
+  check("delete/re-award cannot replay credits", (await balanceOf(player)) === 25000);
+  const later = await catalog("later", 1, true);
+  await award(later);
+  check("later awards credit automatically", (await balanceOf(player)) === 30000);
+  const client = asPlayer(player);
+  const own = await client.rpc("activate_wallet");
+  check("JWT activation operates on own account", !own.error && own.data.amount === 0);
+  const other = await client.rpc("activate_wallet_for", { p_player: player });
+  check("JWT cannot call service-only activation", Boolean(other.error));
+}
+
 async function cleanup() {
   const users = created.users;
   if (users.length) {
@@ -388,6 +463,10 @@ async function cleanup() {
   }
   if (created.rules.length) await db.from("earn_rules").delete().in("action", created.rules);
   if (created.contests.length) await db.from("contests").delete().in("id", created.contests);
+  if (created.achievements.length) {
+    const { error } = await db.from("achievements").delete().in("id", created.achievements);
+    if (error) console.warn(`cleanup: could not delete test achievements: ${error.message}`);
+  }
 }
 
 (async () => {
@@ -399,6 +478,7 @@ async function cleanup() {
     await rls();
     await contestLeaderboard();
     await startingGrant();
+    await achievementCredits();
   } catch (err) {
     failures++;
     console.error(`\nERROR  ${err.message}`);

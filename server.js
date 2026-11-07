@@ -10,6 +10,7 @@ if (process.env.NODE_ENV !== "production") {
 const path = require("path");
 const fs = require("fs");
 const cookieParser = require("cookie-parser");
+const { randomUUID } = require("node:crypto");
 const {
   getSupabase,
   createSanitizer,
@@ -133,6 +134,27 @@ function wantsNavData(req) {
   const ext = path.extname(req.path);
   return !ext || ext === ".html";
 }
+
+// Establish visitor identity on page load, before any simultaneous vote clicks.
+app.use((req, res, next) => {
+  if (
+    req.method === "GET" &&
+    wantsNavData(req) &&
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      String(req.signedCookies?.site_vote_visitor || "")
+    )
+  ) {
+    res.cookie("site_vote_visitor", randomUUID(), {
+      signed: true,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 365 * 24 * 60 * 60 * 1000,
+    });
+  }
+  next();
+});
 
 // Server middleware: populate nav data for server-rendered navigation partials
 app.use(async (req, res, next) => {

@@ -1,23 +1,23 @@
 # Bric Design System: Philosophy and Foundations
 
-*Version 1.0 for Bric, the friend-group prediction market*
+_Version 1.0 for Bric, the friend-group prediction market_
 
 **How to read this.** Sections tagged **Settled** record decisions made while building the wallet. Sections tagged **Proposed** extend those decisions to parts of the product that don’t exist yet. They are adopted for the first build, but nothing in them has been built yet, so check them against real screens as they are made. Section 10 lists what is still undecided.
 
 ## At a glance
 
-| Topic | Decision |
-| --- | --- |
-| **Platform** | Bric, a friend-group prediction market |
-| **Currency** | brics (“1 bric”, “20 brics”), written with the Bric symbol beside numerals |
-| **Idea** | A ledger for friends: heavy, plain and exact |
-| **Look** | Black ground, white ink, 4px double rules, heavy IBM Plex Mono, radius 0, dark only |
-| **Interface color** | Ink white, Fill teal `#00a0a0`, Mark yellow `#ffd400` on first letters only, Alert red `#ff2400` |
-| **Series color** | Teal, yellow, blue `#3366ff`, green `#00ff00`, orange `#ff8000`, by stable slot, with a marker shape each |
-| **Line language** | Double = a major unit, solid = structure and data, dashed = divisions inside a container |
-| **Voice** | Earnest and plain. Pushes the user toward gaining more brics, never winks, and is exact on anything that moves a balance |
-| **Marks** | Supplied Bric logo and symbol remain unmodified; organic curves also belong to hand-drawn illustration, never rounded UI chrome |
-| **Icons** | Clean-lined, labeled and few. Market states are ledger boxes. The hand-drawn piggy bank identifies the wallet |
+| Topic                       | Decision                                                                                                                                         |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Platform**                | Bric, a friend-group prediction market                                                                                                           |
+| **Currency**                | brics (“1 bric”, “20 brics”), written with the Bric symbol beside numerals                                                                       |
+| **Idea**                    | A ledger for friends: heavy, plain and exact                                                                                                     |
+| **Look**                    | Black ground, white ink, 4px double rules, heavy IBM Plex Mono, radius 0, dark only                                                              |
+| **Interface color**         | Ink white, Fill teal `#00a0a0`, Mark yellow `#ffd400` on first letters only, Alert red `#ff2400`                                                 |
+| **Series color**            | Teal, yellow, blue `#3366ff`, green `#00ff00`, orange `#ff8000`, by stable slot, with a marker shape each                                        |
+| **Line language**           | Double = a major unit, solid = structure and data, dashed = divisions inside a container                                                         |
+| **Voice**                   | Earnest and plain. Pushes the user toward gaining more brics, never winks, and is exact on anything that moves a balance                         |
+| **Marks**                   | Supplied Bric logo and symbol remain unmodified; organic curves also belong to hand-drawn illustration, never rounded UI chrome                  |
+| **Icons**                   | Clean-lined, labeled and few. Market states are ledger boxes. The hand-drawn piggy bank identifies the wallet                                    |
 | **Illustration and motion** | Confident hand-drawn artwork; one brief coin drop into the piggy bank per confirmed reward, white trails on black, no motion with reduced motion |
 
 ## 1. Origins
@@ -38,11 +38,11 @@ The core metaphor is the **ledger**: everything on screen is a record, and recor
 
 ### Principles (Settled)
 
-**1. Everything means something.** Every label, badge, line, color and word on screen must refer to a real thing in the product. If you can’t say what an element means, remove it. *Test: point at any element and explain what it tells the user. “It looks technical” is not an answer.* This is the principle that removed the invented status labels from the first wallet draft.
+**1. Everything means something.** Every label, badge, line, color and word on screen must refer to a real thing in the product. If you can’t say what an element means, remove it. _Test: point at any element and explain what it tells the user. “It looks technical” is not an answer._ This is the principle that removed the invented status labels from the first wallet draft.
 
 **2. Structure is drawn, not decorated.** We separate and group content with lines. We don’t use shadows, rounded corners, gradients or tinted surfaces. Different line styles mean different things (see Line language).
 
-**3. Heavy, never delicate.** Type is medium or bold, lines are thick, and numbers are large. Nothing should look faint or tentative. *Test: squint. Every element should still be legible.*
+**3. Heavy, never delicate.** Type is medium or bold, lines are thick, and numbers are large. Nothing should look faint or tentative. _Test: squint. Every element should still be legible._
 
 **4. Color is a job, not a mood.** Each color has one role and one rule within its layer: interface colors say what the interface is doing, and series colors say which option a data series belongs to. We add a color only when a new job exists that no current color can do.
 
@@ -77,15 +77,15 @@ The core metaphor is the **ledger**: everything on screen is a record, and recor
 
 ### Color (Settled)
 
-| Token | Value | Job | Rules |
-| --- | --- | --- | --- |
-| Ground | `#000000` | Page and every box background | Never tinted or layered. |
-| Ink | `#ffffff` | All lines and all body text | Lines are always Ink. |
-| Fill | `#00a0a0` (teal) | Selected, active, labeled and header fills | Text on Fill is always black, never white. |
-| Hatch | `#00b3b3` | Chart pattern fill only | Not used for text or borders. |
-| Mark | `#ffd400` (yellow) | The first letter of each panel title | Rare by design. See extension rule below. |
-| Guide | `#bdbdbd` | Chart gridlines and other tertiary guides | Never for text. |
-| Alert (proposed) | #ff2400 (red) | Errors, failures, losses and irreversible actions | Always paired with a word or a sign. Black text on a red fill. Never a series color. |
+| Token            | Value              | Job                                               | Rules                                                                                |
+| ---------------- | ------------------ | ------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Ground           | `#000000`          | Page and every box background                     | Never tinted or layered.                                                             |
+| Ink              | `#ffffff`          | All lines and all body text                       | Lines are always Ink.                                                                |
+| Fill             | `#00a0a0` (teal)   | Selected, active, labeled and header fills        | Text on Fill is always black, never white.                                           |
+| Hatch            | `#00b3b3`          | Chart pattern fill only                           | Not used for text or borders.                                                        |
+| Mark             | `#ffd400` (yellow) | The first letter of each panel title              | Rare by design. See extension rule below.                                            |
+| Guide            | `#bdbdbd`          | Chart gridlines and other tertiary guides         | Never for text.                                                                      |
+| Alert (proposed) | #ff2400 (red)      | Errors, failures, losses and irreversible actions | Always paired with a word or a sign. Black text on a red fill. Never a series color. |
 
 Rules:
 
@@ -102,13 +102,13 @@ Contrast (approximate): white on black is about 21:1, black on teal about 6.5:1,
 
 Prediction markets often have more than two options, and every option needs a stable identity across charts, positions and the ledger. The interface colors can’t do that job, so the system has a second layer: **series colors**. They exist only to tell one option from another.
 
-| Slot | Color | Value | Hue | Contrast on black | Marker |
-| --- | --- | --- | --- | --- | --- |
-| 1 | Teal | `#00a0a0` | 180° | 6.5:1 | Solid square |
-| 2 | Yellow | `#ffd400` | 50° | 14.7:1 | Solid diamond |
-| 3 | Blue | `#3366ff` | 225° | 4.5:1 | Solid triangle |
-| 4 | Green | `#00ff00` | 120° | 15.3:1 | Cross (×) |
-| 5 | Orange | `#ff8000` | 30° | 8.3:1 | Hollow square |
+| Slot | Color  | Value     | Hue  | Contrast on black | Marker         |
+| ---- | ------ | --------- | ---- | ----------------- | -------------- |
+| 1    | Teal   | `#00a0a0` | 180° | 6.5:1             | Solid square   |
+| 2    | Yellow | `#ffd400` | 50°  | 14.7:1            | Solid diamond  |
+| 3    | Blue   | `#3366ff` | 225° | 4.5:1             | Solid triangle |
+| 4    | Green  | `#00ff00` | 120° | 15.3:1            | Cross (×)      |
+| 5    | Orange | `#ff8000` | 30°  | 8.3:1             | Hollow square  |
 
 The hues are spread around the wheel, with red (about 8°) held back for the Alert job. Teal, yellow, green and orange are fully saturated. Orange sits closest to red, so it leans on its marker and label, and red is always paired with a word or a sign. Blue is as pure as legibility allows: pure blue (#0000ff) is only 2.4:1 against black, so the system uses #3366ff at 4.5:1 and draws it with 3px lines and larger markers. The other four sit at 6:1 or better.
 
@@ -126,14 +126,14 @@ The hues are spread around the wheel, with red (about 8°) held back for the Ale
 
 Why monospace: columns align without effort, numerals read as a record, and the typeface carries the ledger character on its own so we don’t need ornament.
 
-| Role | Size | Weight | Notes |
-| --- | --- | --- | --- |
-| Display numeral | 60px | 700 | Letter-spacing −0.03em. Unit sits beside it at 16px, spacing reset to 0. |
-| Page title | 30px | 700 | Uppercase, letter-spacing +0.04em. |
-| Panel title | 16px | 700 | Sits in the border like a notch. First letter in Mark yellow. |
-| Body | 15px | 500 | Line height 1.5. |
-| Small / table / readout | 13px | 500 (700 for emphasis) |  |
-| Chart labels | 12px | 500 |  |
+| Role                    | Size | Weight                 | Notes                                                                    |
+| ----------------------- | ---- | ---------------------- | ------------------------------------------------------------------------ |
+| Display numeral         | 60px | 700                    | Letter-spacing −0.03em. Unit sits beside it at 16px, spacing reset to 0. |
+| Page title              | 30px | 700                    | Uppercase, letter-spacing +0.04em.                                       |
+| Panel title             | 16px | 700                    | Sits in the border like a notch. First letter in Mark yellow.            |
+| Body                    | 15px | 500                    | Line height 1.5.                                                         |
+| Small / table / readout | 13px | 500 (700 for emphasis) |                                                                          |
+| Chart labels            | 12px | 500                    |                                                                          |
 
 Rules:
 
@@ -146,15 +146,15 @@ Rules:
 
 Lines are the system’s grammar. Each style has a meaning, so the style tells the reader what kind of boundary they’re looking at.
 
-| Line | Weight | Meaning | Where it appears |
-| --- | --- | --- | --- |
-| Double | 4px | A major unit that contains things | Panels, the title block, the rule under a table header |
-| Solid | 3px | Data itself | Chart frame, the data line |
-| Solid | 2px | A secondary container or control | Ledger container, readout bar, chips, buttons |
-| Solid | 1px | A division between neighbors | Table column dividers |
-| Dashed (short) | 1–2px | More of the same, divided inside a container | The rule under the balance numeral, ledger row dividers |
-| Dashed (long, 6/4) | 1.5px | Reference marks | Chart gridlines |
-| Dotted / short dash (2/3) | 1.5px | Transient guides | The cursor line on a chart |
+| Line                      | Weight | Meaning                                      | Where it appears                                        |
+| ------------------------- | ------ | -------------------------------------------- | ------------------------------------------------------- |
+| Double                    | 4px    | A major unit that contains things            | Panels, the title block, the rule under a table header  |
+| Solid                     | 3px    | Data itself                                  | Chart frame, the data line                              |
+| Solid                     | 2px    | A secondary container or control             | Ledger container, readout bar, chips, buttons           |
+| Solid                     | 1px    | A division between neighbors                 | Table column dividers                                   |
+| Dashed (short)            | 1–2px  | More of the same, divided inside a container | The rule under the balance numeral, ledger row dividers |
+| Dashed (long, 6/4)        | 1.5px  | Reference marks                              | Chart gridlines                                         |
+| Dotted / short dash (2/3) | 1.5px  | Transient guides                             | The cursor line on a chart                              |
 
 **The dashed rule:** dashes are a delineation tool, not a theme. Use them to divide repeated or related content inside a container. Don’t use them for borders around containers, and don’t add them for texture.
 
@@ -187,11 +187,11 @@ Base icons are the system’s small alphabet; illustrations are its hand-drawn o
 
 **Construction**
 
-| Size | Stroke | Use |
-| --- | --- | --- |
-| 16px | 2px | Inline beside small text |
-| 24px | 2px | Default size for navigation, buttons and rows |
-| 48px | 3px | Spot icons in empty states |
+| Size | Stroke | Use                                           |
+| ---- | ------ | --------------------------------------------- |
+| 16px | 2px    | Inline beside small text                      |
+| 24px | 2px    | Default size for navigation, buttons and rows |
+| 48px | 3px    | Spot icons in empty states                    |
 
 - Build on a 24 × 24 grid with a 20 × 20 live area and a 2px margin. Place points on whole-number coordinates so 2px strokes land crisp on the pixel grid.
 - Ship as SVG with `stroke` set to `currentColor`, `fill` set to `none`, square caps and mitered joins, so an icon takes its color from the surrounding text.
@@ -220,12 +220,12 @@ Spot illustration is for moments where the interface has room to be human: empty
 
 The brand has two marks, both supplied as SVG. The **logo** reads as two interlocking B shapes, tilted. The **symbol** is a heavy B crossed by a vertical bar, with a rounded flourish on its left; the bar is the same device currency symbols use. The symbol doubles as the currency mark and stands wherever “pts” used to stand.
 
-| File | Use |
-| --- | --- |
-| `bric_symbol_white.svg` | Default symbol: white on black, everywhere in the interface |
-| `bric_symbol_white_sm.svg` | Same symbol, for small sizes such as inline beside numerals and favicons (assumed purpose of the \_sm files) |
-| `bric_logo.svg` | Full logo in white, for headers, splash and share images on black |
-| `bric_symbol.svg`, `bric_symbol_sm.svg`, `bric_logo_black.svg` | Black versions for light surfaces such as print and documents |
+| File                                                           | Use                                                                                                          |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `bric_symbol_white.svg`                                        | Default symbol: white on black, everywhere in the interface                                                  |
+| `bric_symbol_white_sm.svg`                                     | Same symbol, for small sizes such as inline beside numerals and favicons (assumed purpose of the \_sm files) |
+| `bric_logo.svg`                                                | Full logo in white, for headers, splash and share images on black                                            |
+| `bric_symbol.svg`, `bric_symbol_sm.svg`, `bric_logo_black.svg` | Black versions for light surfaces such as print and documents                                                |
 
 - **Unmodified marks.** The interface is built from straight rules and right angles; supplied marks and hand-drawn illustration may have organic curves. Do not round, outline, shadow, tilt, stretch or recolor the logo or symbol to match the interface, and set them against plain black so the contrast does the work.
 - **Always Ink.** White on black, black on light surfaces. Series colors, Fill and Alert never tint the marks.
@@ -235,6 +235,52 @@ The brand has two marks, both supplied as SVG. The **logo** reads as two interlo
 - **Never behind content.** Not behind text, charts or tables, and not as a pattern or watermark.
 
 ### Motion (Settled direction, implementation pending)
+
+**Embedded portal (Settled direction).** The BriSpace wallet lives in a fixed
+bottom-right teal organic shape containing the piggy bank, Wallet label and
+balance, replacing the navigation wallet button. The blob marks the boundary
+to Bric; it is an explicit exception to straight-edged UI chrome, not a general
+rounded-control style. A tuck-away control leaves an accessible edge tab.
+Remember that choice on this browser across pages and visits, and respect
+safe areas and mobile bottom navigation.
+
+The embedded portal is icon-only, with a smaller stationary piggy bank on a
+slowly morphing teal blob and subtle teal glow. Dragging toward the right edge
+tucks it away; an icon-only edge tab restores it. A keyboard-focus tuck control
+remains available. Accessible names replace visible labels here. This is a
+specific exception to the no-shadow and no-loop rules for the portal boundary;
+other Bric controls remain clean-lined. Reduced motion disables morphing.
+The piggy bank stays centered independently of the coin's flight area; reward
+coins still enter its slot from above the teal shape. A dark teal center and
+brighter irregular rim suggest depth. The gradient is a portal-specific
+exception alongside its glow, not a general panel treatment.
+
+**Current portal direction:** the opening is nearly circular and its rim moves
+only slightly. A teal rim surrounds a black viewport containing a cropped
+white double-ruled wallet surface with a teal header band and the centered pig.
+This replaces the teal gradient interior: we see a glimpse of Bric's design,
+not a teal object on BriSpace. No invented data or visible labels are added.
+The coin drop, drag dismissal and reduced-motion behavior remain.
+
+**Light-preview experiment:** inside the embedded portal, a white viewport
+contains a centered black double-ruled wallet box and centered piggy bank,
+with a small legend-style notch and no visible text. This replaces the black
+preview and teal header band only; the full product's dark-only decision and
+the surrounding BriSpace theme are unchanged.
+
+**Actual wallet portal (current direction):** the opening is a crop of the
+real light Bric wallet, not an imitation of another site's UI. The same surface
+expands on click, revealing its balance, daily check-in and recent activity.
+The lower-right illustrated pig and varied copies of the hand-drawn coin
+decorate the bottom. Keep the expanded boundary circular with black around the
+separate white double-ruled box. The heading says Wallet; the balance summary
+includes latest change and total transactions. Activity reserves four scrollable
+rows. Coin-drop preview is test-only (`?walletPreview=1` on localhost).
+Clean monospace controls and teal action fills replace the legacy
+wallet dialog. Close/Escape returns to the crop; retain sound, coin motion and
+drag dismissal. Clipped controls are inert, and the expanded surface uses
+native modal focus. A brief 320ms expansion is an explicit portal exception;
+reduced motion makes it immediate. This does not expand the product scope.
 
 - Motion is functional only: it confirms a state change.
 - Ordinary UI state changes are immediate or a single step of 100ms or less. No easing flourishes, springs or looping animation.
@@ -349,12 +395,12 @@ When something new is needed, check it against these questions in order:
   color-scheme: dark;
 
   /* color */
-  --ground: #000000;   /* page + box backgrounds */
-  --ink:    #ffffff;   /* all lines + text */
-  --fill:   #00a0a0;   /* selected / header / label fills; black text on top */
-  --hatch:  #00b3b3;   /* chart pattern only */
-  --mark:   #ffd400;   /* first letter of panel titles */
-  --guide:  #bdbdbd;   /* gridlines */
+  --ground: #000000; /* page + box backgrounds */
+  --ink: #ffffff; /* all lines + text */
+  --fill: #00a0a0; /* selected / header / label fills; black text on top */
+  --hatch: #00b3b3; /* chart pattern only */
+  --mark: #ffd400; /* first letter of panel titles */
+  --guide: #bdbdbd; /* gridlines */
 
   /* type */
   --font: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;

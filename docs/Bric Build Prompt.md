@@ -1,6 +1,6 @@
 # Bric: Build Prompt
 
-*How to use this. Paste it into your coding tool as the project instructions, or save it as DESIGN.md in the repo. It is self-contained and assumes no other file except the logo SVGs. The full rationale lives in the Bric Design System doc.*
+_How to use this. Paste it into your coding tool as the project instructions, or save it as DESIGN.md in the repo. It is self-contained and assumes no other file except the logo SVGs. The full rationale lives in the Bric Design System doc._
 
 ## 1. What you are building
 
@@ -38,20 +38,20 @@ Design values are in px. Implement sizes in rem (1rem = 16px) so text respects u
   color-scheme: dark;
 
   /* interface colors */
-  --ground: #000000;  /* page and every box background */
-  --ink:    #ffffff;  /* all lines and body text */
-  --fill:   #00a0a0;  /* selected, active, header and label fills (teal) */
-  --hatch:  #00b3b3;  /* chart hatch pattern only */
-  --mark:   #ffd400;  /* first letter of panel titles only */
-  --guide:  #bdbdbd;  /* chart gridlines, tertiary guides */
-  --alert:  #ff2400;  /* errors, failures, losses, irreversible actions */
+  --ground: #000000; /* page and every box background */
+  --ink: #ffffff; /* all lines and body text */
+  --fill: #00a0a0; /* selected, active, header and label fills (teal) */
+  --hatch: #00b3b3; /* chart hatch pattern only */
+  --mark: #ffd400; /* first letter of panel titles only */
+  --guide: #bdbdbd; /* chart gridlines, tertiary guides */
+  --alert: #ff2400; /* errors, failures, losses, irreversible actions */
 
   /* series colors: identify one option among several, assigned by slot */
-  --series-1: #00a0a0;  /* teal,   solid square    */
-  --series-2: #ffd400;  /* yellow, solid diamond   */
-  --series-3: #3366ff;  /* blue,   solid triangle  */
-  --series-4: #00ff00;  /* green,  cross           */
-  --series-5: #ff8000;  /* orange, hollow square   */
+  --series-1: #00a0a0; /* teal,   solid square    */
+  --series-2: #ffd400; /* yellow, solid diamond   */
+  --series-3: #3366ff; /* blue,   solid triangle  */
+  --series-4: #00ff00; /* green,  cross           */
+  --series-5: #ff8000; /* orange, hollow square   */
 
   /* type */
   --font: IBM Plex Mono, ui-monospace, Menlo, Consolas, monospace;
@@ -74,14 +74,14 @@ Design values are in px. Implement sizes in rem (1rem = 16px) so text respects u
 
 ## 5. Typography
 
-| Role | Size | Weight | Notes |
-| --- | --- | --- | --- |
-| Display numeral | 60px | 700 | Letter-spacing −0.03em, line-height 1.1. The unit (word or symbol) sits beside it at 16px. |
-| Page title | 30px | 700 | Uppercase, letter-spacing +0.04em. |
-| Panel title | 16px | 700 | Sits in the border like a notch. First letter in `--mark`. |
-| Body | 15px | 500 | Line-height 1.5. |
-| Small, table, readout | 13px | 500, 700 for emphasis |  |
-| Chart labels | 12px | 500 |  |
+| Role                  | Size | Weight                | Notes                                                                                      |
+| --------------------- | ---- | --------------------- | ------------------------------------------------------------------------------------------ |
+| Display numeral       | 60px | 700                   | Letter-spacing −0.03em, line-height 1.1. The unit (word or symbol) sits beside it at 16px. |
+| Page title            | 30px | 700                   | Uppercase, letter-spacing +0.04em.                                                         |
+| Panel title           | 16px | 700                   | Sits in the border like a notch. First letter in `--mark`.                                 |
+| Body                  | 15px | 500                   | Line-height 1.5.                                                                           |
+| Small, table, readout | 13px | 500, 700 for emphasis |                                                                                            |
+| Chart labels          | 12px | 500                   |                                                                                            |
 
 - Hierarchy comes from size and weight only, never from color or opacity.
 - Numbers are right-aligned in tables. Running totals and balances are bold.
@@ -90,15 +90,15 @@ Design values are in px. Implement sizes in rem (1rem = 16px) so text respects u
 
 ## 6. Line language
 
-| Line | Weight | Meaning | Where |
-| --- | --- | --- | --- |
-| Double | 4px | A major unit that contains things | Panels, title block, the rule under a table header |
-| Solid | 3px | Data itself | Chart frame, data lines |
-| Solid | 2px | A secondary container or control | Ledger container, readout bar, chips, buttons, form fields |
-| Solid | 1px | A division between neighbors | Table column dividers |
-| Dashed, short | 1–2px | More of the same, divided inside a container | The rule under the balance numeral, ledger row dividers |
-| Dashed, long (6 4) | 1.5px | Reference marks | Chart gridlines |
-| Dotted (2 3) | 1.5px | Transient guides | The chart cursor line |
+| Line               | Weight | Meaning                                      | Where                                                      |
+| ------------------ | ------ | -------------------------------------------- | ---------------------------------------------------------- |
+| Double             | 4px    | A major unit that contains things            | Panels, title block, the rule under a table header         |
+| Solid              | 3px    | Data itself                                  | Chart frame, data lines                                    |
+| Solid              | 2px    | A secondary container or control             | Ledger container, readout bar, chips, buttons, form fields |
+| Solid              | 1px    | A division between neighbors                 | Table column dividers                                      |
+| Dashed, short      | 1–2px  | More of the same, divided inside a container | The rule under the balance numeral, ledger row dividers    |
+| Dashed, long (6 4) | 1.5px  | Reference marks                              | Chart gridlines                                            |
+| Dotted (2 3)       | 1.5px  | Transient guides                             | The chart cursor line                                      |
 
 Dashes are a delineation tool, not a theme. Never use them as borders around containers or for texture. Dash patterns also mean “estimate” on charts, so series are never told apart by dashes.
 
@@ -199,12 +199,12 @@ A panel whose legend is the market question. It shows the leading probability as
 
 **Files** (supplied; place in `/assets/brand/`):
 
-| File | Use |
-| --- | --- |
-| `bric_symbol_white.svg` | Default symbol: white on black, everywhere in the interface |
-| `bric_symbol_white_sm.svg` | Same symbol for small sizes (inline beside numerals, favicon) |
-| `bric_logo.svg` | Full logo in white, for headers, splash and share images |
-| `bric_symbol.svg`, `bric_symbol_sm.svg`, `bric_logo_black.svg` | Black versions for light surfaces such as print |
+| File                                                           | Use                                                           |
+| -------------------------------------------------------------- | ------------------------------------------------------------- |
+| `bric_symbol_white.svg`                                        | Default symbol: white on black, everywhere in the interface   |
+| `bric_symbol_white_sm.svg`                                     | Same symbol for small sizes (inline beside numerals, favicon) |
+| `bric_logo.svg`                                                | Full logo in white, for headers, splash and share images      |
+| `bric_symbol.svg`, `bric_symbol_sm.svg`, `bric_logo_black.svg` | Black versions for light surfaces such as print               |
 
 - The symbol also serves as the currency mark. Use the word “brics” in running copy and the symbol in tables, the readout bar and the display numeral. Size the symbol to the cap height of the figures beside it.
 - Clear space is at least the width of the symbol’s vertical bar on every side (about 13% of the symbol’s width).
@@ -223,6 +223,53 @@ Market states are ledger boxes: an empty box for Open, a struck box for Closed, 
 - Other subjects come from the social world (friends, rooms, food, dice, tickets). The piggy bank and individual reward coin are explicit exceptions to the restriction on finance imagery; coin stacks, rockets and upward arrows remain excluded.
 
 ### Reward motion
+
+**Embedded wallet portal.** On BriSpace, the signed-in wallet lives in a fixed
+bottom-right teal organic shape containing the piggy bank, a Wallet label and
+balance. This is a deliberate shape exception for the boundary between BriSpace
+and Bric, not permission to round other Bric controls. It replaces the nav wallet
+button. A tuck-away button leaves an accessible edge tab; the choice persists
+on this browser across pages and visits. Respect safe areas and mobile bottom
+navigation. Keep the piggy bank and coin artwork unmodified.
+
+The embedded portal is now icon-only: no visible label or balance. Its teal
+shape morphs slowly with a subtle glow; the piggy bank stays still. Drag toward
+the right edge to tuck it away; an icon-only edge tab restores it and a
+keyboard-focus tuck control offers an alternative. Accessible names remain.
+Disable the morph with reduced motion. This ambient movement and glow are
+specific portal exceptions to the usual no-loop/no-shadow rules.
+The bank stays centered independently of the coin's flight space. Coins may
+enter from above the teal shape and disappear at its slot. A darker teal center
+and brighter irregular rim give the opening depth; this gradient is also a
+portal-specific exception, not a treatment for other panels.
+
+**Current portal direction:** keep the opening nearly circular, with only a
+subtle rim morph. Teal frames a black viewport onto cropped white double-ruled
+wallet structure and a teal header band. The centered pig belongs to that Bric
+scene, not to BriSpace. Do not fabricate data or add visible labels to the
+preview. This replaces the solid/gradient teal interior; retain the coin drop,
+drag-to-tuck behavior and reduced-motion support.
+
+**Light-preview experiment:** the embedded portal now shows a white surface
+with a centered black double-ruled box and the piggy bank centered inside it.
+A small legend-style notch belongs to the box; no visible label is added.
+This supersedes the black portal interior and teal header band only, not the
+dark-only rule for the full product or the surrounding BriSpace theme.
+
+**Actual wallet portal (supersedes the decorative preview):** build the limited
+BriSpace wallet in the light treatment above. The circular opening clips the
+actual wallet around its lower-right pig decoration. The full circle stays
+circular and black surrounds the separate white double-ruled wallet box.
+The header says Wallet; show balance, latest ledger delta and total transaction
+count. Reserve four scrollable activity rows, never fake missing transactions.
+Decorate the bottom with varied sizes/rotations of the supplied coin beside the
+pig. Coin-drop preview is only available on localhost with `?walletPreview=1`.
+Clicking expands the same surface to show real balance, daily check-in and
+history, with clean monospace UI and teal action fills, not a separate legacy
+dialog. Closing returns to the crop; keep drag-to-tuck, coin/sound and keyboard
+access. Collapsed controls are inert. Native modal focus and Escape apply while
+expanded. The 320ms expansion is a portal-only exception; reduced motion is
+immediate. Do not add markets or new earning actions.
 
 - After a confirmed bric credit, the illustrated coin falls into the piggy bank’s slot. One brief drop per confirmed reward, not one coin per bric.
 - Short, hand-drawn **white trailing lines on black** follow the coin’s path to communicate movement. They are transient illustration strokes, not chart guides, decorative texture or a new container-border style.

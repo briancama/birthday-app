@@ -1,76 +1,486 @@
-/* Chips wallet: nav button + panel (templates/partials/wallet-nav-button.ejs,
-   js/components/wallet-panel.js). Knobs below. */
+/* One light Bric wallet surface, revealed through an expanding teal portal. */
 :root {
-  --wallet-chip-color: var(--myspace-red, #cc0100);
-  --wallet-chip-edge: #fff;
-  --wallet-chip-size: 18px;
-  --wallet-panel-width: 360px;
-  --wallet-plus-color: #007a00;
-  --wallet-minus-color: var(--myspace-red, #cc0100);
+  --wallet-panel-width: 400px;
+  --wallet-panel-current-width: min(
+    var(--wallet-panel-width),
+    calc(100vw - 36px - env(safe-area-inset-right, 0px))
+  );
+  --wallet-panel-current-height: min(608px, calc(100dvh - 48px - env(safe-area-inset-bottom, 0px)));
+  --wallet-panel-right: max(12px, env(safe-area-inset-right, 0px));
+  --wallet-panel-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  --wallet-resting-circle-x: -10px;
+  --wallet-resting-circle-y: 6px;
+  --wallet-portal-diameter: 112px;
+  --wallet-portal-inner-radius: 46px;
+  --wallet-portal-duration: 320ms;
+  --wallet-market-preview-gap: 12px;
+  --wallet-plus-color: #006b68;
+  --wallet-minus-color: #a82424;
 }
 
-/* Prototype: white masks use the supplied black artwork without editing the SVGs. */
+.wallet-portal {
+  position: fixed;
+  inset: auto var(--wallet-panel-right) var(--wallet-panel-bottom) auto;
+  z-index: 1001;
+  width: 112px;
+  height: 112px;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  overflow: visible;
+  isolation: isolate;
+  color: #000;
+  font:
+    500 13px ui-monospace,
+    Menlo,
+    Consolas,
+    monospace;
+  transition: none;
+}
+
+.wallet-portal::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: #00a0a0;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 0 2px #00d4cf,
+    inset 0 0 12px 3px #00b3b3,
+    0 0 16px 3px #00a0a066,
+    0 0 32px #00a0a033;
+  animation: wallet-portal-morph 12s ease-in-out infinite;
+}
+
+.wallet-portal:not(.is-expanded)::before {
+  translate: var(--wallet-resting-circle-x) var(--wallet-resting-circle-y);
+}
+
+@keyframes wallet-portal-morph {
+  0%,
+  100% {
+    border-radius: 50%;
+  }
+  33% {
+    border-radius: 49% 51% 50% 50% / 51% 49% 51% 49%;
+  }
+  66% {
+    border-radius: 51% 49% 51% 49% / 49% 51% 49% 51%;
+  }
+}
+
+body.has-bottom-menu .wallet-portal {
+  --wallet-panel-bottom: calc(104px + env(safe-area-inset-bottom, 0px));
+  --wallet-panel-current-height: min(
+    608px,
+    calc(100dvh - 128px - env(safe-area-inset-bottom, 0px))
+  );
+  bottom: calc(104px + env(safe-area-inset-bottom, 0px));
+}
+
+.wallet-portal.is-expanded {
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  border-radius: 0;
+}
+
+.wallet-portal.is-expanded::before {
+  opacity: 0;
+  animation: none;
+}
+
+.wallet-portal::backdrop {
+  background: #0006;
+}
+
+.wallet-portal button {
+  color: #000;
+  background: #fff;
+  border: 2px solid #000;
+  border-radius: 0;
+  box-shadow: none;
+  text-shadow: none;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  margin: 0;
+}
+
+.wallet-portal button:focus-visible {
+  outline: 3px solid #007f7b;
+  outline-offset: 2px;
+}
+
+.wallet-portal .wallet-portal__open {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  translate: var(--wallet-resting-circle-x) var(--wallet-resting-circle-y);
+  touch-action: none;
+  cursor: grab;
+}
+
+.wallet-portal__scene {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: visible;
+  border-radius: 50%;
+  background: transparent;
+  pointer-events: none;
+}
+
+.wallet-portal__scene::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 5px;
+  border-radius: 50%;
+  background: #000;
+}
+
+.wallet-portal:not(.is-expanded) .wallet-portal__scene::before {
+  translate: var(--wallet-resting-circle-x) var(--wallet-resting-circle-y);
+}
+
+.wallet-portal.is-expanded .wallet-portal__scene {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+  isolation: isolate;
+}
+
+.wallet-portal.is-expanded .wallet-portal__scene::before,
+.wallet-portal.is-expanded .wallet-portal__scene::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  left: var(--wallet-portal-center-x);
+  top: var(--wallet-portal-center-y);
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition:
+    width var(--wallet-portal-duration) ease-out,
+    height var(--wallet-portal-duration) ease-out;
+}
+
+.wallet-portal.is-expanded .wallet-portal__scene::before {
+  background: #00a0a0;
+  box-shadow:
+    inset 0 0 0 2px #00d4cf,
+    inset 0 0 12px 3px #00b3b3,
+    0 0 16px 3px #00a0a066,
+    0 0 32px #00a0a033;
+}
+
+.wallet-portal.is-expanded .wallet-portal__scene::after {
+  width: 102px;
+  height: 102px;
+  background: #000;
+}
+
+.wallet-portal.is-expanded .wallet-portal__scene.is-revealed::before {
+  width: var(--wallet-portal-diameter);
+  height: var(--wallet-portal-diameter);
+}
+
+.wallet-portal.is-expanded .wallet-portal__scene.is-revealed::after {
+  width: calc(var(--wallet-portal-diameter) - 10px);
+  height: calc(var(--wallet-portal-diameter) - 10px);
+}
+
+.wallet-portal__market-preview {
+  display: none;
+}
+.wallet-portal.is-expanded .wallet-portal__market-preview {
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  clip-path: circle(51px at var(--wallet-portal-center-x) var(--wallet-portal-center-y));
+  transition: clip-path var(--wallet-portal-duration) ease-out;
+}
+.wallet-portal.is-expanded .wallet-portal__scene.is-revealed .wallet-portal__market-preview {
+  clip-path: circle(
+    var(--wallet-portal-inner-radius) at var(--wallet-portal-center-x) var(--wallet-portal-center-y)
+  );
+}
+.wallet-portal__market-preview img {
+  position: absolute;
+  right: calc(
+    var(--wallet-panel-right) + var(--wallet-panel-current-width) + var(--wallet-market-preview-gap)
+  );
+  bottom: var(--wallet-panel-bottom);
+  height: 100%;
+  max-width: none;
+}
+
+.wallet-portal.is-expanded .wallet-panel {
+  transition: clip-path var(--wallet-portal-duration) ease-out;
+  clip-path: circle(
+    51px at
+      calc(
+        var(--wallet-portal-center-x) -
+          (100vw - var(--wallet-panel-right) - var(--wallet-panel-current-width))
+      )
+      calc(
+        var(--wallet-portal-center-y) -
+          (100dvh - var(--wallet-panel-bottom) - var(--wallet-panel-current-height))
+      )
+  );
+}
+
+.wallet-portal.is-expanded .wallet-portal__scene.is-revealed .wallet-panel {
+  clip-path: circle(
+    var(--wallet-portal-inner-radius) at
+      calc(
+        var(--wallet-portal-center-x) -
+          (100vw - var(--wallet-panel-right) - var(--wallet-panel-current-width))
+      )
+      calc(
+        var(--wallet-portal-center-y) -
+          (100dvh - var(--wallet-panel-bottom) - var(--wallet-panel-current-height))
+      )
+  );
+}
+
+.wallet-panel {
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  bottom: 0;
+  width: var(--wallet-panel-current-width);
+  height: var(--wallet-panel-current-height);
+  box-sizing: border-box;
+  padding: 12px;
+  border: 4px double #000;
+  outline: 1px solid #fff;
+  color: #000;
+  background: #fff;
+  pointer-events: auto;
+}
+
+.wallet-portal.is-expanded .wallet-panel {
+  right: var(--wallet-panel-right);
+  bottom: var(--wallet-panel-bottom);
+}
+
+.wallet-portal:not(.is-expanded) .wallet-panel {
+  clip-path: circle(
+    51px at calc(100% - 56px + var(--wallet-resting-circle-x))
+      calc(100% - 56px + var(--wallet-resting-circle-y))
+  );
+}
+
+.wallet-panel__box {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.wallet-panel__head {
+  box-sizing: content-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  border-bottom: 4px double #000;
+}
+
+.wallet-panel__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font: inherit;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #000;
+  text-shadow: none;
+  text-decoration: none;
+}
+
+.wallet-panel__logo {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  background: #000;
+  flex-shrink: 0;
+}
+
+.wallet-panel__logo img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.wallet-portal .wallet-panel__close {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  font-size: 26px;
+}
+
+.wallet-panel__hero {
+  box-sizing: content-box;
+  position: relative;
+  height: 86px;
+  flex-shrink: 0;
+  margin-top: auto;
+}
+
+.wallet-panel__hero .wallet-reward {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+}
+
+.wallet-panel__coins {
+  position: absolute;
+  left: 0;
+  bottom: 8px;
+  right: 130px;
+  overflow: hidden;
+  height: 76px;
+}
+
+.wallet-panel__decor-coin {
+  position: absolute;
+  left: 0;
+  bottom: 2px;
+  width: 30px;
+  height: 30px;
+  background: url("/images/BRIC/coin_illustrated.svg?v=2") center / contain no-repeat;
+  transform: rotate(-42deg);
+}
+
+.wallet-panel__decor-coin:nth-child(2) {
+  left: 13%;
+  bottom: 25px;
+  width: 42px;
+  height: 42px;
+  transform: rotate(32deg);
+}
+
+.wallet-panel__decor-coin:nth-child(3) {
+  left: 36%;
+  bottom: 0;
+  width: 34px;
+  height: 34px;
+  transform: rotate(-12deg);
+}
+
+.wallet-panel__decor-coin:nth-child(4) {
+  left: 47%;
+  bottom: 30px;
+  width: 28px;
+  height: 28px;
+  transform: rotate(68deg);
+}
+
+.wallet-panel__decor-coin:nth-child(5) {
+  left: 63%;
+  bottom: 7px;
+  width: 40px;
+  height: 40px;
+  transform: rotate(-65deg);
+}
+
+.wallet-panel__decor-coin:nth-child(6) {
+  left: 81%;
+  bottom: 34px;
+  width: 32px;
+  height: 32px;
+  transform: rotate(18deg);
+}
+
 .wallet-reward {
   --wallet-drop-duration: 650ms;
+  --wallet-bank-height: 68px;
+  /* Coordinates share the pig's 68-unit drawing scale, including its SVG slot. */
+  font-size: calc(var(--wallet-bank-height) / 68);
   position: relative;
-  align-self: center;
-  width: 140px;
-  height: 164px;
-  background: #000;
+  width: 120em;
+  height: 68em;
 }
 
 .wallet-reward__bank {
   position: absolute;
-  left: 10px;
-  top: 70px;
-  width: 120px;
-  height: 87px;
-  background: #fff;
-  mask: url("/images/BRIC/piggy_bank.svg") center / contain no-repeat;
+  left: 23em;
+  top: 0;
+  width: 94em;
+  height: 68em;
+  background: url("/images/BRIC/piggy_bank.svg?v=2") center / contain no-repeat;
 }
 
 .wallet-reward__flight {
   position: absolute;
-  inset: 0 0 auto;
-  height: 100px;
+  left: 0;
+  right: 0;
+  top: -48em;
+  height: 65.1em;
+  z-index: 1;
   overflow: hidden;
 }
 
 .wallet-reward__moving {
   position: absolute;
-  left: 54px;
-  top: 0;
-  width: 20px;
-  height: 24px;
+  left: 55.65em;
+  top: -24em;
+  width: 20em;
+  height: 24em;
   visibility: hidden;
 }
 
 .wallet-reward__coin {
   position: absolute;
   inset: 0;
-  background: #fff;
-  mask: url("/images/BRIC/coin_illustrated.svg") center / contain no-repeat;
+  background: url("/images/BRIC/coin_illustrated.svg?v=2") center / contain no-repeat;
 }
 
 .wallet-reward__trail {
   position: absolute;
-  bottom: 28px;
-  left: 3px;
-  height: 17px;
-  width: 2px;
-  background: #fff;
+  bottom: 28em;
+  left: 3em;
+  height: 17em;
+  width: 2em;
+  background: #000;
   transform: rotate(-4deg);
 }
 
 .wallet-reward__trail:nth-child(3) {
-  left: 10px;
-  height: 27px;
+  left: 10em;
+  height: 27em;
   transform: rotate(3deg);
 }
 
 .wallet-reward__trail:nth-child(4) {
-  left: 17px;
-  height: 12px;
+  left: 17em;
+  height: 12em;
   transform: rotate(-2deg);
 }
 
@@ -84,251 +494,280 @@
     transform: translateY(0);
   }
   to {
-    transform: translateY(140px);
+    transform: translateY(145em);
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .wallet-reward__moving.is-dropping {
-    animation: none;
-    visibility: hidden;
-  }
-}
-
-/* ---------- Poker chip icon (pure CSS) ---------- */
-.wallet-chip-icon {
-  display: inline-block;
-  flex: none;
-  width: var(--wallet-chip-size);
-  height: var(--wallet-chip-size);
-  border-radius: 50%;
-  background: var(--wallet-chip-color);
-  border: 3px dashed var(--wallet-chip-edge);
-  box-shadow:
-    0 0 0 1px #000,
-    inset 0 0 0 2px var(--wallet-chip-color),
-    inset 0 0 0 3px var(--wallet-chip-edge);
-  box-sizing: border-box;
-}
-
-.wallet-chip-icon--big {
-  --wallet-chip-size: 34px;
-  border-width: 5px;
-}
-
-/* ---------- Nav button ---------- */
-.wallet-nav-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin-right: 12px;
-  padding: 2px 8px 2px 4px;
-  font-family: var(--font-mono, monospace);
-  font-size: 14px;
-  font-weight: bold;
-  color: #000;
-  background: var(--accent-yellow, #ff0);
-  border: 2px outset #fff;
-  outline: 1px solid #000;
-  cursor: pointer;
-  line-height: 1.2;
-  white-space: nowrap;
-}
-
-.wallet-nav-button:hover {
-  background: #fff799;
-}
-
-.wallet-nav-button:active {
-  border-style: inset;
-}
-
-.wallet-nav-button:focus-visible {
-  outline: 2px dotted #000;
-  outline-offset: 2px;
-}
-
-@media (max-width: 600px) {
-  .wallet-nav-button {
-    margin-right: 8px;
-    padding: 1px 6px 1px 3px;
-    font-size: 12px;
-  }
-
-  .wallet-nav-button .wallet-chip-icon {
-    --wallet-chip-size: 14px;
-    border-width: 2px;
-  }
-}
-
-/* ---------- Panel ---------- */
-.wallet-panel {
-  width: min(var(--wallet-panel-width), calc(100vw - 24px));
-  max-height: calc(100dvh - 48px);
+.wallet-portal .wallet-portal__tuck {
+  position: absolute;
+  right: 0;
+  top: 12px;
+  z-index: 2;
+  width: 44px;
+  height: 44px;
   padding: 0;
-  border: var(--border-thick, 4px) outset #fff;
-  background: var(--section-bg, #d9d9d9);
-  color: #000;
-  box-shadow: 6px 6px 0 #000;
-  font-family: var(--font-primary, "Comic Sans MS", sans-serif);
+  border: 0;
+  background: transparent;
+  font-size: 28px;
+  opacity: 0;
 }
 
-.wallet-panel::backdrop {
-  background: rgba(0, 0, 80, 0.45);
+.wallet-portal .wallet-portal__tuck:focus-visible {
+  opacity: 1;
+}
+.wallet-portal.is-dragging .wallet-portal__open {
+  cursor: grabbing;
 }
 
-.wallet-panel__box {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 0 12px 12px;
+.wallet-portal.is-tucked {
+  right: 0;
+  width: 44px;
+  height: 48px;
+  border-radius: 0;
 }
 
-.wallet-panel__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 0 -12px;
-  padding: 4px 6px 4px 10px;
-  background: linear-gradient(90deg, var(--primary-bg, #000080), #1084d0);
+.wallet-portal.is-tucked::before {
+  animation: none;
 }
 
-.wallet-panel__title {
-  margin: 0;
-  font-family: var(--font-heading, "Arial Black", sans-serif);
-  font-size: 16px;
-  color: #fff;
-  letter-spacing: 1px;
+.wallet-portal .wallet-portal__tab {
+  width: 44px;
+  height: 48px;
+  padding: 8px;
+  touch-action: none;
+  cursor: grab;
 }
 
-.wallet-panel__close {
-  width: 22px;
-  height: 20px;
-  padding: 0;
-  font-family: var(--font-mono, monospace);
-  font-weight: bold;
-  background: var(--section-bg, #d9d9d9);
-  border: 2px outset #fff;
-  cursor: pointer;
+.wallet-portal__tab-icon {
+  display: block;
+  width: 28px;
+  height: 24px;
+  background: url("/images/BRIC/piggy_bank.svg?v=2") center / contain no-repeat;
 }
 
-.wallet-panel__close:active,
-.wallet-panel__checkin:active,
-.wallet-panel__more:active {
-  border-style: inset;
+.wallet-portal [hidden] {
+  display: none !important;
 }
 
-.wallet-panel__balance {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
+.wallet-panel__section {
+  position: relative;
+  border: 4px double #000;
+  padding: 16px 10px 10px;
+  flex-shrink: 0;
   background: #fff;
-  border: 2px inset #fff;
+}
+
+.wallet-panel__section-title {
+  position: absolute;
+  top: -12px;
+  left: 10px;
+  margin: 0;
+  padding: 0 6px;
+  background: #fff;
+  color: #000;
+  text-shadow: none;
+  font: inherit;
+  font-weight: 700;
+  line-height: 20px;
+}
+
+.wallet-panel__value {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.wallet-panel__summary {
+  margin: 8px 0 0;
+  padding-top: 8px;
+  border-top: 2px dashed #000;
+  font-size: 12px;
 }
 
 .wallet-panel__amount {
-  font-family: var(--font-mono, monospace);
-  font-size: 28px;
-  font-weight: bold;
+  font-family: inherit;
+  font-size: 42px;
+  font-weight: 700;
 }
-
 .wallet-panel__unit {
-  font-size: 14px;
-  color: #333;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
-.wallet-panel__checkin,
-.wallet-panel__more {
+.wallet-portal .wallet-panel__checkin,
+.wallet-portal .wallet-panel__more {
   align-self: flex-start;
-  padding: 4px 12px;
-  font-family: var(--font-primary, "Comic Sans MS", sans-serif);
-  font-size: 14px;
-  font-weight: bold;
-  background: var(--section-bg, #d9d9d9);
-  border: 2px outset #fff;
-  outline: 1px solid #000;
-  cursor: pointer;
+  min-height: 44px;
+  padding: 8px 12px;
 }
 
-.wallet-panel__checkin:disabled,
-.wallet-panel__more:disabled {
-  color: #777;
+.wallet-portal .wallet-panel__checkin {
+  align-self: center;
+  width: 100%;
+  min-height: 60px;
+  flex-shrink: 0;
+  background: #fff;
+  border: 4px double #000;
+  font-size: 16px;
+}
+.wallet-portal .wallet-panel__checkin:active:not(:disabled) {
+  background: #000;
+  color: #fff;
+}
+.wallet-portal .wallet-panel__checkin.is-complete {
+  opacity: 0.65;
+  background: #f5f5f5;
+  cursor: default;
+}
+.wallet-portal .wallet-panel__more:active {
+  background: #00a0a0;
+}
+.wallet-portal button:disabled {
+  opacity: 0.6;
   cursor: wait;
 }
-
 .wallet-panel__status {
-  min-height: 1.2em;
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
 }
-
+.wallet-panel__status:empty {
+  display: none;
+}
 .wallet-panel__status[data-tone="success"] {
   color: var(--wallet-plus-color);
-  font-weight: bold;
 }
-
 .wallet-panel__status[data-tone="error"] {
   color: var(--wallet-minus-color);
-  font-weight: bold;
 }
-
-.wallet-panel__subtitle {
-  margin: 4px 0 0;
-  font-size: 14px;
-  border-bottom: 2px groove #fff;
-}
-
 .wallet-panel__ledger {
   margin: 0;
   padding: 0;
   list-style: none;
-  max-height: 260px;
-  overflow-y: auto;
-  background: #fff;
-  border: 2px inset #fff;
 }
-
+.wallet-panel__activity-frame {
+  position: relative;
+}
+.wallet-panel__scroll-hint {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 18px 4px 2px;
+  background: linear-gradient(transparent, #fff 60%);
+  color: #000;
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+  pointer-events: none;
+}
+.wallet-panel__scroll-hint::after {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-left: 6px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+}
+.wallet-panel__scroll-hint[hidden] {
+  display: none;
+}
+.wallet-panel__activity {
+  --wallet-row-height: 36px;
+  height: calc(var(--wallet-row-height) * 4);
+  min-height: calc(var(--wallet-row-height) * 4);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.wallet-panel__activity:focus-visible {
+  outline: 2px solid #007f7b;
+}
 .wallet-panel__row {
   display: grid;
-  grid-template-columns: 52px 1fr auto;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
   gap: 8px;
-  padding: 4px 8px;
-  font-size: 13px;
-  border-bottom: 1px dotted #999;
+  box-sizing: border-box;
+  height: var(--wallet-row-height);
+  align-items: center;
+  padding: 6px 0;
+  font-size: 12px;
+  border-bottom: 1px dashed #000;
 }
-
-.wallet-panel__row:last-child {
-  border-bottom: 0;
-}
-
 .wallet-panel__date {
   color: #555;
-  font-family: var(--font-mono, monospace);
-  font-size: 12px;
 }
-
 .wallet-panel__memo {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
-.wallet-panel__delta {
-  font-family: var(--font-mono, monospace);
-  font-weight: bold;
+@supports (container-type: inline-size) {
+  .wallet-panel__memo {
+    container-type: inline-size;
+    text-overflow: clip;
+  }
+  .wallet-panel__memo-text {
+    display: inline-block;
+    width: max-content;
+    vertical-align: bottom;
+    animation: wallet-memo-scroll 8s linear infinite alternate;
+  }
 }
-
+.wallet-panel__memo:hover .wallet-panel__memo-text {
+  animation-play-state: paused;
+}
+@keyframes wallet-memo-scroll {
+  0%,
+  20% {
+    transform: translateX(0);
+  }
+  80%,
+  100% {
+    transform: translateX(min(0px, calc(100cqw - 100%)));
+  }
+}
+.wallet-panel__delta {
+  font-weight: 700;
+}
 .wallet-panel__delta.is-plus {
   color: var(--wallet-plus-color);
 }
-
 .wallet-panel__delta.is-minus {
   color: var(--wallet-minus-color);
 }
-
 .wallet-panel__empty {
-  padding: 8px;
-  font-size: 13px;
+  padding: 8px 0;
+  font-size: 12px;
   color: #555;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wallet-panel__memo {
+    text-overflow: ellipsis;
+  }
+  .wallet-panel__memo .wallet-panel__memo-text {
+    display: inline;
+    animation: none;
+  }
+  .wallet-portal {
+    transition: none;
+  }
+  .wallet-portal.is-expanded .wallet-portal__scene::before,
+  .wallet-portal.is-expanded .wallet-portal__scene::after {
+    transition: none;
+  }
+  .wallet-portal.is-expanded .wallet-panel {
+    transition: none;
+  }
+  .wallet-portal.is-expanded .wallet-portal__market-preview {
+    transition: none;
+  }
+  .wallet-portal::before {
+    animation: none;
+  }
+  .wallet-reward__moving.is-dropping {
+    animation: none;
+    visibility: hidden;
+  }
 }
