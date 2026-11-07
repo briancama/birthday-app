@@ -11,6 +11,7 @@
     <span id="secretArnold" class="secret-arnold">RICKTER</span>
     <div class="nav-content-right">
       <% if (isLoggedIn) { %>
+      <%- include('wallet-nav-button', { navData: visitorNavData }) %>
       <a href="/account" class="notification-nav-link" aria-label="Account Center">
         <img
           src="/images/notification-bell.gif"

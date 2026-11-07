@@ -1295,7 +1295,12 @@ class UserProfilePage extends BasePage {
           credentials: "include",
           body: JSON.stringify({ message }),
         });
-        if (!resp.ok) throw new Error((await resp.json()).error || resp.statusText);
+        const result = await resp.json();
+        if (!resp.ok) throw new Error(result.error || resp.statusText);
+        if (result.walletReward?.status === "earned") {
+          window.dispatchEvent(new CustomEvent("wallet:earned", { detail: result.walletReward }));
+        }
+        if (result.walletRewardError) this.showErrorToast(result.walletRewardError);
         if (textarea) textarea.value = "";
         updatePreview();
         await this.loadWall();

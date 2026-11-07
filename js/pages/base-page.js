@@ -653,6 +653,30 @@ class BasePage {
         /* ignore */
       }
 
+      fetch("/api/wallet/vote", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ voteType: randomAward }),
+      })
+        .then(async (response) => {
+          const reward = await response.json();
+          if (!response.ok) throw new Error(reward.error || "Could not record your site vote");
+          if (reward.status === "earned") {
+            window.dispatchEvent(new CustomEvent("wallet:earned", { detail: reward }));
+          } else if (
+            !["daily_cap", "global_cap", "already_earned", "recorded", "already_recorded"].includes(
+              reward.status
+            )
+          ) {
+            throw new Error("Site vote tracking is unavailable.");
+          }
+        })
+        .catch((error) => {
+          console.error("Site vote tracking failed:", error);
+          this.showErrorToast(error.message);
+        });
+
       // Track unique award image clicks
       const clicked = getClicked();
       const imgKey = randomAward; // use the image path as unique key
@@ -675,6 +699,11 @@ class BasePage {
 
     awardImg.addEventListener("click", handleAwardClick);
     voteLabel.addEventListener("click", handleAwardClick);
+    this.eventCleanup.push(() => {
+      awardImg.removeEventListener("click", handleAwardClick);
+      voteLabel.removeEventListener("click", handleAwardClick);
+      awardContainer.remove();
+    });
 
     document.body.appendChild(awardContainer);
   }

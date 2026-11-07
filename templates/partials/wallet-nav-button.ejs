@@ -1,0 +1,37 @@
+<%# Chips wallet button + panel loader. Shared by navigation.ejs and navigation-visitor.ejs. %>
+<%# Hidden when signed out or when the balance lookup failed (navData.chipBalance === null). %>
+<% const walletNav = typeof navData !== 'undefined' && navData ? navData : {}; %>
+<% if (walletNav.user && typeof walletNav.chipBalance === 'number') { %>
+<% const chipLabel = (walletNav.chipBalance / 100).toLocaleString('en-US', { maximumFractionDigits: 2 }); %>
+<link rel="stylesheet" href="/css/components/wallet.css" />
+<dialog open id="walletPortal" class="wallet-portal" data-wallet-portal data-wallet-units="<%= walletNav.chipBalance %>" role="presentation">
+  <div class="wallet-portal__scene" data-wallet-scene></div>
+  <button type="button" class="wallet-portal__tuck" data-wallet-tuck aria-label="Tuck wallet away">
+    <span aria-hidden="true">›</span>
+  </button>
+  <button
+    type="button"
+    class="wallet-portal__open"
+    data-wallet-open
+    data-sound="menu"
+    aria-haspopup="dialog"
+    aria-controls="walletPortal"
+    aria-expanded="false"
+    aria-label="Your brics: <%= chipLabel %>"
+  >
+  </button>
+  <button
+    type="button"
+    class="wallet-portal__tab"
+    data-wallet-restore
+    aria-label="Bring wallet back"
+    hidden
+  >
+    <span class="wallet-portal__tab-icon" aria-hidden="true"></span>
+  </button>
+</dialog>
+<script type="module">
+  import { initWalletPanel } from "/js/components/wallet-panel.js";
+  initWalletPanel();
+</script>
+<% } %>

@@ -1157,7 +1157,30 @@ router.post("/users/:id/wall", async (req, res) => {
       }
     }
 
-    return res.json({ ok: true, entry: data });
+    let walletReward = null;
+    let walletRewardError = null;
+    if (signedUserId !== data.target_user_id) {
+      const rewardResult = await supabase
+        .from("wallet_ledger")
+        .select("amount, balance_after")
+        .eq("player_id", signedUserId)
+        .eq("kind", "earn")
+        .eq("ref_type", "wall_post")
+        .eq("ref_id", data.id)
+        .maybeSingle();
+      if (rewardResult.error) {
+        console.error("Wall post saved, but wallet reward lookup failed:", rewardResult.error);
+        walletRewardError = "Comment posted, but wallet reward details could not be loaded.";
+      } else if (rewardResult.data) {
+        walletReward = {
+          status: "earned",
+          action: "wall_post",
+          amount: rewardResult.data.amount,
+          balance: rewardResult.data.balance_after,
+        };
+      }
+    }
+    return res.json({ ok: true, entry: data, walletReward, walletRewardError });
   } catch (err) {
     console.error("Error in POST /api/users/:id/wall", err);
     return res.status(500).json({ error: "Internal server error" });

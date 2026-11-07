@@ -10,6 +10,7 @@ if (process.env.NODE_ENV !== "production") {
 const path = require("path");
 const fs = require("fs");
 const cookieParser = require("cookie-parser");
+const { randomUUID } = require("node:crypto");
 const {
   getSupabase,
   createSanitizer,
@@ -134,6 +135,27 @@ function wantsNavData(req) {
   return !ext || ext === ".html";
 }
 
+// Establish visitor identity on page load, before any simultaneous vote clicks.
+app.use((req, res, next) => {
+  if (
+    req.method === "GET" &&
+    wantsNavData(req) &&
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      String(req.signedCookies?.site_vote_visitor || "")
+    )
+  ) {
+    res.cookie("site_vote_visitor", randomUUID(), {
+      signed: true,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 365 * 24 * 60 * 60 * 1000,
+    });
+  }
+  next();
+});
+
 // Server middleware: populate nav data for server-rendered navigation partials
 app.use(async (req, res, next) => {
   try {
@@ -173,6 +195,7 @@ app.use(async (req, res, next) => {
           .eq("user_id", userId)
           .eq("read", false)
           .gte("created_at", unreadCutoffIso),
+        supabase.rpc("get_wallet_for", { p_player: userId }),
       ]);
     // A UUID cookie is almost always the user's id, so start the nav lookups alongside the user lookup
     let lookups = isUuid ? navLookups(signed) : null;
@@ -197,7 +220,8 @@ app.use(async (req, res, next) => {
     if (!user) return next();
     if (!lookups || user.id !== signed) lookups = navLookups(user.id);
 
-    const [pushResult, eventFlagResult, challengesFlagResult, unreadResult] = await lookups;
+    const [pushResult, eventFlagResult, challengesFlagResult, unreadResult, walletResult] =
+      await lookups;
 
     const hasPush = !!(
       pushResult.status === "fulfilled" &&
@@ -227,6 +251,12 @@ app.use(async (req, res, next) => {
         ? unreadResult.value.count || 0
         : 0;
 
+    // Wallet button is hidden if the balance can't be read (e.g. wallet SQL not applied yet)
+    const chipBalance =
+      walletResult.status === "fulfilled" && !walletResult.value.error
+        ? Number(walletResult.value.data) || 0
+        : null;
+
     // Simple admin check: username matches known admins (keep existing client-side conventions)
     const isAdmin = !!(user && (user.username === "brianc" || user.username === "admin"));
 
@@ -242,6 +272,7 @@ app.use(async (req, res, next) => {
       isAuthenticated: true,
       hasPushSubscription: hasPush,
       unreadNotificationCount,
+      chipBalance,
       eventStarted,
       challengesEnabled,
     };
@@ -1254,6 +1285,8 @@ app.use("/api", apiUsersRouter);
 const apiCompetitionsRouter = require("./routes/api-competitions");
 app.use("/api", apiCompetitionsRouter);
 app.use("/api", apiWalktoberRouter);
+const apiWalletRouter = require("./routes/api-wallet");
+app.use("/api", apiWalletRouter);
 const authRouter = require("./routes/auth");
 app.use("/auth", authRouter);
 

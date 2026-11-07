@@ -22,6 +22,7 @@
     "inventory": "node scripts/generate-site-inventory.js",
     "db:pull": "node scripts/db-pull.js",
     "seed": "node scripts/seed-dev.js",
-    "verify:kit": "node tests/dev/verify-competition-kit.js"
+    "verify:kit": "node tests/dev/verify-competition-kit.js",
+    "verify:wallet": "node tests/dev/verify-wallet.js"
   }
 }
