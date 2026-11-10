@@ -1356,34 +1356,6 @@
   overflow: hidden !important;
 }
 
-/* Bottom Menu - Bottom Sticky Navigation */
-.bottom-menu {
-  display: none;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: calc(70px + env(safe-area-inset-bottom, 0px));
-  background: linear-gradient(180deg, #ff00ff, #0000ff);
-  border-top: 3px solid #ffff00;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
-  z-index: 100;
-
-  /* Respect browser UI and safe areas */
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  justify-content: space-around;
-  align-items: center;
-  gap: 0;
-
-  /* Animation */
-  opacity: 0;
-  transition: opacity 0.4s ease-in-out;
-}
-
-.bottom-menu.loaded {
-  opacity: 1;
-}
-
 .challenge-info-details {
   background: var(--retro-yellow, #ffff99);
   border: 2px dashed #0000cc;
@@ -1415,102 +1387,6 @@
   width: 0 !important;
 }
 
-/* Show only on mobile */
-@media (max-width: 768px) {
-  .bottom-menu {
-    display: flex;
-  }
-
-  /* Adjust body to account for fixed menu */
-  body {
-    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
-  }
-}
-
-.bottom-menu-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-  height: 100%;
-  text-decoration: none;
-  color: #fff;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-weight: bold;
-  font-family: "Comic Sans", "Comic Sans MS", "Chalkboard", "ChalkboardSE-Regular", sans-serif;
-  font-size: 10px;
-  transition:
-    background-color 0.2s,
-    transform 0.1s;
-
-  /* Touch target minimum size */
-  min-height: 44px;
-}
-
-.bottom-menu-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: scale(1.05);
-}
-
-.bottom-menu-item.active {
-  background: rgba(255, 255, 0, 0.2);
-  border-bottom: 3px solid #ffff00;
-}
-
-.bottom-menu-item:active {
-  transform: scale(0.95);
-}
-
-/* Keep bottom menu text colors stable even when profile theme sets global link colors. */
-.myspace.has-profile-theme .bottom-menu .bottom-menu-item,
-.myspace.has-profile-theme .bottom-menu .bottom-menu-item:visited {
-  color: #fff;
-}
-
-.myspace.has-profile-theme .bottom-menu .bottom-menu-item:hover,
-.myspace.has-profile-theme .bottom-menu .bottom-menu-item:focus,
-.myspace.has-profile-theme .bottom-menu .bottom-menu-item:active,
-.myspace.has-profile-theme .bottom-menu .bottom-menu-item.active {
-  color: #fff;
-}
-
-.myspace .bottom-menu-label {
-  color: #fff;
-}
-
-.myspace.has-profile-theme .bottom-menu .bottom-menu-item:hover .bottom-menu-label,
-.myspace.has-profile-theme .bottom-menu .bottom-menu-item:focus .bottom-menu-label,
-.myspace.has-profile-theme .bottom-menu .bottom-menu-item:active .bottom-menu-label,
-.myspace.has-profile-theme .bottom-menu .bottom-menu-item.active .bottom-menu-label {
-  color: #fff;
-}
-
-.bottom-menu-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  margin-bottom: 2px;
-}
-
-.bottom-menu-icon img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
-}
-
-.bottom-menu-label {
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* Respect notches and safe areas on modern phones */
 /* Notifications toggle is intentionally hidden until the feature is ready. */
 .notif-toggle-btn {
   display: none !important;

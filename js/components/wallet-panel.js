@@ -354,6 +354,8 @@ class WalletPanel {
       { signal }
     );
     close.addEventListener("click", () => this.collapse(), { signal });
+    // Re-clicking the piggy closes the portal; aria-hidden art, so the close button stays the a11y path.
+    reward.addEventListener("click", () => this.collapse(), { signal });
     this.dialog.addEventListener(
       "cancel",
       (event) => {

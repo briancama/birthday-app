@@ -14,7 +14,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
   </head>
 
-  <body class="has-bottom-menu">
+  <body>
     <div class="container">
       <!-- Server-rendered Navigation -->
       <% const navLocal = Object.assign({}, (typeof navData !== 'undefined' ? navData : {}), { pageTitle: '40 Proof' }); %>
@@ -82,7 +82,5 @@
         }
       })();
     </script>
-    <bottom-menu></bottom-menu>
-    <script type="module" src="/js/components/bottom-menu.js"></script>
   </body>
 </html>

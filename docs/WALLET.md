@@ -132,8 +132,9 @@ start/end at that point.
 The embedded wallet now opens from a fixed bottom-right teal piggy-bank portal,
 not the navigation button. Tucking it away leaves a Wallet edge tab.
 `bric-wallet-tucked` in localStorage remembers this browser's preference.
-It respects safe areas and sits above navigation when `body.has-bottom-menu`
-is present. The organic portal is a documented Bric shape exception.
+It respects safe areas. The panel height uses `svh` so it doesn't resize
+when mobile browser toolbars show or hide. The organic portal is a
+documented Bric shape exception.
 
 The portal is icon-only, with a smaller piggy bank, a slow CSS shape morph
 and a subtle teal glow. Drag right at least 44px to tuck it away; the
@@ -143,6 +144,7 @@ embedded-portal exceptions, not styles for other Bric controls.
 The piggy bank lives at the lower-right of the wallet's bottom decoration.
 Six differently sized/rotated copies of the supplied illustrated coin sit beside
 it; no new artwork is fabricated. Reward motion still clips at the bank's slot.
+
 ### Site earning rules
 
 Apply `sql/2026_11_05_wallet_site_rewards.sql` after the original wallet migration
@@ -152,6 +154,7 @@ cap/idempotency implementation with wall-reference validation. This migration
 does not grant starting balances or change historical ledger entries.
 
 Amounts use 100 units per bric:
+
 - Daily check-in: 20 brics, once daily.
 - Site award image or "Vote for Me!" label click: 5 brics per award image type
   once daily, at most three distinct types daily. Image and label share a type;

@@ -15,7 +15,7 @@
   </head>
 
   <body
-    class="has-bottom-menu<%= competition.theme ? ' theme-' + competition.theme : '' %>"
+    class="<%= competition.theme ? 'theme-' + competition.theme : '' %>"
     data-competition-slug="<%= competition.slug %>"
     data-competition-id="<%= competition.id %>"
   >

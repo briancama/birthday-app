@@ -27,7 +27,7 @@
   </head>
 
   <body
-    class="myspace has-bottom-menu<% if (hasProfileTheme) { %> has-profile-theme theme-<%= activeTheme.key %><% } %>"
+    class="myspace<% if (hasProfileTheme) { %> has-profile-theme theme-<%= activeTheme.key %><% } %>"
     data-profile-user-id="<%= user.id %>"
     data-profile-username="<%= user.username %>"
     data-needs-identity-setup="<%= needsIdentitySetup ? 'true' : 'false' %>"
@@ -514,8 +514,5 @@
       const page = new UserProfilePage();
       window.addEventListener("DOMContentLoaded", () => page.init());
     </script>
-
-    <bottom-menu></bottom-menu>
-    <script type="module" src="/js/components/bottom-menu.js"></script>
   </body>
 </html>

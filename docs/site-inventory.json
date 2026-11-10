@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-30",
+  "generated": "2026-11-10",
   "staticPages": {
     "admin-approvals.html": {
       "css": [
@@ -36,8 +36,7 @@
         "./js/pages/challenges-submit.js"
       ],
       "components": [
-        "components/navigation.js",
-        "components/bottom-menu.js"
+        "components/navigation.js"
       ],
       "partials": [],
       "otherScripts": [
@@ -58,8 +57,7 @@
         "/js/pages/challenges.js"
       ],
       "components": [
-        "components/navigation.js",
-        "components/bottom-menu.js"
+        "components/navigation.js"
       ],
       "partials": [],
       "otherScripts": [
@@ -77,8 +75,7 @@
         "./js/pages/cocktail-judging.js"
       ],
       "components": [
-        "components/navigation.js",
-        "components/bottom-menu.js"
+        "components/navigation.js"
       ],
       "partials": [],
       "otherScripts": [
@@ -121,9 +118,7 @@
       "pageScripts": [
         "./js/pages/dashboard.js"
       ],
-      "components": [
-        "components/bottom-menu.js"
-      ],
+      "components": [],
       "partials": [],
       "otherScripts": [
         "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
@@ -147,8 +142,7 @@
       "components": [
         "components/gif-stepper.js",
         "components/navigation.js",
-        "components/cocktail-entry-modal.js",
-        "components/bottom-menu.js"
+        "components/cocktail-entry-modal.js"
       ],
       "partials": [],
       "otherScripts": [
@@ -217,8 +211,7 @@
         "./js/pages/leaderboard.js"
       ],
       "components": [
-        "components/navigation.js",
-        "components/bottom-menu.js"
+        "components/navigation.js"
       ],
       "partials": [],
       "otherScripts": [
@@ -241,11 +234,15 @@
         "css/on-a-stick.css"
       ],
       "pageScripts": [
-        "js/pages/on-a-stick.js"
+        "js/pages/on-a-stick.js",
+        "js/pages/on-a-stick-register.js"
       ],
       "components": [],
       "partials": [],
-      "otherScripts": []
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"
+      ]
     },
     "register.html": {
       "css": [
@@ -381,9 +378,7 @@
       "pageScripts": [
         "/js/pages/challenges-submit.js"
       ],
-      "components": [
-        "components/bottom-menu.js"
-      ],
+      "components": [],
       "partials": [
         "partials/navigation"
       ],
@@ -404,9 +399,7 @@
       "pageScripts": [
         "/js/pages/challenges.js"
       ],
-      "components": [
-        "components/bottom-menu.js"
-      ],
+      "components": [],
       "partials": [
         "partials/navigation",
         "partials/challenge-list"
@@ -425,9 +418,43 @@
       "pageScripts": [
         "/js/pages/cocktail-judging.js"
       ],
-      "components": [
-        "components/bottom-menu.js"
+      "components": [],
+      "partials": [
+        "partials/navigation"
       ],
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"
+      ]
+    },
+    "templates/competition-judging.ejs": {
+      "css": [
+        "/css/geocities.css",
+        "/css/components/navigation.css",
+        "/css/components/competition-judging.css"
+      ],
+      "pageScripts": [
+        "/js/pages/competition-judging.js"
+      ],
+      "components": [],
+      "partials": [
+        "partials/navigation"
+      ],
+      "otherScripts": [
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
+        "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"
+      ]
+    },
+    "templates/competition-results.ejs": {
+      "css": [
+        "/css/geocities.css",
+        "/css/components/navigation.css",
+        "/css/components/competition-judging.css"
+      ],
+      "pageScripts": [
+        "/js/pages/base-page.js"
+      ],
+      "components": [],
       "partials": [
         "partials/navigation"
       ],
@@ -447,9 +474,7 @@
       "pageScripts": [
         "/js/pages/dashboard.js"
       ],
-      "components": [
-        "components/bottom-menu.js"
-      ],
+      "components": [],
       "partials": [
         "partials/navigation",
         "partials/challenge-list"
@@ -475,8 +500,7 @@
         "/js/pages/event-info.js"
       ],
       "components": [
-        "components/gif-stepper.js",
-        "components/bottom-menu.js"
+        "components/gif-stepper.js"
       ],
       "partials": [
         "partials/navigation"
@@ -526,9 +550,7 @@
       "pageScripts": [
         "/js/pages/leaderboard.js"
       ],
-      "components": [
-        "components/bottom-menu.js"
-      ],
+      "components": [],
       "partials": [
         "partials/navigation"
       ],
@@ -536,6 +558,15 @@
         "https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js",
         "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"
       ]
+    },
+    "templates/on-a-stick-guest-list.ejs": {
+      "css": [
+        "/css/on-a-stick.css"
+      ],
+      "pageScripts": [],
+      "components": [],
+      "partials": [],
+      "otherScripts": []
     },
     "templates/recipe.ejs": {
       "css": [
@@ -577,6 +608,8 @@
         "/css/components/navigation.css",
         "/css/components/myspace.css",
         "/css/components/myspace-comments.css",
+        "/css/components/mention-autocomplete.css",
+        "/css/components/emote-picker.css",
         "/css/components/user-profile.css",
         "/css/components/secret-player.css",
         "https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css"
@@ -584,9 +617,7 @@
       "pageScripts": [
         "/js/pages/user-profile.js"
       ],
-      "components": [
-        "components/bottom-menu.js"
-      ],
+      "components": [],
       "partials": [
         "partials/navigation-visitor"
       ],
@@ -596,6 +627,50 @@
         "https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js",
         "https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"
       ]
+    },
+    "templates/walktober-leaderboard.ejs": {
+      "css": [
+        "/css/geocities.css",
+        "/css/components/myspace.css",
+        "/css/components/navigation.css",
+        "/css/components/brispace-home.css",
+        "/css/components/login-signup.css",
+        "/css/components/walktober.css"
+      ],
+      "pageScripts": [
+        "/js/pages/walktober-leaderboard.js"
+      ],
+      "components": [],
+      "partials": [
+        "partials/walktober-meta",
+        "partials/navigation-visitor",
+        "partials/walktober-loading"
+      ],
+      "otherScripts": []
+    },
+    "templates/walktober.ejs": {
+      "css": [
+        "/css/geocities.css",
+        "/css/components/myspace.css",
+        "/css/components/navigation.css",
+        "/css/components/brispace-home.css",
+        "/css/components/login-signup.css",
+        "/css/components/walktober.css"
+      ],
+      "pageScripts": [
+        "/js/pages/walktober.js"
+      ],
+      "components": [
+        "components/login-signup.js",
+        "components/gif-stepper.js"
+      ],
+      "partials": [
+        "partials/walktober-meta",
+        "partials/navigation-visitor",
+        "partials/walktober-loading",
+        "partials/media-slot"
+      ],
+      "otherScripts": []
     }
   }
 }

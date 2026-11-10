@@ -5,7 +5,8 @@
     var(--wallet-panel-width),
     calc(100vw - 36px - env(safe-area-inset-right, 0px))
   );
-  --wallet-panel-current-height: min(608px, calc(100dvh - 48px - env(safe-area-inset-bottom, 0px)));
+  /* svh, not dvh: the panel must not resize while mobile browser toolbars show/hide. */
+  --wallet-panel-current-height: min(608px, calc(100svh - 48px - env(safe-area-inset-bottom, 0px)));
   --wallet-panel-right: max(12px, env(safe-area-inset-right, 0px));
   --wallet-panel-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
   --wallet-resting-circle-x: -10px;
@@ -16,6 +17,9 @@
   --wallet-market-preview-gap: 12px;
   --wallet-plus-color: #006b68;
   --wallet-minus-color: #a82424;
+  --wallet-focus-rim: #66fff8;
+  --wallet-focus-rim-width: 4px;
+  --wallet-focus-glow: 0 0 22px 6px #00d4cfaa;
 }
 
 .wallet-portal {
@@ -74,15 +78,6 @@
   }
 }
 
-body.has-bottom-menu .wallet-portal {
-  --wallet-panel-bottom: calc(104px + env(safe-area-inset-bottom, 0px));
-  --wallet-panel-current-height: min(
-    608px,
-    calc(100dvh - 128px - env(safe-area-inset-bottom, 0px))
-  );
-  bottom: calc(104px + env(safe-area-inset-bottom, 0px));
-}
-
 .wallet-portal.is-expanded {
   inset: 0;
   width: 100vw;
@@ -115,6 +110,18 @@ body.has-bottom-menu .wallet-portal {
 .wallet-portal button:focus-visible {
   outline: 3px solid #007f7b;
   outline-offset: 2px;
+}
+
+/* Keyboard focus on the piggy lights up the portal rim instead of a floating ring. */
+.wallet-portal .wallet-portal__open:focus-visible {
+  outline: none;
+}
+
+.wallet-portal:has(.wallet-portal__open:focus-visible)::before {
+  box-shadow:
+    inset 0 0 0 var(--wallet-focus-rim-width) var(--wallet-focus-rim),
+    inset 0 0 12px 3px #00b3b3,
+    var(--wallet-focus-glow);
 }
 
 .wallet-portal .wallet-portal__open {
@@ -357,6 +364,7 @@ body.has-bottom-menu .wallet-portal {
   position: absolute;
   right: 0;
   bottom: 0;
+  cursor: pointer;
 }
 
 .wallet-panel__coins {

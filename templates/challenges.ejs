@@ -16,7 +16,7 @@
     <script defer src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
   </head>
 
-  <body class="has-bottom-menu">
+  <body>
     <% const navLocal = Object.assign({}, (typeof navData !== 'undefined' ? navData : {}), { pageTitle: 'My Challenges' }); %>
     <%- include('partials/navigation', { navData: navLocal }) %>
 
@@ -25,24 +25,39 @@
         <h2>Complete Challenges</h2>
         <div id="challengesList" class="challenge-list" style="margin-bottom: 2rem">
           <% if (typeof eventStarted !== 'undefined' && !eventStarted) { %>
-            <div class="feature-preview" style="text-align: center">
-              <img style="margin-top: -25px" src="/images/construction.gif" alt="Under Construction" class="preview-gif" />
-              <div style="text-align: left; padding: 1rem">
-                <h3 style="margin-top: 0; text-align: center">What are Challenges?</h3>
-                <p style="margin: 0.5rem 0">
-                  Challenges are quick, fun activities that take <strong>30 seconds to 1 minute</strong> to complete. During the weekend, anyone can challenge you to perform one of these predetermined tasks—check the app and give it your best shot!
-                </p>
-                <p style="margin: 0.5rem 0">
-                  <strong>Have an idea?</strong> We've got plenty of challenges already created, but feel free to submit your own! Whether it's a general challenge for anyone or a specific one tailored for a particular person,
-                  <a href="/challenges-submit" style="color: #0000ff; text-decoration: underline">submit a challenge here</a>.
-                </p>
-                <p style="margin: 0.5rem 0; text-align: center; font-style: italic; font-size: 0.9rem">
-                  Once the event starts, be ready to accept some challenges and climb the leaderboard!
-                </p>
-              </div>
+          <div class="feature-preview" style="text-align: center">
+            <img
+              style="margin-top: -25px"
+              src="/images/construction.gif"
+              alt="Under Construction"
+              class="preview-gif"
+            />
+            <div style="text-align: left; padding: 1rem">
+              <h3 style="margin-top: 0; text-align: center">What are Challenges?</h3>
+              <p style="margin: 0.5rem 0">
+                Challenges are quick, fun activities that take
+                <strong>30 seconds to 1 minute</strong> to complete. During the weekend, anyone can
+                challenge you to perform one of these predetermined tasks—check the app and give it
+                your best shot!
+              </p>
+              <p style="margin: 0.5rem 0">
+                <strong>Have an idea?</strong> We've got plenty of challenges already created, but
+                feel free to submit your own! Whether it's a general challenge for anyone or a
+                specific one tailored for a particular person,
+                <a href="/challenges-submit" style="color: #0000ff; text-decoration: underline"
+                  >submit a challenge here</a
+                >.
+              </p>
+              <p
+                style="margin: 0.5rem 0; text-align: center; font-style: italic; font-size: 0.9rem"
+              >
+                Once the event starts, be ready to accept some challenges and climb the leaderboard!
+              </p>
             </div>
-          <% } else if (typeof assignments !== 'undefined' && Array.isArray(assignments) && assignments.length > 0) { %>
-            <%- include('partials/challenge-list', { assignments, options: getChallengeCardOptions({ challengesEnabled: typeof challengesEnabled !== 'undefined' ? challengesEnabled : true }) }) %>
+          </div>
+          <% } else if (typeof assignments !== 'undefined' && Array.isArray(assignments) &&
+          assignments.length > 0) { %>
+          <%- include('partials/challenge-list', { assignments, options: getChallengeCardOptions({ challengesEnabled: typeof challengesEnabled !== 'undefined' ? challengesEnabled : true }) }) %>
           <% } %>
         </div>
         <script>
@@ -80,8 +95,5 @@
       const page = new ChallengesPage();
       window.addEventListener("DOMContentLoaded", () => page.init());
     </script>
-
-    <bottom-menu></bottom-menu>
-    <script type="module" src="/js/components/bottom-menu.js"></script>
   </body>
 </html>
